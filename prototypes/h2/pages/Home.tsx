@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Heading, Text } from '@/components';
-import { TabChip, Toaster, ToasterProvider, useToast } from '@/staging';
-import { H2_SECTIONS, PrototypeShell, StatePicker } from '../_shell';
-import { FEED_ITEMS } from './feed-data';
-import { FeedItem } from './FeedItem';
+import { TabChip, useToast } from '@/staging';
+import { FEED_ITEMS } from '../feed-data';
+import { FeedItem } from '../FeedItem';
 
 type FilterKey = 'all' | 'action' | 'insight';
 
-function Body() {
+export function Home() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const { showToast } = useToast();
 
@@ -87,23 +86,5 @@ function Body() {
         ))}
       </div>
     </div>
-  );
-}
-
-export default function H2Index() {
-  return (
-    <ToasterProvider>
-      <StatePicker states={['default']} defaultState="default">
-        <PrototypeShell
-          title="Home"
-          sidebarSections={H2_SECTIONS}
-          sidebarActiveLabel="Home"
-          workspaceName="Radiant Health"
-        >
-          <Body />
-        </PrototypeShell>
-      </StatePicker>
-      <Toaster />
-    </ToasterProvider>
   );
 }

@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('h2-index prototype', () => {
+test.describe('h2 home prototype', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/h2-index');
+    await page.goto('/h2');
     await page.waitForLoadState('networkidle');
     // Wait for fonts so typography is stable
     await page.evaluate(() => document.fonts.ready);

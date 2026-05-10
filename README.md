@@ -105,7 +105,7 @@ Pre-release. The repo is fully scaffolded with:
 
 - **Vetted components** (publishable surface, 1:1 with prod's `apps/blaze/src/blaze-ui/` and `apps/blaze/src/almanac-ui/`): `Button`, `ButtonLink`, `Heading`, `IconButton`, `IconButtonLink`, `Modal`, `Paragraph`, `Text`.
 - **Staging components** (shared WIP, not published): `Avatar`, `Card`, `Chip`, `KindBadge`, `Logo`, `NavItem`, `NavSection`, `Pill`, `SourcePill`, `Toast`, `WorkspaceSelector`.
-- **Prototypes**: `hello-world` (canonical example), `h2-index` (ported from Ivan's HTML mockup), `modal-showcase` (vetted Modal demo).
+- **Prototypes**: `hello-world` (canonical example), `h2` (mega-prototype ported from Ivan's H2 HTML mockup — multi-page sub-routes at `/h2`, `/h2/organic-social`, etc.), `modal-showcase` (vetted Modal demo).
 - **Tooling**: chrome-devtools-mcp workflow for visual debugging against prod, Playwright snapshot tests (vetted-only by policy), Plop scaffolders, Ladle component dev environment.
 
 The promotion pipeline staging → vetted requires that prod adopts the equivalent into `apps/blaze/src/blaze-ui/`. See `.claude/skills/promoting-staging-component.md`.
