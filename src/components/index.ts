@@ -15,5 +15,8 @@ export type { HeadingProps, HeadingLevel } from './Heading';
 export { Paragraph } from './Paragraph';
 export type { ParagraphProps } from './Paragraph';
 
-export { Button } from './Button';
+export { Button, ButtonLink } from './Button';
 export type { ButtonProps, ButtonSize, ButtonVariant, ButtonLinkProps, Icon } from './Button';
+
+export { IconButton, IconButtonLink } from './IconButton';
+export type { IconButtonProps, IconButtonLinkProps } from './IconButton';

@@ -11,7 +11,7 @@ import ChevronDown2 from '../../icons/20/ChevronDown2';
 import { DOMProps } from '@react-types/shared';
 import useButtonWithScrollCancel from '../../hooks/useButtonWithScrollCancel';
 
-const iconSizes: Record<ButtonSize, number> = {
+export const iconSizes: Record<ButtonSize, number> = {
   xs: 16,
   sm: 16,
   md: 16,
