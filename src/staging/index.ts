@@ -49,5 +49,13 @@ export { WorkspaceSelector } from './WorkspaceSelector';
 export type { WorkspaceSelectorProps } from './WorkspaceSelector';
 
 export { TabChip } from './TabChip';
-// Add additional types as needed (e.g. TabChipVariant, TabChipSize).
 export type { TabChipProps } from './TabChip';
+
+export { Toaster, ToasterProvider, useToast } from './Toaster';
+export type {
+  ToasterProps,
+  ToasterProviderProps,
+  ToastSpec,
+  ActiveToast,
+  ToastContextValue,
+} from './Toaster';

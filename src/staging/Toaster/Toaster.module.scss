@@ -1,0 +1,17 @@
+@use '../../tokens/typography' as *;
+
+// Portal-mounted host for active toasts. Bottom-center placement mirrors the
+// prior inline implementation in prototypes/h2-index/index.tsx.
+
+.root {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
