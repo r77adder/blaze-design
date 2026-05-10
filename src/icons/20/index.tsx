@@ -125,6 +125,7 @@ export { default as CopyRight2 } from './CopyRight2';
 export { default as CornerRadius } from './CornerRadius';
 export { default as CoverImage } from './CoverImage';
 export { default as Credits } from './Credits';
+export { default as CreditsSparkle } from './CreditsSparkle';
 export { default as CurrencyDollar } from './CurrencyDollar';
 export { default as Cursor04 } from './Cursor04';
 export { default as CustomerService } from './CustomerService';

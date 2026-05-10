@@ -1,5 +1,7 @@
 .sidebar {
-  width: 232px;
+  // Verified via Chrome DevTools MCP: prod's WorkspaceDashboardSidebar
+  // (the locked, default-resize state) renders 238px wide.
+  width: 238px;
   height: 100vh;
   /* Mirrors prod's cascade: WorkspaceDashboardSidebar applies
      `background-color: var(--default-bg)` on the locked sidebar, which on

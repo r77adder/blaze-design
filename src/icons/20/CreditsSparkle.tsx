@@ -1,0 +1,42 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+// Three-sparkle credits icon. Path data captured 1:1 from prod's
+// `data-testid="credits-icon"` SVG used inside the topbar's
+// CreditUsageDropdown_button. Verified via Chrome DevTools MCP.
+//
+// Distinct from `Star` (5-point) and `Stars` (1 star + 1 starburst). This
+// has 3 stacked sparkles arranged diagonally and reads as a "credits" /
+// "magic" indicator at small sizes — matches what prod uses next to the
+// credits count in the topbar.
+export const CreditsSparkle = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20, ...rest }, forwardedRef) => {
+    return (
+      <svg
+        ref={forwardedRef}
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        {...rest}
+      >
+        <path
+          d="M13.2942 1.27106L13.9333 6.80437C14.0573 7.87819 14.8574 8.75068 15.9165 8.96699L18.9413 9.58478L15.8979 10.2312C14.8481 10.4542 14.0578 11.3223 13.934 12.3883L13.2942 17.8985L12.4056 12.2773C12.2459 11.267 11.4869 10.456 10.4894 10.2296L7.64716 9.58478L10.47 8.96896C11.4775 8.74917 12.2467 7.93337 12.4068 6.91472L13.2942 1.27106Z"
+          fill={color}
+        />
+        <path
+          d="M7.64716 12.1413L7.88882 13.234C8.09179 14.1518 8.79238 14.8781 9.70221 15.1141L10.9413 15.4354L9.76865 15.7058C8.82339 15.9237 8.08953 16.6687 7.88594 17.6172L7.64716 18.7296L7.28359 17.4554C7.03782 16.5941 6.35003 15.9301 5.48061 15.7147L4.35304 15.4354L5.55005 15.1019C6.38116 14.8703 7.03412 14.2265 7.27748 13.3988L7.64716 12.1413Z"
+          fill={color}
+        />
+        <path
+          d="M4.35296 2.99655L4.59462 4.08923C4.79759 5.00699 5.49818 5.73334 6.40801 5.96931L7.64707 6.29067L6.47444 6.561C5.52919 6.77891 4.79532 7.52397 4.59173 8.47241L4.35296 9.58478L3.98939 8.31065C3.74362 7.44932 3.05583 6.7853 2.18641 6.56995L1.05884 6.29067L2.25585 5.95712C3.08696 5.72552 3.73993 5.08175 3.98328 4.254L4.35296 2.99655Z"
+          fill={color}
+        />
+      </svg>
+    )
+  },
+)
+CreditsSparkle.displayName = 'CreditsSparkle'
+export default CreditsSparkle

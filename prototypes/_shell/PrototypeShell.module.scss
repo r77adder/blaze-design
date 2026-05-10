@@ -1,6 +1,6 @@
 .shell {
   display: grid;
-  grid-template-columns: 232px 1fr;
+  grid-template-columns: 238px 1fr;
   /* Pin the shell to the viewport. Sidebar + topbar stay put; only the
      content area scrolls. Without `height: 100vh` + `overflow: hidden` the
      grid grows with content and the whole page scrolls together. */

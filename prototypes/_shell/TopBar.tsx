@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '@/components';
 import LockOpen3 from '@/icons/24/LockOpen3';
-import Star from '@/icons/14/Star';
+import CreditsSparkle from '@/icons/20/CreditsSparkle';
 import styles from './TopBar.module.scss';
 
 export interface TopBarProps {
@@ -31,10 +31,15 @@ export interface TopBarProps {
 function DefaultChromeCluster() {
   return (
     <>
-      <span className={styles.creditsPill}>
-        <Star size={14} className={styles.creditsIcon} />
+      {/* Credits — Button variant="tertiary" size="md" matches prod's
+          CreditUsageDropdown_button verbatim (32px h, 8px padding, 8px
+          radius, gap 2px, font 14px Söhne 400 in dark-90). The icon is
+          prod's 3-sparkle SVG, NOT the 5-point Star — verified via Chrome
+          DevTools MCP (`data-testid="credits-icon"`, viewBox 0 0 20 20,
+          rendered at 16). */}
+      <Button variant="tertiary" size="md" frontIcon={CreditsSparkle}>
         48 Credits
-      </span>
+      </Button>
       <Button
         variant="secondary"
         size="md"

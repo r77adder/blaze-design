@@ -40,45 +40,26 @@
   gap: 12px;
 }
 
-// Credits pill — verified via Chrome DevTools MCP against prod. Prod's
-// renders as inline text with sparkle glyph + "N Credits", no pill bg.
-.creditsPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--dark-90);
-  font-family: 'Sohne', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-}
+// Credits cluster + Upgrade button both use our real <Button> component now
+// (variant="tertiary" size="md" for credits, variant="secondary" size="md"
+// for Upgrade). Both verified 1:1 against prod via Chrome DevTools MCP. No
+// custom topbar SCSS needed for either — Button.module.scss carries all the
+// styling.
 
-.creditsIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  color: var(--dark-90);
-}
-
-// Upgrade button styling lives in our Button component now (variant="secondary"
-// size="md"). Color override is applied inline via style prop in TopBar.tsx.
-// Earlier this file had a gradient/pill custom .upgradeBtn class — that was
-// based on the legacy `VirtualMarketerUpgradeButton.module.scss`, which is NOT
-// what prod actually renders. Verified via Chrome DevTools MCP: prod uses the
-// regular blaze-ui Button (Button_root + Button_md + Button_secondary), white
-// bg, dark-8 border, var(--upgrade) text, LockOpen3 @ 16px. So we just use our
-// equivalent <Button> directly.
-
+// Avatar — verified via Chrome DevTools MCP against prod's
+// `.Avatar_avatar.Avatar_blaze` in the topbar:
+//   32x32, border-radius 50%, bg rgb(223,223,223), color white, font 20px
+// (the 20px font is for the initial inside; with no image we render text).
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--purple);
+  background: rgb(223, 223, 223);
   color: var(--light-100);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: 'Sohne', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 400;
 }
