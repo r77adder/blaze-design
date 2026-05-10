@@ -38,7 +38,7 @@ function DefaultChromeCluster() {
         variant="secondary"
         size="md"
         frontIcon={LockOpen3}
-        style={{ color: 'var(--upgrade)' }}
+        color="var(--upgrade)"
       >
         Upgrade
       </Button>

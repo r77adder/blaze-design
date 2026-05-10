@@ -67,6 +67,7 @@
     "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.5.1",
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.24",
     "@types/node": "^20.19.40",
@@ -88,9 +89,12 @@
     "vite": "^8.0.11"
   },
   "dependencies": {
+    "@react-aria/button": "^3.15.0",
     "@react-aria/focus": "^3.22.0",
     "@react-aria/interactions": "^3.28.0",
     "@react-aria/utils": "^3.34.0",
+    "@react-types/button": "^3.16.0",
+    "@react-types/link": "^3.7.0",
     "@react-types/shared": "^3.34.0",
     "classnames": "^2.5.1",
     "lodash": "^4.18.1",

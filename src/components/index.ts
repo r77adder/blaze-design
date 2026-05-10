@@ -16,4 +16,4 @@ export { Paragraph } from './Paragraph';
 export type { ParagraphProps } from './Paragraph';
 
 export { Button } from './Button';
-export type { ButtonProps, ButtonSize, ButtonVariant, ButtonIconProps } from './Button';
+export type { ButtonProps, ButtonSize, ButtonVariant, ButtonLinkProps, Icon } from './Button';
