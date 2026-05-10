@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Heading, Text } from '@/components';
-import { Chip, Toast } from '@/staging';
+import { TabChip, Toast } from '@/staging';
 import { H2_SECTIONS, PrototypeShell, StatePicker } from '../_shell';
 import { FEED_ITEMS } from './feed-data';
 import { FeedItem } from './FeedItem';
@@ -105,33 +105,14 @@ function Body() {
             { key: 'insight', label: 'Insights', count: counts.insight },
           ] as const
         ).map((f) => (
-          <Chip
+          <TabChip
             key={f.key}
-            size="md"
             selected={activeFilter === f.key}
-            onSelectionChange={() => setActiveFilter(f.key)}
+            count={f.count}
+            onSelect={() => setActiveFilter(f.key)}
           >
             {f.label}
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'var(--dark-4)',
-                borderRadius: 4,
-                padding: '0 4px',
-                minWidth: 16,
-                height: 16,
-                fontSize: 11,
-                fontWeight: 500,
-                color: 'var(--dark-80)',
-                lineHeight: 1,
-                marginLeft: 4,
-              }}
-            >
-              {f.count}
-            </span>
-          </Chip>
+          </TabChip>
         ))}
       </div>
 
