@@ -22,6 +22,9 @@ export interface H2LayoutProps {
   children: ReactNode;
   /** Override the auto-derived page title (defaults to PAGE_TITLES[pathname]). */
   title?: string;
+  /** Optional content rendered in the topbar BEFORE the default chrome cluster.
+   *  Use for page-level actions like "Create new". */
+  topbarRight?: ReactNode;
 }
 
 /**
@@ -33,7 +36,7 @@ export interface H2LayoutProps {
  * Each page-specific component renders only its body content; the layout
  * handles all the chrome.
  */
-export function H2Layout({ children, title }: H2LayoutProps) {
+export function H2Layout({ children, title, topbarRight }: H2LayoutProps) {
   const { pathname } = useLocation();
   const derived = PAGE_TITLES[pathname] ?? 'Blaze';
   return (
@@ -41,6 +44,7 @@ export function H2Layout({ children, title }: H2LayoutProps) {
       title={title ?? derived}
       sidebarSections={H2_SECTIONS}
       workspaceName="Radiant Health"
+      topbarRight={topbarRight}
     >
       {children}
     </PrototypeShell>
