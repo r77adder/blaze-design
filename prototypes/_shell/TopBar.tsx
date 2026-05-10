@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '@/components';
 import LockOpen3 from '@/icons/24/LockOpen3';
+import Star from '@/icons/14/Star';
 import styles from './TopBar.module.scss';
 
 export interface TopBarProps {
@@ -31,7 +32,7 @@ function DefaultChromeCluster() {
   return (
     <>
       <span className={styles.creditsPill}>
-        <span className={styles.creditsIcon} aria-hidden>✦</span>
+        <Star size={14} className={styles.creditsIcon} />
         48 Credits
       </span>
       <Button

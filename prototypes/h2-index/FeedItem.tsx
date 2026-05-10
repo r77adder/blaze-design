@@ -1,4 +1,5 @@
 import { Button, Text } from '@/components';
+import ArrowRightSm from '@/icons/16/ArrowRightSm';
 import { Card, KindBadge, SourcePill } from '@/staging';
 import type { SourceName } from '@/staging';
 import type { FeedItem as FeedItemData, FeedSource } from './feed-data';
@@ -25,28 +26,6 @@ const SOURCE_KEY_MAP: Record<FeedSource, SourceName> = {
   reputation: 'reputation',
   email: 'emailsms',
 };
-
-/**
- * Local arrow icon for the primary action button. Will move to `@/icons/16`
- * once an Arrow / ChevronRight icon exists in the lib. See GAPS.md.
- */
-function ArrowRight({ size = 11 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
 
 export function FeedItem({ item, onAction }: FeedItemProps) {
   return (
@@ -109,7 +88,7 @@ export function FeedItem({ item, onAction }: FeedItemProps) {
               <Button
                 variant="secondary"
                 size="sm"
-                endIcon={ArrowRight}
+                endIcon={ArrowRightSm}
                 onClick={(event) => {
                   event.stopPropagation();
                   onAction(item.primary!, item.sourceLabel);
