@@ -58,10 +58,10 @@ export function FeedItem({ item, onAction }: FeedItemProps) {
           <KindBadge kind={item.kind} />
           <Text
             variant="metadata"
-            color="var(--dark-40)"
             style={{
               marginLeft: 'auto',
               fontVariantNumeric: 'tabular-nums',
+              color: 'var(--dark-40)',
             }}
           >
             {item.time}
@@ -76,8 +76,7 @@ export function FeedItem({ item, onAction }: FeedItemProps) {
         {/* body */}
         <Text
           variant="secondary"
-          color="var(--dark-60)"
-          style={{ display: 'block', lineHeight: 1.55 }}
+          style={{ display: 'block', lineHeight: 1.55, color: 'var(--dark-60)' }}
         >
           {item.body}
         </Text>

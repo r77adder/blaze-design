@@ -1,0 +1,18 @@
+// NavItem.Trail — typography from Ivan's `.nav-trail` rule (Blaze H2
+// Features/index.html lines ~115-117):
+//   .nav-item .nav-trail { margin-left: auto; font-size: 11px;
+//                          font-weight: 400; color: var(--dark-40); }
+//
+// No equivalent in prod's NavItem composition (prod uses Counter for numeric
+// indicators only). This is a freeform-string slot for things like fractions
+// or "New" labels.
+
+.trail {
+  margin-left: auto;
+  font-family: 'Sohne', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--dark-40);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}

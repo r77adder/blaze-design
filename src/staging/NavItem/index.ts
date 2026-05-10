@@ -8,6 +8,7 @@ export type {
   NavItemRootProps,
   NavItemLabelProps,
   NavItemCounterProps,
+  NavItemTrailProps,
   NavItemSize,
   NavItemContextValue,
 } from './Types';

@@ -44,3 +44,18 @@ export interface NavItemCounterProps extends Omit<HTMLAttributes<HTMLDivElement>
   isActive?: boolean;
   classNames?: string;
 }
+
+/**
+ * NavItem.Trail — freeform right-aligned slot for a small text indicator like
+ * "3/10" or "New". Distinct from Counter (numeric only, prod-styled chrome
+ * indicator). Use Counter for prod-aligned numeric counts; use Trail for
+ * arbitrary short status labels (Ivan's H2 sidebar uses this for
+ * "Integrations 3/10" — a fraction, not a count).
+ *
+ * Typography per Ivan's source `.nav-trail` rule: 11px Söhne 400 in
+ * var(--dark-40). Right-aligned via margin-left: auto.
+ */
+export interface NavItemTrailProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
+  children: ReactNode;
+  classNames?: string;
+}

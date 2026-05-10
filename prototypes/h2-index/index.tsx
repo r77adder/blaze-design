@@ -1,78 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Heading, Text } from '@/components';
-import { Avatar, Chip, Toast } from '@/staging';
+import { Chip, Toast } from '@/staging';
 import { H2_SECTIONS, PrototypeShell, StatePicker } from '../_shell';
 import { FEED_ITEMS } from './feed-data';
 import { FeedItem } from './FeedItem';
 
 type FilterKey = 'all' | 'action' | 'insight';
-
-function StarIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="m12 2 1.6 4.6L18 8.2l-3.4 2.5L16 15l-4-2.7L8 15l1.4-4.3L6 8.2l4.4-1.6z" />
-    </svg>
-  );
-}
-
-/**
- * GAP placeholder — `<TopBarRight>` cluster: credits badge with star, Upgrade
- * button (purple-themed, between secondary and primary). The avatar slot now
- * uses the real `<Avatar>` component. See GAPS.md for what's still inline.
- */
-function TopBarRight() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          fontFamily: "'Sohne', sans-serif",
-          fontSize: 13,
-          color: 'var(--dark-80)',
-        }}
-      >
-        <span style={{ color: 'var(--dark-60)' }}>
-          <StarIcon size={14} />
-        </span>
-        48 Credits
-      </span>
-      <button
-        type="button"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '7px 14px',
-          borderRadius: 8,
-          border: '1px solid #C8B5FB',
-          background: 'var(--light-100)',
-          color: 'var(--purple)',
-          fontFamily: "'Sohne', sans-serif",
-          fontSize: 13,
-          fontWeight: 500,
-          letterSpacing: '0.1px',
-          cursor: 'pointer',
-        }}
-      >
-        Upgrade
-      </button>
-      <Avatar
-        src="https://i.pravatar.cc/64?img=12"
-        fallback="FH"
-        alt="Profile"
-        size="md"
-      />
-    </div>
-  );
-}
 
 interface ToastState {
   id: number;
@@ -147,8 +80,7 @@ function Body() {
         </Heading>
         <Text
           variant="secondary"
-          color="var(--dark-60)"
-          style={{ display: 'block', lineHeight: 1.5 }}
+          style={{ display: 'block', lineHeight: 1.5, color: 'var(--dark-60)' }}
         >
           <Text variant="smallList">3 things need your sign-off</Text>
           {' '}this morning · 12 fresh updates from your channels.
@@ -223,7 +155,6 @@ export default function H2Index() {
         sidebarSections={H2_SECTIONS}
         sidebarActiveLabel="Home"
         workspaceName="Radiant Health"
-        topbarRight={<TopBarRight />}
       >
         <Body />
       </PrototypeShell>

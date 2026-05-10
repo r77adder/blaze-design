@@ -35,6 +35,9 @@ export interface SidebarNavItem {
   label: string;
   icon: React.ComponentType<{ size?: number }>;
   activeIcon?: React.ComponentType<{ size?: number }>;
+  /** Optional right-aligned text indicator (e.g. "3/10", "New"). Renders via
+   *  `<NavItem.Trail>` — distinct from numeric `<NavItem.Counter>`. */
+  trail?: React.ReactNode;
 }
 
 export interface SidebarSection {
@@ -148,6 +151,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     items: [
       { label: 'Content Settings', icon: Settings },
       { label: 'Brand Kit', icon: Brand },
+      { label: 'Integrations', icon: Lightning, trail: '3/10' },
     ],
   },
 ];
@@ -179,6 +183,7 @@ function renderItem(item: SidebarNavItem, activeLabel: string) {
     <NavItem.Root key={item.label} isActive={isActive} size="lg">
       <Icon size={18} />
       <NavItem.Label label={item.label} />
+      {item.trail !== undefined && <NavItem.Trail>{item.trail}</NavItem.Trail>}
     </NavItem.Root>
   );
 }

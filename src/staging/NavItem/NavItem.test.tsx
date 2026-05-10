@@ -140,10 +140,29 @@ describe('NavItem (Root)', () => {
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 
-  it('exposes Root, Label, Counter as namespaced sub-components', () => {
+  it('exposes Root, Label, Counter, Trail as namespaced sub-components', () => {
     expect(typeof NavItem.Root).toBe('object'); // forwardRef returns an object
     expect(typeof NavItem.Label).toBe('function');
     expect(typeof NavItem.Counter).toBe('function');
+    expect(typeof NavItem.Trail).toBe('function');
+  });
+});
+
+describe('NavItem.Trail', () => {
+  it('renders freeform children (e.g. fraction strings)', () => {
+    render(<NavItem.Trail>3/10</NavItem.Trail>);
+    expect(screen.getByText('3/10')).toBeInTheDocument();
+  });
+
+  it('applies the trail class', () => {
+    const { container } = render(<NavItem.Trail>New</NavItem.Trail>);
+    expect(container.firstChild).toHaveClass('trail');
+  });
+
+  it('merges consumer classNames', () => {
+    const { container } = render(<NavItem.Trail classNames="custom">3/10</NavItem.Trail>);
+    expect(container.firstChild).toHaveClass('trail');
+    expect(container.firstChild).toHaveClass('custom');
   });
 });
 
