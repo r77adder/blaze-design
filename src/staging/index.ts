@@ -59,3 +59,6 @@ export type {
   ActiveToast,
   ToastContextValue,
 } from './Toaster';
+
+export { Modal } from './Modal';
+export type { ModalProps, ModalSize } from './Modal';

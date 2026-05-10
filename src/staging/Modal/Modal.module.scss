@@ -1,0 +1,111 @@
+// Portal-mounted modal dialog. Scrim covers the viewport; modal box is
+// centered with a soft drop shadow. Animations mirror Ivan's H2 source
+// (cubic-bezier 0.2,0,0,1 ease, 180ms).
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  animation: scrim-in 0.18s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.modal {
+  background: var(--light-100);
+  border-radius: 18px;
+  width: 100%;
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  animation: modal-in 0.18s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.size-md {
+  max-width: 560px;
+}
+
+.size-lg {
+  max-width: 720px;
+}
+
+.size-xl {
+  max-width: 920px;
+}
+
+.close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--dark-60);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  font-family: inherit;
+}
+
+.close:hover {
+  background: var(--dark-4);
+  color: var(--dark-90);
+}
+
+.head {
+  padding: 24px 28px 14px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--dark-90);
+  letter-spacing: -0.2px;
+  margin-bottom: 6px;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--dark-60);
+  line-height: 1.55;
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 28px 22px;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-top: 1px solid var(--dark-8);
+}

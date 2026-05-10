@@ -2,7 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { Toaster, ToasterProvider } from '@/staging';
 import { H2Layout } from './H2Layout';
 import { Home } from './pages/Home';
-import { OrganicSocial, OrganicSocialTopbarAction } from './pages/OrganicSocial';
+import { OrganicSocialRoute } from './pages/OrganicSocial';
 import { Campaigns, CampaignsTopbarAction } from './pages/Campaigns';
 import { EmailSms } from './pages/EmailSms';
 import { InfluencerContent, InfluencerContentTopbarAction } from './pages/InfluencerContent';
@@ -30,7 +30,7 @@ export default function H2() {
     <ToasterProvider>
       <Routes>
         <Route path="/" element={<H2Layout><Home /></H2Layout>} />
-        <Route path="/organic-social" element={<H2Layout topbarRight={<OrganicSocialTopbarAction />}><OrganicSocial /></H2Layout>} />
+        <Route path="/organic-social" element={<OrganicSocialRoute />} />
         <Route path="/seo-aeo" element={<H2Layout><SeoAeo /></H2Layout>} />
         <Route path="/map-ranking" element={<H2Layout topbarRight={<MapRankingTopbarAction />}><MapRanking /></H2Layout>} />
         <Route path="/influencer-content" element={<H2Layout topbarRight={<InfluencerContentTopbarAction />}><InfluencerContent /></H2Layout>} />
