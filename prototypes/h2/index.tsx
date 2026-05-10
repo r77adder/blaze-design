@@ -3,6 +3,7 @@ import { Toaster, ToasterProvider } from '@/staging';
 import { H2Layout } from './H2Layout';
 import { Home } from './pages/Home';
 import { OrganicSocial, OrganicSocialTopbarAction } from './pages/OrganicSocial';
+import { InfluencerContent, InfluencerContentTopbarAction } from './pages/InfluencerContent';
 import { LandingPages, LandingPagesTopbarAction } from './pages/LandingPages';
 import { MapRanking, MapRankingTopbarAction } from './pages/MapRanking';
 import { PaidSearch, PaidSearchTopbarAction } from './pages/PaidSearch';
@@ -30,7 +31,7 @@ export default function H2() {
         <Route path="/organic-social" element={<H2Layout topbarRight={<OrganicSocialTopbarAction />}><OrganicSocial /></H2Layout>} />
         <Route path="/seo-aeo" element={<H2Layout><SeoAeo /></H2Layout>} />
         <Route path="/map-ranking" element={<H2Layout topbarRight={<MapRankingTopbarAction />}><MapRanking /></H2Layout>} />
-        <Route path="/influencer-content" element={<H2Layout><Placeholder name="UGC Content" sourceFile="influencer-content" /></H2Layout>} />
+        <Route path="/influencer-content" element={<H2Layout topbarRight={<InfluencerContentTopbarAction />}><InfluencerContent /></H2Layout>} />
         <Route path="/paid-social" element={<H2Layout><Placeholder name="Paid Social" /></H2Layout>} />
         <Route path="/paid-search" element={<H2Layout topbarRight={<PaidSearchTopbarAction />}><PaidSearch /></H2Layout>} />
         <Route path="/email-sms" element={<H2Layout><Placeholder name="Email & SMS Programs" sourceFile="email&sms" /></H2Layout>} />
