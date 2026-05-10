@@ -19,6 +19,23 @@ Slash commands also work:
 - `/new-prototype <slug>` — scaffold + open browser
 - `/preview [slug]` — open a prototype
 - `/port-html <path>` — convert an HTML mockup into a real prototype
+- `/share` — push your work and open a PR for the team to review
+
+## Sharing your work
+
+When you have something the team should see, just say:
+
+> share this with the team
+
+Claude creates a branch, commits your changes, runs the tests, pushes, and opens a pull request — all without you needing to know git. It'll print the PR link when done.
+
+If you want to give context, just add it:
+
+> share this — the inbox-v3 prototype is ready for design review
+
+Claude uses your phrasing to write the PR title and description.
+
+The `main` branch is protected — all changes ship via PR. If you (or Claude) accidentally try to push directly to `main`, GitHub will reject it. Use `/share` instead.
 
 ## For engineers — getting started
 

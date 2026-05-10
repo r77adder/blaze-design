@@ -13,6 +13,7 @@ This repo is the Blaze design system + a prototype playground. Two audiences use
 5. **ALWAYS import via `@/components` (vetted lib) or `@/staging` (work-in-progress)** inside `prototypes/` and `src/playground/`. **ALWAYS use relative imports** inside `src/components/` and `src/staging/` — the alias is intentionally not in the lib's tsconfig because it would leak into emitted `.d.ts` files. Vetted code MUST NOT import from staging (would leak into the published surface); staging may import from `../../components/<Name>`.
 6. **For any visual gap investigation against prod**, follow `.claude/skills/visual-debugging.md`. First step is verifying chrome-devtools-mcp is connected — if `list_pages` errors, walk the user through plugin install BEFORE attempting screenshot comparisons. Never ping-pong screenshots with the user when the MCP would settle the question in one tool call.
 7. **When a new prototype or component lands, add a Playwright snapshot test** under `tests/visual/`. Follow `.claude/skills/visual-snapshot-testing.md`. Run `pnpm test:visual` before considering the task done.
+8. **NEVER commit to `main` directly.** Before staging any commit, check the current branch — if on `main`, create a new branch named after the work scope (`prototype/<slug>`, `staging/<name>`, `docs/<topic>`, etc.). The remote `main` branch is server-protected; direct pushes will be rejected. Use `/share` (`.claude/commands/share.md`) to handle the full branch+commit+push+PR flow automatically.
 
 ---
 
@@ -175,6 +176,7 @@ See `.claude/commands/` for the full prompt of each.
 - `/new-prototype <slug>` — scaffold a prototype + open browser
 - `/preview [slug]` — open a prototype in the browser
 - `/port-html <path>` — start the HTML → prototype workflow
+- `/share` — branch, commit, push, and open a PR for whatever you've been working on (designer-friendly — handles git invisibly)
 - `/add-icon <name> <size>` — add an icon (eng-friendly)
 - `/new-component <name>` — (eng) scaffold a new lib component
 - `/publish <version>` — (eng) cut a release tag
@@ -192,3 +194,4 @@ Longer workflow guides — read the relevant one before doing the matching task.
 - `.claude/skills/visual-debugging.md` — investigate "ours doesn't match prod" gaps using chrome-devtools-mcp (live inspection of prod + localhost)
 - `.claude/skills/visual-snapshot-testing.md` — Playwright snapshot tests under `tests/visual/`, when to add them and how to re-seed baselines
 - `.claude/skills/promoting-staging-component.md` — checklist for graduating a `src/staging/` component into the vetted `src/components/` lib surface
+- `.claude/commands/share.md` — full step-by-step for the `/share` flow (branch + commit + push + PR). Auto-invoked when the user says "share this with the team" or similar
