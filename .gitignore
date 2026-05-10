@@ -1,0 +1,10 @@
+node_modules/
+dist/
+lib/
+module/
+.DS_Store
+*.log
+.vite/
+.ladle/build/
+playwright-report/
+test-results/

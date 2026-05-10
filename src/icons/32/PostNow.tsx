@@ -1,0 +1,173 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const PostNow = forwardRef<SVGSVGElement, IconProps>(({ size = 32 }, forwardedRef) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 33 33"
+      fill="none"
+      ref={forwardedRef}
+    >
+      <g filter="url(#filter0_d_2527_6702)">
+        <path d="M11.7847 28.1756L12.2255 22.6663L18.8499 12.6497L29.8573 3.27293L11.7847 28.1756Z" fill="#016E63" />
+      </g>
+      <g filter="url(#filter1_d_2527_6702)">
+        <path
+          d="M11.7847 28.1758L8.46591 20.0218L29.8561 3.27262L12.2256 22.6664L11.7847 28.1758Z"
+          fill="url(#paint0_linear_2527_6702)"
+        />
+      </g>
+      <g filter="url(#filter2_d_2527_6702)">
+        <path
+          d="M8.46586 20.0215L4.00386 17.0404C3.35612 16.6076 3.43007 15.6331 4.13572 15.3031L29.856 3.27261L8.46586 20.0215Z"
+          fill="url(#paint1_linear_2527_6702)"
+          fillOpacity="0.8"
+          shapeRendering="crispEdges"
+        />
+      </g>
+      <g filter="url(#filter3_bd_2527_6702)">
+        <path
+          d="M12.2255 22.6662L20.3679 28.4823C20.9189 28.8758 21.6935 28.6195 21.901 27.9751L29.856 3.2726L12.2255 22.6662Z"
+          fill="url(#paint2_linear_2527_6702)"
+          fillOpacity="0.8"
+          shapeRendering="crispEdges"
+        />
+      </g>
+      <defs>
+        <filter
+          id="filter0_d_2527_6702"
+          x="8.78473"
+          y="1.27295"
+          width="24.0726"
+          height="30.9028"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="1" />
+          <feGaussianBlur stdDeviation="1.5" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2527_6702" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2527_6702" result="shape" />
+        </filter>
+        <filter
+          id="filter1_d_2527_6702"
+          x="5.46591"
+          y="1.27246"
+          width="27.3901"
+          height="30.9033"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="1" />
+          <feGaussianBlur stdDeviation="1.5" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2527_6702" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2527_6702" result="shape" />
+        </filter>
+        <filter
+          id="filter2_d_2527_6702"
+          x="0.559326"
+          y="1.27246"
+          width="32.2967"
+          height="22.749"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="1" />
+          <feGaussianBlur stdDeviation="1.5" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2527_6702" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2527_6702" result="shape" />
+        </filter>
+        <filter
+          id="filter3_bd_2527_6702"
+          x="9.22546"
+          y="1.27246"
+          width="23.6306"
+          height="31.3965"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feGaussianBlur in="BackgroundImageFix" stdDeviation="1" />
+          <feComposite in2="SourceAlpha" operator="in" result="effect1_backgroundBlur_2527_6702" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="1" />
+          <feGaussianBlur stdDeviation="1.5" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+          <feBlend mode="normal" in2="effect1_backgroundBlur_2527_6702" result="effect2_dropShadow_2527_6702" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2527_6702" result="shape" />
+        </filter>
+        <linearGradient
+          id="paint0_linear_2527_6702"
+          x1="30.4038"
+          y1="3.82034"
+          x2="8.91652"
+          y2="25.3076"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#FF5F4A" />
+          <stop offset="1" stopColor="#02BCBC" />
+        </linearGradient>
+        <linearGradient
+          id="paint1_linear_2527_6702"
+          x1="27.8063"
+          y1="4.41135"
+          x2="6.16497"
+          y2="19.6911"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#FFE070" />
+          <stop offset="0.432789" stopColor="#FFC700" />
+          <stop offset="1" stopColor="#03A7CB" />
+        </linearGradient>
+        <linearGradient
+          id="paint2_linear_2527_6702"
+          x1="20.7528"
+          y1="27.273"
+          x2="20.8028"
+          y2="15.1668"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#00C7C7" />
+          <stop offset="1" stopColor="#FFC700" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+})
+
+export default PostNow

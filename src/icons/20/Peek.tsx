@@ -1,0 +1,25 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Peek = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M2.96885 15.0625V4.9375H17.0313V15.0625H2.96885ZM1.46885 4.4375C1.46885 3.88522 1.91656 3.4375 2.46885 3.4375H17.5313C18.0836 3.4375 18.5313 3.88522 18.5313 4.4375V15.5625C18.5313 16.1148 18.0836 16.5625 17.5313 16.5625H2.46885C1.91656 16.5625 1.46885 16.1148 1.46885 15.5625V4.4375ZM15.7501 6.1875H11.1876V13.625H15.7501V6.1875Z"
+        fill={color}
+      />
+    </svg>
+  )
+})
+
+export default Peek

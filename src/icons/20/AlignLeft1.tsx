@@ -1,0 +1,25 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const AlignLeft1 = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M2.75 2C2.75 1.58579 2.41421 1.25 2 1.25C1.58579 1.25 1.25 1.58579 1.25 2H2.75ZM1.25 18C1.25 18.4142 1.58579 18.75 2 18.75C2.41421 18.75 2.75 18.4142 2.75 18H1.25ZM16 6.5V7.25V6.5ZM18 8.5H17.25H18ZM6 8.5H5.25H6ZM8 6.5L8 5.75L8 6.5ZM8 13.5V12.75V13.5ZM6 11.5H6.75H6ZM16 13.5V14.25V13.5ZM18 11.5H18.75H18ZM1.25 2V18H2.75V2H1.25ZM16 12.75L8 12.75L8 14.25L16 14.25V12.75ZM6.75 11.5V8.5H5.25V11.5H6.75ZM8 7.25L16 7.25V5.75L8 5.75L8 7.25ZM17.25 8.5V11.5H18.75V8.5H17.25ZM16 7.25C16.6904 7.25 17.25 7.80964 17.25 8.5L18.75 8.5C18.75 6.98122 17.5188 5.75 16 5.75V7.25ZM6.75 8.5C6.75 7.80964 7.30964 7.25 8 7.25L8 5.75C6.48122 5.75 5.25 6.98122 5.25 8.5L6.75 8.5ZM8 12.75C7.30964 12.75 6.75 12.1904 6.75 11.5H5.25C5.25 13.0188 6.48122 14.25 8 14.25L8 12.75ZM16 14.25C17.5188 14.25 18.75 13.0188 18.75 11.5H17.25C17.25 12.1904 16.6904 12.75 16 12.75V14.25Z"
+          fill={color}
+        />
+      </svg>
+    )
+  },
+)
+
+export default AlignLeft1

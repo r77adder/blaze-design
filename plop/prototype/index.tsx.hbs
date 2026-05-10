@@ -1,0 +1,24 @@
+import { Text } from '@/components';
+import { PrototypeShell, StatePicker, useStateContext } from '../_shell';
+
+function Body() {
+  const { state } = useStateContext();
+  return (
+    <div>
+      <Text size="lg" weight="halbfett">{{titleCase name}}</Text>
+      <div style=\{{ marginTop: 16 }}>
+        <Text size="sm">State: {state}</Text>
+      </div>
+    </div>
+  );
+}
+
+export default function {{pascalCase name}}() {
+  return (
+    <StatePicker states={['cold', 'steady', 'error']} defaultState="steady">
+      <PrototypeShell title="{{titleCase name}}">
+        <Body />
+      </PrototypeShell>
+    </StatePicker>
+  );
+}

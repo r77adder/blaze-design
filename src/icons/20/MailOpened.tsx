@@ -1,0 +1,28 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const MailOpened = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M2.5 8.32803C2.5 10.8819 2.5 14.8677 2.5 14.8677C2.5 14.8677 2.5 14.8677 2.5 14.8677C2.5 15.8611 3.33947 16.6663 4.375 16.6663H15.625C16.6605 16.6663 17.5 15.8611 17.5 14.8677V7.90589M2.5 8.32803C2.5 8.01796 2.66652 7.72975 2.94063 7.56541L10 3.33301L17.0221 7.12207C17.3173 7.28135 17.5 7.58099 17.5 7.90589M2.5 8.32803C2.875 8.32803 10 12.7758 10 12.7758L17.5 7.90589"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  },
+)
+
+export default MailOpened

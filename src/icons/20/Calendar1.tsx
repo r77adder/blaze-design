@@ -1,0 +1,30 @@
+import { forwardRef, type SVGAttributes } from 'react';
+
+export interface IconProps extends SVGAttributes<SVGElement> {
+  color?: string;
+  size?: number;
+}
+
+const Calendar1 = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20, ...rest }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...rest}
+    >
+      <path
+        d="M3.95833 7.42855H15.625M5.46627 2.5V3.78586M13.9583 2.5V3.78571M16.4583 6.03571V15.25C16.4583 16.4926 15.4634 17.5 14.2361 17.5H5.34722C4.11992 17.5 3.125 16.4926 3.125 15.25V6.03571C3.125 4.79307 4.11992 3.78571 5.34722 3.78571H14.2361C15.4634 3.78571 16.4583 4.79307 16.4583 6.03571Z"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+);
+Calendar1.displayName = 'Calendar1';
+export default Calendar1;

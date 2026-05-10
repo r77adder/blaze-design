@@ -1,0 +1,77 @@
+.sidebar {
+  width: 232px;
+  height: 100vh;
+  /* Mirrors prod's cascade: WorkspaceDashboardSidebar applies
+     `background-color: var(--default-bg)` on the locked sidebar, which on
+     desktop + light theme resolves to #f3f5f6. */
+  background: var(--default-bg);
+  /* `--dark-4` matches prod's redesign-mode `border-right` on .sidebar
+     (apps/blaze/src/blaze-components/WorkspaceDashboardSidebar/WorkspaceDashboardSidebar.module.scss). */
+  border-right: 1px solid var(--dark-4);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+// Header slot mirrors prod's `.header` redesign block:
+// `height: 60px; padding: 17px 15px; border-bottom: 1px solid var(--dark-4)`
+// (apps/blaze/src/blaze-components/WorkspaceDashboardSidebar/WorkspaceDashboardSidebar.module.scss).
+// The 60px height aligns with the topbar's 60px height so the bottom borders
+// line up across the chrome.
+.headerSlot {
+  height: 60px;
+  min-height: 60px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--dark-4);
+  box-sizing: border-box;
+
+  // The WorkspaceSelector handles its own internal padding (6px 8px); the
+  // outer slot just enforces the chrome height.
+  > * {
+    width: 100%;
+  }
+}
+
+// Nav container does NOT add horizontal padding — NavItem and NavSection
+// handle their own horizontal margins (matching prod's WorkspaceDashboardSidebar
+// where the inner nav is just a flex column and items are responsible for
+// their own indent via `margin: 0 10px` on .lg etc).
+//
+// `gap: 20px` between sections is from prod's WorkspaceDashboardSidebarContent.
+// module.scss redesign-mode block:
+//   .nav { gap: 10px; [data-autopilot-system-redesign='on'] & { gap: 20px } }
+// (Earlier I had 10px from NavMenu.module.scss `.navItemsList { margin-top: 10px }`
+// but that's an INNER element's spacing between section header and items, not
+// the outer nav container's between-sections gap. Different file, different
+// element. The 20px here is the actual between-sections rule.)
+.nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 0;
+  gap: 20px;
+}
+
+// Footer mirrors prod's `.moreItemsContainer` from
+// `WorkspaceDashboardSidebar/components/More/More.module.scss`:
+//   position: fixed; bottom: 0; padding: 19px 15px; background: var(--default-bg)
+//
+// Prod's "shadow when scrolled" effect comes from the footer being position:fixed
+// over the scrolling nav — content goes UNDER the solid bg. The shadow only
+// becomes visible when the user has actually scrolled.
+//
+// We do NOT replicate the always-on shadow (that would show fake separation
+// when there's nothing to scroll). True scroll-conditional shadow needs JS
+// (track .nav.scrollTop, add a class to footer when > 0). Deferred — for now
+// the footer is just a solid bg matching prod's resting state.
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 19px 15px;
+  background: var(--default-bg);
+}

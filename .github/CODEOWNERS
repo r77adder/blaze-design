@@ -1,0 +1,9 @@
+# Eng owns the lib (publishable surface)
+/src/                @almanaclabs/eng
+/.github/            @almanaclabs/eng
+/package.json        @almanaclabs/eng
+/tsconfig*.json      @almanaclabs/eng
+/plopfile.js         @almanaclabs/eng
+
+# Prototypes are open — no ownership requirement.
+# (intentionally NOT listed — branch protection should not require review here)

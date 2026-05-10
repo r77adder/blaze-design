@@ -1,0 +1,10 @@
+export { default as FacebookBrand } from './FacebookBrand';
+export { default as GoHighLevelBrand } from './GoHighLevelBrand';
+export { default as InstagramBrand } from './InstagramBrand';
+export { default as LinkedInBrand } from './LinkedInBrand';
+export { default as MailchimpBrand } from './MailchimpBrand';
+export { default as ShopifyBrand } from './ShopifyBrand';
+export { default as TiktokBrand } from './TiktokBrand';
+export { default as TwitterBrand } from './TwitterBrand';
+export { default as WixBrand } from './WixBrand';
+export { default as WordPressBrand } from './WordPressBrand';

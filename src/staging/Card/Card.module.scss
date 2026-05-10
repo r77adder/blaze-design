@@ -1,0 +1,46 @@
+@use '../../tokens/typography' as *;
+
+.root {
+  background: var(--light-100);
+  border: 1px solid var(--dark-8);
+  border-radius: 8px;
+  color: var(--dark-90);
+  transition: border-color 120ms ease, box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.padding-none {
+  padding: 0;
+}
+
+.padding-sm {
+  padding: 12px;
+}
+
+.padding-md {
+  padding: 16px;
+}
+
+.padding-lg {
+  padding: 24px;
+}
+
+.interactive {
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+
+  &:hover {
+    border-color: var(--dark-15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  &:active {
+    background: var(--dark-2);
+    border-color: var(--dark-15);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+}

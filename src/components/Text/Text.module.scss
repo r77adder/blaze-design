@@ -1,0 +1,73 @@
+@use '../../tokens/typography' as *;
+
+// Variant classes — mirror prod `apps/blaze/src/blaze-ui/Text/Text.module.scss`.
+// Per CONVENTIONS.md, the redesign-mode (`[data-autopilot-system-redesign='on']`)
+// value is baked in as the default. Prod's pre-redesign defaults are noted in
+// comments for traceability. Mixin choices match prod 1:1.
+
+.root {
+  display: inline;
+}
+
+.primary {
+  @include md-sohne;
+  color: var(--dark-90); // prod default-mode: dark-80
+}
+
+.secondary {
+  @include sm-sohne;
+  color: var(--dark-90); // prod default-mode: dark-60
+}
+
+.placeholder {
+  @include sm-sohne;
+  line-height: 20px;
+  color: var(--dark-90); // prod default-mode: dark-40 — use `color` prop for true-placeholder shades
+}
+
+.label {
+  font-family: 'Sohne';
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400; // prod default-mode: 500
+  line-height: 130%;
+  letter-spacing: 0.24px;
+  color: var(--dark-90); // prod default-mode: dark-40
+}
+
+.largeList {
+  @include md-sohne-medium;
+  line-height: 140%;
+  letter-spacing: 0.16px;
+  color: var(--dark-90);
+}
+
+.smallList {
+  @include sm-sohne-medium;
+  line-height: 135%;
+  letter-spacing: 0.14px;
+  color: var(--dark-90);
+}
+
+.metadata {
+  @include xs-sohne-book;
+  letter-spacing: 0.12px;
+  color: var(--dark-90); // prod default-mode: dark-80
+}
+
+// Line-clamp styles. `--lines-to-clamp` is set inline by the component.
+.lineClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines-to-clamp);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lineClampForceSingleLine {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

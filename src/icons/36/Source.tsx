@@ -1,0 +1,106 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Source = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 36 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      viewBox="0 0 36 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <g filter="url(#filter0_d_3524_89154)">
+        <path
+          d="M30.3644 12.5501C29.0445 7.27026 23.8278 3.67271 17.0074 4.62086C10.187 5.56901 6.96803 8.92211 6.15192 13.3524C5.86124 14.9304 5.93017 16.2231 6.23525 17.5321C6.43451 18.3871 6.46985 19.2797 6.21809 20.1207L4.66515 25.3083C4.58282 25.5833 4.78878 25.86 5.07586 25.86H7.64894C8.09518 25.86 8.49474 26.1365 8.65199 26.5541L9.69696 29.3293C10.2656 30.7973 11.6758 31.9265 13.5309 31.3081L16.1107 30.3909L18 34.8749L30.3644 32.0624L27.5195 24.5314C27.2065 23.7027 27.4478 22.778 28.0584 22.136C30.1864 19.8989 31.5048 17.112 30.3644 12.5501Z"
+          fill="url(#paint0_linear_3524_89154)"
+          shapeRendering="crispEdges"
+        />
+      </g>
+      <g filter="url(#filter1_d_3524_89154)">
+        <path
+          d="M18.3726 9.33301C18.2448 8.98741 17.7559 8.98741 17.628 9.33301L16.3399 12.8143C16.0182 13.6835 15.3329 14.3689 14.4636 14.6905L10.9824 15.9787C10.6368 16.1066 10.6368 16.5954 10.9824 16.7233L14.4636 18.0114C15.3329 18.3331 16.0182 19.0184 16.3399 19.8877L17.628 23.3689C17.7559 23.7145 18.2448 23.7145 18.3726 23.3689L19.6608 19.8877C19.9825 19.0184 20.6678 18.3331 21.5371 18.0114L25.0183 16.7233C25.3639 16.5954 25.3639 16.1066 25.0183 15.9787L21.5371 14.6905C20.6678 14.3689 19.9825 13.6835 19.6608 12.8143L18.3726 9.33301Z"
+          fill="url(#paint1_linear_3524_89154)"
+          fillOpacity="0.91"
+          shapeRendering="crispEdges"
+        />
+      </g>
+      <defs>
+        <filter
+          id="filter0_d_3524_89154"
+          x="1.43157"
+          y="1.25371"
+          width="30.4249"
+          height="34.693"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dx="-1.0718" dy="-1.0718" />
+          <feGaussianBlur stdDeviation="1.0718" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_3524_89154" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_3524_89154" result="shape" />
+        </filter>
+        <filter
+          id="filter1_d_3524_89154"
+          x="7.50774"
+          y="8.00199"
+          width="20.985"
+          height="20.9852"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="2.1436" />
+          <feGaussianBlur stdDeviation="1.6077" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.32 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_3524_89154" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_3524_89154" result="shape" />
+        </filter>
+        <linearGradient
+          id="paint0_linear_3524_89154"
+          x1="9.5625"
+          y1="10.4061"
+          x2="17.6423"
+          y2="33.1874"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#0027B3" />
+          <stop offset="0.455" stopColor="#D22CC2" />
+          <stop offset="0.766529" stopColor="#FFB930" />
+          <stop offset="1" stopColor="#FFB930" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient
+          id="paint1_linear_3524_89154"
+          x1="19.5769"
+          y1="19.5937"
+          x2="16.1082"
+          y2="15.375"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#FACA21" />
+          <stop offset="1" stopColor="#FFF0BA" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+})
+
+export default Source

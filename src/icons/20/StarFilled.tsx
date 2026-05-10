@@ -1,0 +1,27 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const StarFilled = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M8.87891 2.63867C9.30886 1.76793 10.5004 1.71358 11.0254 2.47559L11.1211 2.63867L12.9961 6.43848L17.1895 7.04785C18.2146 7.19695 18.6235 8.45655 17.8818 9.17969L14.8467 12.1377L15.5645 16.3135C15.7396 17.3346 14.667 18.1139 13.75 17.6318L10 15.6592L6.25 17.6318C5.33296 18.114 4.26041 17.3346 4.43555 16.3135L5.15234 12.1377L2.11816 9.17969C1.37645 8.45654 1.78546 7.19695 2.81055 7.04785L7.00293 6.43848L8.87891 2.63867Z"
+          fill={color}
+          stroke={color}
+          strokeWidth="1.5"
+        />
+      </svg>
+    )
+  },
+)
+
+export default StarFilled

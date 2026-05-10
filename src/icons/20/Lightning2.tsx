@@ -1,0 +1,29 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Lightning2 = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 21"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M11.9905 2L3.99048 11.6H10.9238L10.3905 18L17.8571 8.4H10.9238L11.9905 2.53333"
+          stroke={color}
+          strokeOpacity="0.8"
+          strokeWidth="1.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  },
+)
+
+export default Lightning2

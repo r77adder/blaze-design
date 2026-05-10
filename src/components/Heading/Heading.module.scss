@@ -1,0 +1,62 @@
+@use '../../tokens/typography' as *;
+
+// Per-level type — mirror prod `apps/blaze/src/blaze-ui/Heading/Heading.module.scss`.
+// Per CONVENTIONS.md, the redesign-mode values are baked in as defaults.
+// Prod ships a `min-width: $phoneMaxWidth` media query that scales sizes up on
+// desktop; we bake in the desktop sizes since this is a desktop-first system.
+// Pre-redesign defaults are noted in comments.
+
+.root {
+  margin: 0;
+  font-family: 'Sohne';
+  font-style: normal;
+  color: var(--dark-90); // prod default-mode: dark-80
+}
+
+.level1 {
+  font-size: 32px; // mobile redesign: 28px / pre-redesign: 32px
+  font-weight: 400; // pre-redesign: 600
+  line-height: 110%;
+  letter-spacing: -0.64px;
+}
+
+.level2 {
+  font-size: 26px; // mobile redesign: 22px / pre-redesign: 26px
+  font-weight: 400; // pre-redesign: 600
+  line-height: 110%;
+}
+
+.level3 {
+  font-size: 20px; // mobile redesign: 18px / pre-redesign: 22px
+  font-weight: 400; // pre-redesign: 600
+  line-height: 140%;
+}
+
+.level4 {
+  font-size: 18px; // mobile redesign: 16px / pre-redesign: 18px
+  font-weight: 400; // pre-redesign: 500
+  line-height: 140%;
+}
+
+.level5 {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 135%; // mobile redesign: 140%
+  letter-spacing: 0.16px;
+}
+
+.lineClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines-to-clamp);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lineClampForceSingleLine {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

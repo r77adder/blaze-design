@@ -1,0 +1,29 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Markdown = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 24 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M19.6 18.0004V19.2004C19.6 20.5259 18.5255 21.6004 17.2 21.6004L6.39999 21.6003C5.0745 21.6003 3.99999 20.5258 4 19.2003L4.00009 4.80038C4.0001 3.4749 5.07462 2.40039 6.40009 2.40039H17.2003C18.5258 2.40039 19.6003 3.47493 19.6003 4.80044V8.80039"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13.2404 15.7998H12.45L11.0212 11.5818V15.7998H10.1168V10.343H11.4544L12.8604 14.523L14.2664 10.343H15.5736V15.7998H14.6692V11.5818L13.2404 15.7998ZM16.7555 15.7998V10.343H18.5795C20.2743 10.343 21.3231 11.407 21.3231 13.0714C21.3231 14.7358 20.2743 15.7998 18.5795 15.7998H16.7555ZM17.7055 14.9638H18.5795C19.7043 14.9638 20.3655 14.219 20.3655 13.0714C20.3655 11.9162 19.7043 11.179 18.5719 11.179H17.7055V14.9638Z"
+        fill={color}
+      />
+    </svg>
+  )
+})
+
+export default Markdown

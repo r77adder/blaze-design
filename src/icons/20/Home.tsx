@@ -1,0 +1,29 @@
+import { forwardRef, type SVGAttributes } from 'react';
+
+export interface IconProps extends SVGAttributes<SVGElement> {
+  color?: string;
+  size?: number;
+}
+
+const Home = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20, ...rest }, ref) => (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...rest}
+    >
+      <path
+        d="M7.5 17.5V11.794C7.5 11.2688 7.94772 10.843 8.5 10.843H11.5C12.0523 10.843 12.5 11.2688 12.5 11.794V17.5M9.42048 2.67598L2.92048 7.07169C2.65668 7.25009 2.5 7.53888 2.5 7.84671V16.0735C2.5 16.8613 3.17157 17.5 4 17.5H16C16.8284 17.5 17.5 16.8613 17.5 16.0735V7.84671C17.5 7.53888 17.3433 7.25009 17.0795 7.07169L10.5795 2.67598C10.2326 2.44134 9.76744 2.44134 9.42048 2.67598Z"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
+);
+Home.displayName = 'Home';
+export default Home;

@@ -1,0 +1,34 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const YouTubeBrand = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20, ...rest }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+        {...rest}
+      >
+        <g clipPath="url(#clip0_3256_254)">
+          <path
+            d="M19.5881 5.16133C19.3574 4.29969 18.682 3.62032 17.8253 3.38834C16.2602 2.95752 9.99996 2.95752 9.99996 2.95752C9.99996 2.95752 3.73969 2.95752 2.17462 3.37177C1.33443 3.60375 0.642501 4.29969 0.41186 5.16133C0 6.73548 0 9.99977 0 9.99977C0 9.99977 0 13.2806 0.41186 14.8382C0.642501 15.6999 1.31795 16.3792 2.17462 16.6112C3.75616 17.042 9.99996 17.042 9.99996 17.042C9.99996 17.042 16.2602 17.042 17.8253 16.6278C18.682 16.3958 19.3574 15.7164 19.5881 14.8548C19.9999 13.2806 19.9999 10.0163 19.9999 10.0163C19.9999 10.0163 20.0164 6.73548 19.5881 5.16133Z"
+            fill="#FF0000"
+          />
+          <path d="M13.2137 9.99963L8.00781 6.98389V13.0154L13.2137 9.99963Z" fill="white" />
+        </g>
+        <defs>
+          <clipPath id="clip0_3256_254">
+            <rect width="20" height="16" fill="white" transform="translate(0 2)" />
+          </clipPath>
+        </defs>
+      </svg>
+    )
+  },
+)
+
+export default YouTubeBrand

@@ -1,0 +1,23 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Carousel = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M14.5833 12.4583V4.66667C14.5833 3.45833 13.625 2.5 12.4167 2.5H4.66667C3.45833 2.5 2.5 3.45833 2.5 4.66667V12.4583C2.5 13.6667 3.45833 14.625 4.66667 14.625H12.4583C13.625 14.5833 14.5833 13.625 14.5833 12.4583ZM16.4167 6.33333V13.0417C16.4167 14.9167 14.875 16.4583 13 16.4583H6.29167C6.04167 16.4583 5.91667 16.75 6.08333 16.9167C6.5 17.375 7.08333 17.6667 7.79167 17.6667H13.375C15.75 17.6667 17.6667 15.75 17.6667 13.375V7.79167C17.6667 7.125 17.375 6.5 16.9167 6.08333C16.7083 5.91667 16.4167 6.08333 16.4167 6.33333Z"
+        fill={color}
+      />
+    </svg>
+  )
+})
+
+export default Carousel

@@ -1,0 +1,53 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Website = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      ref={forwardedRef}
+    >
+      <path
+        d="M16.6348 18.352L18.1865 16.8003C18.3579 16.6289 18.3579 16.351 18.1865 16.1796L15.7402 13.7333C15.5552 13.5483 15.5721 13.2436 15.7763 13.0802L17.8329 11.435C18.1113 11.2123 18.0221 10.7682 17.6793 10.6702L8.39447 8.01742C8.0634 7.92283 7.7573 8.22892 7.8519 8.56L10.5047 17.8448C10.6026 18.1876 11.0467 18.2768 11.2694 17.9984L12.9147 15.9419C13.0781 15.7376 13.3828 15.7207 13.5678 15.9057L16.0141 18.352C16.1855 18.5234 16.4634 18.5234 16.6348 18.352Z"
+        fill="url(#paint0_linear_2721_29335)"
+      />
+      <path
+        d="M4.56075 12.0398L3.15478 13.4457M3.00787 8.29021H1.01953M3.15478 3.13566L4.56075 4.54157M8.31046 1L8.31046 2.98826M13.4652 3.13566L12.0592 4.54157M18.1865 16.8003L16.6348 18.352C16.4634 18.5234 16.1855 18.5234 16.0141 18.352L13.5678 15.9057C13.3828 15.7207 13.0781 15.7376 12.9147 15.9419L11.2694 17.9984C11.0467 18.2768 10.6026 18.1876 10.5047 17.8448L7.8519 8.56C7.7573 8.22892 8.0634 7.92283 8.39447 8.01742L17.6793 10.6702C18.0221 10.7682 18.1113 11.2123 17.8329 11.435L15.7763 13.0802C15.5721 13.2436 15.5552 13.5483 15.7402 13.7333L18.1865 16.1796C18.3579 16.351 18.3579 16.6289 18.1865 16.8003Z"
+        stroke="url(#paint1_linear_2721_29335)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear_2721_29335"
+          x1="9.66729"
+          y1="1"
+          x2="9.66729"
+          y2="18.4806"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#05D800" />
+          <stop offset="1" stopColor="#037C00" />
+        </linearGradient>
+        <linearGradient
+          id="paint1_linear_2721_29335"
+          x1="9.66729"
+          y1="1"
+          x2="9.66729"
+          y2="18.4806"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#05D800" />
+          <stop offset="1" stopColor="#037C00" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+})
+
+export default Website

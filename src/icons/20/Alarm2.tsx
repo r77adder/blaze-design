@@ -1,0 +1,25 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Alarm2 = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        id="Icon"
+        d="M10 8.38598V11.0009C10 11.1706 10.0674 11.3334 10.1875 11.4534L11.6 12.866M4.88 16.386L2.64 18.626M17.36 18.626L15.12 16.386M4 2.62598L1.5 5.12598M18.5 5.12598L16 2.62598M17.04 11.266C17.04 15.1541 13.8881 18.306 10 18.306C6.11192 18.306 2.96 15.1541 2.96 11.266C2.96 7.37789 6.11192 4.22598 10 4.22598C13.8881 4.22598 17.04 7.37789 17.04 11.266Z"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+})
+
+export default Alarm2

@@ -1,0 +1,100 @@
+@use '../../tokens/typography' as *;
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 51px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+  font-family: 'Sohne', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--light-100);
+  user-select: none;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 auto;
+}
+
+.action {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+}
+
+.dismiss {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+}
+
+.variant-success {
+  background: var(--dark-90);
+  color: var(--light-100);
+}
+
+.variant-generating {
+  background: var(--dark-90);
+  color: var(--light-100);
+}
+
+.variant-error {
+  background: var(--red-90);
+  color: var(--light-100);
+}
+
+.spinner {
+  animation: toast-spin 900ms linear infinite;
+}
+
+@keyframes toast-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

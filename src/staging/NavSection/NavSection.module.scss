@@ -1,0 +1,112 @@
+@use '../../tokens/typography' as *;
+
+// Faithful port of prod's
+//   apps/blaze/src/blaze-components/WorkspaceDashboardSidebar/components/SectionHeader/SectionHeader.module.scss
+//
+// Per CONVENTIONS the redesign-mode block values are baked in as default
+// (no `[data-autopilot-system-redesign='on']` selector — we ARE redesign).
+//
+// Shape difference: prod's `SectionHeader` is JUST the header row; the items
+// are siblings rendered separately by NavMenu. Our `<NavSection>` wraps both
+// (header + children) so the prototype API is composable. The header's chrome
+// matches prod 1:1; the column wrapper around the children is additive.
+
+// IMPORTANT: prod's SectionHeader.root margin (0 10px 4px 20px → 2px in
+// redesign) is applied to JUST THE HEADER ROW. In prod, items are SIBLINGS
+// of the SectionHeader (NavMenu renders them separately). So prod's left=20
+// margin only insets the label, not the items.
+//
+// Our composition wraps label + children in a single NavSection.root, so
+// we must NOT apply the section-header's left-20 to the wrapper — that
+// would push the items 20px in (on top of their own 10px from .size-lg).
+// Instead, the wrapper has only vertical margin (the bottom-2 from
+// redesign), and the label gets its own left margin to match prod's inset.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  color: var(--dark-60);
+  // Only the bottom margin from prod's SectionHeader margin shorthand
+  // (`0 10px 2px 20px`) carries to the wrapper — the rest is the LABEL's
+  // positioning, applied to .label below.
+  margin: 0 0 2px 0;
+}
+
+// `.label` is the clickable header. Prod renders it as a button; the styles
+// also apply to the static-div fallback when not collapsible (same selector,
+// same class — matches prod which also uses `.label` for the button class).
+.label {
+  // Inherits prod's SectionHeader positioning that we extracted from .root:
+  //   margin-left: 20px (prod's `margin-left: 20px` from SectionHeader)
+  //   margin-right: 10px (prod's `margin-right: 10px` from SectionHeader)
+  // Items below the label sit at their own .size-lg `margin: 0 10px`
+  // (10px from sidebar edge) — that asymmetry mirrors prod exactly.
+  margin: 0 10px 0 20px;
+
+  // From prod's `.label` block (line 68-90):
+  //   transition: ...;
+  //   height: 18px;
+  //   display: flex;
+  //   align-items: center;
+  //   column-gap: 2px;
+  //   border-radius: 4px;
+  transition: background-color 120ms ease;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  column-gap: 2px;
+  border-radius: 4px;
+  // Reset native button chrome so it visually matches the static-div fallback.
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: 0;
+  text-align: left;
+  color: inherit;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+
+  // From prod's `.label svg` rules (line 80-83):
+  //   svg { min-width: 12px; transition: transform 200ms ease-out; }
+  // And the redesign override (line 36-39): svg color is var(--dark-40).
+  svg {
+    min-width: 12px;
+    color: var(--dark-40);
+    transition: transform 200ms ease-out;
+  }
+}
+
+// From prod's `.expanded .label svg` (line 85-89):
+//   transform: rotate(90deg)
+// Triggered when the parent `.root` carries `.expanded`.
+.expanded .label svg {
+  transform: rotate(90deg);
+}
+
+// Hover treatment for the button label. Prod's redesign-mode block (line 14-22)
+// sets `.hovered .label { background-color: initial; }` (i.e. clears it).
+// Default-mode (line 42-46): `.hovered .label { background-color: var(--dark-4); }`.
+// Per CONVENTIONS the redesign-mode value (no hover bg) wins. We NOOP.
+.hovered {
+  background-color: initial;
+}
+
+// Label text — typography mirrors prod's redesign-mode override.
+//   @include xs-sohne-book; letter-spacing: 0.12px; color: var(--dark-40);
+// Note prod's xs-sohne-book and our xs-sohne are functionally identical
+// (both 12px Buch / weight 400) per src/tokens/typography.scss header.
+//
+// IMPORTANT: do NOT add `flex: 1` here. Prod's `.labelText` is content-sized
+// so the chevron sits immediately to its right (with the `column-gap: 2px`
+// from `.label`). Earlier I added `flex: 1; min-width: 0` thinking it'd
+// prevent text squeeze on long labels — that was wrong. It pushed the
+// chevron to the far edge of the section, away from the label.
+.labelText {
+  @include xs-sohne-book;
+  letter-spacing: 0.12px;
+  color: var(--dark-40);
+}

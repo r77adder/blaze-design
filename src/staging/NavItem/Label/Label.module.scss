@@ -1,0 +1,37 @@
+@use '../../../tokens/typography' as *;
+
+// Faithful port of prod's
+//   apps/blaze/src/blaze-components/WorkspaceDashboardSidebar/components/NavItem/Label/Label.module.scss
+//
+// Prod's body: `@include line-clamp; @include sm-sohne;` plus a redesign-mode
+// override `line-height: 110%`. We bake the redesign value in as the default
+// (CONVENTIONS strip-list).
+//
+// `sm-sohne` is 14px Buch (weight 400). The earlier lib version used
+// `md-sohne` (16px) on the parent .size-lg class — that broke the cascade and
+// rendered every NavItem label at 16px. Putting the font here, on the Label,
+// matches prod and renders 14px correctly.
+
+.label {
+  // Inlined `@include line-clamp` (1 line, default arg). prod's mixin sets:
+  //   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include sm-sohne;
+
+  // Redesign-mode override (line 13-15 of prod's Label.module.scss):
+  //   line-height: 110%
+  // The base sm-sohne mixin sets 150%; the redesign override tightens it.
+  line-height: 110%;
+}
+
+// Active label gets bold weight. Prod applies this via NavMenuItem's
+// `.isActive` class (NavMenuItem.module.scss line 25-29):
+//   .isActive { [data-autopilot-system-redesign='on'] & { font-weight: 500 } }
+// Label.tsx subscribes to NavItemContext and applies this class when active,
+// so we get the same behavior without the NavMenuItem composition layer.
+.active {
+  font-weight: 500;
+}

@@ -1,0 +1,29 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const FolderSearch2 = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        style={{ height: size, width: size }}
+        fill="none"
+        ref={forwardedRef}
+      >
+        <path
+          d="M18 13.5005V5.50049C18 4.9482 17.5523 4.50049 17 4.50049H10.9948C10.683 4.50049 10.389 4.35504 10.1998 4.10716L9.56563 3.27614C9.37646 3.02826 9.0825 2.88281 8.77068 2.88281H3.00028C2.44785 2.88281 2.00007 3.33013 2.00024 3.88256C2.00049 4.66801 2.00077 5.75279 2.00077 6.63207L2.00069 13.8C2.00068 14.9045 2.89611 15.8 4.00069 15.8M13.3635 14.9818L16.8822 18.5005M14.1817 11.7091C14.1817 13.9684 12.3502 15.8 10.0908 15.8C7.83147 15.8 5.99991 13.9684 5.99991 11.7091C5.99991 9.44973 7.83147 7.61816 10.0908 7.61816C12.3502 7.61816 14.1817 9.44973 14.1817 11.7091Z"
+          stroke={color}
+          strokeOpacity="0.8"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  },
+)
+
+export default FolderSearch2

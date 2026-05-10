@@ -1,0 +1,145 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const EmailNewsletterIcon = forwardRef<SVGSVGElement, IconProps>(
+  ({ size = 20, color = 'currentColor', ...props }, ref) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={ref}
+        {...props}
+      >
+        <path
+          d="M2.3125 9.04297C2.3125 8.49068 2.76022 8.04297 3.3125 8.04297H18.6875C19.2398 8.04297 19.6875 8.49068 19.6875 9.04297V15.9358C19.6875 17.3165 18.5682 18.4358 17.1875 18.4358H4.8125C3.43179 18.4358 2.3125 17.3165 2.3125 15.9358V9.04297Z"
+          fill="#FFBA08"
+        />
+        <path
+          d="M9.21495 3.19934L2.71667 8.02046C2.46241 8.20909 2.3125 8.50698 2.3125 8.82357V13.7425H19.6797V8.80095C19.6797 8.4839 19.5293 8.18564 19.2745 7.99706L12.7868 3.19699C11.7254 2.41169 10.2753 2.41264 9.21495 3.19934Z"
+          fill="#FFBA08"
+        />
+        <path
+          d="M9.5127 3.60059C10.3413 2.98589 11.4555 2.94732 12.3203 3.48438L12.4893 3.59863L18.9775 8.39941C19.1046 8.49369 19.1796 8.64252 19.1797 8.80078V13.2422H2.8125V8.82324C2.81258 8.70449 2.85486 8.59102 2.92969 8.50195L3.01465 8.42188L9.5127 3.60059Z"
+          stroke="#E48900"
+          strokeOpacity="0.29"
+        />
+        <g filter="url(#filter0_d_4314_11771)">
+          <path
+            d="M4.17383 6.45588C4.17383 6.06603 4.48986 5.75 4.87971 5.75H17.1197C17.5096 5.75 17.8256 6.06603 17.8256 6.45588V10.9241C17.8256 14.6939 14.7696 17.75 10.9997 17.75C7.22988 17.75 4.17383 14.6939 4.17383 10.9241V6.45588Z"
+            fill="white"
+            fillOpacity="0.88"
+          />
+        </g>
+        <rect x="6.07422" y="7.71875" width="9.84375" height="9.5625" rx="0.5" fill="url(#paint0_linear_4314_11771)" />
+        <path
+          d="M19.067 17.5043L3.05532 8.60897C2.72206 8.42382 2.3125 8.6648 2.3125 9.04605V15.0222L2.93304 17.5043L17.8259 18.4351L19.067 17.5043Z"
+          fill="url(#paint1_linear_4314_11771)"
+        />
+        <path
+          d="M2.5625 17.8281L18.9424 8.61537C19.2757 8.42791 19.6875 8.66877 19.6875 9.05117V15.6427L17.8259 18.4351H4.79464L2.5625 17.8281Z"
+          fill="url(#paint2_linear_4314_11771)"
+        />
+        <g style={{ mixBlendMode: 'darken' }}>
+          <path
+            d="M19.5938 8.23438L17.9688 7.03125L2.5 17.1094L2.96875 17.6875L19.5938 8.23438Z"
+            fill="url(#paint3_linear_4314_11771)"
+            fillOpacity="0.13"
+          />
+        </g>
+        <g style={{ mixBlendMode: 'darken' }}>
+          <path
+            d="M2.43359 8.24219L4.07812 7.03125L11.5781 12.75L11.0547 13.1094L2.43359 8.24219Z"
+            fill="url(#paint4_linear_4314_11771)"
+            fillOpacity="0.13"
+          />
+        </g>
+        <defs>
+          <filter
+            id="filter0_d_4314_11771"
+            x="0.173828"
+            y="1.75"
+            width="21.6519"
+            height="20"
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset />
+            <feGaussianBlur stdDeviation="2" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_4314_11771" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_4314_11771" result="shape" />
+          </filter>
+          <linearGradient
+            id="paint0_linear_4314_11771"
+            x1="15.918"
+            y1="12.5"
+            x2="6.07422"
+            y2="12.5"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#BF5CFB" />
+            <stop offset="0.495" stopColor="#FF54EE" />
+            <stop offset="1" stopColor="#FFCF54" />
+          </linearGradient>
+          <linearGradient
+            id="paint1_linear_4314_11771"
+            x1="10.5085"
+            y1="8.19629"
+            x2="10.5085"
+            y2="18.4351"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#FBB500" />
+            <stop offset="1" stopColor="#FFBA08" />
+          </linearGradient>
+          <linearGradient
+            id="paint2_linear_4314_11771"
+            x1="11.3103"
+            y1="8.19629"
+            x2="11.3103"
+            y2="18.4351"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#FBB500" />
+            <stop offset="1" stopColor="#FFBA08" />
+          </linearGradient>
+          <linearGradient
+            id="paint3_linear_4314_11771"
+            x1="7.84375"
+            y1="14.0781"
+            x2="8.28125"
+            y2="14.6875"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopOpacity="0" />
+            <stop offset="1" />
+          </linearGradient>
+          <linearGradient
+            id="paint4_linear_4314_11771"
+            x1="7.71875"
+            y1="9.9375"
+            x2="6.78125"
+            y2="11.25"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopOpacity="0" />
+            <stop offset="1" />
+          </linearGradient>
+        </defs>
+      </svg>
+    )
+  },
+)
+
+export default EmailNewsletterIcon

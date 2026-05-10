@@ -1,0 +1,35 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const DotHorizontal = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M5.46877 10.0155C5.46877 10.9453 4.715 11.6991 3.78517 11.6991C2.85534 11.6991 2.10156 10.9453 2.10156 10.0155C2.10156 9.08562 2.85534 8.33185 3.78517 8.33185C4.715 8.33185 5.46877 9.08562 5.46877 10.0155Z"
+          stroke={color}
+          strokeWidth="1.5"
+        />
+        <path
+          d="M11.6837 10.0155C11.6837 10.9453 10.93 11.6991 10.0001 11.6991C9.07029 11.6991 8.31652 10.9453 8.31652 10.0155C8.31652 9.08562 9.07029 8.33185 10.0001 8.33185C10.93 8.33185 11.6837 9.08562 11.6837 10.0155Z"
+          stroke={color}
+          strokeWidth="1.5"
+        />
+        <path
+          d="M17.9687 10.0155C17.9687 10.9453 17.2149 11.6991 16.2851 11.6991C15.3552 11.6991 14.6015 10.9453 14.6015 10.0155C14.6015 9.08562 15.3552 8.33185 16.2851 8.33185C17.2149 8.33185 17.9687 9.08562 17.9687 10.0155Z"
+          stroke={color}
+          strokeWidth="1.5"
+        />
+      </svg>
+    )
+  },
+)
+
+export default DotHorizontal

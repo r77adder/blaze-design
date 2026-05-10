@@ -1,0 +1,84 @@
+// Faithful port of prod's NavItem.module.scss REDESIGN-MODE values:
+//   apps/blaze/src/blaze-components/WorkspaceDashboardSidebar/components/NavItem/NavItem.module.scss
+//
+// Redesign mode IS the source of truth for new Blaze work. The
+// `data-autopilot-system-redesign='on'` attribute is applied to
+// `document.documentElement` by `apps/blaze/src/hooks/useAutopilotProvider.tsx`
+// when the flipper flag (isVirtualMarketer) is true — which is on by default
+// for new Blaze users. Onboarding/signup paths force it on as well.
+// See CONVENTIONS.md §"Which mode does this component render in?"
+//
+// Typography: NO mixin applied here. The `<NavItem.Label>` sub-component
+// (Label/Label.module.scss) carries `@include sm-sohne` (14px Buch) +
+// `line-height: 110%` in redesign mode (overrides sm-sohne's default 150%).
+
+.root {
+  display: flex;
+  align-items: center;
+  color: var(--dark-60);
+  cursor: pointer;
+  outline: 0;
+  overflow: hidden;
+  background: transparent;
+  transition: background-color 120ms ease, color 120ms ease;
+  // Redesign-mode root values (lines 14-21 of prod's NavItem.module.scss):
+  border-radius: 8px;
+  padding: 10px;
+  gap: 8px;
+  height: 35px;
+
+  // `:hover, .highlighted` background = var(--light-40). This rule lives
+  // OUTSIDE prod's redesign block but cascades INTO it (the redesign `:hover`
+  // only adds `color: var(--dark-60)` and doesn't clear background). Verified
+  // via DevTools (selector: `.NavItem_root:hover, .NavItem_root.NavItem_highlighted`).
+  &:hover,
+  &.highlighted {
+    background-color: var(--light-40);
+    color: var(--dark-60);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+
+  // Active (route-selected) — redesign-mode rule from prod (lines 26-35).
+  &.active {
+    background: var(--dark-3);
+    box-shadow: none;
+    color: var(--dark-80);
+
+    svg {
+      filter: none;
+      color: var(--dark-80);
+    }
+  }
+}
+
+// Size classes — prod has minimal redesign-mode overrides on these because
+// the redesign root already sets height/padding/gap. We mirror prod 1:1.
+
+.size-lg {
+  // Prod redesign override on `.lg` (lines 60-62) re-states padding: 10px
+  // (same as root) and keeps the default-mode `margin: 0 10px`.
+  margin: 0 10px;
+}
+
+.size-md {
+  // Prod `.md` (lines 65-69) has no redesign override; default values apply.
+  // The root's redesign `height: 35px` supersedes the default `height: 36px`
+  // due to specificity ordering.
+  padding: 8px 10px;
+  margin: 0 10px;
+}
+
+.size-sm {
+  // Prod `.sm` (lines 71-80) has no redesign override; default values apply.
+  padding: 5px 6px;
+  margin: 0 8px;
+  height: 30px;
+  color: var(--dark-60);
+
+  svg {
+    color: var(--dark-60);
+  }
+}

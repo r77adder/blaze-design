@@ -1,0 +1,18 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const ClockPlus = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 24 }, forwardedRef) => {
+  return (
+    <svg width={size} height={size} viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M15.125 14.25L11.75 13.125V8.42087M20.75 12C20.75 7.02944 16.7206 3 11.75 3C6.77944 3 2.75 7.02944 2.75 12C2.75 16.9706 6.77944 21 11.75 21C12.3268 21 12.8909 20.9457 13.4375 20.8421M19.0625 15.375V18.1875M19.0625 18.1875V21M19.0625 18.1875H21.875M19.0625 18.1875H16.25"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+})
+
+export default ClockPlus

@@ -1,0 +1,52 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const WixBrand = forwardRef<SVGSVGElement, IconProps>(({ size = 35, color, ...rest }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="-3.5 0.5 35 35"
+      fill="none"
+      ref={forwardedRef}
+      xmlns="http://www.w3.org/2000/svg"
+      {...rest}
+    >
+      <rect x="-3.5" y="0.5" width="35" height="35" fill="black" />
+      <g clipPath="url(#clip0_wix_brand)">
+        <mask
+          id="mask0_wix_brand"
+          style={{ maskType: 'luminance' }}
+          maskUnits="userSpaceOnUse"
+          x="-3"
+          y="11"
+          width="34"
+          height="13"
+        >
+          <path d="M30.3594 11H-3V24H30.3594V11Z" fill="white" />
+        </mask>
+        <g mask="url(#mask0_wix_brand)">
+          <path
+            d="M30.3594 11H28.5469C28.0425 11 27.5719 11.2352 27.2813 11.6287L24.7813 15.0062C24.7188 15.0957 24.5813 15.0957 24.5188 15.0062L22.0188 11.6287C21.7281 11.2352 21.2575 11 20.7531 11H18.9406L23.3438 17.0168L18.9625 23H20.775C21.2794 23 21.75 22.7648 22.0406 22.3713L24.5188 19.0273C24.5813 18.9379 24.7188 18.9379 24.7813 19.0273L27.2594 22.3713C27.55 22.7648 28.0206 23 28.525 23H30.3375L25.9563 17.0168L30.3594 11Z"
+            fill="white"
+          />
+          <path
+            d="M16.3438 12.2275V23H17.2188C17.9531 23 18.5469 22.4504 18.5469 21.7725V11H17.6719C16.9375 11 16.3438 11.5496 16.3438 12.2275Z"
+            fill="white"
+          />
+          <path
+            d="M14.7656 11H14.0063C13.0781 11 12.2813 11.5547 12.0875 12.3363L10.2438 19.9963L8.72813 13.4125C8.45156 12.0769 6.93594 11.1438 5.47656 11.5102C4.48125 11.7629 3.71719 12.5283 3.52344 13.4668L2.01563 19.9883L0.472656 12.3379C0.278906 11.5551 -0.517969 11 -1.44531 11H-2.20312L0.890625 23H2.03906C3.08906 23 3.97969 22.3434 4.19531 21.4258L6.08594 12.9875C6.10938 12.8859 6.20156 12.8145 6.31719 12.8145C6.43281 12.8145 6.525 12.8859 6.54844 12.9875L8.44063 21.4262C8.65625 22.3438 9.54688 23 10.597 23H11.7469L14.7656 11Z"
+            fill="white"
+          />
+        </g>
+      </g>
+      <defs>
+        <clipPath id="clip0_wix_brand">
+          <rect width="34" height="13" fill="white" transform="translate(-3 11)" />
+        </clipPath>
+      </defs>
+    </svg>
+  )
+})
+
+export default WixBrand

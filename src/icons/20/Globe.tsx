@@ -1,0 +1,24 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Globe = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5M10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5M10 17.5C8.18782 17.5 6.71875 14.1421 6.71875 10C6.71875 5.85786 8.18782 2.5 10 2.5M10 17.5C11.8122 17.5 13.2812 14.1421 13.2812 10C13.2812 5.85786 11.8122 2.5 10 2.5M3.90625 13.6453C5.28027 12.8585 7.56311 12.3437 10.147 12.3437C12.8437 12.3437 15.2125 12.9045 16.5625 13.75M3.90625 6.35465C5.28027 7.14146 7.56311 7.65625 10.147 7.65625C12.8437 7.65625 15.2125 7.0955 16.5625 6.25"
+        stroke={color}
+        strokeOpacity="0.8"
+        strokeWidth="1.5"
+      />
+    </svg>
+  )
+})
+
+export default Globe

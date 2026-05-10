@@ -1,0 +1,27 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const SingleSelect = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M6.875 5.9375H13.125C15.3687 5.9375 17.1875 7.75634 17.1875 10C17.1875 12.2437 15.3687 14.0625 13.125 14.0625H6.875C4.63134 14.0625 2.8125 12.2437 2.8125 10C2.8125 7.75634 4.63134 5.9375 6.875 5.9375ZM1.3125 10C1.3125 6.92792 3.80292 4.4375 6.875 4.4375H13.125C16.1971 4.4375 18.6875 6.92792 18.6875 10C18.6875 13.0721 16.1971 15.5625 13.125 15.5625H6.875C3.80292 15.5625 1.3125 13.0721 1.3125 10ZM10.9961 8.75201C10.6855 8.478 10.2116 8.50768 9.93755 8.81831C9.66354 9.12894 9.69323 9.60289 10.0039 9.8769L12.1245 11.7475C12.408 11.9976 12.8333 11.9976 13.1167 11.7475L15.2374 9.8769C15.548 9.60289 15.5777 9.12894 15.3037 8.81831C15.0296 8.50768 14.5557 8.478 14.2451 8.75201L12.6206 10.185L10.9961 8.75201Z"
+          fill={color}
+        />
+      </svg>
+    )
+  },
+)
+
+export default SingleSelect

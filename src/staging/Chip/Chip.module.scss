@@ -1,0 +1,113 @@
+@use '../../tokens/typography' as *;
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border: 1px solid var(--dark-8);
+  background: var(--light-100);
+  color: var(--dark-90);
+  font-family: 'Sohne', sans-serif;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+
+  &:hover:not(.selected) {
+    border-color: var(--dark-15);
+  }
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+}
+
+.delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  border-radius: 50%;
+  color: var(--dark-60);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+
+  &:hover {
+    background: var(--dark-8);
+    color: var(--dark-90);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+}
+
+/* Sizes — chip is interactive so it needs a tappable target. xs is
+   intentionally not exposed (use Pill for static labels at that size). */
+.size-sm {
+  @include sm-sohne-medium;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+}
+
+.size-md {
+  @include sm-sohne-medium;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+}
+
+.size-lg {
+  @include md-sohne-medium;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+}
+
+.size-xl {
+  @include md-sohne-medium;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 20px;
+}
+
+/* Variants — picked from prod's redesign-mode treatment. The selected
+   modifier (.selected) below applies on top of the variant. */
+.variant-default {
+  background: var(--light-100);
+  border-color: var(--dark-8);
+  color: var(--dark-90);
+}
+
+.variant-add {
+  background: var(--light-100);
+  border-style: dashed;
+  border-color: var(--dark-15);
+  color: var(--dark-80);
+}
+
+.selected {
+  background: var(--dark-2);
+  border-color: var(--dark-90);
+  color: var(--dark-90);
+}

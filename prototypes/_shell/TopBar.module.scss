@@ -1,0 +1,84 @@
+.topbar {
+  height: 60px;
+  flex-shrink: 0;
+  // `--dark-4` matches prod's TopBar.module.scss border-bottom
+  // (apps/blaze/src/blaze-components/TopBar/TopBar.module.scss) AND the
+  // sidebar header's border-bottom — so the two 1px lines line up across the
+  // chrome as a single continuous divider.
+  border-bottom: 1px solid var(--dark-4);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  background: var(--light-100);
+  box-sizing: border-box;
+}
+
+.title {
+  font-family: 'Sohne', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--dark-90);
+}
+
+.left,
+.center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.center {
+  flex: 1;
+  justify-content: center;
+}
+
+.right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+// Credits pill — verified via Chrome DevTools MCP against prod. Prod's
+// renders as inline text with sparkle glyph + "N Credits", no pill bg.
+.creditsPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dark-90);
+  font-family: 'Sohne', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.creditsIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--dark-90);
+}
+
+// Upgrade button styling lives in our Button component now (variant="secondary"
+// size="md"). Color override is applied inline via style prop in TopBar.tsx.
+// Earlier this file had a gradient/pill custom .upgradeBtn class — that was
+// based on the legacy `VirtualMarketerUpgradeButton.module.scss`, which is NOT
+// what prod actually renders. Verified via Chrome DevTools MCP: prod uses the
+// regular blaze-ui Button (Button_root + Button_md + Button_secondary), white
+// bg, dark-8 border, var(--upgrade) text, LockOpen3 @ 16px. So we just use our
+// equivalent <Button> directly.
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: var(--light-100);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Sohne', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+}

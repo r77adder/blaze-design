@@ -1,0 +1,358 @@
+/**
+ * Blaze Design System — Color Tokens
+ *
+ * Pure CSS custom properties. No SCSS syntax — designer prototypes
+ * import this raw. All tokens scoped to :root.
+ *
+ * Faithful port of prod's color system. Source files:
+ *   - apps/blaze/src/styles/blaze/colors.scss   (Blaze palette: dark/light scales,
+ *                                                 named hues, brand, selected/avatar)
+ *   - apps/blaze/src/styles/colors.scss         (cross-cutting semantic tokens:
+ *                                                 neutral/action/focus/positive/
+ *                                                 negative/strong, sidebar, nav-item)
+ *   - apps/blaze/src/styles/variables.scss      (named-hue scales: gray, blue, gold,
+ *                                                 green, grass, navy, orange, pink,
+ *                                                 red, violet, yellow)
+ *
+ * Prod ships theme overrides (`[data-theme='dark']`, `[data-color-scheme='blue']`,
+ * `[data-autopilot-system-redesign='on']`). Per CONVENTIONS.md, the design system
+ * bakes the redesign-mode light defaults in — so the overrides are folded into
+ * `:root` rather than scoped to selectors.
+ *
+ * In addition to the prod port, this file keeps the design-system-only tokens
+ * that have no direct prod equivalent (status pill colors, source pill colors).
+ */
+
+:root {
+  /* ============================================================
+   * Dark scale — rgba(0, 0, 0, alpha).
+   * Default surface tint -> primary text.
+   * Source: apps/blaze/src/styles/blaze/colors.scss (light theme).
+   * ============================================================ */
+  --dark-100: rgb(0, 0, 0);
+  --dark-90: rgba(0, 0, 0, 0.9);
+  --dark-80: rgba(0, 0, 0, 0.8);
+  --dark-60: rgba(0, 0, 0, 0.6);
+  --dark-40: rgba(0, 0, 0, 0.4);
+  --dark-30: rgba(0, 0, 0, 0.3); /* redesign-mode value (was 0.4 default) */
+  --dark-25: rgba(0, 0, 0, 0.25);
+  --dark-20: rgba(0, 0, 0, 0.2);
+  --dark-16: rgba(0, 0, 0, 0.16);
+  --dark-15: rgba(0, 0, 0, 0.15);
+  --dark-12: rgba(0, 0, 0, 0.12);
+  --dark-10: rgba(0, 0, 0, 0.1);
+  --dark-8: rgba(0, 0, 0, 0.08);
+  --dark-7: rgba(0, 0, 0, 0.07);
+  --dark-6: rgba(0, 0, 0, 0.06);
+  --dark-5: rgba(0, 0, 0, 0.04);
+  --dark-4: rgba(0, 0, 0, 0.05);
+  --dark-3: rgba(0, 0, 0, 0.03);
+  --dark-2: rgba(0, 0, 0, 0.02);
+
+  /* ============================================================
+   * Light scale — rgba(255, 255, 255, alpha).
+   * ============================================================ */
+  --light-100: rgba(255, 255, 255, 1);
+  --light-90: rgba(255, 255, 255, 0.9); /* redesign-mode value (was 0.8 default) */
+  --light-80: rgba(255, 255, 255, 0.9);
+  --light-60: rgba(255, 255, 255, 0.6);
+  --light-40: rgba(255, 255, 255, 0.4);
+  --light-30: rgba(255, 255, 255, 0.3);
+  --light-20: rgba(255, 255, 255, 0.2);
+  --light-16: rgba(255, 255, 255, 0.16);
+  --light-12: rgba(255, 255, 255, 0.12);
+  --light-10: rgba(255, 255, 255, 0.1);
+  --light-9: rgba(255, 255, 255, 0.09);
+  --light-8: rgba(255, 255, 255, 0.08);
+  --light-7: rgba(255, 255, 255, 0.07);
+  --light-6: rgba(255, 255, 255, 0.06);
+  --light-5: rgba(255, 255, 255, 0.05);
+  --light-4: rgba(255, 255, 255, 0.04);
+
+  /* ============================================================
+   * Named hue scales (from blaze/colors.scss).
+   * Redesign-mode values where they differ from defaults.
+   * ============================================================ */
+
+  /* Green */
+  --green: #20a14f; /* redesign-mode addition */
+  --green-10: rgba(32, 161, 79, 0.1); /* redesign-mode value */
+  --green-20: rgba(4, 175, 0, 0.2);
+  --green-50: #04af00;
+  --green-70: #007729;
+  --green-80: #038400;
+  --green-90: #025206;
+
+  /* Purple */
+  --purple-50: #4f62f8;
+  --purple-70: #2e3a9c;
+
+  /* Red */
+  --red-10: rgba(253, 66, 66, 0.1); /* redesign-mode addition */
+  --red-50: #cc1717; /* redesign-mode value (was #ec1e28) */
+  --red-70: rgba(188, 1, 11, 1);
+  --red-80: #9d0000;
+  --red-90: rgba(174, 34, 34, 1);
+
+  /* Teal */
+  --teal-50: #2ab5f0;
+  --teal-70: #0082ab;
+  --teal-80: #0fa6af;
+
+  /* Blue */
+  --blue-50: #2fa8ff;
+  --blue-70: #0179cf;
+  --blue-80: #008ebb;
+
+  /* Sky blue */
+  --sky-blue-50: #0085d0;
+  --sky-blue-80: #008ebb;
+
+  /* Magenta */
+  --magenta-50: #b64bf8;
+  --magenta-70: #7f24b7;
+  --magenta-80: #7e0079;
+
+  /* Orange */
+  --orange-50: #ff842b;
+  --orange-70: #bc550a;
+  --orange-80: #c95400;
+
+  /* Yellow */
+  --yellow-10: #ffae001a;
+  --yellow-20: #ffbc0533;
+  --yellow-40: #f3d73b26;
+  --yellow-50: #f3d73b;
+  --yellow-70: #d38e0f; /* redesign-mode value (was #dac200) */
+  --yellow-80: #8d5d01;
+  --yellow-90: #b46b00;
+
+  /* ============================================================
+   * Cosmetic / brand tokens (from blaze/colors.scss).
+   * ============================================================ */
+  --blaze-baby-blue: #bee9fc;
+  --backdrop: rgba(65, 60, 54, 0.3);
+  --pro: #8801ff;
+  --gray: #7383a2;
+  --background-light: #fafafa;
+
+  /* Brand source identifiers */
+  --brand-instagram: #6c009f;
+  --brand-facebook: #1576bb;
+  --brand-linkedin: #005182;
+  --brand-youtube: #740000;
+  --brand-x: #313c4d;
+  --brand-tiktok: #d21041;
+
+  /* Plan / upgrade */
+  --upgrade: #6a00ff;
+  --upgrade-10: rgba(106, 0, 255, 0.1);
+  --starter: rgba(239, 104, 0, 1);
+  --starter-10: rgba(239, 104, 0, 0.1);
+  --out-of-credits: var(--red-70);
+  --growth: #0083e2;
+  --growth-10: rgba(0, 131, 226, 0.1);
+
+  /* ============================================================
+   * Theme: light (default color scheme).
+   * Source: apps/blaze/src/styles/blaze/colors.scss [data-color-scheme='light'].
+   * ============================================================ */
+  /* Desktop + light color-scheme override from prod
+     (apps/blaze/src/styles/blaze/colors.scss:272). The base value is #ffffff
+     but the @media (min-width: tabletPortraitMinWidth) [data-color-scheme='light']
+     block overrides to #f3f5f6 — that's prod's actual desktop value. We target
+     desktop + light, so we bake the override in per CONVENTIONS. */
+  --default-bg: #f3f5f6;
+  --selected-fill: rgba(0, 0, 0, 0.9); /* redesign-mode value (was #0099f7) */
+  --selected-stroke: rgba(0, 0, 0, 0.9); /* redesign-mode value (was #0099f7) */
+  --selected-fill-10: rgba(0, 0, 0, 0.05); /* redesign-mode value */
+  --selected-fill-15: rgba(0, 0, 0, 0.075); /* redesign-mode value */
+  --avatar: rgba(0, 0, 0, 0.9); /* redesign-mode value (was #0099f7) */
+  --editor-top: rgba(255, 255, 255, 0.4);
+  --overlay-color: 238, 241, 241;
+  --editor-bg: #f3f5f6;
+
+  /* Overlays derived from --overlay-color. */
+  --overlay: rgba(var(--overlay-color), 0.6);
+  --overlay-wizards: rgba(var(--overlay-color), 0.9);
+
+  /* ============================================================
+   * Cross-cutting semantic tokens (from styles/colors.scss).
+   * Neutral / action / focus / positive / negative / strong scales.
+   * ============================================================ */
+
+  /* Neutral scale — chrome surfaces, body text. */
+  --white: #fff;
+  --neutral-0: hsl(0, 0%, 100%);
+  --neutral-0-rgb: 255, 255, 255;
+  --neutral-1: #fdfdfd;
+  --neutral-3: rgba(45, 66, 91, 0.03);
+  --neutral-5: rgba(45, 66, 91, 0.05);
+  --neutral-5-alt: #f1f1f1;
+  --neutral-10: rgba(45, 66, 91, 0.1);
+  --neutral-30: #8f98a9;
+  --neutral-40: #6d778b;
+  --neutral-50: #4c566a;
+  --neutral-90: #2b2f38;
+
+  /* Action scale — primary action / link colors. */
+  --action-1: #fbfbff;
+  --action-5: rgba(102, 78, 255, 0.05);
+  --action-10: rgba(102, 78, 255, 0.1);
+  --action-40: #b2a6ff;
+  --action-50: #664eff;
+  --action-60: #523ae2;
+  --action-90: #200d92;
+
+  /* Focus scale — focus ring / focused-input glare. */
+  --focus-glare: #def4ff;
+  --focus-5: #f0faff;
+  --focus-5-transparent: #58c7ff17;
+  --focus-10: #e2f4ff;
+  --focus-20: #c7eaff;
+  --focus-50: #0088d3;
+
+  /* Positive (success) scale. */
+  --positive-10: #def6e6;
+  --positive-50: #13a745;
+  --positive-60: #00690b;
+  --positive-80: #004b08;
+
+  /* Negative (error) scale. */
+  --negative-5: #fff8f7;
+  --negative-10: #ec1e281a;
+  --negative-20: #ffd2cf;
+  --negative-50: #dd4740;
+  --negative-60: #ae2019;
+  --negative-80: #750904;
+
+  /* Strong (warning highlight). */
+  --strong-50: #f5b000;
+
+  /* Misc text / selection. */
+  --text-selection-highlight: rgb(149 218 255 / 30%);
+
+  /* ============================================================
+   * Chrome surface tokens (from styles/colors.scss).
+   * These alias into the neutral / focus scales.
+   * ============================================================ */
+  --sidebar-background-color: var(--neutral-1);
+  --modal-underlay-color: rgba(253, 253, 253, 0.4);
+
+  /* NavItem — default state. */
+  --nav-item-icon-color: var(--neutral-50);
+  --nav-item-color: var(--neutral-90);
+  --nav-item-background-color: var(--neutral-0);
+  --nav-item-control-color: var(--neutral-50);
+  --nav-item-section-header-color: var(--neutral-40);
+  --nav-item-control-icon-color: var(--neutral-30);
+
+  /* NavItem — hover state. */
+  --nav-item-icon-color-hover: var(--neutral-50);
+  --nav-item-color-hover: var(--neutral-90);
+  --nav-item-background-color-hover: var(--neutral-5);
+  --nav-item-control-color-hover: var(--neutral-50);
+
+  /* NavItem — active (route-selected) state. */
+  --nav-item-icon-color-active: var(--focus-50);
+  --nav-item-color-active: var(--focus-50);
+  --nav-item-background-color-active: var(--focus-5);
+  --nav-item-control-color-active: var(--focus-50);
+
+  --toast-neutral-background-color: #f4f6f7;
+
+  /* ============================================================
+   * Blaze palette (from styles/colors.scss).
+   * Decorative hues used by Blaze surfaces and illustrations.
+   * ============================================================ */
+  --blaze-neutral-1: #fdfcfa;
+  --blaze-neutral-3: #f8f6f1;
+
+  --blaze-joker-green: #99e538;
+
+  --blaze-light-blue: #6fe0f9;
+  --blaze-blue: #8fa8ff;
+  --blaze-pale-blue: #c1def8;
+  --blaze-green: #6ff98d;
+  --blaze-light-green: #73f5c6;
+  --blaze-pale-green: #c2df9c;
+  --blaze-orange: #ff8139;
+  --blaze-light-orange: #ffa843;
+  --blaze-pale-orange: #fae7a3;
+  --blaze-pink: #ffa0f0;
+  --blaze-bright-pink: #ff9be9;
+  --blaze-pale-pink: #f2bfe7;
+  --blaze-purple: #ac8fff;
+  --blaze-light-purple: #e5bbff;
+  --blaze-yellow: #ffc700;
+  --blaze-light-yellow: #ffec8b;
+  --blaze-pale-light-yellow: #fff4cc;
+  --blaze-bright-yellow: #ffdb59;
+  --blaze-pale-yellow: #f7e8ab;
+  --blaze-beige: #f4f2eb;
+  --blaze-dark-green: #4da64b;
+  --blaze-bright-green: #04af00;
+  --blaze-dark-yellow: #f8b200;
+  --blaze-dark-blue: #0c84bb;
+  --blaze-orange-20: #fd8d0b;
+  --blaze-orange-40: #fb6434;
+  --blaze-purple-40: #eb72ff;
+  --blaze-purple-50: #a28bff;
+  --blaze-green-40: #77f6ef;
+  --blaze-design-green: #5ffa00;
+  --blaze-document-blue: #00aef9;
+
+  --freemium-blaze-pro: linear-gradient(180deg, #9500ff 0%, #6a00ff 100%);
+
+  /* ============================================================
+   * Brand (figma-make-guidelines).
+   * Yellow/gold "Blaze" brand fill.
+   * ============================================================ */
+  --brand: #fcb728;
+
+  /* Accent (figma-make-guidelines). */
+  --purple: #7c5cfc;
+
+  /* ============================================================
+   * Status pill colors (design-system only — not in prod's tokens).
+   * See figma-make-guidelines.md §Status Pill. Used by <StatusPill>.
+   * Values picked to align with prod colors.scss where available;
+   * pinks/purples drawn from the guideline palette.
+   * ============================================================ */
+  --status-draft: #757c8a; /* Grey   — gray-50 from prod */
+  --status-connect: #ed7c2c; /* Orange — orange-50 from prod */
+  --status-review: #edb62c; /* Yellow — gold-50 from prod */
+  --status-approved: #04af00; /* Green  — green-50 from prod */
+  --status-posting: #0179cf; /* Blue   — blue-70 from prod */
+  --status-posted: #7f24b7; /* Purple — magenta-70 from prod */
+  --status-failed: #bc010b; /* Red    — matches --red-70 */
+  --status-new: #e65cac; /* Pink   — pink-50 from prod */
+
+  /* ============================================================
+   * Source colors (design-system only — not in prod's tokens).
+   * bg/fg pairs per Blaze surface. Used by <SourcePill>.
+   * Values picked from Ivan's index.html `.src.<source>` rules,
+   * mirrored from the SOURCE_COLORS map in
+   * prototypes/h2-index/feed-data.ts.
+   * ============================================================ */
+  --source-campaigns-bg: #f1f2f5;
+  --source-campaigns-fg: #1f2937;
+  --source-seoaeo-bg: #dbeafe;
+  --source-seoaeo-fg: #1e40af;
+  --source-organicsocial-bg: #d1fae5;
+  --source-organicsocial-fg: #065f46;
+  --source-ugc-bg: #ede9fe;
+  --source-ugc-fg: #5b21b6;
+  --source-mapranking-bg: #fef3c7;
+  --source-mapranking-fg: #92400e;
+  --source-landingpages-bg: #e0e7ff;
+  --source-landingpages-fg: #3730a3;
+  --source-paidsearch-bg: #ffedd5;
+  --source-paidsearch-fg: #9a3412;
+  --source-paidsocial-bg: #fce7f3;
+  --source-paidsocial-fg: #9d174d;
+  --source-reputation-bg: #fee2e2;
+  --source-reputation-fg: #991b1b;
+  --source-emailsms-bg: #dbf4ff;
+  --source-emailsms-fg: #075985;
+}

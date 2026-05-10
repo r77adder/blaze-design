@@ -1,0 +1,28 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Popular = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      ref={forwardedRef}
+    >
+      <path
+        d="M9.53601 1.15542C9.70397 0.73719 10.296 0.73719 10.464 1.15542L12.6148 6.5113C12.6863 6.6894 12.8534 6.81084 13.0449 6.82383L18.8033 7.21428C19.2529 7.24477 19.4359 7.80786 19.09 8.09683L14.6609 11.7974C14.5136 11.9204 14.4498 12.1169 14.4966 12.3031L15.9047 17.9003C16.0147 18.3373 15.5357 18.6853 15.154 18.4457L10.2659 15.3769C10.1033 15.2749 9.89669 15.2749 9.73415 15.3769L4.84603 18.4457C4.46432 18.6853 3.98533 18.3373 4.09529 17.9003L5.50338 12.3031C5.55021 12.117 5.48636 11.9204 5.33907 11.7974L0.90996 8.09683C0.564095 7.80786 0.747055 7.24477 1.19672 7.21428L6.95508 6.82383C7.14657 6.81084 7.31372 6.6894 7.38524 6.5113L9.53601 1.15542Z"
+        fill="url(#paint0_linear_3561_254)"
+      />
+      <defs>
+        <linearGradient id="paint0_linear_3561_254" x1="10" y1="0" x2="10" y2="21.125" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFD905" />
+          <stop offset="1" stopColor="#FF851A" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+})
+
+export default Popular

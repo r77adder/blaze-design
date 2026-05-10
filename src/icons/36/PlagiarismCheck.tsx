@@ -1,0 +1,99 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const PlagiarismCheck = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 36 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 36 36"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <g filter="url(#filter0_d_2591_11001)">
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M16.3619 11.7542C16.3156 12.0756 16.2735 12.3681 16.2202 12.6408C16.2982 12.4411 16.3783 12.2334 16.4609 12.0193C17.4844 9.36554 18.8841 5.73634 21.3837 4.23733C22.4306 3.83159 23.5541 3.617 24.7011 3.617H29.8427C23.0154 7.03064 16.582 17.447 11.5982 25.5166C11.2204 26.1282 10.8509 26.7264 10.4902 27.307L9.16502 24.1628C7.77764 20.8711 8.4255 17.0735 10.8258 14.4279L12.119 13.0025C11.8303 15.4841 11.6825 18.1834 11.8967 19.6571C12.2538 16.8513 12.9346 12.6575 14.5269 10.3486L17.6747 6.87912C16.7392 9.13398 16.5247 10.6236 16.3619 11.7542Z"
+            fill="url(#paint0_linear_2591_11001)"
+          />
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M16.0867 26.5947L12.3987 27.0286C15.3366 18.9493 22.4978 7.28949 29.8425 3.6171L30.4545 8.57767C30.4907 8.87135 30.5054 9.16564 30.4991 9.45834C30.219 12.2708 26.2714 13.7718 23.3955 14.8654C22.9338 15.0409 22.4998 15.2059 22.113 15.3642C22.4928 15.3194 22.954 15.2831 23.4697 15.2426C24.8148 15.1369 26.531 15.002 28.1443 14.6093C28.098 14.6888 28.0512 14.7673 28.0039 14.8447L27.1707 16.048C24.939 18.898 21.985 20.0755 19.57 21.0382L19.5698 21.0382C19.3023 21.1449 19.0413 21.2489 18.7887 21.3523C20.175 21.1886 22.5189 20.4391 24.7197 19.5873L22.5619 22.7034C21.0618 24.8696 18.7034 26.2869 16.0867 26.5947ZM28.1603 14.6054L28.1651 14.6119L28.1715 14.6027C28.1678 14.6036 28.1641 14.6045 28.1603 14.6054Z"
+            fill="url(#paint1_linear_2591_11001)"
+          />
+          <path
+            d="M9.71987 33.5307H6.96558C14.765 19.6009 22.6939 6.81095 29.8425 3.6171C26.7601 4.99424 16.2087 16.0868 9.71987 33.5307Z"
+            fill="url(#paint2_linear_2591_11001)"
+          />
+        </g>
+        <defs>
+          <filter
+            id="filter0_d_2591_11001"
+            x="0.602001"
+            y="0.922089"
+            width="36.4264"
+            height="42.4899"
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset dy="3.59322" />
+            <feGaussianBlur stdDeviation="3.14407" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.14 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2591_11001" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2591_11001" result="shape" />
+          </filter>
+          <linearGradient
+            id="paint0_linear_2591_11001"
+            x1="18.2247"
+            y1="14.1815"
+            x2="14.6462"
+            y2="11.7346"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#1B84FF" />
+            <stop offset="1" stopColor="#1E85FF" stopOpacity="0.42" />
+          </linearGradient>
+          <linearGradient
+            id="paint1_linear_2591_11001"
+            x1="30.5006"
+            y1="11.6134"
+            x2="12.0615"
+            y2="24.5453"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop offset="0.00879028" stopColor="#006EEE" stopOpacity="0.55" />
+            <stop offset="0.518605" stopColor="#1B84FF" />
+            <stop offset="0.776512" stopColor="#F167CB" />
+            <stop offset="1" stopColor="#F0B570" />
+          </linearGradient>
+          <linearGradient
+            id="paint2_linear_2591_11001"
+            x1="13.1902"
+            y1="20.0315"
+            x2="18.1402"
+            y2="23.1815"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#1C85FF" />
+            <stop offset="1" stopColor="#002F5F" />
+          </linearGradient>
+        </defs>
+      </svg>
+    )
+  },
+)
+
+export default PlagiarismCheck

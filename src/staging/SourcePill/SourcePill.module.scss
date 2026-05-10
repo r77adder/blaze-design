@@ -1,0 +1,73 @@
+@use '../../tokens/typography' as *;
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-family: 'Sohne', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.source-campaigns {
+  background: var(--source-campaigns-bg);
+  color: var(--source-campaigns-fg);
+}
+
+.source-seoaeo {
+  background: var(--source-seoaeo-bg);
+  color: var(--source-seoaeo-fg);
+}
+
+.source-organicsocial {
+  background: var(--source-organicsocial-bg);
+  color: var(--source-organicsocial-fg);
+}
+
+.source-ugc {
+  background: var(--source-ugc-bg);
+  color: var(--source-ugc-fg);
+}
+
+.source-mapranking {
+  background: var(--source-mapranking-bg);
+  color: var(--source-mapranking-fg);
+}
+
+.source-landingpages {
+  background: var(--source-landingpages-bg);
+  color: var(--source-landingpages-fg);
+}
+
+.source-paidsearch {
+  background: var(--source-paidsearch-bg);
+  color: var(--source-paidsearch-fg);
+}
+
+.source-paidsocial {
+  background: var(--source-paidsocial-bg);
+  color: var(--source-paidsocial-fg);
+}
+
+.source-reputation {
+  background: var(--source-reputation-bg);
+  color: var(--source-reputation-fg);
+}
+
+.source-emailsms {
+  background: var(--source-emailsms-bg);
+  color: var(--source-emailsms-fg);
+}

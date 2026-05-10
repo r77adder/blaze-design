@@ -1,0 +1,73 @@
+@use '../../tokens/typography' as *;
+
+// Variant classes mirror `../Text/Text.module.scss` — that file is the canonical
+// source for the variant taxonomy. Redefined here because CSS modules generate
+// component-scoped class names; the values must stay in sync. If you change a
+// variant, update both files. (Considered `@use` aliasing but module scoping
+// makes class-name reuse fragile — explicit duplication is the safer trade.)
+
+.root {
+  margin: 0;
+}
+
+.primary {
+  @include md-sohne;
+  color: var(--dark-90);
+}
+
+.secondary {
+  @include sm-sohne;
+  color: var(--dark-90);
+}
+
+.placeholder {
+  @include sm-sohne;
+  line-height: 20px;
+  color: var(--dark-90);
+}
+
+.label {
+  font-family: 'Sohne';
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 130%;
+  letter-spacing: 0.24px;
+  color: var(--dark-90);
+}
+
+.largeList {
+  @include md-sohne-medium;
+  line-height: 140%;
+  letter-spacing: 0.16px;
+  color: var(--dark-90);
+}
+
+.smallList {
+  @include sm-sohne-medium;
+  line-height: 135%;
+  letter-spacing: 0.14px;
+  color: var(--dark-90);
+}
+
+.metadata {
+  @include xs-sohne-book;
+  letter-spacing: 0.12px;
+  color: var(--dark-90);
+}
+
+.lineClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines-to-clamp);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lineClampForceSingleLine {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

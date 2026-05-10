@@ -1,0 +1,31 @@
+import { render, screen } from '@testing-library/react';
+import { {{pascalCase name}} } from './{{pascalCase name}}';
+
+describe('{{pascalCase name}}', () => {
+  it('renders children', () => {
+    render(<{{pascalCase name}}>hi</{{pascalCase name}}>);
+    expect(screen.getByText('hi')).toBeInTheDocument();
+  });
+
+  it('forwards arbitrary HTML attributes via ...rest', () => {
+    render(
+      <{{pascalCase name}} data-testid="t" aria-label="a">
+        hi
+      </{{pascalCase name}}>,
+    );
+    const el = screen.getByTestId('t');
+    expect(el).toHaveAttribute('aria-label', 'a');
+  });
+
+  it('merges consumer className with base classes', () => {
+    const { container } = render(<{{pascalCase name}} className="custom">hi</{{pascalCase name}}>);
+    expect(container.firstChild).toHaveClass('root');
+    expect(container.firstChild).toHaveClass('custom');
+  });
+
+  it('forwards ref', () => {
+    const ref = { current: null as HTMLDivElement | null };
+    render(<{{pascalCase name}} ref={ref}>hi</{{pascalCase name}}>);
+    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+  });
+});

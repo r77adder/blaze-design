@@ -1,0 +1,27 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const PenEdit = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 16 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M8.35772 12.8287L8.85257 12.2741C9.45974 11.5936 10.5491 11.6821 11.0385 12.4516C11.4945 13.1685 12.485 13.3044 13.1171 12.7368L14.0141 11.9314M1.98596 12.9801L4.89662 12.3936C5.05114 12.3625 5.19301 12.2864 5.30444 12.1749L11.8202 5.65553C12.1326 5.34296 12.1324 4.8363 11.8197 4.524L10.4395 3.14528C10.1269 2.8331 9.62054 2.83331 9.30827 3.14576L2.7918 9.66579C2.68059 9.77706 2.60466 9.91865 2.5735 10.0728L1.98596 12.9801Z"
+        stroke={color}
+        strokeOpacity="0.8"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+})
+
+export default PenEdit

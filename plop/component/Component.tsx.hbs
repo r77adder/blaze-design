@@ -1,0 +1,15 @@
+import { forwardRef } from 'react';
+import type { {{pascalCase name}}Props } from './Types';
+import styles from './{{pascalCase name}}.module.scss';
+
+export const {{pascalCase name}} = forwardRef<HTMLDivElement, {{pascalCase name}}Props>(
+  ({ className, children, ...rest }, ref) => {
+    const classes = [styles.root, className].filter(Boolean).join(' ');
+    return (
+      <div ref={ref} className={classes} {...rest}>
+        {children}
+      </div>
+    );
+  },
+);
+{{pascalCase name}}.displayName = '{{pascalCase name}}';

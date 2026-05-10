@@ -1,0 +1,25 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const RightRailClose = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M14.7377 14.5303C14.449 14.8272 13.9741 14.8339 13.6771 14.5452C13.3802 14.2565 13.3735 13.7816 13.6622 13.4846L14.7377 14.5303ZM17.7312 10.3753L18.2689 9.8525C18.552 10.1436 18.552 10.607 18.2689 10.8981L17.7312 10.3753ZM13.6622 7.26597C13.3735 6.96898 13.3802 6.49416 13.6771 6.20542C13.9741 5.91668 14.449 5.92337 14.7377 6.22036L13.6622 7.26597ZM13.6622 13.4846L17.1935 9.8525L18.2689 10.8981L14.7377 14.5303L13.6622 13.4846ZM17.1935 10.8981L13.6622 7.26597L14.7377 6.22036L18.2689 9.8525L17.1935 10.8981Z"
+          fill={color}
+        />
+        <rect x="3" y="2" width="7.19995" height="16.4375" rx="1" stroke={color} strokeWidth="1.5" />
+      </svg>
+    )
+  },
+)
+
+export default RightRailClose

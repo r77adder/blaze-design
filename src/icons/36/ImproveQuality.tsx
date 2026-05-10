@@ -1,0 +1,78 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const ImproveQuality = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 36 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 36 36"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <circle cx="18.1402" cy="18.2329" r="15.075" fill="url(#paint0_linear_2591_5881)" />
+        <g filter="url(#filter0_di_2591_5881)">
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M26.6498 9.35246C26.6411 8.86529 26.1497 8.53585 25.6957 8.71279L19.3303 11.1938C18.8033 11.3992 18.7249 12.1124 19.1947 12.4274L21.181 13.7591L16.9568 19.6863L15.0327 18.2775C14.3711 17.7932 13.4432 17.9298 12.9493 18.5842L8.44929 24.5467C7.95024 25.208 8.08172 26.1486 8.74296 26.6476C9.4042 27.1467 10.3448 27.0152 10.8439 26.3539L14.4533 21.5714L16.4105 23.0044C16.7341 23.2413 17.1392 23.3388 17.5353 23.275C17.9313 23.2111 18.2853 22.9913 18.5181 22.6646L23.6738 15.4304L25.6825 16.7771C26.1523 17.0921 26.7823 16.7487 26.7722 16.1832L26.6498 9.35246Z"
+            fill="white"
+            fillOpacity="0.93"
+            shapeRendering="auto"
+          />
+        </g>
+        <defs>
+          <filter
+            id="filter0_di_2591_5881"
+            x="4.14648"
+            y="8.66437"
+            width="26.6257"
+            height="26.286"
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset dy="4" />
+            <feGaussianBlur stdDeviation="2" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2591_5881" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2591_5881" result="shape" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset dx="0.5" dy="0.5" />
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+            <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.25 0" />
+            <feBlend mode="normal" in2="shape" result="effect2_innerShadow_2591_5881" />
+          </filter>
+          <linearGradient
+            id="paint0_linear_2591_5881"
+            x1="18.1402"
+            y1="3.1579"
+            x2="18.1402"
+            y2="33.3079"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#00DC18" />
+            <stop offset="1" stopColor="#00870E" />
+          </linearGradient>
+        </defs>
+      </svg>
+    )
+  },
+)
+
+export default ImproveQuality

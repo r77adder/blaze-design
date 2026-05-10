@@ -1,0 +1,28 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const PaintBucket2 = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M15.6835 9.46619C15.4166 9.73312 14.7769 10.3498 14.4411 10.6856L10.1402 14.9865C9.49068 15.636 8.43756 15.636 7.78801 14.9865L3.48716 10.6856C3.15137 10.3498 2.98916 9.90618 3.00056 9.46619M15.6835 9.46619H3.00056M15.6835 9.46619C15.3841 9.16675 14.6969 8.53921 14.395 8.23728L9.03979 2.88208M3.00056 9.46619C3.01121 9.05508 3.17341 8.64716 3.48716 8.33341C3.59774 8.22283 9.03979 2.88208 9.03979 2.88208M9.03979 2.88208L8.15771 2M3.8421 18H12.6842M16.2913 12.6614C16.2389 12.5788 16.1492 12.5262 16.052 12.5262C15.9549 12.5262 15.8652 12.5788 15.8128 12.6614C15.6259 12.9694 15.0205 14.0212 15.0205 14.4795C15.0205 15.0505 15.4839 15.5163 16.052 15.5163C16.6201 15.5163 17.0836 15.0505 17.0836 14.4795C17.0836 14.0137 16.4782 12.9694 16.2913 12.6614Z"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  },
+)
+
+export default PaintBucket2

@@ -1,0 +1,38 @@
+@use '../../../tokens/typography' as *;
+
+// Faithful port of prod's
+//   apps/blaze/src/blaze-components/WorkspaceDashboardSidebar/components/NavItem/Counter/Counter.module.scss
+//
+// Prod's stylesheet is short:
+//   .counter { margin-right: 0; position: relative; }
+//   .number { @include md-regular; color: var(--nav-item-control-icon-color);
+//             left: 5.5px; top: 0; position: absolute;
+//             &.active { color: var(--focus-50); } }
+//
+// `md-regular` is a prod typography mixin. Our nearest equivalent is
+// `md-sohne` (16px Buch). Prod also positions the number absolutely (5.5px
+// left of a hidden chip beneath it). That positioning only makes sense in
+// concert with the swappable base Counter chip — which our simplified version
+// doesn't render. We drop the absolute positioning and let the number sit in
+// flow at the right of the row (margin-left: auto on .counter).
+
+.counter {
+  margin-left: auto;
+  margin-right: 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.number {
+  @include md-sohne;
+  // `--nav-item-control-icon-color` resolves to `--neutral-30` (#8f98a9) — the
+  // muted chrome color prod uses for the inactive count.
+  color: var(--nav-item-control-icon-color);
+
+  // Active swap mirrors prod (Counter.module.scss:17-19):
+  //   &.active { color: var(--focus-50); }
+  &.active {
+    color: var(--focus-50);
+  }
+}

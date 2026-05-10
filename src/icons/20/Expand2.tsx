@@ -1,0 +1,25 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Expand2 = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M11.667 8.33299L17.5 2.50002M17.5 2.50002L13.2143 2.5M17.5 2.50002L17.4999 6.78552M8.33368 11.6667L2.50037 17.5M2.50037 17.5L6.78605 17.5M2.50037 17.5L2.50042 13.2145M11.667 11.6667L17.5 17.4996M17.5 17.4996L17.5 13.2141M17.5 17.4996L13.2144 17.4996M8.33368 8.33368L2.50002 2.50002M2.50002 2.50002L2.5 6.7856M2.50002 2.50002L6.78562 2.50008"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+})
+
+export default Expand2

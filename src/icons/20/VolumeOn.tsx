@@ -1,0 +1,36 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const VolumeOn = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20, fill = 'none' }, forwardedRef) => {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill={fill}
+        ref={forwardedRef}
+      >
+        <path
+          d="M15.2787 7.25024C16.9016 8.13645 18 9.83994 18 11.7959C18 13.7519 16.9016 15.4553 15.2787 16.3416M16.7212 20.7959C19.8768 18.9994 21.9999 15.6417 21.9999 11.7959C21.9999 7.95013 19.8768 4.59238 16.7212 2.7959"
+          stroke={color}
+          strokeOpacity="0.8"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M12 4L6.32714 8.65121H3V15.3481L6.32714 15.3465L12 20V4Z"
+          stroke={color}
+          strokeOpacity="0.8"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  },
+)
+
+export default VolumeOn

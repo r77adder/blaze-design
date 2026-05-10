@@ -1,0 +1,104 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const HighDetailedSocial = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 24 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 40 41"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <foreignObject x="0" y="4" width="40" height="36.5557"></foreignObject>
+        <g filter="url(#filter0_d_2517_652)" data-figma-bg-blur-radius="4">
+          <path
+            d="M19.2941 35.2328C19.6791 35.6512 20.3351 35.6649 20.7372 35.2628L22.8834 33.1166C23.821 32.179 25.0928 31.6522 26.4189 31.6522H32C34.2091 31.6522 36 29.8613 36 27.6522V12C36 9.79086 34.2091 8 32 8H8C5.79086 8 4 9.79086 4 12V27.6522C4 29.8613 5.79086 31.6522 8 31.6522H13.8059C15.2043 31.6522 16.5388 32.2378 17.4855 33.2669L19.2941 35.2328Z"
+            fill="url(#paint0_linear_2517_652)"
+            fillOpacity="0.88"
+            shapeRendering="crispEdges"
+          />
+        </g>
+        <g filter="url(#filter1_di_2517_652)">
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M13.1676 15.1582C13.9155 14.447 14.9296 14.0474 15.9871 14.0474C17.0446 14.0474 18.0587 14.447 18.8066 15.1582L19.9751 16.2689L21.1435 15.1582C21.5114 14.7959 21.9515 14.5069 22.438 14.308C22.9246 14.1092 23.4479 14.0045 23.9774 14.0001C24.5069 13.9958 25.032 14.0918 25.5221 14.2825C26.0122 14.4733 26.4575 14.755 26.832 15.1112C27.2064 15.4674 27.5025 15.891 27.703 16.3573C27.9036 16.8235 28.0044 17.3231 27.9998 17.8269C27.9952 18.3306 27.8852 18.8285 27.6762 19.2913C27.4672 19.7542 27.1634 20.1729 26.7825 20.5228L19.9751 27L13.1676 20.5228C12.42 19.8114 12 18.8465 12 17.8405C12 16.8345 12.42 15.8697 13.1676 15.1582Z"
+            fill="white"
+            fillOpacity="0.89"
+            shapeRendering="crispEdges"
+          />
+        </g>
+        <defs>
+          <filter
+            id="filter0_d_2517_652"
+            x="0"
+            y="4"
+            width="40"
+            height="36.5557"
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset dy="2" />
+            <feGaussianBlur stdDeviation="1.5" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.16 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2517_652" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2517_652" result="shape" />
+          </filter>
+          <clipPath id="bgblur_0_2517_652_clip_path" transform="translate(0 -4)">
+            <path d="M19.2941 35.2328C19.6791 35.6512 20.3351 35.6649 20.7372 35.2628L22.8834 33.1166C23.821 32.179 25.0928 31.6522 26.4189 31.6522H32C34.2091 31.6522 36 29.8613 36 27.6522V12C36 9.79086 34.2091 8 32 8H8C5.79086 8 4 9.79086 4 12V27.6522C4 29.8613 5.79086 31.6522 8 31.6522H13.8059C15.2043 31.6522 16.5388 32.2378 17.4855 33.2669L19.2941 35.2328Z" />
+          </clipPath>
+          <filter
+            id="filter1_di_2517_652"
+            x="8"
+            y="14"
+            width="24"
+            height="21"
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset dy="4" />
+            <feGaussianBlur stdDeviation="2" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2517_652" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2517_652" result="shape" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset dx="0.5" dy="0.5" />
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+            <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0" />
+            <feBlend mode="normal" in2="shape" result="effect2_innerShadow_2517_652" />
+          </filter>
+          <linearGradient id="paint0_linear_2517_652" x1="20" y1="15.5" x2="20" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#FF244B" />
+            <stop offset="1" stopColor="#CD000A" />
+          </linearGradient>
+        </defs>
+      </svg>
+    )
+  },
+)
+
+export default HighDetailedSocial

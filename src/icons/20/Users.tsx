@@ -1,0 +1,25 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Users = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M13.3545 17.1579L13.3548 14.4798C13.3549 13.0005 12.1557 11.8012 10.6764 11.8012H4.67868C3.19957 11.8012 2.00047 13.0001 2.0003 14.4792L2 17.1579M17.9998 17.1581L18 14.4799C18.0001 13.0006 16.8009 11.8013 15.3216 11.8013M12.8386 3.3994C13.4964 3.88743 13.9226 4.66981 13.9226 5.55176C13.9226 6.4337 13.4964 7.21608 12.8386 7.70411M10.4115 5.55161C10.4115 7.03084 9.21235 8.22999 7.73312 8.22999C6.25389 8.22999 5.05474 7.03084 5.05474 5.55161C5.05474 4.07238 6.25389 2.87323 7.73312 2.87323C9.21235 2.87323 10.4115 4.07238 10.4115 5.55161Z"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+})
+
+export default Users

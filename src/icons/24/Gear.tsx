@@ -1,0 +1,19 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Gear = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 24 }, forwardedRef) => {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M21.5 7.1471C21.5 7.05631 21.4508 6.97265 21.3714 6.92856L12.6214 2.06745C12.5459 2.0255 12.4541 2.0255 12.3786 2.06745L3.62859 6.92856C3.54922 6.97265 3.5 7.05631 3.5 7.1471V16.8529C3.5 16.9437 3.54922 17.0273 3.62859 17.0714L12.3786 21.9326C12.4541 21.9745 12.5459 21.9745 12.6214 21.9326L21.3714 17.0714C21.4508 17.0273 21.5 16.9437 21.5 16.8529V7.1471ZM12.5 15.3333C14.4132 15.3333 15.9641 13.841 15.9641 12C15.9641 10.1591 14.4132 8.66667 12.5 8.66667C10.5868 8.66667 9.0359 10.1591 9.0359 12C9.0359 13.841 10.5868 15.3333 12.5 15.3333Z"
+        stroke={color}
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+})
+
+export default Gear

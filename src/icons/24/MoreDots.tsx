@@ -1,0 +1,30 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const MoreDots = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 24 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 25"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M6.99989 11.9999C6.99989 12.8283 6.32832 13.4999 5.49989 13.4999C4.67146 13.4999 3.99989 12.8283 3.99989 11.9999C3.99989 11.1714 4.67146 10.4999 5.49989 10.4999C6.32832 10.4999 6.99989 11.1714 6.99989 11.9999Z"
+        fill={color}
+      />
+      <path
+        d="M13.5 12.0001C13.5 12.8285 12.8284 13.5001 12 13.5001C11.1715 13.5001 10.5 12.8285 10.5 12.0001C10.5 11.1717 11.1715 10.5001 12 10.5001C12.8284 10.5001 13.5 11.1717 13.5 12.0001Z"
+        fill={color}
+      />
+      <path
+        d="M19.9999 12.0579C19.9999 12.8863 19.3283 13.5579 18.4999 13.5579C17.6715 13.5579 16.9999 12.8863 16.9999 12.0579C16.9999 11.2295 17.6715 10.5579 18.4999 10.5579C19.3283 10.5579 19.9999 11.2295 19.9999 12.0579Z"
+        fill={color}
+      />
+    </svg>
+  )
+})
+
+export default MoreDots

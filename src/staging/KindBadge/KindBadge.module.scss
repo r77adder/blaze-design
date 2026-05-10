@@ -1,0 +1,39 @@
+@use '../../tokens/typography' as *;
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: 'Sohne', sans-serif;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.kind-action {
+  background: rgba(252, 183, 40, 0.18);
+  color: #9a6300;
+}
+
+.kind-alert {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.kind-insight {
+  background: var(--dark-4);
+  color: var(--dark-60);
+}

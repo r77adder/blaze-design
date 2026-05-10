@@ -1,0 +1,60 @@
+@use '../../tokens/typography' as *;
+
+/* Mirrors apps/blaze/src/components/Pill/Pill.module.scss — heights, padding,
+   radii, mixins. Default bg/border/color match prod's root rule. */
+.root {
+  display: inline-flex;
+  height: 22px;
+  padding: 2px 6px;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: var(--dark-3);
+  color: var(--dark-80);
+  text-align: center;
+  border: 1px solid var(--dark-4);
+  white-space: nowrap;
+  font-family: 'Sohne', sans-serif;
+  @include sm-sohne;
+}
+
+.size-xs {
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 110%;
+  letter-spacing: 0.24px;
+  height: 18px;
+  padding: 1px 3px 2px 3px;
+}
+
+.size-sm {
+  @include xs-sohne-book;
+  border-radius: 4px;
+}
+
+.size-md {
+  height: 24px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.size-lg {
+  height: 33px;
+  padding: 6px 9px;
+  border-radius: 8px;
+}
+
+.size-xl {
+  @include md-sohne;
+  height: 36px;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.size-xxl {
+  @include md-sohne;
+  height: 40px;
+  padding: 8px 14px;
+  border-radius: 10px;
+}

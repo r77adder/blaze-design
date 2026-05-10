@@ -1,0 +1,68 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const SEOAnalysis = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 36 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 36 36"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M4.35889 6.66321H25.0469C26.1515 6.66321 27.0469 7.55864 27.0469 8.66321V11.8707C27.0469 12.9753 26.1515 13.8707 25.0469 13.8707H4.35889V6.66321Z"
+          fill="url(#paint0_linear_2591_20631)"
+        />
+        <path
+          d="M4.35889 14.6296H29.9214C31.026 14.6296 31.9214 15.525 31.9214 16.6296V19.8371C31.9214 20.9416 31.026 21.8371 29.9214 21.8371H4.35889V14.6296Z"
+          fill="url(#paint1_linear_2591_20631)"
+        />
+        <path
+          d="M4.35889 22.5952H13.6536C14.7582 22.5952 15.6536 23.4906 15.6536 24.5952V27.8026C15.6536 28.9072 14.7582 29.8026 13.6536 29.8026H4.35889V22.5952Z"
+          fill="url(#paint2_linear_2591_20631)"
+        />
+        <defs>
+          <linearGradient
+            id="paint0_linear_2591_20631"
+            x1="4.35889"
+            y1="10.267"
+            x2="27.0469"
+            y2="10.267"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#BCEB00" />
+            <stop offset="1" stopColor="#00C513" />
+          </linearGradient>
+          <linearGradient
+            id="paint1_linear_2591_20631"
+            x1="4.35889"
+            y1="18.2333"
+            x2="31.9214"
+            y2="18.2333"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#FFDD2B" />
+            <stop offset="1" stopColor="#FF6D04" />
+          </linearGradient>
+          <linearGradient
+            id="paint2_linear_2591_20631"
+            x1="15.6536"
+            y1="26.1989"
+            x2="4.35889"
+            y2="26.1989"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#DE000B" />
+            <stop offset="1" stopColor="#EC9A1E" />
+          </linearGradient>
+        </defs>
+      </svg>
+    )
+  },
+)
+
+export default SEOAnalysis

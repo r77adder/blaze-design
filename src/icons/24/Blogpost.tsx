@@ -1,0 +1,127 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Blogpost = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 24 }, forwardedRef) => {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g filter="url(#filter0_d_2806_721)">
+        <path
+          d="M2 4C2 2.89543 2.89543 2 4 2H20C21.1046 2 22 2.89543 22 4V20C22 21.1046 21.1046 22 20 22H4C2.89543 22 2 21.1046 2 20V4Z"
+          fill="white"
+        />
+      </g>
+      <path
+        d="M5.1875 14.8682C5.1875 14.5921 5.41136 14.3682 5.6875 14.3682H18.3125C18.5886 14.3682 18.8125 14.5921 18.8125 14.8682C18.8125 15.1443 18.5886 15.3682 18.3125 15.3682H5.6875C5.41136 15.3682 5.1875 15.1443 5.1875 14.8682Z"
+        fill="black"
+        fillOpacity="0.4"
+      />
+      <path
+        d="M5.1875 17.168C5.1875 16.8919 5.41136 16.668 5.6875 16.668H18.3125C18.5886 16.668 18.8125 16.8919 18.8125 17.168C18.8125 17.4442 18.5886 17.668 18.3125 17.668H5.6875C5.41136 17.668 5.1875 17.4442 5.1875 17.168Z"
+        fill="black"
+        fillOpacity="0.4"
+      />
+      <path
+        d="M5.1875 19.4683C5.1875 19.1922 5.41136 18.9683 5.6875 18.9683H12.015C12.2912 18.9683 12.515 19.1922 12.515 19.4683C12.515 19.7444 12.2912 19.9683 12.015 19.9683H5.6875C5.41136 19.9683 5.1875 19.7444 5.1875 19.4683Z"
+        fill="black"
+        fillOpacity="0.4"
+      />
+      <path
+        d="M2 4C2 2.89543 2.89543 2 4 2H20C21.1046 2 22 2.89543 22 4V12.4297H2V4Z"
+        fill="url(#paint0_linear_2806_721)"
+      />
+      <g filter="url(#filter1_d_2806_721)">
+        <path
+          d="M5.1875 6.2908C5.1875 5.87728 5.52273 5.54206 5.93625 5.54206H18.0638C18.4773 5.54206 18.8125 5.87728 18.8125 6.2908C18.8125 6.70433 18.4773 7.03955 18.0638 7.03955H5.93625C5.52272 7.03955 5.1875 6.70433 5.1875 6.2908Z"
+          fill="white"
+          fillOpacity="0.78"
+          shapeRendering="crispEdges"
+        />
+      </g>
+      <g filter="url(#filter2_d_2806_721)">
+        <path
+          d="M5.1875 9.11447C5.1875 8.70095 5.52273 8.36572 5.93625 8.36572H15.4395C15.853 8.36572 16.1882 8.70095 16.1882 9.11447C16.1882 9.52799 15.853 9.86322 15.4395 9.86322H5.93625C5.52273 9.86322 5.1875 9.52799 5.1875 9.11447Z"
+          fill="white"
+          fillOpacity="0.78"
+          shapeRendering="crispEdges"
+        />
+      </g>
+      <defs>
+        <filter
+          id="filter0_d_2806_721"
+          x="0"
+          y="1"
+          width="24"
+          height="24"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="1" />
+          <feGaussianBlur stdDeviation="1" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2806_721" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2806_721" result="shape" />
+        </filter>
+        <filter
+          id="filter1_d_2806_721"
+          x="4.1875"
+          y="5.54199"
+          width="15.625"
+          height="3.49756"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="1" />
+          <feGaussianBlur stdDeviation="0.5" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.09 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2806_721" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2806_721" result="shape" />
+        </filter>
+        <filter
+          id="filter2_d_2806_721"
+          x="4.1875"
+          y="8.36572"
+          width="13.0007"
+          height="3.49756"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy="1" />
+          <feGaussianBlur stdDeviation="0.5" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.09 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2806_721" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_2806_721" result="shape" />
+        </filter>
+        <linearGradient id="paint0_linear_2806_721" x1="12" y1="2" x2="12" y2="12.4297" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFBF19" />
+          <stop offset="1" stopColor="#E27A00" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+})
+
+export default Blogpost

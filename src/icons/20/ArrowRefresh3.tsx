@@ -1,0 +1,28 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const ArrowRefresh3 = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M13.334 16.1406C15.3267 14.9863 16.6673 12.8289 16.6673 10.3579C16.6673 7.55626 14.9438 5.1577 12.5007 4.16736M12.5007 14.1131V17.451H15.834M6.66732 4.64366C4.67465 5.79793 3.33398 7.95537 3.33398 10.4264C3.33398 13.228 5.05746 15.6266 7.50065 16.6169M7.50065 6.67122L7.50065 3.33331L4.16732 3.33331"
+          stroke={color}
+          strokeOpacity="0.8"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  },
+)
+
+export default ArrowRefresh3

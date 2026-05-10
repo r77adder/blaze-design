@@ -1,0 +1,17 @@
+import { forwardRef, type SVGAttributes } from 'react';
+
+export interface IconProps extends SVGAttributes<SVGElement> {
+  color?: string;
+  size?: number;
+}
+
+const {{pascalCase name}} = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = {{size}}, ...rest }, ref) => (
+    <svg ref={ref} width={size} height={size} viewBox="0 0 {{size}} {{size}}" fill="none" {...rest}>
+      {/* TODO: paste SVG paths here */}
+      <rect width="{{size}}" height="{{size}}" fill={color} opacity="0.1" />
+    </svg>
+  ),
+);
+{{pascalCase name}}.displayName = '{{pascalCase name}}';
+export default {{pascalCase name}};

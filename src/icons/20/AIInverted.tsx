@@ -1,0 +1,27 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const AIInverted = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 20 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M15.6451 16.183H2.19892C0.744347 16.183 -0.156269 14.5987 0.587839 13.3488L3.64044 8.22158C3.72095 8.08634 3.81817 7.96179 3.9298 7.85084L8.33267 3.47513C8.68388 3.12608 9.15891 2.93014 9.65407 2.93005L17.695 2.92871C18.8899 2.92851 19.7801 4.03106 19.5282 5.19908L17.478 14.7034C17.2917 15.5667 16.5283 16.183 15.6451 16.183ZM16.082 14.7147H11.1781L11.1283 12.8595H8.09664L7.24175 14.7147H4.42383L9.65711 4.39661H12.8893L13.7076 14.0637L15.7936 4.39661H18.3085L16.082 14.7147ZM11.0024 6.39825H10.9775C10.512 7.52821 9.99669 8.74587 9.46824 9.87583L9.1418 10.5858H11.0668L11.0419 9.87583C11.0038 8.74587 10.9921 7.52821 11.0038 6.39825H11.0024Z"
+          fill={color}
+        />
+      </svg>
+    )
+  },
+)
+
+export default AIInverted

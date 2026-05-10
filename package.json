@@ -1,0 +1,91 @@
+{
+  "name": "@blaze/design-system",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./lib/index.js",
+  "module": "./module/index.js",
+  "types": "./module/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./module/index.d.ts",
+        "default": "./module/index.js"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "default": "./lib/index.js"
+    },
+    "./tokens/colors.css": "./src/tokens/colors.css",
+    "./tokens/typography.scss": "./src/tokens/typography.scss",
+    "./tokens/fonts.scss": "./src/tokens/fonts.scss",
+    "./tokens/reset.css": "./src/tokens/reset.css",
+    "./icons/*": {
+      "import": {
+        "types": "./module/icons/*/index.d.ts",
+        "default": "./module/icons/*/index.js"
+      },
+      "require": {
+        "types": "./lib/icons/*/index.d.ts",
+        "default": "./lib/icons/*/index.js"
+      }
+    }
+  },
+  "files": [
+    "./lib/",
+    "./module/",
+    "./src/"
+  ],
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.23.0",
+  "scripts": {
+    "build": "tsc -p . && tsc -p ./tsconfig.cjs.json && tsconfig-to-dual-package ./tsconfig.json ./tsconfig.cjs.json",
+    "typecheck": "tsc --noEmit",
+    "ladle": "ladle serve",
+    "dev": "vite",
+    "test": "jest",
+    "plop": "plop",
+    "lint": "eslint . --ext .ts,.tsx",
+    "inspect": "node scripts/inspect.mjs",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "publish:tag": "git checkout -b release && pnpm build && git add -f lib/ module/ && git commit -m \"Release $VERSION\" && git tag -m '' $VERSION && git push --tags && git checkout main && git branch -D release"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@ladle/react": "^5.1.1",
+    "@playwright/test": "^1.59.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.19.40",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.0.1",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "plop": "^4.0.5",
+    "puppeteer": "^24.43.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sass": "^1.99.0",
+    "ts-jest": "^29.4.9",
+    "tsconfig-to-dual-package": "^1.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.11"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.15.0"
+  }
+}

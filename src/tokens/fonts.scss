@@ -1,0 +1,129 @@
+/* Söhne — mirrors apps/blaze/src/styles/fonts.scss (lines 328-449).
+   7 weights × {normal, italic} = 14 @font-face declarations.
+   Font-family is 'Sohne' (no umlaut) to match prod. */
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-ExtraLight.woff2') format('woff2'),
+    url('./fonts/Sohne-ExtraLight.woff') format('woff');
+  font-weight: 200;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-ExtraLightItalic.woff2') format('woff2'),
+    url('./fonts/Sohne-ExtraLightItalic.woff') format('woff');
+  font-weight: 200;
+  font-style: italic;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-Light.woff2') format('woff2'),
+    url('./fonts/Sohne-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-LightItalic.woff2') format('woff2'),
+    url('./fonts/Sohne-LightItalic.woff') format('woff');
+  font-weight: 300;
+  font-style: italic;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-Book.woff2') format('woff2'),
+    url('./fonts/Sohne-Book.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-BookItalic.woff2') format('woff2'),
+    url('./fonts/Sohne-BookItalic.woff') format('woff');
+  font-weight: 400;
+  font-style: italic;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-Medium.woff2') format('woff2'),
+    url('./fonts/Sohne-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-MediumItalic.woff2') format('woff2'),
+    url('./fonts/Sohne-MediumItalic.woff') format('woff');
+  font-weight: 500;
+  font-style: italic;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-Semi.woff2') format('woff2'),
+    url('./fonts/Sohne-Semi.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-SemiItalic.woff2') format('woff2'),
+    url('./fonts/Sohne-SemiItalic.woff') format('woff');
+  font-weight: 600;
+  font-style: italic;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-SemiBold.woff2') format('woff2'),
+    url('./fonts/Sohne-SemiBold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-SemiBoldItalic.woff2') format('woff2'),
+    url('./fonts/Sohne-SemiBoldItalic.woff') format('woff');
+  font-weight: 700;
+  font-style: italic;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-Bold.woff2') format('woff2'),
+    url('./fonts/Sohne-Bold.woff') format('woff');
+  font-weight: 800;
+  font-style: normal;
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Sohne-BoldItalic.woff2') format('woff2'),
+    url('./fonts/Sohne-BoldItalic.woff') format('woff');
+  font-weight: 800;
+  font-style: italic;
+  font-display: fallback;
+}

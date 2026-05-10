@@ -1,0 +1,19 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Heart = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 24 }, forwardedRef) => {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M4.30638 6.20659C5.20651 5.30673 6.42719 4.80122 7.69998 4.80122C8.97276 4.80122 10.1934 5.30673 11.0936 6.20659L12.5 7.61179L13.9064 6.20659C14.3492 5.74815 14.8788 5.38247 15.4644 5.13091C16.0501 4.87934 16.6799 4.74693 17.3172 4.74139C17.9546 4.73585 18.5866 4.8573 19.1766 5.09865C19.7665 5.34 20.3024 5.69641 20.7531 6.1471C21.2038 6.59778 21.5602 7.13371 21.8015 7.72361C22.0429 8.31352 22.1643 8.94558 22.1588 9.58292C22.1532 10.2203 22.0208 10.8501 21.7693 11.4357C21.5177 12.0214 21.152 12.551 20.6936 12.9938L12.5 21.1886L4.30638 12.9938C3.40651 12.0937 2.901 10.873 2.901 9.60019C2.901 8.32741 3.40651 7.10673 4.30638 6.20659V6.20659Z"
+        stroke={color}
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+})
+
+export default Heart

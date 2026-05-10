@@ -1,0 +1,38 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const LayersStar = forwardRef<SVGSVGElement, IconProps>(
+  ({ color = 'currentColor', size = 24 }, forwardedRef) => {
+    return (
+      <svg
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        ref={forwardedRef}
+      >
+        <path
+          d="M21.8762 13.3559L13.3788 17.7115L4.88135 13.3559M21.8762 17.5197L13.3788 21.8753L4.88135 17.5197M13.3788 4.88043L21.8762 9.23603L13.3788 13.5916L4.88135 9.23603L13.3788 4.88043Z"
+          stroke={color}
+          strokeWidth="1.39308"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M4.00002 1.09253L4.68854 2.95323L6.54924 3.64175L4.68854 4.33027L4.00002 6.19096L3.3115 4.33027L1.45081 3.64175L3.3115 2.95323L4.00002 1.09253Z"
+          fill={color}
+        />
+        <path
+          d="M3.99963 0.901123C4.07956 0.901123 4.15156 0.951178 4.17932 1.02612L4.83752 2.80444L6.61584 3.46265C6.69054 3.49042 6.73971 3.56168 6.73987 3.64136C6.73987 3.72122 6.69069 3.79324 6.61584 3.82104L4.83655 4.47827L4.17932 6.25757C4.15152 6.33242 4.0795 6.38159 3.99963 6.38159C3.91995 6.38143 3.8487 6.33226 3.82092 6.25757L3.16272 4.47925L1.3844 3.82104C1.30945 3.79329 1.2594 3.72128 1.2594 3.64136C1.25956 3.56161 1.30961 3.49038 1.3844 3.46265L3.16272 2.80444L3.82092 1.02612L3.84924 0.975342C3.88472 0.929707 3.93975 0.901244 3.99963 0.901123Z"
+          stroke={color}
+          strokeWidth="0.3821"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  },
+)
+
+export default LayersStar

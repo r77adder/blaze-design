@@ -1,0 +1,29 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const GoHighLevelBrand = forwardRef<SVGSVGElement, IconProps>(({ size = 35, color, ...rest }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 36 35"
+      fill="none"
+      ref={forwardedRef}
+      xmlns="http://www.w3.org/2000/svg"
+      {...rest}
+    >
+      <rect width="36" height="35" fill="#08223D" />
+      <rect x="9.46875" y="11.375" width="3" height="17.3125" fill="#FEC401" />
+      <rect x="22.5" y="11.375" width="3" height="17.3125" fill="#4ACF28" />
+      <rect x="15.75" y="18.5938" width="3.3125" height="10.0938" fill="#2996FB" />
+      <path d="M15.8438 11.4062H6.1875L11 6.3125L15.8438 11.4062Z" fill="#FEC401" />
+      <path d="M22.4219 18.5938H12.5781L17.4841 13.4011L22.4219 18.5938Z" fill="#2996FB" />
+      <path d="M28.875 11.4062H19.2188L24.0312 6.3125L28.875 11.4062Z" fill="#4ACF28" />
+      <path d="M25.5078 14.3281L22.5 11.4063L25.5078 11.4062L25.5078 14.3281Z" fill="#52B447" />
+      <path d="M19.1079 21.8553L15.729 18.573L19.1079 18.573V21.8553Z" fill="#1F81DC" />
+      <path d="M12.4766 14.3281L9.46875 11.4063L12.4766 11.4062L12.4766 14.3281Z" fill="#DAAA00" />
+    </svg>
+  )
+})
+
+export default GoHighLevelBrand

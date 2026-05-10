@@ -1,0 +1,26 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Task = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M13.2292 7.1875L9.32292 12.6562L6.82292 10.2083M16.6667 5.83332L16.6667 14.1667C16.6667 15.5474 15.5474 16.6667 14.1667 16.6667H5.83333C4.45262 16.6667 3.33333 15.5474 3.33333 14.1667V5.83332C3.33333 4.45262 4.45262 3.33333 5.83333 3.33333H14.1667C15.5474 3.33333 16.6667 4.45261 16.6667 5.83332Z"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+})
+
+export default Task

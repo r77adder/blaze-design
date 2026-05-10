@@ -1,0 +1,22 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Table2 = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 20 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M8.25 2C8.25 1.58579 7.91421 1.25 7.5 1.25C7.08579 1.25 6.75 1.58579 6.75 2H8.25ZM6.75 18C6.75 18.4142 7.08579 18.75 7.5 18.75C7.91421 18.75 8.25 18.4142 8.25 18H6.75ZM5 2.75H15V1.25H5V2.75ZM17.25 5V15H18.75V5H17.25ZM15 17.25H5V18.75H15V17.25ZM2.75 15V5H1.25V15H2.75ZM5 17.25C3.75736 17.25 2.75 16.2426 2.75 15H1.25C1.25 17.0711 2.92893 18.75 5 18.75V17.25ZM17.25 15C17.25 16.2426 16.2426 17.25 15 17.25V18.75C17.0711 18.75 18.75 17.0711 18.75 15H17.25ZM15 2.75C16.2426 2.75 17.25 3.75736 17.25 5H18.75C18.75 2.92893 17.0711 1.25 15 1.25V2.75ZM5 1.25C2.92893 1.25 1.25 2.92893 1.25 5H2.75C2.75 3.75736 3.75736 2.75 5 2.75V1.25ZM6.75 2V18H8.25V2H6.75ZM2.5 6.75H17.5V5.25H2.5V6.75ZM2.5 10.75H17.5V9.25H2.5V10.75ZM2.5 14.75H17.5V13.25H2.5V14.75Z"
+        fill={color}
+      />
+    </svg>
+  )
+})
+
+export default Table2

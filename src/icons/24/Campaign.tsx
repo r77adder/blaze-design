@@ -1,0 +1,139 @@
+import { forwardRef } from 'react'
+import { IconProps } from '../Types'
+
+export const Campaign = forwardRef<SVGSVGElement, IconProps>(({ color = 'currentColor', size = 32 }, forwardedRef) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={forwardedRef}
+    >
+      <path
+        d="M9.60865 16.0875C6.63619 15.5738 6.53629 12.0449 6.90865 9.6C5.62247 11.2345 4.20698 12.0201 2.57272 12.9234C3.08769 13.8154 4.18171 16.7906 5.10865 18.3961C6.3693 18.1164 7.76756 19.1694 8.55264 21.2744C8.74384 21.787 9.27163 22.116 9.8041 21.9901L11.4598 21.5987C12.1117 21.4445 12.3519 20.7593 11.8809 20.283C11.2737 19.6689 10.4814 18.9287 9.87115 18.3961C10.8746 17.8168 10.6638 16.3702 9.60865 16.0875Z"
+        fill="#B3370F"
+      />
+      <path
+        d="M5.57294 10.784C6.90663 9.69172 7.22036 8.71997 8.37915 4.08541L12.2376 9.55692L16.0675 17.0331C12.5902 16.3563 10.3998 16.4157 10.3998 16.4157L5.20482 18.3698C3.43058 18.9491 0.376974 14.6282 2.50122 12.9626C2.50122 12.9626 4.23925 11.8763 5.57294 10.784Z"
+        fill="url(#paint0_linear_4895_104389)"
+      />
+      <g filter="url(#filter0_d_4895_104389)">
+        <ellipse
+          cx="3.47605"
+          cy="8.11077"
+          rx="3.47605"
+          ry="8.11077"
+          transform="matrix(-0.866025 0.5 0.5 0.866025 12.2468 1.07549)"
+          fill="url(#paint1_radial_4895_104389)"
+        />
+        <path
+          d="M10.7146 11.3257C11.8089 13.2211 13.1178 14.7259 14.3304 15.6331C14.9374 16.0872 15.5002 16.3765 15.983 16.5025C16.4629 16.6277 16.8281 16.5842 17.0973 16.4288C17.3665 16.2733 17.5867 15.9789 17.7182 15.5007C17.8506 15.0196 17.8814 14.3875 17.7916 13.6347C17.6123 12.131 16.9635 10.245 15.8692 8.34962C14.7749 6.45421 13.4659 4.94936 12.2534 4.04222C11.6464 3.58807 11.0835 3.29876 10.6007 3.17279C10.1208 3.04759 9.75571 3.09109 9.4865 3.24652C9.21728 3.40195 8.99704 3.69641 8.86553 4.17461C8.73321 4.65572 8.70235 5.2878 8.79214 6.04059C8.97148 7.54424 9.62023 9.43026 10.7146 11.3257Z"
+          stroke="url(#paint2_radial_4895_104389)"
+        />
+      </g>
+      <path
+        d="M17.2888 7.49325L20.1576 5.50207C20.4992 5.26497 20.9705 5.37047 21.1784 5.73059C21.3863 6.0907 21.242 6.5516 20.8659 6.72889L17.7071 8.21777C17.5096 8.31084 17.2737 8.23701 17.1646 8.04795C17.0554 7.85889 17.1094 7.61772 17.2888 7.49325Z"
+        fill="#FB6434"
+      />
+      <path
+        d="M14.5459 4.34035L16.0347 1.18154C16.212 0.805404 16.6729 0.661126 17.033 0.869038C17.3932 1.07695 17.4987 1.54824 17.2616 1.88985L15.2704 4.75865C15.1459 4.938 14.9047 4.99198 14.7157 4.88283C14.5266 4.77368 14.4528 4.53782 14.5459 4.34035Z"
+        fill="#FB6434"
+      />
+      <path
+        d="M18.963 11.1542L22.443 10.8641C22.8574 10.8296 23.2128 11.1566 23.2128 11.5725C23.2128 11.9883 22.8574 12.3153 22.443 12.2808L18.963 11.9908C18.7454 11.9726 18.5781 11.7908 18.5781 11.5725C18.5781 11.3541 18.7454 11.1723 18.963 11.1542Z"
+        fill="#FB6434"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12.481 13.4187C11.9673 12.8283 11.4531 12.1078 10.9847 11.2966C10.6279 10.6786 10.33 10.0639 10.0958 9.47889C11.1714 8.98233 12.4677 9.3794 13.0717 10.4254C13.6592 11.443 13.3872 12.721 12.481 13.4187Z"
+        fill="url(#paint3_radial_4895_104389)"
+        fillOpacity="0.6"
+      />
+      <path
+        d="M9.74327 16.1973C8.02939 15.461 6.18274 12.2022 6.5569 10.597L5.56719 11.4781C5.56719 13.2402 6.9552 15.8231 8.63287 16.6801C8.95473 16.5433 9.30877 16.3904 9.74327 16.1973Z"
+        fill="black"
+        fillOpacity="0.27"
+      />
+      <path
+        d="M8.12858 16.9384C6.53138 16.2522 4.81045 13.2153 5.15913 11.7193L4.2368 12.5404C4.2368 14.1826 5.53031 16.5897 7.09377 17.3883C7.39372 17.2608 7.72365 17.1183 8.12858 16.9384Z"
+        fill="black"
+        fillOpacity="0.27"
+      />
+      <defs>
+        <filter
+          id="filter0_d_4895_104389"
+          x="5.24099"
+          y="2.59998"
+          width="14.1018"
+          height="18.4753"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dx="-1" dy="2" />
+          <feGaussianBlur stdDeviation="1" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.21 0" />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_4895_104389" />
+          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_4895_104389" result="shape" />
+        </filter>
+        <linearGradient
+          id="paint0_linear_4895_104389"
+          x1="7.13595"
+          y1="12.8419"
+          x2="9.59815"
+          y2="16.9456"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#FB6434" />
+          <stop offset="1" stopColor="#982601" />
+        </linearGradient>
+        <radialGradient
+          id="paint1_radial_4895_104389"
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(5.88814 8.5222) rotate(-179.319) scale(4.74361 8.32922)"
+        >
+          <stop stopColor="#FC6535" />
+          <stop offset="1" stopColor="#CF3200" />
+        </radialGradient>
+        <radialGradient
+          id="paint2_radial_4895_104389"
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(10.2018 2.55854) rotate(85.3828) scale(10.1957 4.36958)"
+        >
+          <stop stopOpacity="0.18" />
+          <stop offset="1" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient
+          id="paint3_radial_4895_104389"
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(12.2056 10.9815) rotate(55.8997) scale(1.72225 1.07825)"
+        >
+          <stop stopColor="#7B7B7B" />
+          <stop offset="1" />
+        </radialGradient>
+      </defs>
+    </svg>
+  )
+})
+
+export default Campaign
