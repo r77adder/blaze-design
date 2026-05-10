@@ -1,0 +1,7 @@
+// Responsive breakpoints — ported from apps/blaze/src/styles/variables.scss.
+// Subset that the Modal subtree (and any future port that needs phone/desktop
+// gating) depends on. The full prod variable file has many more — add to this
+// file as new ports demand them, NOT to a copy of the prod file.
+
+$phoneMaxWidth: 720px;
+$tabletPortraitMinWidth: 720px;
