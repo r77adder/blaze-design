@@ -3,6 +3,7 @@ import { Toaster, ToasterProvider } from '@/staging';
 import { H2Layout } from './H2Layout';
 import { Home } from './pages/Home';
 import { OrganicSocial, OrganicSocialTopbarAction } from './pages/OrganicSocial';
+import { LandingPages, LandingPagesTopbarAction } from './pages/LandingPages';
 import { MapRanking, MapRankingTopbarAction } from './pages/MapRanking';
 import { PaidSearch, PaidSearchTopbarAction } from './pages/PaidSearch';
 import { Reputation } from './pages/Reputation';
@@ -32,7 +33,7 @@ export default function H2() {
         <Route path="/paid-social" element={<H2Layout><Placeholder name="Paid Social" /></H2Layout>} />
         <Route path="/paid-search" element={<H2Layout topbarRight={<PaidSearchTopbarAction />}><PaidSearch /></H2Layout>} />
         <Route path="/email-sms" element={<H2Layout><Placeholder name="Email & SMS Programs" sourceFile="email&sms" /></H2Layout>} />
-        <Route path="/landing-pages" element={<H2Layout><Placeholder name="Landing Pages" sourceFile="landing-pages" /></H2Layout>} />
+        <Route path="/landing-pages" element={<H2Layout topbarRight={<LandingPagesTopbarAction />}><LandingPages /></H2Layout>} />
         <Route path="/reputation" element={<H2Layout><Reputation /></H2Layout>} />
         <Route path="/content-plan" element={<H2Layout><Placeholder name="Content Plan" sourceFile="content-plan-prototype" /></H2Layout>} />
         <Route path="/campaigns" element={<H2Layout><Placeholder name="Campaigns" sourceFile="campaigns" /></H2Layout>} />
