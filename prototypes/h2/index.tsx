@@ -3,6 +3,7 @@ import { Toaster, ToasterProvider } from '@/staging';
 import { H2Layout } from './H2Layout';
 import { Home } from './pages/Home';
 import { OrganicSocial, OrganicSocialTopbarAction } from './pages/OrganicSocial';
+import { Reputation } from './pages/Reputation';
 import { Placeholder } from './pages/Placeholder';
 
 /**
@@ -30,7 +31,7 @@ export default function H2() {
         <Route path="/paid-search" element={<H2Layout><Placeholder name="Paid Search" sourceFile="paid-search" /></H2Layout>} />
         <Route path="/email-sms" element={<H2Layout><Placeholder name="Email & SMS Programs" sourceFile="email&sms" /></H2Layout>} />
         <Route path="/landing-pages" element={<H2Layout><Placeholder name="Landing Pages" sourceFile="landing-pages" /></H2Layout>} />
-        <Route path="/reputation" element={<H2Layout><Placeholder name="Reputation" sourceFile="reputation" /></H2Layout>} />
+        <Route path="/reputation" element={<H2Layout><Reputation /></H2Layout>} />
         <Route path="/content-plan" element={<H2Layout><Placeholder name="Content Plan" sourceFile="content-plan-prototype" /></H2Layout>} />
         <Route path="/campaigns" element={<H2Layout><Placeholder name="Campaigns" sourceFile="campaigns" /></H2Layout>} />
         <Route path="/multi-change" element={<H2Layout><Placeholder name="Multi-Change" sourceFile="multi-change-mockup" /></H2Layout>} />
