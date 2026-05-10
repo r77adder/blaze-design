@@ -7,6 +7,7 @@ import { LandingPages, LandingPagesTopbarAction } from './pages/LandingPages';
 import { MapRanking, MapRankingTopbarAction } from './pages/MapRanking';
 import { PaidSearch, PaidSearchTopbarAction } from './pages/PaidSearch';
 import { Reputation } from './pages/Reputation';
+import { SeoAeo } from './pages/SeoAeo';
 import { Placeholder } from './pages/Placeholder';
 
 /**
@@ -27,7 +28,7 @@ export default function H2() {
       <Routes>
         <Route path="/" element={<H2Layout><Home /></H2Layout>} />
         <Route path="/organic-social" element={<H2Layout topbarRight={<OrganicSocialTopbarAction />}><OrganicSocial /></H2Layout>} />
-        <Route path="/seo-aeo" element={<H2Layout><Placeholder name="SEO/AEO" sourceFile="seo-aeo" /></H2Layout>} />
+        <Route path="/seo-aeo" element={<H2Layout><SeoAeo /></H2Layout>} />
         <Route path="/map-ranking" element={<H2Layout topbarRight={<MapRankingTopbarAction />}><MapRanking /></H2Layout>} />
         <Route path="/influencer-content" element={<H2Layout><Placeholder name="UGC Content" sourceFile="influencer-content" /></H2Layout>} />
         <Route path="/paid-social" element={<H2Layout><Placeholder name="Paid Social" /></H2Layout>} />
