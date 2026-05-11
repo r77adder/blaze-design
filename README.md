@@ -107,12 +107,20 @@ Pre-release. The repo is fully scaffolded with:
 - **Staging components** (shared WIP, not published): `Avatar`, `Card`, `Chip`, `KindBadge`, `Logo`, `NavItem`, `NavSection`, `Pill`, `SourcePill`, `TabChip`, `Toast`, `Toaster` (+ `useToast` hook), `WorkspaceSelector`.
 - **Prototypes**:
   - `hello-world` — canonical example
-  - `h2` — mega-prototype porting Ivan's H2 mockup. 10 sub-routes:
-    `/h2` (Home), `/h2/organic-social`, `/h2/seo-aeo`, `/h2/map-ranking`,
-    `/h2/influencer-content`, `/h2/paid-search`, `/h2/email-sms`,
-    `/h2/landing-pages`, `/h2/reputation`, `/h2/campaigns`. Each port covers
-    the steady state; deep interactivity (modals, multi-step wizards,
-    editor flows) is marked TODO inside each page file for future PRs.
+  - `h2` — mega-prototype porting Ivan's H2 mockup. **All 10 page deep ports + 2 standalone tools shipped:**
+    - `/h2` (Home)
+    - `/h2/organic-social` — calendar + chooser modal + new-post modal + week nav (uses vetted Modal)
+    - `/h2/map-ranking` — 4-step setup flow + animated SVG score ring + dismissable home action
+    - `/h2/reputation` — Reviews + Insights + Listening tabs + AI draft Edit modal
+    - `/h2/paid-search` — wizard modal + empty state + anomaly actions
+    - `/h2/email-sms` — Suggested + Coming-soon + per-program detail modal + new-program modal
+    - `/h2/landing-pages` — loading + 3-pane editor + published view
+    - `/h2/influencer-content` — 4 tabs (Overview/Campaigns/Avatars/Content) + 7-step wizard
+    - `/h2/seo-aeo` — first-run setup + 5 tabs + filter row + cell drawer modal
+    - `/h2/campaigns` — SVG Gantt + detail view + wizard + chooser modal
+    - `/h2/multi-change` — standalone tool with custom chrome (NOT H2Layout)
+    - `/h2/content-plan` — standalone tool with custom sidebar (NOT H2Layout)
+    - **Shared overlay**: `CrosspostWarningModal` invoked from OrganicSocial NewPostModal + Campaigns Detail
   - `modal-showcase` — end-to-end demo of the vetted Modal subtree
 - **Tooling**: chrome-devtools-mcp workflow for visual debugging against prod, Playwright snapshot tests (vetted-only by policy), Plop scaffolders, Ladle component dev environment.
 
