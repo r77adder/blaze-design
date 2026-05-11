@@ -23,3 +23,4 @@ export const Modal = {
 
 export { type StackModalProps } from './Types'
 export { ModalStack, useModals } from './ModalStack'
+export { ModalTrigger } from './ModalTrigger'
