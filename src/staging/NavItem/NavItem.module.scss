@@ -42,14 +42,18 @@
   }
 
   // Active (route-selected) — redesign-mode rule from prod (lines 26-35).
+  // Color verified via Chrome DevTools MCP against prod's live render:
+  // active root computes to rgba(0,0,0,0.9), not 0.8 — likely the
+  // NavMenuItem composition layer in prod overrides the base 0.8 rule.
+  // Bake the verified value (var(--dark-90)) directly to skip the layer.
   &.active {
     background: var(--dark-3);
     box-shadow: none;
-    color: var(--dark-80);
+    color: var(--dark-90);
 
     svg {
       filter: none;
-      color: var(--dark-80);
+      color: var(--dark-90);
     }
   }
 }

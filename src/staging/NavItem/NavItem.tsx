@@ -3,6 +3,7 @@ import type { NavItemRootProps } from './Types';
 import { NavItemContext } from './NavItemContext';
 import { Label } from './Label/Label';
 import { Counter } from './Counter/Counter';
+import { Trail } from './Trail/Trail';
 import styles from './NavItem.module.scss';
 
 /**
@@ -122,4 +123,5 @@ export const NavItem = Object.assign(Root, {
   Root,
   Label,
   Counter,
+  Trail,
 });

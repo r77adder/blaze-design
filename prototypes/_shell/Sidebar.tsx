@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from 'react-router-dom';
 import { NavItem, NavSection, WorkspaceSelector } from '@/staging';
 import {
   Approval,
@@ -35,6 +36,13 @@ export interface SidebarNavItem {
   label: string;
   icon: React.ComponentType<{ size?: number }>;
   activeIcon?: React.ComponentType<{ size?: number }>;
+  /** Optional right-aligned text indicator (e.g. "3/10", "New"). Renders via
+   *  `<NavItem.Trail>` — distinct from numeric `<NavItem.Counter>`. */
+  trail?: React.ReactNode;
+  /** Optional route path — when set, clicking the item navigates via
+   *  React Router and active state derives from the current pathname.
+   *  When omitted, falls back to label-equals-activeLabel matching. */
+  href?: string;
 }
 
 export interface SidebarSection {
@@ -119,27 +127,27 @@ const DEFAULT_SECTIONS: SidebarSection[] = [
  */
 export const H2_SECTIONS: SidebarSection[] = [
   {
-    items: [{ label: 'Home', icon: Home2 }],
+    items: [{ label: 'Home', icon: Home2, href: '/h2' }],
   },
   {
     label: 'Demand Gen',
     collapsible: true,
     items: [
-      { label: 'Organic Social', icon: BarChartSquare },
-      { label: 'SEO/AEO', icon: BarChartSquare },
-      { label: 'Map Ranking', icon: BarChartSquare },
-      { label: 'UGC Content', icon: Brand },
-      { label: 'Paid Social', icon: BarChartSquare },
-      { label: 'Paid Search', icon: BarChartSquare },
-      { label: 'Email & SMS', icon: Calendar1 },
+      { label: 'Organic Social', icon: BarChartSquare, href: '/h2/organic-social' },
+      { label: 'SEO/AEO', icon: BarChartSquare, href: '/h2/seo-aeo' },
+      { label: 'Map Ranking', icon: BarChartSquare, href: '/h2/map-ranking' },
+      { label: 'UGC Content', icon: Brand, href: '/h2/influencer-content' },
+      { label: 'Paid Social', icon: BarChartSquare, href: '/h2/paid-social' },
+      { label: 'Paid Search', icon: BarChartSquare, href: '/h2/paid-search' },
+      { label: 'Email & SMS', icon: Calendar1, href: '/h2/email-sms' },
     ],
   },
   {
     label: 'Conversion',
     collapsible: true,
     items: [
-      { label: 'Landing Pages', icon: Templates },
-      { label: 'Reputation', icon: Approval },
+      { label: 'Landing Pages', icon: Templates, href: '/h2/landing-pages' },
+      { label: 'Reputation', icon: Approval, href: '/h2/reputation' },
     ],
   },
   {
@@ -148,6 +156,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     items: [
       { label: 'Content Settings', icon: Settings },
       { label: 'Brand Kit', icon: Brand },
+      { label: 'Integrations', icon: Lightning, trail: '3/10' },
     ],
   },
 ];
@@ -162,8 +171,17 @@ export interface SidebarProps {
   workspaceName?: string;
 }
 
-function renderItem(item: SidebarNavItem, activeLabel: string) {
-  const isActive = item.label === activeLabel;
+function NavItemEntry({ item, activeLabel, pathname, navigate }: {
+  item: SidebarNavItem;
+  activeLabel: string;
+  pathname: string;
+  navigate: (to: string) => void;
+}) {
+  const isActiveByHref = item.href !== undefined && (
+    pathname === item.href || pathname.startsWith(item.href + '/')
+  );
+  const isActiveByLabel = item.href === undefined && item.label === activeLabel;
+  const isActive = isActiveByHref || isActiveByLabel;
   const Icon = isActive && item.activeIcon ? item.activeIcon : item.icon;
   // Icon size 18 matches prod's `desktopIconSize` in NavMenuItem.tsx for the
   // redesign branch (`isSystemRedesignEnabled ? 18 : 20`). The size persists
@@ -176,9 +194,14 @@ function renderItem(item: SidebarNavItem, activeLabel: string) {
   //   </NavItem.Root>
   // Typography (14px sm-sohne) lives inside <NavItem.Label>, not on the Root.
   return (
-    <NavItem.Root key={item.label} isActive={isActive} size="lg">
+    <NavItem.Root
+      isActive={isActive}
+      size="lg"
+      onPress={item.href !== undefined ? () => navigate(item.href!) : undefined}
+    >
       <Icon size={18} />
       <NavItem.Label label={item.label} />
+      {item.trail !== undefined && <NavItem.Trail>{item.trail}</NavItem.Trail>}
     </NavItem.Root>
   );
 }
@@ -195,6 +218,9 @@ export function Sidebar({
       ? [{ items }]
       : DEFAULT_SECTIONS;
 
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.headerSlot}>
@@ -208,7 +234,15 @@ export function Sidebar({
             collapsible={section.collapsible}
             defaultCollapsed={section.defaultCollapsed}
           >
-            {section.items.map((item) => renderItem(item, activeLabel))}
+            {section.items.map((item) => (
+              <NavItemEntry
+                key={item.label}
+                item={item}
+                activeLabel={activeLabel}
+                pathname={pathname}
+                navigate={navigate}
+              />
+            ))}
           </NavSection>
         ))}
       </nav>

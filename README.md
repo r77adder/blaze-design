@@ -104,8 +104,24 @@ Distribution is git-tag based — no npm registry, no GH Packages. Mirrors `pros
 Pre-release. The repo is fully scaffolded with:
 
 - **Vetted components** (publishable surface, 1:1 with prod's `apps/blaze/src/blaze-ui/` and `apps/blaze/src/almanac-ui/`): `Button`, `ButtonLink`, `Heading`, `IconButton`, `IconButtonLink`, `Modal`, `Paragraph`, `Text`.
-- **Staging components** (shared WIP, not published): `Avatar`, `Card`, `Chip`, `KindBadge`, `Logo`, `NavItem`, `NavSection`, `Pill`, `SourcePill`, `Toast`, `WorkspaceSelector`.
-- **Prototypes**: `hello-world` (canonical example), `h2-index` (ported from Ivan's HTML mockup), `modal-showcase` (vetted Modal demo).
+- **Staging components** (shared WIP, not published): `Avatar`, `Card`, `Chip`, `KindBadge`, `Logo`, `NavItem`, `NavSection`, `Pill`, `SourcePill`, `TabChip`, `Toast`, `Toaster` (+ `useToast` hook), `WorkspaceSelector`.
+- **Prototypes**:
+  - `hello-world` — canonical example
+  - `h2` — mega-prototype porting Ivan's H2 mockup. **All 10 page deep ports + 2 standalone tools shipped:**
+    - `/h2` (Home)
+    - `/h2/organic-social` — calendar + chooser modal + new-post modal + week nav (uses vetted Modal)
+    - `/h2/map-ranking` — 4-step setup flow + animated SVG score ring + dismissable home action
+    - `/h2/reputation` — Reviews + Insights + Listening tabs + AI draft Edit modal
+    - `/h2/paid-search` — wizard modal + empty state + anomaly actions
+    - `/h2/email-sms` — Suggested + Coming-soon + per-program detail modal + new-program modal
+    - `/h2/landing-pages` — loading + 3-pane editor + published view
+    - `/h2/influencer-content` — 4 tabs (Overview/Campaigns/Avatars/Content) + 7-step wizard
+    - `/h2/seo-aeo` — first-run setup + 5 tabs + filter row + cell drawer modal
+    - `/h2/campaigns` — SVG Gantt + detail view + wizard + chooser modal
+    - `/h2/multi-change` — standalone tool with custom chrome (NOT H2Layout)
+    - `/h2/content-plan` — standalone tool with custom sidebar (NOT H2Layout)
+    - **Shared overlay**: `CrosspostWarningModal` invoked from OrganicSocial NewPostModal + Campaigns Detail
+  - `modal-showcase` — end-to-end demo of the vetted Modal subtree
 - **Tooling**: chrome-devtools-mcp workflow for visual debugging against prod, Playwright snapshot tests (vetted-only by policy), Plop scaffolders, Ladle component dev environment.
 
 The promotion pipeline staging → vetted requires that prod adopts the equivalent into `apps/blaze/src/blaze-ui/`. See `.claude/skills/promoting-staging-component.md`.

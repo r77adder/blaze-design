@@ -14,6 +14,13 @@ body {
   padding: 0;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
+  /* Default to Söhne so inline text and components that don't override
+     font-family explicitly match prod's typography. Without this fallback,
+     anything not wrapped in <Text>/<Heading>/etc renders as the browser
+     default (Times on Chromium). Verified via Chrome DevTools MCP: prod's
+     body inherits the same Söhne family. */
+  font-family: 'Sohne', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--dark-90);
 }
 
 button {
