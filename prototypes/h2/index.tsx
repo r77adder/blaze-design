@@ -8,6 +8,7 @@ import { EmailSmsRoute } from './pages/EmailSms';
 import { InfluencerContentRoute } from './pages/InfluencerContent';
 import { LandingPagesRoute } from './pages/LandingPages';
 import { MapRankingRoute } from './pages/MapRanking';
+import { MultiChangeRoute } from './pages/MultiChange';
 import { PaidSearchRoute } from './pages/PaidSearch';
 import { ReputationRoute } from './pages/Reputation';
 import { SeoAeoRoute } from './pages/SeoAeo';
@@ -41,7 +42,7 @@ export default function H2() {
         <Route path="/reputation" element={<ReputationRoute />} />
         <Route path="/content-plan" element={<H2Layout><Placeholder name="Content Plan" sourceFile="content-plan-prototype" /></H2Layout>} />
         <Route path="/campaigns" element={<CampaignsRoute />} />
-        <Route path="/multi-change" element={<H2Layout><Placeholder name="Multi-Change" sourceFile="multi-change-mockup" /></H2Layout>} />
+        <Route path="/multi-change" element={<MultiChangeRoute />} />
       </Routes>
       <Toaster />
     </ToasterProvider>
