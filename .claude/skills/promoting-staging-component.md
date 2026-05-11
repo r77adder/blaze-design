@@ -59,11 +59,10 @@ In `src/components/`: same in reverse — if the promoted component imports anot
 ```bash
 pnpm typecheck
 pnpm test
-pnpm test:visual
 pnpm build && ls lib/components/  # confirm the new component appears
 ```
 
-The visual snapshot run is non-negotiable — if anything regresses, it likely means the API change from staging→vetted broke a prototype.
+If the now-vetted component has prod Ladle stories worth covering, add `tests/visual/<Name>.spec.ts` per `.claude/skills/visual-snapshot-testing.md`. Don't snapshot the prototypes that consume the component — prototype snapshots are out of scope (CLAUDE.md rule #8).
 
 ### 7. Commit
 
@@ -83,6 +82,6 @@ API verified 1:1 against apps/blaze/src/blaze-ui/<Name>:
 ## Anti-patterns
 
 - ❌ Promoting because "the component looks ready to me." The hard gate is **prod adoption**, not your assessment.
-- ❌ Promoting without running `pnpm test:visual`. Snapshot tests catch the prototype-side regressions that prop renames cause.
+- ❌ Skipping the typecheck + unit test pass before promotion. Visual snapshot coverage is optional (only relevant if the component has Ladle stories), but type/unit tests are required.
 - ❌ Inventing a vetted-tier component from scratch. Vetted always starts as staging and graduates — no shortcuts.
 - ❌ Carrying staging-specific debt into the vetted version. If staging had a `// TODO: align with prod` workaround, fix it during promotion, not after.

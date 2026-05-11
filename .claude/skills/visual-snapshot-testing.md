@@ -1,63 +1,61 @@
 # Visual snapshot testing — Playwright
 
-Catch unintended visual regressions when porting components or refactoring shared styles. Each prototype + each component variant has committed PNG baselines; CI fails if a render diverges by more than 0.5% pixel ratio.
+Catch unintended visual regressions in **vetted lib components** when porting them or when refactoring shared tokens. CI fails if a render diverges by more than 0.5% pixel ratio.
 
 This skill is for **regression detection over time**, not for debugging a specific gap. For ad-hoc "ours doesn't match prod" investigations, use `.claude/skills/visual-debugging.md`.
+
+---
+
+## What's in scope
+
+- **`src/components/`** — vetted lib components. Snapshot any component variant that prod ships.
+- **Ladle stories** — if a vetted component has Ladle stories that mirror prod's Ladle stories (which themselves have snapshot coverage in prod), those story URLs are fair game.
+
+## What's NOT in scope
+
+- ❌ **Prototypes** (`prototypes/<slug>/`). Prototypes are throwaway by design — Cloudinary asset churn, copy edits, layout iteration, and StatePicker churn make snapshot tests pure maintenance overhead with zero signal. Designers and PMs eyeball prototypes; that's the QA loop.
+- ❌ **Staging components** (`src/staging/`). API and visuals shift weekly. Snapshot tests would just block iteration. When a staging component graduates to vetted, it picks up snapshot coverage at that boundary (see `.claude/skills/promoting-staging-component.md`).
+
+If you find yourself reaching for `tests/visual/foo.spec.ts` for a prototype or staging file, stop — that's a smell.
 
 ---
 
 ## Setup (already done)
 
 - `playwright.config.ts` at repo root — chromium-only, full-page screenshots, 0.5% diff tolerance, auto-boots `pnpm dev`.
-- `tests/visual/` — spec files. One spec per prototype.
+- `tests/visual/` — spec files. One spec per component (or per Ladle story batch).
 - `tests/visual/__snapshots__/` — committed baseline PNGs.
 - `pnpm test:visual` — run tests, fail on diff.
-- `pnpm test:visual:update` — re-seed baselines (use after intentional visual changes).
+- `pnpm test:visual --update-snapshots` — re-seed baselines (use after intentional visual changes, never blindly).
 - Browser binary: `pnpm exec playwright install chromium` (run once per machine).
 
 ---
 
-## When to add a new snapshot test
+## Adding snapshots for a vetted component
 
-Add one when:
-
-- **A new prototype lands** — at minimum: one screenshot per StatePicker state.
-- **A new component lands in `src/components/`** — Ladle covers the dev environment, but a snapshot test in `tests/visual/` against a Ladle URL or a dedicated playground page locks the variants. (Pick whichever is easier; Ladle URLs are stable.)
-- **A shared token changes** — re-run `pnpm test:visual` to surface what moved, then `pnpm test:visual:update` if all diffs are intentional.
-
----
-
-## Adding a snapshot test for a new prototype
-
-Pattern, mirroring `tests/visual/hello-world.spec.ts`:
+Pattern when a Ladle URL exists for the component:
 
 ```ts
 import { test, expect } from '@playwright/test';
 
-test.describe('<prototype-slug> prototype', () => {
-  test('renders default state', async ({ page }) => {
-    await page.goto('/<prototype-slug>');
+test.describe('Button — vetted', () => {
+  test('primary md', async ({ page }) => {
+    await page.goto('/ladle/?story=button--primary-md');
     await page.waitForLoadState('networkidle');
-    await expect(page).toHaveScreenshot('default.png', { fullPage: true });
-  });
-
-  // One test per StatePicker state if the prototype has one.
-  test('renders <state> state', async ({ page }) => {
-    await page.goto('/<prototype-slug>');
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('button', { name: '<state>' }).click();
-    await expect(page).toHaveScreenshot('<state>.png', { fullPage: true });
+    await expect(page.getByRole('button')).toHaveScreenshot('primary-md.png');
   });
 });
 ```
 
+Pattern when no Ladle story exists (rare — prefer adding the Ladle story first): mount the component on a dedicated playground route under `src/playground/` and screenshot that route.
+
 Then seed baselines:
 
 ```bash
-pnpm test:visual:update
+pnpm test:visual --update-snapshots
 ```
 
-Verify they're stable on a clean run before committing:
+Verify they're stable on a clean re-run before committing:
 
 ```bash
 pnpm test:visual
@@ -77,7 +75,7 @@ A failed test produces three files in `test-results/`:
 
 Open the diff. Decide:
 
-- **Diff is intentional** (you changed a token, refactored a component, etc.): re-seed with `pnpm test:visual:update`, commit the new baselines, mention it in the commit message.
+- **Diff is intentional** (you changed a token, refactored a vetted component, etc.): re-seed with `pnpm test:visual --update-snapshots`, commit the new baselines, mention it in the commit message.
 - **Diff is a regression**: don't update the baseline. Fix the underlying CSS / component change. Re-run.
 
 ---
@@ -86,6 +84,7 @@ Open the diff. Decide:
 
 - ❌ Re-seeding baselines without looking at the diff. That defeats the entire point of the test.
 - ❌ Adding `await page.waitForTimeout(N)` to "make tests stable." Use `waitForLoadState('networkidle')` and explicit selectors via `getByRole` / `getByText`. Timeouts mask real flakiness.
-- ❌ Snapshot-testing the same component from 12 angles. Cover the variants that matter. One snapshot per StatePicker state is usually enough per prototype.
+- ❌ Snapshot-testing the same component from 12 angles. Cover the variants that actually ship.
 - ❌ Running `test:visual` against a stale `pnpm dev` server with old code. The `webServer.reuseExistingServer` setting reuses it — restart `pnpm dev` if you've changed anything since it started.
 - ❌ Using snapshot tests to hunt down a "ours doesn't match prod" gap. Wrong tool — Playwright can't see prod with auth. Use chrome-devtools-mcp instead (see `.claude/skills/visual-debugging.md`).
+- ❌ Adding snapshots for a prototype or staging component. See "What's NOT in scope" above.

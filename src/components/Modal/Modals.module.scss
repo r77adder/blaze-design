@@ -1,0 +1,61 @@
+.stack,
+.mounter {
+  position: fixed;
+  height: 100%;
+  left: 0;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.enter {
+  opacity: 0;
+  transform: scale(0.98);
+}
+.enterActive {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 150ms ease;
+  transition-delay: 150ms;
+}
+.exit {
+  opacity: 1;
+  transform: scale(1);
+}
+.exitActive {
+  opacity: 0;
+  transform: scale(0.98);
+  transition: all 150ms ease;
+}
+
+.presenter {
+  position: fixed;
+  height: 100%;
+  left: 0;
+  top: 0;
+  width: 100%;
+  transition: all 150ms ease;
+  opacity: 0;
+
+  &.show {
+    transform: scale(1);
+    opacity: 1;
+    transition-delay: 150ms;
+  }
+
+  &.hide {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+}
+
+.stackButtons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1001;
+}
+
+.stackButtonsInner {
+  display: flex;
+}

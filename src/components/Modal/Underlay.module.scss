@@ -1,0 +1,114 @@
+@use '../../tokens/mixins' as *;
+
+.underlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  top: 0;
+  right: 0;
+  background-color: var(--modal-underlay-color);
+  z-index: 1000;
+  @include blur(2.5px);
+  background: var(--overlay);
+
+  &.enterActive {
+    transition: opacity 500ms;
+  }
+
+  &.enter {
+    opacity: 0;
+  }
+  &.enterActive {
+    opacity: 1;
+    transition: opacity 150ms;
+  }
+  &.exit {
+    opacity: 1;
+  }
+  &.exitActive {
+    opacity: 0;
+    transition: opacity 150ms;
+  }
+
+  &.light {
+    opacity: 0.35;
+    background: var(--neutral-0, #fff);
+  }
+
+  &.dark {
+    opacity: 0.4;
+    background: var(--neutral-90, #2b2f38);
+  }
+
+  &.wizard {
+    opacity: 1;
+    background: var(--overlay-wizards);
+  }
+
+  &.onboarding {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1753415626/blaze_assets/backgrounds/first_time_experience/splashscreen_0725_g5u9c7.png')
+      lightgray 30% / cover no-repeat;
+  }
+
+  &.heroes {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1725884890/blaze_assets/backgrounds/first_time_experience/heroes_nykr9o.png')
+      lightgray 50% / cover no-repeat;
+  }
+
+  &.brandVoice {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1725884873/blaze_assets/backgrounds/first_time_experience/brand_voice_i3qp6j.png')
+      lightgray 50% / cover no-repeat;
+  }
+
+  &.brandStyle {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1726057865/blaze_assets/backgrounds/first_time_experience/brand_style_k7hzto.png')
+      lightgray 50% / cover no-repeat;
+  }
+
+  &.walkthrough {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1726776861/blaze_assets/backgrounds/make_this_easy_qvhs9w.png')
+      lightgray 50% / cover no-repeat;
+  }
+
+  &.brandContent {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1732653558/blaze_assets/backgrounds/first_time_experience/Background_hq8mgl.png')
+      lightgray 50% / cover no-repeat;
+  }
+
+  &.generatedContent {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1732710485/blaze_assets/backgrounds/first_time_experience/generatedContent_lefpbs.png')
+      lightgray 50% / cover no-repeat;
+  }
+
+  &.virtualMarketer {
+    opacity: 0.3;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1749688566/blaze_assets/backgrounds/virtual_marketer_lb0efa.png')
+      lightgray 50% / cover no-repeat;
+    filter: blur(2.5px);
+  }
+
+  &.robot {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1757016557/blaze_assets/backgrounds/first_time_experience/onboarding_robot_background_pxp5ol.png')
+      lightgray 50% / cover no-repeat;
+  }
+
+  &.autopilotUpgrade {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1759330390/blaze_assets/backgrounds/autopilot_upgrade_background_qczlsc.png')
+      lightgray top center / cover no-repeat;
+  }
+
+  &.mobileAutopilotUpgrade {
+    opacity: 1;
+    background: url('https://res.cloudinary.com/almanac/image/upload/v1759419729/blaze_assets/backgrounds/mobile_autopilot_upgrade_background_q1idhu.png')
+      lightgray 50% / cover no-repeat;
+  }
+}

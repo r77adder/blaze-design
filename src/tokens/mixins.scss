@@ -1,0 +1,80 @@
+// Layout, scrollbar, blur, and z-index helpers — ported 1:1 from
+// apps/blaze/src/styles/mixins.scss + apps/blaze/src/styles/blaze/mixins.scss.
+// Subset that the Modal subtree depends on; expand as new ports demand more.
+
+@use 'breakpoints' as *;
+
+// ─── z-index ────────────────────────────────────────────────────────
+//
+// Mirrors the prod $z-index map, narrowed to the keys we currently need.
+// Use as `z-index: z-index(modal);` in component SCSS.
+
+$z-index: (
+  heaven: 9999,
+  tooltip: 1021,
+  drawer: 350,
+  modal: 310,
+  overlay: 310,
+  navBar: 301,
+);
+
+@function z-index($key) {
+  @return map-get($z-index, $key);
+}
+
+// ─── Responsive guards ──────────────────────────────────────────────
+
+@mixin for-phone-only {
+  @media (max-width: $phoneMaxWidth) {
+    @content;
+  }
+}
+
+@mixin for-desktop-only {
+  @media (min-width: $phoneMaxWidth) {
+    @content;
+  }
+}
+
+@mixin for-tablet-portrait-up {
+  @media (min-width: $tabletPortraitMinWidth) {
+    @content;
+  }
+}
+
+// ─── Visual effects ─────────────────────────────────────────────────
+
+@mixin blur($blur-amount: 25px) {
+  -webkit-backdrop-filter: blur($blur-amount);
+  backdrop-filter: blur($blur-amount);
+}
+
+@mixin line-clamp($line-count: 1) {
+  overflow: hidden;
+
+  @if $line-count == 1 {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $line-count;
+    -webkit-box-orient: vertical;
+  }
+}
+
+// ─── Scrollbars ─────────────────────────────────────────────────────
+//
+// Prod's `customScrollbar` mixin is large and styles tracks/thumbs
+// elaborately. The Modal subtree only uses `thinScrollbar` to set the
+// scrollbar dimensions on phone-only Modal boxes. Keep this minimal.
+
+@mixin thinScrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+}

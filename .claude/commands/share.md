@@ -63,14 +63,14 @@ EOF
 
 ### 4. Verify visually
 
-If the change touches `prototypes/` or `src/staging/` or `src/components/`, run snapshot tests:
+If the change touches `src/components/` (vetted) AND there's snapshot coverage for the affected component, run:
 ```bash
 cd /Users/kevinaleman/dev/blaze-design && pnpm test:visual 2>&1 | tail -10
 ```
 
-Capture the result. If tests fail because the user intentionally changed something visual, run `pnpm test:visual:update` to re-seed and `git add -A && git commit --amend --no-edit` to fold the new baselines into the same commit. If tests fail because of a regression, surface it to the user and ask whether to proceed.
+Capture the result. If tests fail because the user intentionally changed something visual, run `pnpm test:visual --update-snapshots` to re-seed and `git add -A && git commit --amend --no-edit` to fold the new baselines into the same commit. If tests fail because of a regression, surface it to the user and ask whether to proceed.
 
-If the change is docs-only or icons-only, skip this step.
+Skip this step for prototype changes, staging changes, docs-only, or icons-only — snapshot tests are vetted-only by policy (CLAUDE.md rule #8).
 
 ### 5. Push
 
@@ -97,7 +97,7 @@ If this is docs only: read the diff in the Files tab.
 ## Status
 
 - [x] `pnpm test` — <passing | N failing>
-- [x] `pnpm test:visual` — <passing | N failing | snapshots intentionally updated>
+- [x] `pnpm test:visual` — <passing | N failing | snapshots intentionally updated | n/a — vetted snapshot scope only>
 - [x] `pnpm typecheck` — <passing | N errors>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
@@ -115,6 +115,6 @@ Output the PR URL plain so the user can click it. Brief — one or two sentences
 
 - ❌ Committing on `main`. Server-side branch protection will reject the push and you'll have to redo the work.
 - ❌ Mixing prototype changes with eng-only changes (e.g., `src/components/` edits) into one PR. If you see both, ask the user before bundling.
-- ❌ Skipping `pnpm test:visual` on a UI change. Snapshot tests are how regressions get caught — running them is the difference between "I think this works" and "the harness confirms this works."
+- ❌ Skipping `pnpm test:visual` on a vetted-component change that has snapshot coverage. (Skipping it on prototype/staging changes is fine — they're out of snapshot scope by policy.)
 - ❌ Letting `git add -A` sweep in `node_modules/`, `lib/`, `module/`, or `playwright-report/`. The `.gitignore` should already prevent this, but eyeball the `git status -s` output before staging to be sure.
 - ❌ Creating a branch with a generic name like `claude/changes` or `wip`. The branch name should reflect the primary scope so reviewers know what they're looking at without opening it.

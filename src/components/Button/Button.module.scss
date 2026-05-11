@@ -1,148 +1,628 @@
+@use '../../tokens/breakpoints' as *;
+@use '../../tokens/mixins' as *;
 @use '../../tokens/typography' as *;
 
 .root {
+  transition: all 0.2s ease-in-out, visibility 0s;
+  -webkit-transition: all 0.2s ease-in-out, visibility 0s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  // Verified via Chrome DevTools MCP: prod's Button computed `gap: 2px` for
-  // every size in redesign mode (size classes set it; root carries through).
-  // Earlier value of 5px was from figma-make-guidelines spec — that doc was
-  // never source of truth. Matches prod 1:1 now.
-  gap: 2px;
   white-space: nowrap;
-  cursor: pointer;
-  border: 1px solid transparent;
-  background: transparent;
-  color: inherit;
-  font-family: 'Sohne', sans-serif;
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease;
-  user-select: none;
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--purple);
-  }
+  position: relative;
 
   &.fullWidth {
     width: 100%;
   }
 
+  &.rounded {
+    border-radius: 32px;
+  }
+
+  &.square {
+    flex-direction: column;
+    aspect-ratio: 1;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+
+    .children {
+      white-space: normal;
+      text-align: center;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  &.vertical {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 12px 8px 12px;
+    height: inherit;
+
+    .children {
+      letter-spacing: 0.28px;
+      line-height: 135%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+  }
+
   &.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    opacity: 0.3;
     pointer-events: none;
   }
+
+  .chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+
+    &.up {
+      transform: rotate(180deg);
+    }
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  .children {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
 }
 
-.icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: inherit;
-}
-
-.label {
-  display: inline-flex;
-  align-items: center;
-  color: inherit;
-}
-
-/* Sizes — mirror prod's redesign-mode values per CONVENTIONS strip-list
-   ([data-autopilot-system-redesign='on'] in apps/blaze/src/blaze-ui/Button/
-   Button.module.scss). Redesign mode uses Söhne Buch (400) and tighter
-   dimensions than default mode. Ivan's index.html also uses 400. */
-.size-xs {
+// Sizes
+.xs {
   @include sm-sohne;
-  height: 24px;
-  min-height: 24px;
+  gap: 2px;
   padding: 3px;
   border-radius: 6px;
+  height: 24px;
+  min-height: 24px;
   line-height: 107%;
   letter-spacing: 0.14px;
+
+  &.vertical {
+    min-height: 26px;
+  }
+
+  &.rounded {
+    border-radius: 32px;
+  }
+
+  &.iconButton {
+    padding: 6px;
+    width: 24px;
+    height: 24px;
+    min-height: 24px;
+  }
+
+  @include for-phone-only {
+    height: 24px;
+    min-height: 24px;
+
+    &.iconButton {
+      width: 24px;
+      height: 24px;
+      min-height: 24px;
+    }
+  }
+
+  &.square {
+    padding: 6px;
+    min-height: 28px;
+    min-width: 28px;
+  }
+
+  .children {
+    padding: 0 2px;
+  }
 }
 
-.size-sm {
+.sm {
   @include sm-sohne;
-  height: 28px;
-  min-height: 28px;
+  gap: 2px;
   padding: 6px;
   border-radius: 6px;
-  line-height: 139%;
+  height: 28px;
+  min-height: 28px;
+  line-height: 139%; /* 19.46px */
   letter-spacing: 0.14px;
+
+  &.vertical {
+    min-height: 32px;
+  }
+
+  &.iconButton {
+    padding: 6px;
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+  }
+
+  .children {
+    padding: 0 2px;
+    transform: none;
+  }
+
+  @include for-phone-only {
+    height: 32px;
+    min-height: 32px;
+
+    &.iconButton {
+      width: 32px;
+      height: 32px;
+      min-height: 32px;
+    }
+  }
+
+  &.square {
+    padding: 6px;
+    min-height: 32px;
+    min-width: 32px;
+  }
 }
 
-.size-md {
+.md {
   @include sm-sohne;
-  height: 32px;
-  min-height: 32px;
+  gap: 2px;
   padding: 8px;
   border-radius: 8px;
-  line-height: 109%;
-  letter-spacing: 0.14px;
+  height: 32px;
+  min-height: 32px;
+  line-height: 109%; /* 15.26px */
+
+  &.vertical {
+    min-height: 36px;
+  }
+
+  &.rounded {
+    border-radius: 32px;
+  }
+
+  &.iconButton {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+
+  .children {
+    padding: 0 3px;
+    transform: none;
+
+    img {
+      transform: translateY(1px);
+    }
+  }
+
+  @include for-phone-only {
+    @include md-sohne;
+    height: 40px;
+    min-height: 40px;
+
+    &.iconButton {
+      width: 40px;
+      height: 40px;
+      min-height: 40px;
+    }
+  }
+
+  &.square {
+    padding: 8px;
+    min-height: 36px;
+    min-width: 36px;
+  }
 }
 
-.size-lg {
+.lg {
   @include md-sohne;
-  height: 36px;
-  min-height: 36px;
+  gap: 2px;
   padding: 9px;
   border-radius: 8px;
-  line-height: 96%;
+  height: 36px;
+  min-height: 36px;
+  line-height: 96%; /* 15.36px */
+
+  &.vertical {
+    min-height: 40px;
+  }
+
+  &.iconButton {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 10px;
+  }
+
+  .children {
+    padding: 0 4px;
+    transform: none;
+  }
+
+  @include for-phone-only {
+    height: 52px;
+    min-height: 52px;
+    border-radius: 12px;
+
+    &.iconButton {
+      width: 52px;
+      height: 52px;
+      min-height: 52px;
+    }
+  }
+
+  &.square {
+    padding: 10px;
+    min-height: 40px;
+    min-width: 40px;
+  }
 }
 
-.size-xl {
+.xl {
   @include md-sohne;
-  height: 48px;
-  min-height: 48px;
+  gap: 2px;
   padding: 12px;
   border-radius: 10px;
-  line-height: 125%;
+  height: 48px;
+  min-height: 48px;
+  line-height: 125%; /* 20px */
+
+  &.vertical {
+    min-height: 48px;
+  }
+
+  &.iconButton {
+    width: 48px;
+    height: 48px;
+    min-height: 48px;
+    padding: 12px;
+  }
+
+  .children {
+    padding: 0 4px;
+    transform: none;
+  }
+
+  @include for-phone-only {
+    height: 60px;
+    min-height: 60px;
+
+    &.iconButton {
+      width: 60px;
+      height: 60px;
+      min-height: 60px;
+    }
+  }
+
+  &.square {
+    padding: 12px;
+    min-height: 48px;
+    min-width: 48px;
+  }
 }
 
-/* Variants — picked from prod's redesign mode per CONVENTIONS strip-list
-   (no [data-autopilot-system-redesign] toggling; bake the redesign value in). */
-.variant-primary {
+// Variants
+.primary {
   background: var(--dark-90);
   color: var(--light-100);
-  border-color: var(--dark-90);
 
-  &:hover:not(.disabled) {
-    background: #000;
-    border-color: #000;
+  .endIcon,
+  .frontIcon {
+    fill: var(--light-100);
   }
 
-  &:active:not(.disabled) {
-    background: var(--dark-80);
-    border-color: var(--dark-80);
+  .chevron {
+    fill: var(--light-100);
+  }
+
+  &.pressed:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--light-8);
+  }
+
+  &.focused:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--light-8);
+  }
+
+  &.hovered {
+    color: var(--light-100);
+    background: #000;
   }
 }
 
-.variant-secondary {
+.primary-colored {
+  background: var(--selected-fill);
+  color: var(--light-100);
+
+  .endIcon,
+  .frontIcon {
+    fill: var(--light-100);
+  }
+
+  .chevron {
+    fill: var(--light-100);
+  }
+
+  &.pressed:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--light-8);
+  }
+
+  &.focused:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--light-8);
+  }
+
+  &.hovered {
+    opacity: 0.8;
+  }
+}
+
+.red {
+  background: var(--red-50);
+  color: var(--light-100);
+
+  .endIcon,
+  .frontIcon {
+    fill: var(--light-100);
+  }
+
+  .chevron {
+    fill: var(--light-100);
+  }
+
+  &.pressed:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--light-8);
+  }
+
+  &.focused:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--light-8);
+  }
+
+  &.hovered {
+    color: var(--light-100);
+    background: #d40a14;
+  }
+}
+
+.secondary {
   background: var(--light-100);
   color: var(--dark-90);
-  border-color: var(--dark-8);
+  border: 1px solid var(--dark-8);
+  box-shadow: none;
 
-  &:hover:not(.disabled) {
-    border-color: var(--dark-15);
+  .endIcon,
+  .frontIcon {
+    fill: var(--dark-90);
   }
 
-  &:active:not(.disabled) {
-    background: var(--dark-2);
-    border-color: var(--dark-40);
+  &.hovered {
+    background: var(--light-100);
+    border: 1px solid var(--dark-15);
+  }
+
+  &.pressed {
+    background: var(--light-100);
+    border: 1px solid var(--dark-40);
+    box-shadow: none;
+  }
+
+  &.focused {
+    background: var(--light-100);
+    border: none;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
   }
 }
 
-.variant-tertiary {
+.secondary-bg-agnostic {
+  @extend .secondary;
+
+  &.hovered {
+    background: linear-gradient(0deg, var(--dark-4) 0%, var(--dark-4) 100%), var(--light-100) !important;
+  }
+}
+
+@media (min-width: $phoneMaxWidth) {
+  .secondary,
+  .secondary-bg-agnostic {
+    border: 1px solid var(--dark-15);
+  }
+}
+
+@mixin tertiary-styles {
   background: transparent;
   color: var(--dark-90);
-  border-color: transparent;
 
-  &:hover:not(.disabled) {
+  .endIcon,
+  .frontIcon {
+    fill: var(--dark-90);
+  }
+
+  &.hovered {
     background: var(--dark-3);
   }
 
-  &:active:not(.disabled) {
+  &.pressed {
     background: var(--dark-8);
+    box-shadow: none;
+  }
+
+  &.focused {
+    color: var(--dark-90);
+    background: transparent;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.tertiary {
+  @include tertiary-styles;
+}
+
+.danger {
+  @include tertiary-styles;
+  color: var(--red-70);
+}
+
+.subtle {
+  background: transparent;
+  color: var(--dark-90);
+
+  &.xs {
+    color: var(--dark-60);
+  }
+
+  .endIcon,
+  .frontIcon {
+    fill: var(--dark-90);
+  }
+
+  &.hovered {
+    background: var(--dark-3);
+  }
+
+  &.pressed {
+    background: var(--dark-8);
+    box-shadow: none;
+  }
+
+  &.focused {
+    color: var(--dark-90);
+    background: transparent;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.ghost,
+.ghost-tertiary,
+a.ghost {
+  background: transparent;
+  color: var(--dark-90);
+
+  .endIcon,
+  .frontIcon {
+    fill: var(--dark-90);
+  }
+
+  &.hovered {
+    background: var(--dark-3);
+  }
+
+  &.pressed {
+    background: var(--dark-8);
+    box-shadow: none;
+  }
+
+  &.focused {
+    color: var(--dark-90);
+    background: transparent;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.ghost-tertiary {
+  background: transparent;
+  color: var(--dark-90);
+
+  .endIcon,
+  .frontIcon {
+    fill: var(--dark-90);
+  }
+
+  &.hovered {
+    background: var(--dark-3);
+  }
+
+  &.pressed {
+    background: var(--dark-8);
+    box-shadow: none;
+  }
+
+  &.focused {
+    color: var(--dark-90);
+    background: transparent;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.editor {
+  background: transparent;
+  color: var(--dark-90);
+
+  .endIcon,
+  .frontIcon {
+    fill: var(--dark-90);
+  }
+
+  &.hovered {
+    background: var(--dark-3);
+  }
+
+  &.pressed {
+    background: var(--dark-8);
+    box-shadow: none;
+  }
+
+  &.focused {
+    color: var(--dark-90);
+    background: transparent;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.green {
+  color: var(--light-100);
+  background: var(--green-50);
+
+  .endIcon,
+  .frontIcon {
+    fill: var(--light-100);
+  }
+
+  &.pressed {
+    background: var(--green-70);
+    box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.09) inset;
+  }
+
+  &.focused {
+    background: var(--green-70);
+    color: var(--light-100);
+  }
+
+  &.hovered {
+    background: var(--green-70);
   }
 }

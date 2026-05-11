@@ -62,7 +62,7 @@ You only need to do this once per machine. After install, just open prod and you
 
 ## Visual snapshot tests
 
-The repo has Playwright snapshot tests under `tests/visual/` that catch unintended visual regressions when components or shared tokens change.
+Playwright snapshot tests under `tests/visual/` catch unintended visual regressions in **vetted lib components** (and Ladle stories, when present). Prototypes and staging components are intentionally NOT covered — see CLAUDE.md rule #8 for the rationale.
 
 ```bash
 pnpm test:visual            # run tests, fail on diff
@@ -71,7 +71,7 @@ pnpm test:visual:update     # re-seed baselines after intentional changes
 
 First-time setup on a machine: `pnpm exec playwright install chromium`.
 
-When adding a new prototype or component, add a snapshot test — see `.claude/skills/visual-snapshot-testing.md`.
+When adding a new vetted component, optionally add a snapshot test — see `.claude/skills/visual-snapshot-testing.md`.
 
 ## Architecture
 
@@ -103,9 +103,9 @@ Distribution is git-tag based — no npm registry, no GH Packages. Mirrors `pros
 
 Pre-release. The repo is fully scaffolded with:
 
-- **Vetted components** (publishable surface, 1:1 with `apps/blaze/src/blaze-ui/`): `Button`, `Heading`, `Paragraph`, `Text`.
+- **Vetted components** (publishable surface, 1:1 with prod's `apps/blaze/src/blaze-ui/` and `apps/blaze/src/almanac-ui/`): `Button`, `ButtonLink`, `Heading`, `IconButton`, `IconButtonLink`, `Modal`, `Paragraph`, `Text`.
 - **Staging components** (shared WIP, not published): `Avatar`, `Card`, `Chip`, `KindBadge`, `Logo`, `NavItem`, `NavSection`, `Pill`, `SourcePill`, `Toast`, `WorkspaceSelector`.
-- **Prototypes**: `hello-world` (canonical example), `h2-index` (ported from Ivan's HTML mockup).
-- **Tooling**: chrome-devtools-mcp workflow for visual debugging against prod, Playwright snapshot tests, Plop scaffolders, Ladle component dev environment.
+- **Prototypes**: `hello-world` (canonical example), `h2-index` (ported from Ivan's HTML mockup), `modal-showcase` (vetted Modal demo).
+- **Tooling**: chrome-devtools-mcp workflow for visual debugging against prod, Playwright snapshot tests (vetted-only by policy), Plop scaffolders, Ladle component dev environment.
 
 The promotion pipeline staging → vetted requires that prod adopts the equivalent into `apps/blaze/src/blaze-ui/`. See `.claude/skills/promoting-staging-component.md`.

@@ -109,3 +109,62 @@
   line-height: 110%;
   letter-spacing: 0.24px;
 }
+
+// ─── Cross-family typography mixins (used by Modal/Header etc.) ─────
+//
+// In prod these branch on `[data-design-system='blaze']` to swap between
+// Roboto Flex/Inter (legacy) and Sohne (new). Our lib is Sohne-only, so
+// we resolve the branch to the Sohne form once at port time.
+
+@mixin lg-medium {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 24px;
+  font-family: 'Sohne';
+}
+
+@mixin xl-semibold {
+  font-family: 'Sohne';
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 142%;
+}
+
+@mixin xxl-semibold {
+  font-family: 'Sohne';
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 110%;
+  letter-spacing: -0.28px;
+}
+
+@mixin lg-semibold {
+  font-family: 'Sohne';
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 152%;
+}
+
+// Prod's `ui-md-semibold` mixes in `inter-semibold`. Our lib is Sohne-only, so
+// resolve the family to Sohne 600 at port time (matches prod's blaze design
+// system override).
+@mixin ui-md-semibold {
+  font-family: 'Sohne';
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.1428571429;
+}
+
+// Prod's `md-medium` defaults to Inter and switches to Sohne under
+// `[data-design-system='blaze']`. Lib is Sohne-only, so use Sohne directly.
+@mixin md-medium {
+  font-family: 'Sohne';
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 20px;
+}

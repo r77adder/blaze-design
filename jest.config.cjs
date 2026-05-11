@@ -8,4 +8,5 @@ module.exports = {
   },
   testMatch: ['<rootDir>/src/**/*.test.tsx'],
   modulePathIgnorePatterns: ['<rootDir>/lib/', '<rootDir>/module/'],
+  clearMocks: true,
 };
