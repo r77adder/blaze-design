@@ -5,7 +5,7 @@ import { Home } from './pages/Home';
 import { OrganicSocialRoute } from './pages/OrganicSocial';
 import { Campaigns, CampaignsTopbarAction } from './pages/Campaigns';
 import { EmailSmsRoute } from './pages/EmailSms';
-import { InfluencerContent, InfluencerContentTopbarAction } from './pages/InfluencerContent';
+import { InfluencerContentRoute } from './pages/InfluencerContent';
 import { LandingPagesRoute } from './pages/LandingPages';
 import { MapRankingRoute } from './pages/MapRanking';
 import { PaidSearchRoute } from './pages/PaidSearch';
@@ -33,7 +33,7 @@ export default function H2() {
         <Route path="/organic-social" element={<OrganicSocialRoute />} />
         <Route path="/seo-aeo" element={<H2Layout><SeoAeo /></H2Layout>} />
         <Route path="/map-ranking" element={<MapRankingRoute />} />
-        <Route path="/influencer-content" element={<H2Layout topbarRight={<InfluencerContentTopbarAction />}><InfluencerContent /></H2Layout>} />
+        <Route path="/influencer-content" element={<InfluencerContentRoute />} />
         <Route path="/paid-social" element={<H2Layout><Placeholder name="Paid Social" /></H2Layout>} />
         <Route path="/paid-search" element={<PaidSearchRoute />} />
         <Route path="/email-sms" element={<EmailSmsRoute />} />
