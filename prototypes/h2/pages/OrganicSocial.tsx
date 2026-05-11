@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components';
-import { Modal, useToast } from '@/staging';
+import { Button, Modal, ModalStack, useModals } from '@/components';
+import type { StackModalProps } from '@/components';
+import { useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import ChevronLeft from '@/icons/24/ChevronLeft';
 import ChevronRight from '@/icons/24/ChevronRight';
@@ -452,49 +453,52 @@ function ChooserCard({
 }
 
 function CreateChooserModal({
-  isOpen,
-  onClose,
+  close,
   onPickCampaign,
   onPickPost,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
+}: StackModalProps & {
   onPickCampaign: () => void;
   onPickPost: () => void;
 }) {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="What do you want to create?"
-      description="Pick one — the agent takes it from there."
-    >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <ChooserCard
-          icon={
-            <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <path d="M3 9h18M9 5v14" />
-            </svg>
-          }
-          label="Campaign"
-          description="A multi-channel marketing campaign — agent picks the strategy and channel mix."
-          onClick={onPickCampaign}
-        />
-        <ChooserCard
-          icon={
-            <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="3" />
-              <path d="m3 16 5-5 4 4 3-3 6 6" />
-              <circle cx="9" cy="9" r="1.5" />
-            </svg>
-          }
-          label="Post"
-          description="A single organic social post for Instagram, TikTok, LinkedIn, or X."
-          onClick={onPickPost}
-        />
-      </div>
-    </Modal>
+    <Modal.Root size="md" aria-labelledby="chooser-title" data-testid="create-chooser-modal">
+      <Modal.Header
+        title="What do you want to create?"
+        id="chooser-title"
+        onClose={close}
+        compact={false}
+      />
+      <Modal.Content compact={false}>
+        <p style={{ margin: '0 0 16px 0', fontSize: 13.5, color: 'var(--dark-60)' }}>
+          Pick one — the agent takes it from there.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <ChooserCard
+            icon={
+              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M3 9h18M9 5v14" />
+              </svg>
+            }
+            label="Campaign"
+            description="A multi-channel marketing campaign — agent picks the strategy and channel mix."
+            onClick={onPickCampaign}
+          />
+          <ChooserCard
+            icon={
+              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="3" />
+                <path d="m3 16 5-5 4 4 3-3 6 6" />
+                <circle cx="9" cy="9" r="1.5" />
+              </svg>
+            }
+            label="Post"
+            description="A single organic social post for Instagram, TikTok, LinkedIn, or X."
+            onClick={onPickPost}
+          />
+        </div>
+      </Modal.Content>
+    </Modal.Root>
   );
 }
 
@@ -612,21 +616,16 @@ function NPSection({
 }
 
 function NewPostModal({
-  isOpen,
-  onClose,
+  close,
   onSave,
   visibleWeek,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
+}: StackModalProps & {
   onSave: (p: Post) => void;
   visibleWeek: DayInfo[];
 }) {
+  // Modal mounts on demand via openModal — initial draft is always fresh,
+  // no need for the prior `useEffect(() => { if (isOpen) setDraft(INITIAL_DRAFT) })`.
   const [draft, setDraft] = useState<DraftPost>(INITIAL_DRAFT);
-
-  useEffect(() => {
-    if (isOpen) setDraft(INITIAL_DRAFT);
-  }, [isOpen]);
 
   const setField = <K extends keyof DraftPost>(field: K, value: DraftPost[K]) => {
     setDraft((prev) => {
@@ -658,28 +657,17 @@ function NewPostModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="New post"
-      description="Add a single organic social post to your calendar. The agent will draft the rest."
-      footer={
-        <>
-          <Button variant="tertiary" size="md" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            frontIcon={Check2}
-            isDisabled={!canSave}
-            onClick={handleSave}
-          >
-            Add to calendar
-          </Button>
-        </>
-      }
-    >
+    <Modal.Root size="md" aria-labelledby="new-post-title" data-testid="new-post-modal">
+      <Modal.Header
+        title="New post"
+        id="new-post-title"
+        onClose={close}
+        compact={false}
+      />
+      <Modal.Content compact={false}>
+        <p style={{ margin: '0 0 16px 0', fontSize: 13.5, color: 'var(--dark-60)' }}>
+          Add a single organic social post to your calendar. The agent will draft the rest.
+        </p>
       <NPSection label="Caption / title">
         <textarea
           rows={3}
@@ -812,18 +800,43 @@ function NewPostModal({
           }}
         />
       </NPSection>
-    </Modal>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="ghost" onPress={close}>
+            Cancel
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton
+            variant="primary"
+            frontIcon={Check2}
+            isDisabled={!canSave}
+            onPress={handleSave}
+          >
+            Add to calendar
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
   );
 }
 
 // ─── ROUTE ─────────────────────────────────────────────────────────
 
 export function OrganicSocialRoute() {
+  return (
+    <ModalStack>
+      <OrganicSocialRouteInner />
+    </ModalStack>
+  );
+}
+
+function OrganicSocialRouteInner() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const { openModal, closeModal } = useModals();
   const [posts, setPosts] = useState<Post[]>(SEED_POSTS);
-  const [chooserOpen, setChooserOpen] = useState(false);
-  const [newPostOpen, setNewPostOpen] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
 
   const visibleWeek = useMemo(() => weekFromOffset(weekOffset), [weekOffset]);
@@ -836,8 +849,30 @@ export function OrganicSocialRoute() {
     return map;
   }, [posts, isCurrentWeek]);
 
+  const handleOpenChooser = () => {
+    openModal(CreateChooserModal, {
+      onPickCampaign: () => {
+        closeModal();
+        showToast({ message: 'Campaign wizard coming with campaigns deep port' });
+        navigate('/h2/campaigns');
+      },
+      onPickPost: () => {
+        closeModal();
+        openModal(NewPostModal, {
+          visibleWeek,
+          onSave: (p) => {
+            setPosts((prev) => [...prev, p]);
+            closeModal();
+            if (weekOffset !== 0) setWeekOffset(0);
+            showToast({ message: 'Post added to calendar' });
+          },
+        });
+      },
+    });
+  };
+
   const topbarRight = (
-    <Button variant="secondary" size="md" frontIcon={Plus} onClick={() => setChooserOpen(true)}>
+    <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenChooser}>
       Create new
     </Button>
   );
@@ -919,31 +954,6 @@ export function OrganicSocialRoute() {
         </div>
       </div>
 
-      <CreateChooserModal
-        isOpen={chooserOpen}
-        onClose={() => setChooserOpen(false)}
-        onPickCampaign={() => {
-          setChooserOpen(false);
-          showToast({ message: 'Campaign wizard coming with campaigns deep port' });
-          navigate('/h2/campaigns');
-        }}
-        onPickPost={() => {
-          setChooserOpen(false);
-          setNewPostOpen(true);
-        }}
-      />
-
-      <NewPostModal
-        isOpen={newPostOpen}
-        onClose={() => setNewPostOpen(false)}
-        visibleWeek={visibleWeek}
-        onSave={(p) => {
-          setPosts((prev) => [...prev, p]);
-          setNewPostOpen(false);
-          if (weekOffset !== 0) setWeekOffset(0);
-          showToast({ message: 'Post added to calendar' });
-        }}
-      />
     </H2Layout>
   );
 }
