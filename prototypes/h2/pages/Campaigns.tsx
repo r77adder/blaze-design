@@ -5,6 +5,7 @@ import type { StackModalProps } from '@/components';
 import { useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import { H2Layout } from '../H2Layout';
+import { CrosspostWarningModal } from '../CrosspostWarningModal';
 
 /**
  * /h2/campaigns — deep port of Blaze H2 Features/campaigns.html.
@@ -699,9 +700,10 @@ interface DetailViewProps {
   campaign: Campaign;
   onBack: () => void;
   onSectionClick: (sid: SectionId) => void;
+  onTurnOffCrosspost: () => void;
 }
 
-function DetailView({ campaign: c, onBack, onSectionClick }: DetailViewProps) {
+function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }: DetailViewProps) {
   const start = parseISO(c.start);
   const end = parseISO(c.end);
   const days = daysBetween(start, end) + 1;
@@ -901,6 +903,27 @@ function DetailView({ campaign: c, onBack, onSectionClick }: DetailViewProps) {
             </svg>
           }>
             {c.type}
+          </DetailRow>
+          <DetailRow label="Crosspost" icon={<></>}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: 'var(--dark-90)' }}>On — sharing across all connected accounts</span>
+              <button
+                type="button"
+                onClick={onTurnOffCrosspost}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  color: 'var(--dark-60)',
+                  fontSize: 13,
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Turn off
+              </button>
+            </span>
           </DetailRow>
         </section>
 
@@ -1857,6 +1880,13 @@ function CampaignsRouteInner() {
             campaign={detailCampaign}
             onBack={() => setView({ kind: 'gantt' })}
             onSectionClick={(sid) => showToast({ message: `Open ${SECTION_META[sid]?.title ?? sid}` })}
+            onTurnOffCrosspost={() => {
+              openModal(CrosspostWarningModal, {
+                onConfirm: () => {
+                  showToast({ message: 'Crosspost disabled · each account will publish individually' });
+                },
+              });
+            }}
           />
         )}
       </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { useToast } from '@/staging';
+import { CrosspostWarningModal } from '../CrosspostWarningModal';
 import Plus from '@/icons/20/Plus';
 import ChevronLeft from '@/icons/24/ChevronLeft';
 import ChevronRight from '@/icons/24/ChevronRight';
@@ -623,9 +624,12 @@ function NewPostModal({
   onSave: (p: Post) => void;
   visibleWeek: DayInfo[];
 }) {
+  const { openModal } = useModals();
+  const { showToast } = useToast();
   // Modal mounts on demand via openModal — initial draft is always fresh,
   // no need for the prior `useEffect(() => { if (isOpen) setDraft(INITIAL_DRAFT) })`.
   const [draft, setDraft] = useState<DraftPost>(INITIAL_DRAFT);
+  const [crosspost, setCrosspost] = useState(true);
 
   const setField = <K extends keyof DraftPost>(field: K, value: DraftPost[K]) => {
     setDraft((prev) => {
@@ -799,6 +803,38 @@ function NewPostModal({
             outline: 'none',
           }}
         />
+      </NPSection>
+
+      <NPSection label="Crosspost">
+        <label
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            cursor: 'pointer',
+            fontSize: 13.5,
+            color: 'var(--dark-90)',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={crosspost}
+            onChange={(e) => {
+              if (!e.target.checked) {
+                openModal(CrosspostWarningModal, {
+                  onConfirm: () => {
+                    setCrosspost(false);
+                    showToast({ message: 'Crosspost disabled · posts will publish per account' });
+                  },
+                });
+              } else {
+                setCrosspost(true);
+              }
+            }}
+            style={{ accentColor: 'var(--dark-90)', width: 16, height: 16 }}
+          />
+          <span>Crosspost to all connected accounts</span>
+        </label>
       </NPSection>
       </Modal.Content>
       <Modal.Footer>
