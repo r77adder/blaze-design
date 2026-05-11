@@ -8,7 +8,7 @@ import { EmailSms } from './pages/EmailSms';
 import { InfluencerContent, InfluencerContentTopbarAction } from './pages/InfluencerContent';
 import { LandingPages, LandingPagesTopbarAction } from './pages/LandingPages';
 import { MapRankingRoute } from './pages/MapRanking';
-import { PaidSearch, PaidSearchTopbarAction } from './pages/PaidSearch';
+import { PaidSearchRoute } from './pages/PaidSearch';
 import { ReputationRoute } from './pages/Reputation';
 import { SeoAeo } from './pages/SeoAeo';
 import { Placeholder } from './pages/Placeholder';
@@ -35,7 +35,7 @@ export default function H2() {
         <Route path="/map-ranking" element={<MapRankingRoute />} />
         <Route path="/influencer-content" element={<H2Layout topbarRight={<InfluencerContentTopbarAction />}><InfluencerContent /></H2Layout>} />
         <Route path="/paid-social" element={<H2Layout><Placeholder name="Paid Social" /></H2Layout>} />
-        <Route path="/paid-search" element={<H2Layout topbarRight={<PaidSearchTopbarAction />}><PaidSearch /></H2Layout>} />
+        <Route path="/paid-search" element={<PaidSearchRoute />} />
         <Route path="/email-sms" element={<H2Layout><EmailSms /></H2Layout>} />
         <Route path="/landing-pages" element={<H2Layout topbarRight={<LandingPagesTopbarAction />}><LandingPages /></H2Layout>} />
         <Route path="/reputation" element={<ReputationRoute />} />
