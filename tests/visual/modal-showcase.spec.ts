@@ -20,6 +20,14 @@ test.describe('modal-showcase prototype', () => {
     await page.waitForLoadState('networkidle');
     await page.getByTestId('open-hero').click();
     await expect(page.getByTestId('hero-modal')).toBeVisible();
+    // Hero image is from Cloudinary — wait for it to actually load before capturing
+    await page.locator('[data-testid="hero-modal"] img').waitFor({ state: 'visible' });
+    await page.waitForFunction(() => {
+      const img = document.querySelector(
+        '[data-testid="hero-modal"] img',
+      ) as HTMLImageElement | null;
+      return !!img && img.complete && img.naturalWidth > 0;
+    });
     await expect(page).toHaveScreenshot('hero.png', { fullPage: true });
   });
 

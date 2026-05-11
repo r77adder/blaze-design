@@ -35,12 +35,12 @@ function HeroModal({ close }: StackModalProps) {
     <Modal.Root size="md" aria-labelledby="hero-modal-title" data-testid="hero-modal">
       <Modal.Header
         variant="hero"
-        title="Welcome to Blaze"
-        heroImage="https://res.cloudinary.com/almanac-io/image/upload/v1700000000/marketing-onboarding-hero.png"
-        heroImageAlt="Marketing dashboard preview"
+        title="Your account is connected!"
+        heroImage="https://res.cloudinary.com/almanac/image/upload/v1755871734/blaze_assets/65cfcb6ed487608453ac773ecee3a53be5e327f9_exitid.png"
+        heroImageAlt=""
         id="hero-modal-title"
         onClose={close}
-        titleColor="var(--light-100)"
+        headingLevel={1}
       />
       <Modal.Content>
         <Text variant="secondary">
@@ -70,6 +70,7 @@ function WizardModal({ close }: StackModalProps) {
         id="wizard-modal-title"
         onClose={close}
         onBack={step > 1 ? () => setStep((s) => s - 1) : undefined}
+        compact={false}
       />
       <Modal.Content>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
