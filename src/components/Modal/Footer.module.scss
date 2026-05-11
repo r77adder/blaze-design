@@ -1,0 +1,110 @@
+@use '../../tokens/mixins' as *;
+@use '../../tokens/typography' as *;
+@use '../../tokens/breakpoints' as *;
+
+.footer {
+  border-top: 1px solid var(--dark-4);
+  padding: 15px;
+  background: var(--light-100);
+  border-radius: 0 0 16px 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-content: space-between;
+
+  button {
+    @include md-sohne;
+    gap: 2px;
+    border-radius: 8px;
+    height: 36px;
+    min-height: 36px;
+    padding: 9px;
+    line-height: 96%; /* 15.36px */
+  }
+
+  &.fixed {
+    background: var(--light-100);
+    box-shadow: 0 -4px 14px 0 rgba(0, 0, 0, 0.03);
+    position: sticky;
+    bottom: -50px;
+    border-radius: 0;
+    z-index: 50;
+  }
+
+  &.isConfirmation {
+    border-top: none;
+    padding: 0 25px 25px 25px;
+  }
+
+  &.sticky {
+    position: sticky;
+    bottom: 0;
+  }
+
+  &.blur {
+    @include blur;
+  }
+
+  &.blaze {
+    padding: 15px;
+  }
+
+  &.noCenter {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  &.vertical {
+    display: flex;
+    gap: 12px;
+    flex-direction: column-reverse;
+
+    .slot {
+      justify-content: center;
+      margin: 0;
+    }
+  }
+
+  &.withContentBackground {
+    background-color: var(--light-80);
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+  }
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+
+  &.left {
+    justify-content: start;
+    margin-right: auto;
+  }
+
+  &.right {
+    justify-content: end;
+    margin-left: auto;
+  }
+
+  &.center {
+    justify-content: center;
+    margin: auto;
+  }
+}
+
+@include for-phone-only {
+  .footer {
+    flex-direction: column-reverse;
+    display: flex;
+    gap: 4px;
+    margin-top: auto;
+
+    button,
+    a,
+    div {
+      width: 100%;
+    }
+  }
+
+  .slot {
+    text-align: center;
+  }
+}

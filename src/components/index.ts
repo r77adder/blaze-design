@@ -20,3 +20,6 @@ export type { ButtonProps, ButtonSize, ButtonVariant, ButtonLinkProps, Icon } fr
 
 export { IconButton, IconButtonLink } from './IconButton';
 export type { IconButtonProps, IconButtonLinkProps } from './IconButton';
+
+export { Modal, ModalStack, useModals } from './Modal';
+export type { StackModalProps } from './Modal';

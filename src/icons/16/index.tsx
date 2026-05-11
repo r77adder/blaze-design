@@ -1,6 +1,7 @@
 export { default as AddMember } from './AddMember';
 export { default as AddStrategies } from './AddStrategies';
 export { default as ArrowDownRightSm } from './ArrowDownRightSm';
+export { default as ArrowLeft } from './ArrowLeft';
 export { default as ArrowRightSm } from './ArrowRightSm';
 export { default as ArrowUndo } from './ArrowUndo';
 export { default as ArrowUpRight } from './ArrowUpRight';
@@ -12,6 +13,7 @@ export { default as Check } from './Check';
 export { default as Check02 } from './Check02';
 export { default as Check03 } from './Check03';
 export { default as ChevronDown } from './ChevronDown';
+export { default as ChevronRight } from './ChevronRight';
 export { default as Close } from './Close';
 export { default as CloseThick } from './CloseThick';
 export { default as ContentMix } from './ContentMix';

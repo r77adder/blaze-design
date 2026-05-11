@@ -1,0 +1,247 @@
+@use '../../tokens/mixins' as *;
+@use '../../tokens/typography' as *;
+@use '../../tokens/breakpoints' as *;
+
+.header {
+  padding: 16px 16px 16px 22px;
+  border-bottom: 1px solid var(--dark-4);
+  background: var(--light-100);
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  @include for-desktop-only {
+    &.compact {
+      padding: 35px 40px 30px 40px;
+      border-bottom: none;
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        font-size: 26px !important;
+        font-weight: 400 !important;
+        line-height: 110% !important;
+        letter-spacing: normal !important;
+      }
+
+      .actions {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+      }
+
+      .headerLeftContent {
+        @include line-clamp(2);
+        max-width: calc(100% - 20px);
+        min-height: 30px;
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+          @include line-clamp(2);
+          display: block !important;
+          min-height: 30px;
+        }
+      }
+    }
+
+    &.isConfirmation {
+      padding: 25px;
+    }
+
+    &.widthSubHeader {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 9px;
+
+      &.isConfirmation {
+        gap: 10px;
+      }
+
+      .subHeader {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+          font-size: 18px !important;
+          line-height: 140% !important;
+        }
+      }
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    line-height: 140% !important;
+    letter-spacing: 0.32px !important;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+}
+
+.title {
+  color: var(--dark-80);
+  margin-bottom: 0;
+  @include line-clamp;
+  flex: 1;
+}
+
+.top + .header {
+  padding-top: 2px;
+}
+
+.top {
+  padding: 12px 20px 0 20px;
+  display: flex;
+  align-items: center;
+}
+
+.header {
+  &.sm {
+    .title {
+      @include xl-semibold;
+    }
+  }
+
+  &.lg {
+    .title {
+      @include xxl-semibold;
+    }
+  }
+}
+
+.heroHeader {
+  position: relative;
+
+  .headingContainer {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    width: 100%;
+    height: 50%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5 {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+    }
+  }
+
+  .image {
+    position: relative;
+    width: 100%;
+    display: block;
+
+    @include for-desktop-only {
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+
+    @include for-phone-only {
+      width: 100%;
+      height: 214px;
+      object-fit: cover;
+    }
+  }
+
+  @include for-phone-only {
+    button {
+      position: absolute;
+      top: 8px;
+      right: 4px;
+      font-size: 16px;
+    }
+  }
+}
+
+/* Media query for phones */
+@include for-phone-only {
+  .titleContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    padding: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    height: 46px;
+    gap: 4px;
+    width: 100%;
+    padding: 5px;
+    background: var(--light-100);
+    box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.1);
+
+    .backButtonRight {
+      position: absolute;
+      right: 5px;
+    }
+
+    &.sm,
+    &.lg {
+      .title {
+        @include lg-medium;
+        color: var(--dark-80);
+        margin-right: auto;
+        text-overflow: ellipsis;
+        max-width: 250px;
+        font-weight: 500 !important;
+        position: absolute;
+        left: 50%;
+        justify-content: center;
+        transform: translateX(-50%);
+        text-align: center;
+      }
+    }
+
+    .actions {
+      margin: 2px 0;
+    }
+
+    .noTitle {
+      justify-content: flex-start;
+    }
+
+    &.preventClose {
+      padding: 10px 20px;
+      margin-bottom: 0;
+    }
+  }
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerLeftContent {
+  display: flex;
+  align-items: center;
+}

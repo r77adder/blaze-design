@@ -36,6 +36,12 @@ $z-index: (
   }
 }
 
+@mixin for-tablet-portrait-up {
+  @media (min-width: $tabletPortraitMinWidth) {
+    @content;
+  }
+}
+
 // ─── Visual effects ─────────────────────────────────────────────────
 
 @mixin blur($blur-amount: 25px) {

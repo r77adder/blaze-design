@@ -1,0 +1,50 @@
+@use '../../../tokens/mixins' as *;
+@use '../../../tokens/typography' as *;
+
+.listItem {
+  display: flex;
+  align-items: center;
+  padding: 2px 0px;
+  margin-bottom: 1px;
+
+  @include for-phone-only {
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--neutral-5);
+    }
+    padding: 6px 0px;
+  }
+
+  svg {
+    color: var(--neutral-30);
+  }
+
+  .itemLabel {
+    @include md-medium;
+    color: var(--neutral-90);
+    width: 100%;
+    justify-content: flex-start;
+    height: 32px;
+    gap: 6px;
+
+    @include for-phone-only {
+      padding-left: 4px;
+
+      &:hover {
+        background-color: initial;
+      }
+    }
+
+    @include for-tablet-portrait-up {
+      &:hover {
+        background-color: var(--neutral-10);
+      }
+    }
+  }
+
+  @include for-tablet-portrait-up {
+    .isSelected {
+      color: var(--neutral-90);
+      background-color: var(--neutral-5);
+    }
+  }
+}

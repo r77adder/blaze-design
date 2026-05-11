@@ -1,0 +1,52 @@
+@use '../../tokens/mixins' as *;
+@use '../../tokens/breakpoints' as *;
+
+.content {
+  padding: 35px 40px;
+  background: var(--light-100);
+  overflow: auto;
+
+  @include for-phone-only {
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 8px 16px;
+  }
+
+  @include for-desktop-only {
+    &.compact {
+      padding: 0 40px 35px 40px;
+    }
+
+    &.isConfirmation {
+      padding: 0 25px 25px 25px;
+    }
+  }
+
+  &.withoutFooter {
+    padding: 40px;
+    border-radius: 0 0 16px 16px;
+
+    @include for-desktop-only {
+      &.compact {
+        padding: 0 40px 40px 40px;
+      }
+
+      &.isConfirmation {
+        padding: 0 25px 25px 25px;
+      }
+    }
+  }
+
+  &.fillAvailableSpace {
+    padding: 0;
+  }
+}
+
+.fillAvailableSpace {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1 0 0;
+  align-self: stretch;
+  width: 100%;
+}
