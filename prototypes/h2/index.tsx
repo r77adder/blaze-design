@@ -3,7 +3,7 @@ import { Toaster, ToasterProvider } from '@/staging';
 import { H2Layout } from './H2Layout';
 import { Home } from './pages/Home';
 import { OrganicSocialRoute } from './pages/OrganicSocial';
-import { Campaigns, CampaignsTopbarAction } from './pages/Campaigns';
+import { CampaignsRoute } from './pages/Campaigns';
 import { EmailSmsRoute } from './pages/EmailSms';
 import { InfluencerContentRoute } from './pages/InfluencerContent';
 import { LandingPagesRoute } from './pages/LandingPages';
@@ -40,7 +40,7 @@ export default function H2() {
         <Route path="/landing-pages" element={<LandingPagesRoute />} />
         <Route path="/reputation" element={<ReputationRoute />} />
         <Route path="/content-plan" element={<H2Layout><Placeholder name="Content Plan" sourceFile="content-plan-prototype" /></H2Layout>} />
-        <Route path="/campaigns" element={<H2Layout topbarRight={<CampaignsTopbarAction />}><Campaigns /></H2Layout>} />
+        <Route path="/campaigns" element={<CampaignsRoute />} />
         <Route path="/multi-change" element={<H2Layout><Placeholder name="Multi-Change" sourceFile="multi-change-mockup" /></H2Layout>} />
       </Routes>
       <Toaster />
