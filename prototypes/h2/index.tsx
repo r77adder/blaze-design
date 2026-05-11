@@ -6,7 +6,7 @@ import { OrganicSocialRoute } from './pages/OrganicSocial';
 import { Campaigns, CampaignsTopbarAction } from './pages/Campaigns';
 import { EmailSmsRoute } from './pages/EmailSms';
 import { InfluencerContent, InfluencerContentTopbarAction } from './pages/InfluencerContent';
-import { LandingPages, LandingPagesTopbarAction } from './pages/LandingPages';
+import { LandingPagesRoute } from './pages/LandingPages';
 import { MapRankingRoute } from './pages/MapRanking';
 import { PaidSearchRoute } from './pages/PaidSearch';
 import { ReputationRoute } from './pages/Reputation';
@@ -37,7 +37,7 @@ export default function H2() {
         <Route path="/paid-social" element={<H2Layout><Placeholder name="Paid Social" /></H2Layout>} />
         <Route path="/paid-search" element={<PaidSearchRoute />} />
         <Route path="/email-sms" element={<EmailSmsRoute />} />
-        <Route path="/landing-pages" element={<H2Layout topbarRight={<LandingPagesTopbarAction />}><LandingPages /></H2Layout>} />
+        <Route path="/landing-pages" element={<LandingPagesRoute />} />
         <Route path="/reputation" element={<ReputationRoute />} />
         <Route path="/content-plan" element={<H2Layout><Placeholder name="Content Plan" sourceFile="content-plan-prototype" /></H2Layout>} />
         <Route path="/campaigns" element={<H2Layout topbarRight={<CampaignsTopbarAction />}><Campaigns /></H2Layout>} />
