@@ -10,7 +10,7 @@ import { LandingPagesRoute } from './pages/LandingPages';
 import { MapRankingRoute } from './pages/MapRanking';
 import { PaidSearchRoute } from './pages/PaidSearch';
 import { ReputationRoute } from './pages/Reputation';
-import { SeoAeo } from './pages/SeoAeo';
+import { SeoAeoRoute } from './pages/SeoAeo';
 import { Placeholder } from './pages/Placeholder';
 
 /**
@@ -31,7 +31,7 @@ export default function H2() {
       <Routes>
         <Route path="/" element={<H2Layout><Home /></H2Layout>} />
         <Route path="/organic-social" element={<OrganicSocialRoute />} />
-        <Route path="/seo-aeo" element={<H2Layout><SeoAeo /></H2Layout>} />
+        <Route path="/seo-aeo" element={<SeoAeoRoute />} />
         <Route path="/map-ranking" element={<MapRankingRoute />} />
         <Route path="/influencer-content" element={<InfluencerContentRoute />} />
         <Route path="/paid-social" element={<H2Layout><Placeholder name="Paid Social" /></H2Layout>} />
