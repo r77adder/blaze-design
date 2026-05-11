@@ -6,20 +6,22 @@ This repo is the Blaze design system + a prototype playground. Two audiences use
 
 ## Hard rules
 
-1. **NEVER reinvent components inside `prototypes/`.** If a needed component doesn't exist in `src/components/` OR `src/staging/`, STOP. Either scaffold it in `src/staging/` (default) or append a description to `prototypes/<feature>/GAPS.md` and tell the user. Do not fake it with raw `<button>`, `<input>`, custom card divs, etc.
-2. **NEVER use raw hex for blacks/whites/reds.** Use design tokens: `var(--dark-90)`, `var(--light-100)`, `var(--red-70)`, etc. Brand and accent colors are tokenized too — see the table below.
-3. **NEVER edit files in `src/components/` or `src/icons/` from a prototype task.** Those directories are eng-protected. `src/staging/` is open for prototype-driven evolution. If a prototype task seems to require touching `src/components/` or `src/icons/`, confirm with the user before doing so.
-4. **NEVER add a new directory to `src/components/` directly.** All new components scaffold into `src/staging/` first. Promotion to `src/components/` requires the gate in `.claude/skills/promoting-staging-component.md` (chiefly: prod has adopted the component into `apps/blaze/src/blaze-ui/`).
-5. **ALWAYS import via `@/components` (vetted lib) or `@/staging` (work-in-progress)** inside `prototypes/` and `src/playground/`. **ALWAYS use relative imports** inside `src/components/` and `src/staging/` — the alias is intentionally not in the lib's tsconfig because it would leak into emitted `.d.ts` files. Vetted code MUST NOT import from staging (would leak into the published surface); staging may import from `../../components/<Name>`.
-6. **For any visual gap investigation against prod**, follow `.claude/skills/visual-debugging.md`. First step is verifying chrome-devtools-mcp is connected — if `list_pages` errors, walk the user through plugin install BEFORE attempting screenshot comparisons. Never ping-pong screenshots with the user when the MCP would settle the question in one tool call.
-7. **When a new prototype or component lands, add a Playwright snapshot test** under `tests/visual/`. Follow `.claude/skills/visual-snapshot-testing.md`. Run `pnpm test:visual` before considering the task done.
-8. **NEVER commit to `main` directly.** Before staging any commit, check the current branch — if on `main`, create a new branch named after the work scope (`prototype/<slug>`, `staging/<name>`, `docs/<topic>`, etc.). The remote `main` branch is server-protected; direct pushes will be rejected. Use `/share` (`.claude/commands/share.md`) to handle the full branch+commit+push+PR flow automatically.
+1. **NEVER reinvent components inside `prototypes/`.** If a needed component doesn't exist in `src/components/` OR `src/staging/`, STOP. Either scaffold it in `src/staging/` (default) or append a description to `prototypes/<feature>/GAPS.md` and tell the user. Do not fake it with raw `<button>`, `<input>`, custom card divs, etc. The vetted-source-of-truth in prod is **both** `apps/blaze/src/blaze-ui/` AND `apps/blaze/src/almanac-ui/` — when checking whether a component is portable to vetted, look in both.
+2. **The lib is "redesign always on."** Prod gates many behaviors on `document.documentElement.getAttribute('data-autopilot-system-redesign') === 'on'`. In this repo, treat that branch as ALWAYS TRUE — inline the redesign-on values, drop the legacy branch, and remove the attribute check. SCSS follows the same rule: bake the `[data-autopilot-system-redesign='on'] &` overrides into the default selector.
+
+3. **NEVER use raw hex for blacks/whites/reds.** Use design tokens: `var(--dark-90)`, `var(--light-100)`, `var(--red-70)`, etc. Brand and accent colors are tokenized too — see the table below.
+4. **NEVER edit files in `src/components/` or `src/icons/` from a prototype task.** Those directories are eng-protected. `src/staging/` is open for prototype-driven evolution. If a prototype task seems to require touching `src/components/` or `src/icons/`, confirm with the user before doing so.
+5. **NEVER add a new directory to `src/components/` directly.** All new components scaffold into `src/staging/` first. Promotion to `src/components/` requires the gate in `.claude/skills/promoting-staging-component.md` (chiefly: prod has adopted the component into `apps/blaze/src/blaze-ui/` or `apps/blaze/src/almanac-ui/`).
+6. **ALWAYS import via `@/components` (vetted lib) or `@/staging` (work-in-progress)** inside `prototypes/` and `src/playground/`. **ALWAYS use relative imports** inside `src/components/` and `src/staging/` — the alias is intentionally not in the lib's tsconfig because it would leak into emitted `.d.ts` files. Vetted code MUST NOT import from staging (would leak into the published surface); staging may import from `../../components/<Name>`.
+7. **For any visual gap investigation against prod**, follow `.claude/skills/visual-debugging.md`. First step is verifying chrome-devtools-mcp is connected — if `list_pages` errors, walk the user through plugin install BEFORE attempting screenshot comparisons. Never ping-pong screenshots with the user when the MCP would settle the question in one tool call.
+8. **When a new prototype or component lands, add a Playwright snapshot test** under `tests/visual/`. Follow `.claude/skills/visual-snapshot-testing.md`. Run `pnpm test:visual` before considering the task done.
+9. **NEVER commit to `main` directly.** Before staging any commit, check the current branch — if on `main`, create a new branch named after the work scope (`prototype/<slug>`, `staging/<name>`, `docs/<topic>`, etc.). The remote `main` branch is server-protected; direct pushes will be rejected. Use `/share` (`.claude/commands/share.md`) to handle the full branch+commit+push+PR flow automatically.
 
 ---
 
 ## What's where
 
-- `src/components/` — **vetted lib surface (publishable).** Only components that are 1:1 with `apps/blaze/src/blaze-ui/`. Eng-protected. Today: `Button`, `Heading`, `Paragraph`, `Text`.
+- `src/components/` — **vetted lib surface (publishable).** Only components that are 1:1 with prod's vetted dirs (`apps/blaze/src/blaze-ui/` and `apps/blaze/src/almanac-ui/` — both count as upstream sources of truth). Eng-protected. Today: `Button`, `ButtonLink`, `Heading`, `IconButton`, `IconButtonLink`, `Modal`, `Paragraph`, `Text`.
 - `src/staging/` — shared-across-prototypes work-in-progress components. NOT shipped in the published lib. Open to prototype-driven evolution. Promote to `src/components/` only when prod adopts the component into `apps/blaze/src/blaze-ui/` — see `.claude/skills/promoting-staging-component.md`.
 - `src/icons/` — eng-protected icon components, organized by pixel size (`12/`, `14/`, `16/`, etc.)
 - `src/tokens/` — `colors.css` + `typography.scss` + `fonts.scss` + `reset.css` + Söhne font files
@@ -137,12 +139,16 @@ Fonts load automatically via the playground / Ladle. Do NOT add `@font-face` dec
 
 ## Component catalog (quick reference)
 
-### Vetted (`@/components`) — 1:1 with `apps/blaze/src/blaze-ui/`
+### Vetted (`@/components`) — 1:1 with `apps/blaze/src/blaze-ui/` and `apps/blaze/src/almanac-ui/`
 
 - **`Text`** — typographic primitive (`apps/blaze/src/blaze-ui/Text`)
 - **`Heading`** — heading primitive (`apps/blaze/src/blaze-ui/Heading`)
 - **`Paragraph`** — paragraph primitive (`apps/blaze/src/blaze-ui/Paragraph`)
-- **`Button`** — button primitive (`apps/blaze/src/blaze-ui/Button`). Verified 1:1 via Chrome DevTools MCP.
+- **`Button`** — button primitive (`apps/blaze/src/blaze-ui/Button`). 12 variants, 5 sizes. Verified 1:1 via Chrome DevTools MCP.
+- **`ButtonLink`** — anchor variant of Button (`apps/blaze/src/blaze-ui/Button/ButtonLink.tsx`). React-router-aware via `to` prop.
+- **`IconButton`** — Button wrapper for icon-only buttons (`apps/blaze/src/blaze-ui/IconButton/IconButton.tsx`). `active` → forceActive, hover events propagated.
+- **`IconButtonLink`** — ButtonLink wrapper (`apps/blaze/src/blaze-ui/IconButton/IconButtonLink.tsx`). Optional `withChevron` (up/down) endIcon.
+- **`Modal`** — namespace component (`apps/blaze/src/almanac-ui/Modal/`). Sub-parts: `Modal.Root`, `Modal.Header`, `Modal.Top`, `Modal.BackButton`, `Modal.Content`, `Modal.Footer`, `Modal.FooterContent`, `Modal.FooterButton`, `Modal.FooterButtonLink`, `Modal.ListSection` (mobile), `Modal.ListItem` (mobile). Stack management via `<ModalStack>` provider + `useModals()` hook. Use `<ModalTrigger modal={Component}>` to attach a modal to any pressable child.
 
 For full prop details, read each component's `Types.ts`.
 
