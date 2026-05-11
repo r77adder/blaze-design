@@ -27,6 +27,10 @@
   flex-direction: column;
   max-width: 100%;
   color: var(--dark-60);
+  // 2px gap between stacked NavItems matches prod's `.navItemsList { gap: 2px }`
+  // (apps/blaze/src/blaze-components/WorkspaceDashboardSidebar/components/NavMenu/NavMenu.module.scss).
+  // Without this, items render flush and the rail looks crushed compared to prod.
+  gap: 2px;
   // Only the bottom margin from prod's SectionHeader margin shorthand
   // (`0 10px 2px 20px`) carries to the wrapper — the rest is the LABEL's
   // positioning, applied to .label below.
