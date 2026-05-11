@@ -50,6 +50,7 @@
     "typecheck": "tsc --noEmit",
     "ladle": "ladle serve",
     "dev": "vite",
+    "build:playground": "vite build",
     "test": "jest",
     "plop": "plop",
     "lint": "eslint . --ext .ts,.tsx",
