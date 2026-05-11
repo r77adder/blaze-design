@@ -9,7 +9,7 @@ import { InfluencerContent, InfluencerContentTopbarAction } from './pages/Influe
 import { LandingPages, LandingPagesTopbarAction } from './pages/LandingPages';
 import { MapRankingRoute } from './pages/MapRanking';
 import { PaidSearch, PaidSearchTopbarAction } from './pages/PaidSearch';
-import { Reputation } from './pages/Reputation';
+import { ReputationRoute } from './pages/Reputation';
 import { SeoAeo } from './pages/SeoAeo';
 import { Placeholder } from './pages/Placeholder';
 
@@ -38,7 +38,7 @@ export default function H2() {
         <Route path="/paid-search" element={<H2Layout topbarRight={<PaidSearchTopbarAction />}><PaidSearch /></H2Layout>} />
         <Route path="/email-sms" element={<H2Layout><EmailSms /></H2Layout>} />
         <Route path="/landing-pages" element={<H2Layout topbarRight={<LandingPagesTopbarAction />}><LandingPages /></H2Layout>} />
-        <Route path="/reputation" element={<H2Layout><Reputation /></H2Layout>} />
+        <Route path="/reputation" element={<ReputationRoute />} />
         <Route path="/content-plan" element={<H2Layout><Placeholder name="Content Plan" sourceFile="content-plan-prototype" /></H2Layout>} />
         <Route path="/campaigns" element={<H2Layout topbarRight={<CampaignsTopbarAction />}><Campaigns /></H2Layout>} />
         <Route path="/multi-change" element={<H2Layout><Placeholder name="Multi-Change" sourceFile="multi-change-mockup" /></H2Layout>} />
