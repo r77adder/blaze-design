@@ -8,7 +8,7 @@ function SimpleModal({ close }: StackModalProps) {
   return (
     <Modal.Root size="sm" aria-labelledby="simple-modal-title" data-testid="simple-modal">
       <Modal.Header title="Save your draft?" id="simple-modal-title" onClose={close} />
-      <Modal.Content>
+      <Modal.Content compact={false}>
         <Text variant="secondary">
           Your changes are unsaved. Save them now or keep editing — you can always come back to this.
         </Text>
@@ -42,7 +42,7 @@ function HeroModal({ close }: StackModalProps) {
         onClose={close}
         headingLevel={1}
       />
-      <Modal.Content>
+      <Modal.Content compact={false}>
         <Text variant="secondary">
           Connect your channels, set a goal, and let Blaze run your growth program. Takes about
           three minutes.
@@ -72,7 +72,7 @@ function WizardModal({ close }: StackModalProps) {
         onBack={step > 1 ? () => setStep((s) => s - 1) : undefined}
         compact={false}
       />
-      <Modal.Content>
+      <Modal.Content compact={false}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Heading level={4}>
             {step === 1 && 'Pick your channels'}
@@ -114,7 +114,7 @@ function StackedFirstModal({ close }: StackModalProps) {
   return (
     <Modal.Root size="sm" aria-labelledby="stacked-first-title" data-testid="stacked-first">
       <Modal.Header title="Delete this campaign?" id="stacked-first-title" onClose={close} />
-      <Modal.Content>
+      <Modal.Content compact={false}>
         <Text variant="secondary">
           This will permanently remove the campaign and all of its scheduled posts.
         </Text>
@@ -139,7 +139,7 @@ function StackedConfirmModal({ close }: StackModalProps) {
   return (
     <Modal.Root size="xs" aria-labelledby="stacked-confirm-title" data-testid="stacked-confirm">
       <Modal.Header title="Are you sure?" id="stacked-confirm-title" onClose={close} />
-      <Modal.Content>
+      <Modal.Content compact={false}>
         <Text variant="secondary">This action can&apos;t be undone.</Text>
       </Modal.Content>
       <Modal.Footer>
