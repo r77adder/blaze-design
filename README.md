@@ -62,7 +62,7 @@ You only need to do this once per machine. After install, just open prod and you
 
 ## Visual snapshot tests
 
-The repo has Playwright snapshot tests under `tests/visual/` that catch unintended visual regressions when components or shared tokens change.
+Playwright snapshot tests under `tests/visual/` catch unintended visual regressions in **vetted lib components** (and Ladle stories, when present). Prototypes and staging components are intentionally NOT covered — see CLAUDE.md rule #8 for the rationale.
 
 ```bash
 pnpm test:visual            # run tests, fail on diff
@@ -71,7 +71,7 @@ pnpm test:visual:update     # re-seed baselines after intentional changes
 
 First-time setup on a machine: `pnpm exec playwright install chromium`.
 
-When adding a new prototype or component, add a snapshot test — see `.claude/skills/visual-snapshot-testing.md`.
+When adding a new vetted component, optionally add a snapshot test — see `.claude/skills/visual-snapshot-testing.md`.
 
 ## Architecture
 
