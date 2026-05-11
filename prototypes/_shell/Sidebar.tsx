@@ -2,15 +2,20 @@ import { NavItem, NavSection, WorkspaceSelector } from '@/staging';
 import {
   Approval,
   Approvals,
-  ArrowRefresh2,
   ArrowUpRightSquareContained,
   BarChartSquare,
   Brand,
+  ClockBackward,
+  Folder,
   Gift01,
+  Globe,
   Help,
+  Image as ImageIcon,
   Lightning,
+  MetaBrand,
+  Plus,
+  Search,
   Settings,
-  Stars,
   Templates,
   UserProfileAdd,
   Users,
@@ -59,9 +64,10 @@ export interface SidebarSection {
  * - Approvals → `Approvals` (badge icon — NavMenuApprovalsItem.tsx)
  * - Learnings → `ArrowUpRightSquareContained` (NavMenuLearningsItem.tsx)
  * - Insights → `BarGroup3` (NavMenuInsightsItem.tsx)
- * - Gen V2 Playground → `Stars` (sparkle equivalent — prod uses almanac-ui
- *   Sparkle, our lib's nearest analogue)
- * - Learnings Playground → `ArrowRefresh2` (NavMenuLearningLoopPlaygroundItem.tsx)
+ *
+ * NOTE: prod also renders "Gen V2 Playground" + "Learnings Playground" entries
+ * for internal users only — they're gated and never shipped to real customers.
+ * They're omitted here so prototypes look like the user-facing nav.
  */
 const DEFAULT_SECTIONS: SidebarSection[] = [
   {
@@ -75,16 +81,35 @@ const DEFAULT_SECTIONS: SidebarSection[] = [
       { label: 'Approvals', icon: Approvals },
       { label: 'Learnings', icon: ArrowUpRightSquareContained },
       { label: 'Insights', icon: BarGroup3 },
-      { label: 'Gen V2 Playground', icon: Stars },
-      { label: 'Learnings Playground', icon: ArrowRefresh2 },
     ],
   },
-  // Prod renders these two labeled sections (with collapsible chevrons) below
-  // the flat top items. They aggregate user-curated lists in prod (Favorites,
-  // AllFiles tree); for prototype purposes we ship the empty headers so the
-  // chrome matches and prototypes can fill items as needed.
-  { label: 'Reach', items: [], collapsible: true },
-  { label: 'Files & Projects', items: [], collapsible: true },
+  // Reach: real users always have at least Meta Ads + SEO populated in prod
+  // (those two are the always-on default channels). Spoof those so the section
+  // doesn't look empty in prototypes.
+  {
+    label: 'Reach',
+    collapsible: true,
+    items: [
+      { label: 'Meta Ads', icon: MetaBrand },
+      { label: 'SEO', icon: Globe },
+    ],
+  },
+  // Files & Projects: prod renders four standing actions at the top
+  // (Create New / Search / Recents / Media Library) plus user-curated folders
+  // below. Spoof a few "Week of" folders so the rail looks lived-in.
+  {
+    label: 'Files & Projects',
+    collapsible: true,
+    items: [
+      { label: 'Create New', icon: Plus },
+      { label: 'Search', icon: Search },
+      { label: 'Recents', icon: ClockBackward },
+      { label: 'Media Library', icon: ImageIcon },
+      { label: 'Week of May 04', icon: Folder },
+      { label: 'Week of Apr 27', icon: Folder },
+      { label: 'Week of Apr 20', icon: Folder },
+    ],
+  },
 ];
 
 /**
