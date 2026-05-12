@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { useToast } from '@/staging';
+import { TabChip, useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import { H2Layout } from '../H2Layout';
 import { CrosspostWarningModal } from '../CrosspostWarningModal';
@@ -227,50 +228,6 @@ function fmtDateInput(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 const TOTAL_DAYS = daysBetween(RANGE_START, RANGE_END) + 1;
-
-// ─── PAGE TABS ─────────────────────────────────────────────────────
-
-function PageTabs() {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0,
-        padding: '0 28px',
-        background: 'var(--light-100)',
-        borderBottom: '1px solid var(--dark-8)',
-        flexShrink: 0,
-      }}
-    >
-      <span
-        style={{
-          padding: '11px 16px',
-          fontSize: 13.5,
-          fontWeight: 500,
-          color: 'var(--dark-90)',
-          borderBottom: '2px solid var(--dark-90)',
-          marginBottom: -1,
-        }}
-      >
-        Campaigns
-      </span>
-      <span
-        style={{
-          padding: '11px 16px',
-          fontSize: 13.5,
-          fontWeight: 400,
-          color: 'var(--dark-60)',
-          borderBottom: '2px solid transparent',
-          marginBottom: -1,
-          cursor: 'pointer',
-        }}
-      >
-        Calendar
-      </span>
-    </div>
-  );
-}
 
 // ─── GANTT VIEW ────────────────────────────────────────────────────
 
@@ -1830,6 +1787,7 @@ export function CampaignsRoute() {
 
 function CampaignsRouteInner() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const { openModal, closeModal } = useModals();
   const [campaigns, setCampaigns] = useState<Campaign[]>(SEED_CAMPAIGNS);
   const [view, setView] = useState<{ kind: 'gantt' } | { kind: 'detail'; campaignId: string }>({ kind: 'gantt' });
@@ -1856,22 +1814,37 @@ function CampaignsRouteInner() {
     });
   };
 
-  const topbarRight =
+  const topbarCenter =
     view.kind === 'gantt' ? (
-      <Button variant="secondary" size="md" frontIcon={Plus} onPress={openChooser}>
-        Create new
-      </Button>
+      <div style={{ display: 'inline-flex', gap: 6 }}>
+        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social')}>Calendar</TabChip>
+        <TabChip selected onSelect={() => {}}>Campaigns</TabChip>
+      </div>
     ) : undefined;
 
   const detailCampaign =
     view.kind === 'detail' ? campaigns.find((c) => c.id === view.campaignId) ?? null : null;
 
   return (
-    <H2Layout topbarRight={topbarRight}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <H2Layout topbarCenter={topbarCenter}>
+      <div style={{ margin: '-24px -24px 0', display: 'flex', flexDirection: 'column', height: '100%' }}>
         {view.kind === 'gantt' && (
           <>
-            <PageTabs />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                padding: '12px 28px',
+                borderBottom: '1px solid var(--dark-8)',
+                background: 'var(--light-100)',
+                flexShrink: 0,
+              }}
+            >
+              <Button variant="secondary" size="md" frontIcon={Plus} onPress={openChooser}>
+                Create new
+              </Button>
+            </div>
             <GanttView campaigns={campaigns} onOpenDetail={(id) => setView({ kind: 'detail', campaignId: id })} />
           </>
         )}

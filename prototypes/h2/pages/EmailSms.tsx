@@ -4,6 +4,8 @@ import type { StackModalProps } from '@/components';
 import { useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
+import { EmailSmsColdView } from './ColdViews';
 
 /**
  * /h2/email-sms — port of Blaze H2 Features/email&sms.html (program hub).
@@ -326,86 +328,111 @@ function BlockedPill() {
   );
 }
 
-// ─── PROGRAM CARD ───────────────────────────────────────────────────────
+// ─── PROGRAM ROW (flat list — mirrors PaidSearch campaign row) ─────────
 
-function ProgramCard({ p, onOpen }: { p: Program; onOpen: () => void }) {
+const ROW_GRID = '2fr 1fr 110px 110px 130px 110px 28px';
+
+function ProgramRow({
+  p,
+  onOpen,
+  last,
+}: {
+  p: Program;
+  onOpen: () => void;
+  last: boolean;
+}) {
+  const audience = p.stats.find((s) => /audience|reach|recipients/i.test(s.k));
+  const audienceVal = audience?.v ?? '—';
+  const cadence = `${p.steps.length} touches`;
+  const lastSent =
+    p.status === 'live'
+      ? '2h ago'
+      : p.status === 'draft'
+        ? 'Not sent yet'
+        : 'Not drafted';
+
   return (
-    <div
+    <button
+      type="button"
       onClick={onOpen}
       style={{
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
-        padding: 18,
+        display: 'grid',
+        gridTemplateColumns: ROW_GRID,
+        gap: 14,
+        alignItems: 'center',
+        padding: '14px 16px',
+        background: 'transparent',
+        border: 'none',
+        borderBottom: last ? 'none' : '1px solid var(--dark-8)',
+        width: '100%',
         cursor: 'pointer',
-        marginBottom: 12,
+        fontFamily: 'inherit',
+        textAlign: 'left',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-            <StatusPill status={p.status} />
-            {p.channels.map((c) => <ChannelIcon key={c} kind={c} />)}
-            <span style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>{p.stage}</span>
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.1px' }}>{p.name}</div>
-          <div style={{ fontSize: 13, color: 'var(--dark-80)', marginTop: 4, lineHeight: 1.55, maxWidth: 720 }}>{p.desc}</div>
-          {p.attention && (
-            <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-              <AttentionPill attention={p.attention} />
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, paddingTop: 4, color: 'var(--dark-25)' }}>
-          <span style={{ fontSize: 12.5, color: 'var(--dark-90)', fontWeight: 450 }}>Open</span>
-          <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="m9 6 6 6-6 6" />
-          </svg>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 450, color: 'var(--dark-90)' }}>{p.name}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 2 }}>
+          {p.trigger} · {p.stage}
         </div>
       </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 0,
-          marginTop: 14,
-          paddingTop: 14,
-          borderTop: '1px solid var(--dark-4)',
-        }}
-      >
-        {p.stats.map((s, i) => (
-          <div key={s.k} style={{ paddingLeft: i === 0 ? 0 : 14, borderLeft: i === 0 ? 'none' : '1px solid var(--dark-4)' }}>
-            <div style={{ fontSize: 10.5, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 }}>{s.k}</div>
-            <div style={{ fontSize: 15, fontWeight: 500, marginTop: 3, color: 'var(--dark-90)' }}>{s.v}</div>
-          </div>
-        ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+        <StatusPill status={p.status} />
+        {p.attention && <AttentionPill attention={p.attention} />}
       </div>
-    </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {p.channels.map((c) => <ChannelIcon key={c} kind={c} size={20} />)}
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>{cadence}</div>
+      <div style={{ fontSize: 13, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>{audienceVal}</div>
+      <div style={{ fontSize: 12.5, color: 'var(--dark-60)' }}>{lastSent}</div>
+      <div style={{ color: 'var(--dark-40)' }}>
+        <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="m9 6 6 6-6 6" />
+        </svg>
+      </div>
+    </button>
   );
 }
 
-function BlockedCard({ b, onClick }: { b: BlockedProgram; onClick: () => void }) {
+function BlockedRow({ b, onClick, last }: { b: BlockedProgram; onClick: () => void; last: boolean }) {
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
       style={{
-        background: 'var(--dark-2)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
-        padding: 16,
+        display: 'grid',
+        gridTemplateColumns: ROW_GRID,
+        gap: 14,
+        alignItems: 'center',
+        padding: '14px 16px',
+        background: 'transparent',
+        border: 'none',
+        borderBottom: last ? 'none' : '1px solid var(--dark-8)',
+        width: '100%',
         cursor: 'pointer',
+        fontFamily: 'inherit',
+        textAlign: 'left',
+        opacity: 0.75,
       }}
     >
-      <BlockedPill />
-      <div style={{ fontSize: 15, fontWeight: 500, marginTop: 8, color: 'var(--dark-90)' }}>{b.name}</div>
-      <div style={{ fontSize: 12.5, color: 'var(--dark-80)', marginTop: 4, lineHeight: 1.5 }}>{b.desc}</div>
-      <div style={{ marginTop: 10, fontSize: 11.5, color: 'var(--dark-60)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-        <svg viewBox="0 0 24 24" width={11} height={11} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M13 3 4 14h7l-1 7 9-11h-7z" />
-        </svg>
-        {b.reason}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 450, color: 'var(--dark-90)' }}>{b.name}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 2 }}>{b.desc}</div>
       </div>
-    </div>
+      <div>
+        <BlockedPill />
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>—</div>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>—</div>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>—</div>
+      <div style={{ fontSize: 11.5, color: 'var(--dark-60)' }}>{b.reason}</div>
+      <div style={{ color: 'var(--dark-40)' }}>
+        <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="m9 6 6 6-6 6" />
+        </svg>
+      </div>
+    </button>
   );
 }
 
@@ -795,6 +822,8 @@ export function EmailSmsRoute() {
 function EmailSmsRouteInner() {
   const { showToast } = useToast();
   const { openModal } = useModals();
+  const { getState } = useDevState();
+  const isCold = getState('/h2/email-sms') === 'cold';
 
   const handleOpenDetail = (p: Program) => {
     openModal(ProgramDetailModal, {
@@ -825,9 +854,13 @@ function EmailSmsRouteInner() {
     </Button>
   );
 
-  const live = PROGRAMS.filter((p) => p.status === 'live');
-  const drafts = PROGRAMS.filter((p) => p.status === 'draft');
-  const suggested = PROGRAMS.filter((p) => p.status === 'suggested');
+  if (isCold) {
+    return (
+      <H2Layout>
+        <EmailSmsColdView />
+      </H2Layout>
+    );
+  }
 
   return (
     <H2Layout topbarRight={topbarRight}>
@@ -838,113 +871,57 @@ function EmailSmsRouteInner() {
           100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
         }
       `}</style>
-      <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
-        {/* Hero */}
+      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 28px 60px' }}>
         <div
           style={{
             background: 'var(--light-100)',
             border: '1px solid var(--dark-8)',
-            borderRadius: 14,
-            padding: '22px 26px',
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            gap: 24,
-            alignItems: 'center',
-            marginBottom: 22,
+            borderRadius: 12,
+            overflow: 'hidden',
           }}
         >
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--dark-60)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: 8 }}>
-              <svg viewBox="0 0 24 24" width={12} height={12} fill="currentColor" aria-hidden>
-                <path d="m12 2 1.6 4.6L18 8.2l-3.4 2.5L16 15l-4-2.7L8 15l1.4-4.3L6 8.2l4.4-1.6z" />
-              </svg>
-              Lifecycle programs
-            </div>
-            <h2 style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.2px', margin: 0 }}>
-              Every moment in the customer journey, owned by the agent.
-            </h2>
-            <div style={{ marginTop: 6, fontSize: 13, color: 'var(--dark-60)', maxWidth: 720, lineHeight: 1.55 }}>
-              Each program below is a self-driving sequence of touches across email and SMS. The agent designs, drafts, and learns from results — your team approves the strategy and weighs in when it matters.
-            </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: ROW_GRID,
+              gap: 14,
+              alignItems: 'center',
+              padding: '11px 16px',
+              background: 'var(--surface-2, #FAFAFA)',
+              borderBottom: '1px solid var(--dark-8)',
+              fontSize: 11,
+              color: 'var(--dark-40)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              fontWeight: 450,
+            }}
+          >
+            <div>Program</div>
+            <div>Status</div>
+            <div>Channels</div>
+            <div>Cadence</div>
+            <div>Audience</div>
+            <div>Last sent</div>
+            <div />
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="primary" size="md" frontIcon={Plus} onPress={handleOpenNew}>
-              New program
-            </Button>
-          </div>
-        </div>
-
-        {/* Tiles */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 22 }}>
-          {[
-            { label: 'Live programs', value: '1', sub: 'Welcome Stack' },
-            { label: 'In draft', value: '2', sub: 'Awaiting your review' },
-            { label: 'Agent-suggested', value: '3', sub: 'Based on your data' },
-            { label: 'Customers reached · 28d', value: '1,356', sub: 'across all programs', dark: true },
-          ].map((t, i) => (
-            <div
-              key={i}
-              style={{
-                background: t.dark ? 'var(--dark-90)' : 'var(--light-100)',
-                color: t.dark ? 'var(--light-100)' : 'var(--dark-90)',
-                border: t.dark ? '1px solid var(--dark-90)' : '1px solid var(--dark-8)',
-                borderRadius: 12,
-                padding: '14px 16px',
-              }}
-            >
-              <div style={{ fontSize: 11, opacity: t.dark ? 0.7 : 1, color: t.dark ? '#B6B4AC' : 'var(--dark-60)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 }}>{t.label}</div>
-              <div style={{ fontSize: 24, fontWeight: 500, marginTop: 4, letterSpacing: '-0.3px' }}>{t.value}</div>
-              <div style={{ fontSize: 11.5, marginTop: 2, color: t.dark ? '#B6B4AC' : 'var(--dark-60)' }}>{t.sub}</div>
-            </div>
+          {PROGRAMS.map((p, i) => (
+            <ProgramRow
+              key={p.id}
+              p={p}
+              onOpen={() => handleOpenDetail(p)}
+              last={i === PROGRAMS.length - 1 && BLOCKED.length === 0}
+            />
           ))}
-        </div>
-
-        {/* Active */}
-        <SectionHead title="Active" sub="Running right now" />
-        {live.map((p) => (
-          <ProgramCard key={p.id} p={p} onOpen={() => handleOpenDetail(p)} />
-        ))}
-
-        {/* Drafts */}
-        <div style={{ marginTop: 16 }} />
-        <SectionHead title="Drafts · awaiting your review" sub="Strategy is written. Approve to activate." />
-        {drafts.map((p) => (
-          <ProgramCard key={p.id} p={p} onOpen={() => handleOpenDetail(p)} />
-        ))}
-
-        {/* Suggested */}
-        <div style={{ marginTop: 16 }} />
-        <SectionHead title="Agent-suggested" sub="The agent thinks these would pay off, given your traffic and inbox health." />
-        {suggested.map((p) => (
-          <ProgramCard key={p.id} p={p} onOpen={() => handleOpenDetail(p)} />
-        ))}
-
-        {/* Coming soon */}
-        <div style={{ marginTop: 16 }} />
-        <SectionHead title="Coming soon" sub="Programs that need a connected integration before the agent can draft." />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
-          {BLOCKED.map((b) => (
-            <BlockedCard
+          {BLOCKED.map((b, i) => (
+            <BlockedRow
               key={b.name}
               b={b}
               onClick={() => showToast({ message: `${b.reason} — connect to enable ${b.name}` })}
+              last={i === BLOCKED.length - 1}
             />
           ))}
         </div>
-
-        <div style={{ marginTop: 24, padding: 16, background: 'var(--dark-2)', border: '1px dashed var(--dark-15)', borderRadius: 10, fontSize: 12.5, color: 'var(--dark-60)', textAlign: 'center' }}>
-          Click any program card above to open its sequence — every touch is clickable for preview or edit.
-        </div>
       </div>
     </H2Layout>
-  );
-}
-
-function SectionHead({ title, sub }: { title: string; sub: string }) {
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <h3 style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>{title}</h3>
-      <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{sub}</div>
-    </div>
   );
 }

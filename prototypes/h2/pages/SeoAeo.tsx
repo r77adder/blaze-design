@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Modal, ModalStack, useModals } from '@/components';
+import { Button, Heading, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { useToast } from '@/staging';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
 
 /**
  * /h2/seo-aeo — deep port of `~/dev/Blaze H2 Features/seo-aeo.html`.
@@ -244,6 +245,8 @@ export function SeoAeoRoute() {
 function SeoAeoRouteInner() {
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { getState, setState: setDevState } = useDevState();
+  const devState = getState('/h2/seo-aeo');
 
   const [setupComplete, setSetupComplete] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -261,6 +264,11 @@ function SeoAeoRouteInner() {
       return false;
     }
   });
+
+  // Sync dev-state toggle → setupComplete. Cold = pre-setup, steady = configured.
+  useEffect(() => {
+    setSetupComplete(devState === 'steady');
+  }, [devState]);
 
   const [setupLoading, setSetupLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
@@ -283,6 +291,7 @@ function SeoAeoRouteInner() {
     setSetupComplete(false);
     setSetupLoading(false);
     setActiveTab('overview');
+    setDevState('/h2/seo-aeo', 'cold');
     showToast({ message: 'Setup reset — replay from the confirmation step' });
   };
 
@@ -297,6 +306,7 @@ function SeoAeoRouteInner() {
       setSetupLoading(false);
       setSetupComplete(true);
       setActiveTab('overview');
+      setDevState('/h2/seo-aeo', 'steady');
     }, 1800);
   };
 
@@ -321,211 +331,395 @@ function SeoAeoRouteInner() {
 
 // ─── SETUP SCREEN ─────────────────────────────────────────────────────
 
+type SetupSectionId = 'category' | 'icps' | 'competitors' | 'queries' | 'facts' | 'tools';
+
 function SetupScreen({ onConfirm }: { onConfirm: () => void }) {
+  const { openModal } = useModals();
+
+  const edit = (id: SetupSectionId) => {
+    openModal(SetupEditModal, { sectionId: id });
+  };
+
   return (
-    <div style={{ maxWidth: 820, margin: '0 auto', padding: '24px 28px 60px' }}>
+    <>
+      <div style={{ maxWidth: 820, margin: '0 auto', padding: '8px 4px 140px' }}>
+        <Heading level={2} style={{ marginBottom: 8 }}>
+          Confirm your AEO setup
+        </Heading>
+        <Text variant="secondary" style={{ display: 'block', maxWidth: 560, marginBottom: 32, lineHeight: 1.55 }}>
+          We've pre-filled everything from your Brand Kit and Content Preferences. Review the summary below — edit anything that
+          looks off, then run the first analysis.
+        </Text>
+
+        <SetupSection label="Category & use cases" source="Brand Kit → Brand Profile" onEdit={() => edit('category')}>
+          <SetupRow k="Category" v="Wellness supplements · adaptogenic & functional" />
+          <SetupRow k="Use cases" v="Daily wellness, stress, sleep, energy, hormone support" />
+          <SetupRow k="Geography" v="United States, Canada, UK" />
+        </SetupSection>
+
+        <SetupSection label="ICPs" count={ICPS.length} source="Content Preferences" onEdit={() => edit('icps')}>
+          {ICPS.map((icp, i) => (
+            <SetupRow key={icp} k={`ICP ${i + 1}`} v={icp} />
+          ))}
+        </SetupSection>
+
+        <SetupSection label="Competitors" count={COMPETITORS.length} onEdit={() => edit('competitors')}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {COMPETITORS.map((c) => (
+              <span key={c.name} style={chipStyle()}>
+                <span style={chipMarkStyle(c.color)}>{c.letter}</span>
+                {c.name}
+              </span>
+            ))}
+          </div>
+        </SetupSection>
+
+        <SetupSection label="Target queries" count={24} onEdit={() => edit('queries')}>
+          <Text variant="secondary" style={{ display: 'block', marginBottom: 8 }}>
+            Top 6 of 24 — generated from your category, competitors, and ICPs.
+          </Text>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {QUERIES.slice(0, 6).map((q) => (
+              <li key={q.id} style={{ padding: '4px 0' }}>
+                <Text>{q.q}</Text>
+              </li>
+            ))}
+            <li style={{ padding: '4px 0' }}>
+              <Text variant="secondary">+ 18 more</Text>
+            </li>
+          </ul>
+        </SetupSection>
+
+        <SetupSection label="Brand facts to check" count={BRAND_FACTS.length} source="Brand Kit" onEdit={() => edit('facts')}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {BRAND_FACTS.slice(0, 4).map((f) => (
+              <li key={f.id} style={{ padding: '4px 0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--dark-60)', background: 'var(--dark-4)', borderRadius: 4, padding: '1px 6px', flexShrink: 0 }}>
+                  {f.cat}
+                </span>
+                <Text>{f.q}</Text>
+              </li>
+            ))}
+            <li style={{ padding: '4px 0' }}>
+              <Text variant="secondary">+ 2 more</Text>
+            </li>
+          </ul>
+        </SetupSection>
+
+        <SetupSection label="AI tools to monitor" count={TOOLS.length} onEdit={() => edit('tools')}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {TOOLS.map((t) => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px 6px 6px' }}>
+                <div style={{ width: 22, height: 22, borderRadius: 5, background: t.color, color: 'var(--light-100)', fontSize: 11, fontWeight: 500, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {t.logo}
+                </div>
+                <Text>{t.name}</Text>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <SetupRow k="Cadence" v="Weekly · next run after first analysis completes" />
+          </div>
+        </SetupSection>
+      </div>
+
       <div
         style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 238,
+          right: 0,
           background: 'var(--light-100)',
-          border: '1px solid var(--dark-8)',
-          borderRadius: 14,
-          overflow: 'hidden',
+          borderTop: '1px solid var(--dark-8)',
+          padding: '16px 28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 12,
+          zIndex: 10,
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '14px 24px',
-            borderBottom: '1px solid var(--dark-4)',
-          }}
-        >
-          <span style={{ fontSize: 11.5, color: 'var(--dark-90)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500 }}>
-            Setup AEO
-          </span>
-          <div style={{ flex: 1, height: 3, background: 'var(--dark-4)', borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: '100%', background: 'var(--dark-90)' }} />
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>Ready to run</span>
-        </div>
-
-        <div style={{ padding: '28px 32px' }}>
-          <h2 style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.2px', marginBottom: 8 }}>
-            Confirm your AEO setup
-          </h2>
-          <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.55, maxWidth: 540, marginBottom: 24 }}>
-            We've pre-filled everything from your Brand Kit and Content Preferences. Review the summary below — edit anything that
-            looks off, then run the first analysis.
-          </p>
-
-          <SetupSection icon="🏷" label="Category & use cases" source="Brand Kit → Brand Profile">
-            <SetupRow k="Category" v="Wellness supplements · adaptogenic & functional" />
-            <SetupRow k="Use cases" v="Daily wellness, stress, sleep, energy, hormone support" />
-            <SetupRow k="Geography" v="United States, Canada, UK" />
-          </SetupSection>
-
-          <SetupSection icon="🎯" label="ICPs" count={ICPS.length} source="Content Preferences">
-            {ICPS.map((icp, i) => (
-              <SetupRow key={icp} k={`ICP ${i + 1}`} v={icp} />
-            ))}
-          </SetupSection>
-
-          <SetupSection icon="⚔" label="Competitors" count={COMPETITORS.length}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {COMPETITORS.map((c) => (
-                <span key={c.name} style={chipStyle()}>
-                  <span style={chipMarkStyle(c.color)}>{c.letter}</span>
-                  {c.name}
-                </span>
-              ))}
-              <span style={{ ...chipStyle(), background: 'none', border: '1px dashed var(--dark-15)', color: 'var(--dark-60)' }}>
-                + Add
-              </span>
-            </div>
-          </SetupSection>
-
-          <SetupSection icon="❓" label="Target queries" count={24}>
-            <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginBottom: 6 }}>
-              Top 6 of 24 — generated from your category, competitors, and ICPs.
-            </div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {QUERIES.slice(0, 6).map((q) => (
-                <li key={q.id} style={{ fontSize: 12.5, color: 'var(--dark-90)', padding: '4px 0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                  <span style={{ color: 'var(--dark-25)', fontSize: 14, lineHeight: 1 }}>○</span>
-                  <span>{q.q}</span>
-                </li>
-              ))}
-              <li style={{ color: 'var(--dark-40)', fontSize: 11.5, padding: '4px 0' }}>+ 18 more</li>
-            </ul>
-          </SetupSection>
-
-          <SetupSection icon="📌" label="Brand facts to check" count={BRAND_FACTS.length} source="Brand Kit">
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {BRAND_FACTS.slice(0, 4).map((f) => (
-                <li key={f.id} style={{ fontSize: 12.5, color: 'var(--dark-90)', padding: '4px 0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                  <span style={{ fontSize: 10.5, color: 'var(--dark-60)', background: 'var(--dark-4)', borderRadius: 4, padding: '1px 6px', flexShrink: 0 }}>
-                    {f.cat}
-                  </span>
-                  <span>{f.q}</span>
-                </li>
-              ))}
-              <li style={{ color: 'var(--dark-40)', fontSize: 11.5, padding: '4px 0' }}>+ 2 more</li>
-            </ul>
-          </SetupSection>
-
-          <SetupSection icon="🤖" label="AI tools to monitor" count={TOOLS.length}>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {TOOLS.map((t) => (
-                <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--dark-2)', border: '1px solid var(--dark-4)', borderRadius: 8, padding: '8px 12px' }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 5, background: t.color, color: 'var(--light-100)', fontSize: 11, fontWeight: 500, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {t.logo}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--dark-90)', fontWeight: 500 }}>{t.name}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <SetupRow k="Cadence" v="Weekly · next run after first analysis completes" />
-            </div>
-          </SetupSection>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '16px 28px',
-            borderTop: '1px solid var(--dark-4)',
-            background: 'var(--light-100)',
-          }}
-        >
-          <Button variant="tertiary" size="sm" onPress={() => undefined}>
-            Cancel
-          </Button>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>~2 min · 24 queries × 5 AI tools</span>
-            <Button variant="primary" size="md" onPress={onConfirm}>
-              Looks good — start tracking →
-            </Button>
-          </div>
-        </div>
+        <Text variant="secondary">~2 min · 24 queries × 5 AI tools</Text>
+        <Button variant="primary" size="md" onPress={onConfirm}>
+          Looks good — start tracking →
+        </Button>
       </div>
-    </div>
+    </>
   );
 }
 
 function SetupSection({
-  icon,
   label,
   count,
   source,
+  onEdit,
   children,
 }: {
-  icon: string;
   label: string;
   count?: number;
   source?: string;
+  onEdit?: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
-        marginBottom: 10,
-        overflow: 'hidden',
-      }}
-    >
+    <section style={{ marginBottom: 40 }}>
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '12px 14px',
-          background: 'rgba(0,0,0,0.02)',
-          borderBottom: '1px solid var(--dark-4)',
+          alignItems: 'baseline',
+          gap: 12,
+          paddingBottom: 12,
+          borderBottom: '1px solid var(--dark-8)',
+          marginBottom: 20,
         }}
       >
-        <span style={{ fontSize: 14 }}>{icon}</span>
-        <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--dark-90)' }}>{label}</span>
-        {count !== undefined && (
-          <span style={{ background: 'var(--dark-4)', color: 'var(--dark-80)', fontSize: 11, fontWeight: 500, borderRadius: 5, padding: '1px 7px' }}>
-            {count}
-          </span>
-        )}
+        <Heading level={3} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+          {label}
+          {count !== undefined && (
+            <Text variant="secondary" style={{ fontWeight: 400 }}>
+              ({count})
+            </Text>
+          )}
+        </Heading>
         <span style={{ flex: 1 }} />
-        {source && <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>{source}</span>}
-        <button
-          type="button"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            font: 'inherit',
-            fontSize: 12,
-            color: 'var(--dark-90)',
-            textDecoration: 'underline',
-            textDecorationColor: 'var(--dark-15)',
-            textUnderlineOffset: 2,
-            padding: 0,
-          }}
-        >
-          Edit
-        </button>
+        {source && <Text variant="secondary">{source}</Text>}
+        {onEdit && (
+          <Button variant="tertiary" size="sm" onPress={onEdit}>
+            Edit
+          </Button>
+        )}
       </div>
-      <div style={{ padding: '12px 14px' }}>{children}</div>
-    </div>
+      <div>{children}</div>
+    </section>
   );
 }
 
 function SetupRow({ k, v }: { k: string; v: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '5px 0' }}>
-      <span style={{ width: 120, fontSize: 12, color: 'var(--dark-40)', flexShrink: 0 }}>{k}</span>
-      <span style={{ fontSize: 12.5, color: 'var(--dark-90)' }}>{v}</span>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '4px 0' }}>
+      <span style={{ width: 120, flexShrink: 0 }}>
+        <Text variant="secondary">{k}</Text>
+      </span>
+      <Text>{v}</Text>
+    </div>
+  );
+}
+
+// ─── SETUP EDIT MODAL ────────────────────────────────────────────────
+
+const SETUP_EDIT_META: Record<SetupSectionId, { title: string; description: string }> = {
+  category: {
+    title: 'Edit category & use cases',
+    description: 'Tune what Blaze monitors. These shape every target query and citation check.',
+  },
+  icps: {
+    title: 'Edit ICPs',
+    description: 'The customer personas Blaze uses to score query intent and content relevance.',
+  },
+  competitors: {
+    title: 'Edit competitors',
+    description: 'Brands Blaze tracks against in citation matrices and competitive teardowns.',
+  },
+  queries: {
+    title: 'Edit target queries',
+    description: 'The questions Blaze runs across every AI tool. Edit, add, or remove.',
+  },
+  facts: {
+    title: 'Edit brand facts',
+    description: 'Ground-truth statements Blaze checks against every AI tool weekly.',
+  },
+  tools: {
+    title: 'Edit AI tools to monitor',
+    description: 'Which AI tools Blaze samples and how often.',
+  },
+};
+
+function SetupEditModal({ close, sectionId }: StackModalProps & { sectionId: SetupSectionId }) {
+  const meta = SETUP_EDIT_META[sectionId];
+  const { showToast } = useToast();
+
+  const handleSave = () => {
+    showToast({ message: `${meta.title.replace(/^Edit /, '')} saved` });
+    close();
+  };
+
+  return (
+    <Modal.Root size="md" aria-labelledby="setup-edit-title">
+      <Modal.Header title={meta.title} id="setup-edit-title" onClose={close} />
+      <Modal.Content>
+        <Text variant="secondary" style={{ display: 'block', marginBottom: 20, lineHeight: 1.55 }}>
+          {meta.description}
+        </Text>
+        <SetupEditFields sectionId={sectionId} />
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={handleSave}>
+            Save changes
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+const editFieldLabel: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 500,
+  color: 'var(--dark-80)',
+  marginBottom: 6,
+  display: 'block',
+  letterSpacing: '0.1px',
+};
+
+const editInputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 12px',
+  fontFamily: 'inherit',
+  fontSize: 13,
+  color: 'var(--dark-90)',
+  background: 'var(--light-100)',
+  border: '1px solid var(--dark-8)',
+  borderRadius: 8,
+  outline: 'none',
+};
+
+const editTextareaStyle: React.CSSProperties = {
+  ...editInputStyle,
+  minHeight: 80,
+  resize: 'vertical',
+  fontFamily: 'inherit',
+  lineHeight: 1.5,
+};
+
+function SetupEditFields({ sectionId }: { sectionId: SetupSectionId }) {
+  if (sectionId === 'category') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <EditField label="Category">
+          <input
+            type="text"
+            defaultValue="Wellness supplements · adaptogenic & functional"
+            style={editInputStyle}
+          />
+        </EditField>
+        <EditField label="Use cases">
+          <textarea
+            defaultValue="Daily wellness, stress, sleep, energy, hormone support"
+            style={editTextareaStyle}
+          />
+        </EditField>
+        <EditField label="Geography">
+          <select defaultValue="us-ca-uk" style={editInputStyle}>
+            <option value="us-ca-uk">United States, Canada, UK</option>
+            <option value="us">United States only</option>
+            <option value="global">Global</option>
+          </select>
+        </EditField>
+      </div>
+    );
+  }
+
+  if (sectionId === 'icps') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {ICPS.map((icp, i) => (
+          <EditField key={icp} label={`ICP ${i + 1}`}>
+            <input type="text" defaultValue={icp} style={editInputStyle} />
+          </EditField>
+        ))}
+        <Button variant="tertiary" size="sm" onPress={() => undefined}>
+          + Add ICP
+        </Button>
+      </div>
+    );
+  }
+
+  if (sectionId === 'competitors') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {COMPETITORS.map((c) => (
+          <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={chipMarkStyle(c.color)}>{c.letter}</span>
+            <input type="text" defaultValue={c.name} style={{ ...editInputStyle, flex: 1 }} />
+            <Button variant="tertiary" size="sm" onPress={() => undefined}>
+              Remove
+            </Button>
+          </div>
+        ))}
+        <Button variant="tertiary" size="sm" onPress={() => undefined} style={{ alignSelf: 'flex-start', marginTop: 4 }}>
+          + Add competitor
+        </Button>
+      </div>
+    );
+  }
+
+  if (sectionId === 'queries') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {QUERIES.slice(0, 6).map((q) => (
+          <EditField key={q.id} label={`Query ${q.id}`}>
+            <input type="text" defaultValue={q.q} style={editInputStyle} />
+          </EditField>
+        ))}
+        <Text variant="secondary" style={{ display: 'block', marginTop: 4 }}>
+          + 18 more queries (edit all in bulk after launch)
+        </Text>
+      </div>
+    );
+  }
+
+  if (sectionId === 'facts') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {BRAND_FACTS.slice(0, 4).map((f) => (
+          <EditField key={f.id} label={f.cat}>
+            <input type="text" defaultValue={f.q} style={editInputStyle} />
+          </EditField>
+        ))}
+        <Button variant="tertiary" size="sm" onPress={() => undefined} style={{ alignSelf: 'flex-start' }}>
+          + Add brand fact
+        </Button>
+      </div>
+    );
+  }
+
+  // tools
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <EditField label="Enabled AI tools">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {TOOLS.map((t) => (
+            <label
+              key={t.id}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '4px 0' }}
+            >
+              <input type="checkbox" defaultChecked style={{ accentColor: 'var(--dark-90)' }} />
+              <div style={{ width: 22, height: 22, borderRadius: 5, background: t.color, color: 'var(--light-100)', fontSize: 11, fontWeight: 500, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                {t.logo}
+              </div>
+              <Text>{t.name}</Text>
+            </label>
+          ))}
+        </div>
+      </EditField>
+      <EditField label="Cadence">
+        <select defaultValue="weekly" style={editInputStyle}>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="biweekly">Every 2 weeks</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </EditField>
+    </div>
+  );
+}
+
+function EditField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label style={editFieldLabel}>{label}</label>
+      {children}
     </div>
   );
 }

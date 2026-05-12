@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { useToast } from '@/staging';
+import { TabChip, useToast } from '@/staging';
 import { CrosspostWarningModal } from '../CrosspostWarningModal';
 import Plus from '@/icons/20/Plus';
 import ChevronLeft from '@/icons/24/ChevronLeft';
@@ -13,6 +13,8 @@ import TikTok from '@/icons/20/TikTok';
 import LinkedIn from '@/icons/20/LinkedIn';
 import Twitter from '@/icons/20/Twitter';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
+import { OrganicSocialColdView } from './ColdViews';
 
 /**
  * /h2/organic-social — deep port of `~/dev/Blaze H2 Features/organic-social.html`.
@@ -142,48 +144,6 @@ function formatWeekLabel(days: DayInfo[], offsetWeeks: number): string {
   sunday.setDate(monday.getDate() + 6);
   const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   return `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
-}
-
-function PageTabs({ active }: { active: 'campaigns' | 'calendar' }) {
-  const navigate = useNavigate();
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0,
-        padding: '0 28px',
-        background: 'var(--light-100)',
-        borderBottom: '1px solid var(--dark-8)',
-        flexShrink: 0,
-      }}
-    >
-      {(['campaigns', 'calendar'] as const).map((key) => (
-        <button
-          type="button"
-          key={key}
-          onClick={() => key === 'campaigns' && navigate('/h2/campaigns')}
-          style={{
-            padding: '11px 16px',
-            fontSize: 13.5,
-            fontWeight: active === key ? 500 : 400,
-            color: active === key ? 'var(--dark-90)' : 'var(--dark-60)',
-            borderBottom: `2px solid ${active === key ? 'var(--dark-90)' : 'transparent'}`,
-            marginBottom: -1,
-            cursor: active === key ? 'default' : 'pointer',
-            background: 'none',
-            border: 'none',
-            borderBottomWidth: 2,
-            borderBottomStyle: 'solid',
-            borderBottomColor: active === key ? 'var(--dark-90)' : 'transparent',
-            fontFamily: 'inherit',
-          }}
-        >
-          {key === 'calendar' ? 'Calendar' : 'Campaigns'}
-        </button>
-      ))}
-    </div>
-  );
 }
 
 function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
@@ -872,6 +832,8 @@ function OrganicSocialRouteInner() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { openModal, closeModal } = useModals();
+  const { getState } = useDevState();
+  const isCold = getState('/h2/organic-social') === 'cold';
   const [posts, setPosts] = useState<Post[]>(SEED_POSTS);
   const [weekOffset, setWeekOffset] = useState(0);
 
@@ -907,20 +869,29 @@ function OrganicSocialRouteInner() {
     });
   };
 
-  const topbarRight = (
-    <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenChooser}>
-      Create new
-    </Button>
+  const topbarCenter = (
+    <div style={{ display: 'inline-flex', gap: 6 }}>
+      <TabChip selected onSelect={() => {}}>Calendar</TabChip>
+      <TabChip selected={false} onSelect={() => navigate('/h2/campaigns')}>Campaigns</TabChip>
+    </div>
   );
 
+  if (isCold) {
+    return (
+      <H2Layout>
+        <OrganicSocialColdView />
+      </H2Layout>
+    );
+  }
+
   return (
-    <H2Layout topbarRight={topbarRight}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <PageTabs active="calendar" />
+    <H2Layout topbarCenter={topbarCenter}>
+      <div style={{ margin: '-24px -24px 0', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             gap: 12,
             padding: '18px 28px',
             borderBottom: '1px solid var(--dark-8)',
@@ -967,6 +938,9 @@ function OrganicSocialRouteInner() {
               <ChevronRight size={16} />
             </button>
           </div>
+          <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenChooser}>
+            Create new
+          </Button>
         </div>
         <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto' }}>
           <div

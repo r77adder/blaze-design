@@ -1,25 +1,33 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { NavItem, NavSection, WorkspaceSelector } from '@/staging';
 import {
-  Approval,
   Approvals,
   ArrowUpRightSquareContained,
+  AudioSettings,
   BarChartSquare,
   Brand,
+  Calendar1 as Calendar1Sm,
   ClockBackward,
+  Cursor04,
+  FileSearch1,
   Folder,
   Gift01,
   Globe,
   Help,
   Image as ImageIcon,
   Lightning,
+  Mail,
+  Map02,
   MetaBrand,
   Plus,
   Search,
-  Settings,
+  Star,
   Templates,
   UserProfileAdd,
+  UserProfileCircle,
+  UserProfileGroup,
   Users,
+  Wrench,
 } from '@/icons/20';
 import {
   Atom,
@@ -130,16 +138,16 @@ export const H2_SECTIONS: SidebarSection[] = [
     items: [{ label: 'Home', icon: Home2, href: '/h2' }],
   },
   {
-    label: 'Demand Gen',
+    label: 'Awareness',
     collapsible: true,
     items: [
-      { label: 'Organic Social', icon: BarChartSquare, href: '/h2/organic-social' },
-      { label: 'SEO/AEO', icon: BarChartSquare, href: '/h2/seo-aeo' },
-      { label: 'Map Ranking', icon: BarChartSquare, href: '/h2/map-ranking' },
-      { label: 'UGC Content', icon: Brand, href: '/h2/influencer-content' },
-      { label: 'Paid Social', icon: BarChartSquare, href: '/h2/paid-social' },
+      { label: 'Organic Campaigns', icon: Calendar1Sm, href: '/h2/organic-social' },
+      { label: 'SEO/AEO', icon: FileSearch1, href: '/h2/seo-aeo' },
+      { label: 'Map Ranking', icon: Map02, href: '/h2/map-ranking' },
+      { label: 'UGC Content', icon: UserProfileCircle, href: '/h2/influencer-content' },
+      { label: 'Paid Social', icon: Cursor04, href: '/h2/paid-social' },
       { label: 'Paid Search', icon: BarChartSquare, href: '/h2/paid-search' },
-      { label: 'Email & SMS', icon: Calendar1, href: '/h2/email-sms' },
+      { label: 'Email & SMS', icon: Mail, href: '/h2/email-sms' },
     ],
   },
   {
@@ -147,14 +155,16 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Landing Pages', icon: Templates, href: '/h2/landing-pages' },
-      { label: 'Reputation', icon: Approval, href: '/h2/reputation' },
+      { label: 'CRM', icon: UserProfileGroup, href: '/h2/crm' },
+      { label: 'Reputation', icon: Star, href: '/h2/reputation' },
     ],
   },
   {
     label: 'Settings',
     collapsible: true,
     items: [
-      { label: 'Content Settings', icon: Settings },
+      { label: 'Tools', icon: Wrench, href: '/h2/tools' },
+      { label: 'Content Settings', icon: AudioSettings, href: '/h2/content-settings' },
       { label: 'Brand Kit', icon: Brand },
       { label: 'Integrations', icon: Lightning, trail: '3/10' },
     ],
@@ -177,9 +187,7 @@ function NavItemEntry({ item, activeLabel, pathname, navigate }: {
   pathname: string;
   navigate: (to: string) => void;
 }) {
-  const isActiveByHref = item.href !== undefined && (
-    pathname === item.href || pathname.startsWith(item.href + '/')
-  );
+  const isActiveByHref = item.href !== undefined && pathname === item.href;
   const isActiveByLabel = item.href === undefined && item.label === activeLabel;
   const isActive = isActiveByHref || isActiveByLabel;
   const Icon = isActive && item.activeIcon ? item.activeIcon : item.icon;

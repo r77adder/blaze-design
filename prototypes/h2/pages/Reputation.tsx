@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
+import { Facebook, Google, Instagram, TikTok, Twitter } from '@/icons/20';
 import { useToast } from '@/staging';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
+import { ReputationColdView } from './ColdViews';
 
 /**
  * /h2/reputation — deep port of Blaze H2 Features/reputation.html.
@@ -11,9 +14,10 @@ import { H2Layout } from '../H2Layout';
  * Social Listening). Each tab shows a list of items needing attention,
  * many with an AI-drafted reply ready to approve.
  *
- * Brand-specific source pill colors (Yelp/Reddit/Google/Instagram/Facebook/
- * TikTok) are inlined — these are platform-brand colors, not part of our
- * generic token set.
+ * Source pills use a uniform gray background (`var(--dark-4)`) with the
+ * platform's brand logo on the left. Logos come from our 20px icon set
+ * (Google/Instagram/TikTok/Facebook/Twitter); Yelp and Reddit fall back
+ * to small `<img>` tags from their public CDN/Wikimedia.
  *
  * Per-page-route pattern: <ReputationRoute /> wraps inner in <ModalStack>
  * to enable the AI draft Edit modal.
@@ -30,6 +34,12 @@ interface AiDraft {
   needsReview?: boolean;
 }
 
+interface ResponseHistoryEntry {
+  who: string;
+  when: string;
+  text: string;
+}
+
 interface AttentionItem {
   id: string;
   severity: Severity;
@@ -39,22 +49,15 @@ interface AttentionItem {
   when: string;
   stars?: number;
   title: string;
+  /** Short body shown on the list card. */
   body: string;
+  /** Full review/comment text shown inside the detail modal. */
+  fullText: string;
   containment?: { label: string; tone: 'escalating' | 'emerging' | 'pattern' | 'isolated' };
   velocity?: string;
   aiDraft?: AiDraft;
-}
-
-interface QuickDraftItem {
-  id: string;
-  source: Source;
-  sourceLabel: string;
-  stars?: number;
-  author: string;
-  excerpt: string;
-  draft: AiDraft;
-  approveLabel: string;
-  approveToast: string;
+  /** Prior replies from the team or other channels. */
+  history?: ResponseHistoryEntry[];
 }
 
 interface InsightItem {
@@ -91,14 +94,66 @@ interface TopicRow {
   badge?: { kind: 'src'; source: Source; label: string } | { kind: 'spike'; label: string };
 }
 
-const SOURCE_STYLES: Record<Source, { bg: string; fg: string }> = {
-  google: { bg: '#FEF3E0', fg: '#B45309' },
-  yelp: { bg: '#FEE4E2', fg: '#B42318' },
-  reddit: { bg: '#FFE9DA', fg: '#C2410C' },
-  facebook: { bg: '#E0EAFD', fg: '#1A56C8' },
-  instagram: { bg: '#FCE7F3', fg: '#9D174D' },
-  tiktok: { bg: '#F4F4F4', fg: '#111111' },
-};
+/**
+ * Renders the brand mark for a source.
+ * - Google / Instagram / TikTok / Facebook / Twitter come from our 20px icon lib.
+ * - Yelp uses its public favicon from yelpassets.com.
+ * - Reddit uses redditstatic.com favicon.
+ * - Anything else falls back to a first-letter monogram on `var(--dark-90)`.
+ */
+function SourceLogo({ source, label }: { source: Source; label: string }) {
+  const size = 14;
+  if (source === 'google') return <Google width={size} height={size} />;
+  if (source === 'instagram') return <Instagram width={size} height={size} />;
+  if (source === 'tiktok') return <TikTok width={size} height={size} />;
+  if (source === 'facebook') return <Facebook width={size} height={size} />;
+  // 'x' / twitter not used in this fixture set but covered for completeness.
+  if (source === 'yelp') {
+    return (
+      <img
+        src="https://yelpassets.com/img/yelp_logo_180x180.png"
+        alt=""
+        width={size}
+        height={size}
+        style={{ borderRadius: 2, display: 'block' }}
+      />
+    );
+  }
+  if (source === 'reddit') {
+    return (
+      <img
+        src="https://www.redditstatic.com/desktop2x/img/favicon/apple-icon-57x57.png"
+        alt=""
+        width={size}
+        height={size}
+        style={{ borderRadius: 2, display: 'block' }}
+      />
+    );
+  }
+  // Fallback: first-letter monogram.
+  const letter = (label || '?').replace(/^[a-z]\//i, '').charAt(0).toUpperCase();
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 3,
+        background: 'var(--dark-90)',
+        color: 'var(--light-100)',
+        fontSize: 9,
+        fontWeight: 500,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        lineHeight: 1,
+      }}
+    >
+      {letter}
+    </span>
+  );
+}
+
 
 const CONTAINMENT_STYLES: Record<NonNullable<AttentionItem['containment']>['tone'], { bg: string; color: string }> = {
   escalating: { bg: '#FEE2E2', color: '#991B1B' },
@@ -122,8 +177,17 @@ const ATTENTION: AttentionItem[] = [
     customer: 'Devon R. · Brooklyn, NY', when: 'Yesterday', stars: 2,
     title: 'Subscription charged twice, hard to cancel',
     body: 'Got billed twice for the same month and the help center kept routing me in circles. Took a chat agent 30 minutes to refund it.',
+    fullText: 'Got billed twice for the same month and the help center kept routing me in circles. I clicked "manage subscription" four different times and it never landed on a cancel button — finally got it sorted by chatting with an agent, but that took 30 minutes and I shouldn\'t have had to fight for it. The product itself is fine, but the experience of being charged for something I tried to cancel really soured me.',
     containment: { label: 'Escalating', tone: 'escalating' },
     velocity: '↗ 2.4× normal · 24h',
+    aiDraft: {
+      tone: 'Apologetic', confidence: 71, needsReview: true,
+      text: '"Hi Devon — that\'s frustrating, and I\'m sorry it took so long to sort out. I\'ve flagged your account internally so a senior support lead will reach out today with confirmation of the refund and a small credit on your next order…"',
+    },
+    history: [
+      { who: 'Support · Maya', when: 'Yesterday, 4:12 PM', text: 'Refunded duplicate charge for May. Apologized for the cancel-flow friction.' },
+      { who: 'Billing auto-reply', when: 'Yesterday, 11:08 AM', text: 'Thanks for reaching out — a teammate will get back to you within 24 hours.' },
+    ],
   },
   {
     id: 'balanced-runner-reddit',
@@ -131,12 +195,16 @@ const ATTENTION: AttentionItem[] = [
     customer: 'u/balanced_runner', when: '5h ago',
     title: 'Anyone else notice the new formula tastes different?',
     body: "Bought a bottle last week and the aftertaste is way more bitter than the old one. Wondering if Radiant Health changed something.",
+    fullText: "Bought a bottle last week and the aftertaste is way more bitter than the old one. Wondering if Radiant Health changed something — I checked the label and it looks the same. Anyone else noticing this, or am I just losing it? Not enough to make me stop, but enough that I wanted to ask.",
     containment: { label: 'Active issue', tone: 'emerging' },
     velocity: '↗ 3× normal · 6h',
     aiDraft: {
       tone: 'Curious, transparent', confidence: 78,
       text: '"Hey — that\'s a fair callout. We did tweak the formulation in March to remove a synthetic binder, which can shift the aftertaste. We\'re still iterating: a flavor-mask sachet is shipping to current subscribers next week, and if you\'d like one, reply with your order # and we\'ll send it on us."',
     },
+    history: [
+      { who: 'Community team · Jordan', when: 'March 14', text: 'Posted a Reddit AMA explaining the formulation change. 84 upvotes, mostly positive.' },
+    ],
   },
   {
     id: 'marissa-google',
@@ -144,7 +212,11 @@ const ATTENTION: AttentionItem[] = [
     customer: 'Marissa K. · Austin, TX', when: '2h ago', stars: 1,
     title: 'Order arrived damaged, no response from support',
     body: "I've emailed twice about the broken bottle and haven't heard back in 4 days. Disappointed because I really liked the product itself.",
+    fullText: "I've emailed twice about the broken bottle and haven't heard back in 4 days. Disappointed because I really liked the product itself — the energy gummies have been the only thing that's helped me get through afternoon slumps. But sitting on a damaged shipment with no reply doesn't feel great. Hoping someone reaches out.",
     containment: { label: 'Isolated complaint', tone: 'isolated' },
+    history: [
+      { who: 'Support inbox', when: '4 days ago', text: 'Initial email received — no human reply logged.' },
+    ],
   },
   {
     id: 'hannah-instagram',
@@ -152,50 +224,39 @@ const ATTENTION: AttentionItem[] = [
     customer: '@hannahgoesgreen', when: '1d ago',
     title: 'Is this safe while pregnant? No info on the site.',
     body: "Hi! Trying to figure out if the multi is safe during pregnancy — I couldn't find anything in the FAQ.",
+    fullText: "Hi! Trying to figure out if the multi is safe during pregnancy — I couldn't find anything in the FAQ or product page. I asked my OB and she said \"check with the manufacturer.\" Would love a clear answer because I really want to keep taking it, but I'm 12 weeks and being careful.",
     containment: { label: 'Emerging pattern', tone: 'pattern' },
     aiDraft: {
       tone: 'Warm, factual', confidence: 94,
       text: '"Hi Hannah! Great question — our daily multi isn\'t formulated specifically for pregnancy, so we always recommend checking with your OB before adding any new supplement. We\'re rolling out a dedicated pregnancy-safe FAQ this month and will share when it\'s live!"',
     },
   },
-];
-
-const QUICK_DRAFTS: QuickDraftItem[] = [
   {
     id: 'priya-google',
-    source: 'google', sourceLabel: 'Google Reviews',
-    stars: 4, author: 'Priya S.',
-    excerpt: '"Love the daily multi but the capsules are a little big for me to swallow."',
-    draft: {
+    severity: 'watch', source: 'google', sourceLabel: 'Google Reviews',
+    customer: 'Priya S. · Seattle, WA', when: '3h ago', stars: 4,
+    title: 'Love the daily multi — capsules are just a bit large',
+    body: 'Love the daily multi but the capsules are a little big for me to swallow.',
+    fullText: 'Love the daily multi but the capsules are a little big for me to swallow. I\'ve been a subscriber for 8 months and the energy difference is real — I just have to break them in half some mornings, which feels silly for a $48/mo product. Would 100% pay the same for a smaller-size option.',
+    aiDraft: {
       tone: 'Warm, helpful', confidence: 92,
       text: '"Hi Priya — thank you so much for sticking with the daily multi! Capsule size is something we hear from a few of our customers, and the team is actively testing a smaller mini-cap format for early next year…"',
     },
-    approveLabel: 'Approve',
-    approveToast: 'Reply approved',
   },
   {
     id: 'theo-facebook',
-    source: 'facebook', sourceLabel: 'Facebook',
-    author: 'Theo M.',
-    excerpt: '"Do you ship to Canada yet?"',
-    draft: {
+    severity: 'watch', source: 'facebook', sourceLabel: 'Facebook',
+    customer: 'Theo M.', when: '6h ago',
+    title: 'Do you ship to Canada yet?',
+    body: 'Do you ship to Canada yet?',
+    fullText: 'Do you ship to Canada yet? I\'ve been waiting a year — friend in Brooklyn sent me a bottle of the sleep blend and I want to actually subscribe but I\'m in Toronto. Any timeline?',
+    aiDraft: {
       tone: 'Friendly, concise', confidence: 97,
       text: '"Hey Theo! We don\'t ship to Canada quite yet, but it\'s near the top of our 2026 roadmap. If you drop your email at radianthealth.co/canada we\'ll let you know the moment it goes live."',
     },
-    approveLabel: 'Approve',
-    approveToast: 'Reply approved',
-  },
-  {
-    id: 'devon-yelp-quick',
-    source: 'yelp', sourceLabel: 'Yelp',
-    stars: 2, author: 'Devon R.',
-    excerpt: '"Subscription charged twice, hard to cancel."',
-    draft: {
-      tone: 'Apologetic', confidence: 71, needsReview: true,
-      text: '"Hi Devon — that\'s frustrating, and I\'m sorry it took so long to sort out. I\'ve flagged your account internally so a senior support lead will reach out today with confirmation of the refund and a small credit on your next order…"',
-    },
-    approveLabel: 'Send to team',
-    approveToast: 'Sent to support team',
+    history: [
+      { who: 'Theo M.', when: '6 months ago', text: 'Asked the same question on Instagram — got our standard "soon" reply.' },
+    ],
   },
 ];
 
@@ -366,21 +427,22 @@ function KpiCard({ label, value, unit, delta, sub }: KpiCardProps) {
 }
 
 function SourceBadge({ source, label }: { source: Source; label: string }) {
-  const s = SOURCE_STYLES[source];
   return (
     <span
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 5,
-        padding: '3px 7px',
-        borderRadius: 5,
-        background: s.bg,
-        color: s.fg,
-        fontSize: 11,
+        gap: 6,
+        padding: '4px 10px',
+        borderRadius: 8,
+        background: 'var(--dark-4)',
+        color: 'var(--dark-90)',
+        fontSize: 12,
         fontWeight: 500,
+        lineHeight: 1.2,
       }}
     >
+      <SourceLogo source={source} label={label} />
       {label}
     </span>
   );
@@ -449,19 +511,35 @@ interface AttentionCardProps {
   item: AttentionItem;
   onEditDraft: (item: AttentionItem) => void;
   onApproveDraft: (item: AttentionItem) => void;
-  onOpenThread: (item: AttentionItem) => void;
+  onOpenDetail: (item: AttentionItem) => void;
 }
 
-function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenThread }: AttentionCardProps) {
+function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: AttentionCardProps) {
   const containmentStyle = item.containment ? CONTAINMENT_STYLES[item.containment.tone] : null;
+
+  // Inner controls (Edit / Approve buttons) need to stop propagation so clicking
+  // them doesn't also open the detail modal.
+  const stop = (e: MouseEvent) => e.stopPropagation();
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpenDetail(item)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpenDetail(item);
+        }
+      }}
       style={{
         background: 'var(--light-100)',
         border: '1px solid var(--dark-8)',
         borderRadius: 12,
         padding: '14px 16px',
         marginBottom: 8,
+        cursor: 'pointer',
+        textAlign: 'left',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -477,11 +555,13 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenThread }: Atte
         {item.body}
       </div>
       {item.aiDraft && (
-        <AiDraftBlock
-          draft={item.aiDraft}
-          onEdit={() => onEditDraft(item)}
-          onApprove={() => onApproveDraft(item)}
-        />
+        <div onClick={stop}>
+          <AiDraftBlock
+            draft={item.aiDraft}
+            onEdit={() => onEditDraft(item)}
+            onApprove={() => onApproveDraft(item)}
+          />
+        </div>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         {item.containment && containmentStyle && (
@@ -502,45 +582,11 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenThread }: Atte
           <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>{item.velocity}</span>
         )}
         {!item.aiDraft && (
-          <div style={{ marginLeft: 'auto' }}>
-            <Button variant="secondary" size="sm" onClick={() => onOpenThread(item)}>Open thread</Button>
-          </div>
+          <span style={{ fontSize: 11, color: 'var(--purple)', marginLeft: 'auto', fontWeight: 500 }}>
+            Open thread →
+          </span>
         )}
       </div>
-    </div>
-  );
-}
-
-interface QuickDraftCardProps {
-  item: QuickDraftItem;
-  onEdit: (item: QuickDraftItem) => void;
-  onApprove: (item: QuickDraftItem) => void;
-}
-
-function QuickDraftCard({ item, onEdit, onApprove }: QuickDraftCardProps) {
-  return (
-    <div
-      style={{
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 14,
-        padding: 16,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-        <SourceBadge source={item.source} label={item.sourceLabel} />
-        {item.stars !== undefined && <Stars n={item.stars} />}
-        <span style={{ fontSize: 11, color: 'var(--dark-40)', marginLeft: 'auto' }}>{item.author}</span>
-      </div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5, marginBottom: 10 }}>
-        {item.excerpt}
-      </div>
-      <AiDraftBlock
-        draft={item.draft}
-        approveLabel={item.approveLabel}
-        onEdit={() => onEdit(item)}
-        onApprove={() => onApprove(item)}
-      />
     </div>
   );
 }
@@ -934,6 +980,187 @@ function Tabs({ active, onChange, counts }: {
   );
 }
 
+// ─── ITEM-DETAIL MODAL ────────────────────────────────────────────
+
+function ItemDetailModal({
+  close,
+  item,
+  onSendReply,
+  onApproveDraft,
+  onEditDraft,
+}: StackModalProps & {
+  item: AttentionItem;
+  onSendReply: (text: string) => void;
+  onApproveDraft: () => void;
+  onEditDraft: () => void;
+}) {
+  const [reply, setReply] = useState('');
+  const canSend = reply.trim().length > 0;
+  return (
+    <Modal.Root size="md" aria-labelledby="item-detail-title" data-testid="item-detail-modal">
+      <Modal.Header
+        title={item.title}
+        id="item-detail-title"
+        onClose={close}
+        compact={false}
+      />
+      <Modal.Content compact={false}>
+        {/* meta row */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            flexWrap: 'wrap',
+            marginBottom: 16,
+          }}
+        >
+          <SourceBadge source={item.source} label={item.sourceLabel} />
+          {item.stars !== undefined && <Stars n={item.stars} />}
+          <span style={{ fontSize: 13, color: 'var(--dark-90)', fontWeight: 500 }}>
+            {item.customer}
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>· {item.when}</span>
+        </div>
+
+        {/* full review text */}
+        <div
+          style={{
+            fontSize: 14,
+            color: 'var(--dark-90)',
+            lineHeight: 1.6,
+            background: 'var(--dark-2)',
+            border: '1px solid var(--dark-8)',
+            borderRadius: 10,
+            padding: '14px 16px',
+            marginBottom: 20,
+          }}
+        >
+          {item.fullText}
+        </div>
+
+        {/* AI draft (if present) */}
+        {item.aiDraft && (
+          <div style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'var(--dark-40)',
+                fontWeight: 500,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                marginBottom: 8,
+              }}
+            >
+              Suggested reply
+            </div>
+            <AiDraftBlock
+              draft={item.aiDraft}
+              onEdit={onEditDraft}
+              onApprove={() => {
+                onApproveDraft();
+                close();
+              }}
+            />
+          </div>
+        )}
+
+        {/* prior response history */}
+        {item.history && item.history.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'var(--dark-40)',
+                fontWeight: 500,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                marginBottom: 8,
+              }}
+            >
+              Prior responses
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {item.history.map((h, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: 'var(--dark-2)',
+                    border: '1px solid var(--dark-8)',
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, color: 'var(--dark-90)', fontWeight: 500 }}>{h.who}</span>
+                    <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>{h.when}</span>
+                  </div>
+                  <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.55 }}>{h.text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* inline reply compose */}
+        <div>
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--dark-40)',
+              fontWeight: 500,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              marginBottom: 8,
+            }}
+          >
+            Your reply
+          </div>
+          <textarea
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            rows={4}
+            placeholder={`Reply to ${item.customer ?? 'this customer'}…`}
+            style={{
+              width: '100%',
+              fontFamily: 'inherit',
+              fontSize: 14,
+              color: 'var(--dark-90)',
+              background: 'var(--light-100)',
+              border: '1px solid var(--dark-15)',
+              borderRadius: 9,
+              padding: '10px 12px',
+              outline: 'none',
+              resize: 'vertical',
+              minHeight: 96,
+              lineHeight: 1.55,
+            }}
+          />
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="ghost" onPress={close}>
+            Close
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton
+            variant="primary"
+            isDisabled={!canSend}
+            onPress={() => {
+              onSendReply(reply.trim());
+              close();
+            }}
+          >
+            Send reply
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
 // ─── EDIT-DRAFT MODAL ─────────────────────────────────────────────
 
 function EditDraftModal({
@@ -1007,9 +1234,10 @@ export function ReputationRoute() {
 function ReputationRouteInner() {
   const { showToast } = useToast();
   const { openModal, closeModal } = useModals();
+  const { getState } = useDevState();
+  const isCold = getState('/h2/reputation') === 'cold';
   const [tab, setTab] = useState<TabKey>('reviews');
   const [attention, setAttention] = useState<AttentionItem[]>(ATTENTION);
-  const [quickDrafts, setQuickDrafts] = useState<QuickDraftItem[]>(QUICK_DRAFTS);
 
   const editAttentionDraft = (item: AttentionItem) => {
     if (!item.aiDraft) return;
@@ -1025,18 +1253,24 @@ function ReputationRouteInner() {
     });
   };
 
-  const editQuickDraft = (item: QuickDraftItem) => {
-    openModal(EditDraftModal, {
-      initialText: item.draft.text,
-      onSave: (text) => {
-        setQuickDrafts((prev) =>
-          prev.map((q) => (q.id === item.id ? { ...q, draft: { ...q.draft, text } } : q)),
-        );
-        closeModal();
-        showToast({ message: 'Draft updated' });
-      },
+  const openItemDetail = (item: AttentionItem) => {
+    openModal(ItemDetailModal, {
+      item,
+      onSendReply: () => showToast({ message: `Reply sent to ${item.customer ?? item.sourceLabel}` }),
+      onApproveDraft: () => showToast({ message: `Reply approved · sending to ${item.sourceLabel}` }),
+      onEditDraft: () => editAttentionDraft(item),
     });
   };
+
+  const reviewCount = attention.length;
+
+  if (isCold) {
+    return (
+      <H2Layout>
+        <ReputationColdView />
+      </H2Layout>
+    );
+  }
 
   return (
     <H2Layout>
@@ -1074,16 +1308,16 @@ function ReputationRouteInner() {
           <KpiCard label="Total Mentions" value="1,248" delta={{ tone: 'good', text: '+18%' }} sub="this week" />
           <KpiCard label="Positive Sentiment" value="74%" delta={{ tone: 'good', text: '+2.1%' }} sub="of all mentions" />
           <KpiCard label="Negative Sentiment" value="11%" delta={{ tone: 'bad', text: '+1.4%' }} sub="trending up" />
-          <KpiCard label="Needs Attention" value="9" delta={{ tone: 'warn', text: '3 urgent' }} sub="reviews + comments" />
+          <KpiCard label="Needs Attention" value={String(reviewCount)} delta={{ tone: 'warn', text: '2 urgent' }} sub="reviews + comments" />
         </div>
 
-        <Tabs active={tab} onChange={setTab} counts={{ reviews: 9, insights: 5 }} />
+        <Tabs active={tab} onChange={setTab} counts={{ reviews: reviewCount, insights: 5 }} />
 
         {tab === 'reviews' && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <h3 style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>Needs attention</h3>
-              <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>9 items · sorted by impact</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{reviewCount} items · sorted by impact</span>
             </div>
             {attention.map((item) => (
               <AttentionCard
@@ -1091,26 +1325,9 @@ function ReputationRouteInner() {
                 item={item}
                 onEditDraft={editAttentionDraft}
                 onApproveDraft={(it) => showToast({ message: `Reply approved · sending to ${it.sourceLabel}` })}
-                onOpenThread={() => showToast({ message: 'Open thread (TODO)' })}
+                onOpenDetail={openItemDetail}
               />
             ))}
-
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 28, marginBottom: 12 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.2px', color: 'var(--dark-90)', margin: 0 }}>
-                AI drafts ready to approve
-              </h2>
-              <span style={{ fontSize: 12.5, color: 'var(--dark-60)' }}>3 ready · ~25 min saved</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-              {quickDrafts.map((q) => (
-                <QuickDraftCard
-                  key={q.id}
-                  item={q}
-                  onEdit={editQuickDraft}
-                  onApprove={(it) => showToast({ message: it.approveToast })}
-                />
-              ))}
-            </div>
           </>
         )}
         {tab === 'insights' && (

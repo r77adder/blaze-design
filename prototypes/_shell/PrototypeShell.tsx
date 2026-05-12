@@ -7,6 +7,9 @@ import { StatePickerControls } from './StatePicker';
 export interface PrototypeShellProps {
   title: string;
   topbarRight?: ReactNode;
+  /** Optional content rendered in the topbar's center slot. Useful for
+   *  page-level tab strips (e.g. General / Blogs). */
+  topbarCenter?: ReactNode;
   /** Sectioned sidebar (Demand Gen / Conversion / Settings shape). Wins
    *  over `sidebarItems` when both are passed. */
   sidebarSections?: SidebarSection[];
@@ -21,6 +24,7 @@ export interface PrototypeShellProps {
 export function PrototypeShell({
   title,
   topbarRight,
+  topbarCenter,
   sidebarSections,
   sidebarItems,
   sidebarActiveLabel,
@@ -36,7 +40,11 @@ export function PrototypeShell({
         workspaceName={workspaceName}
       />
       <div className={styles.main}>
-        <TopBar title={title} rightContent={topbarRight ?? <StatePickerControls />} />
+        <TopBar
+          title={title}
+          centerContent={topbarCenter}
+          rightContent={topbarRight ?? <StatePickerControls />}
+        />
         <section className={styles.content}>{children}</section>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, IconButton } from '@/components';
+import { Button, Heading, IconButton, Text } from '@/components';
 import { useToast } from '@/staging';
 import ArrowRightSm from '@/icons/16/ArrowRightSm';
 import Check from '@/icons/16/Check';
@@ -18,6 +18,7 @@ import ShieldChecked from '@/icons/20/ShieldChecked';
 import Star from '@/icons/20/Star';
 import Stars from '@/icons/20/Stars';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
 import type { Icon } from '@/components';
 
 /**
@@ -112,114 +113,6 @@ const IMPROVE_LIST: { icon: Icon; t: string; s: string; toast: string }[] = [
   { icon: Clock1, t: 'Add holiday hours for Memorial Day', s: 'Coming up in 4 weeks', toast: 'Holiday hours added' },
 ];
 
-// ─── SCORE RING (animated SVG) ────────────────────────────────────────
-
-interface ScoreRingProps {
-  /** Final percentage (0-100). */
-  score: number;
-  size?: number;
-  stroke?: number;
-  /** Animate from 0% to score on mount (~1.4s ease-out cubic). */
-  animate?: boolean;
-}
-
-function ScoreRing({ score, size = 280, stroke = 14, animate = true }: ScoreRingProps) {
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const targetOffset = circumference - (score / 100) * circumference;
-  const ringColor =
-    score < 50 ? '#EF6800' : score < 80 ? 'var(--dark-90)' : 'var(--status-approved)';
-
-  // Animate the ring (offset) and the counter via rAF on mount.
-  const [displayed, setDisplayed] = useState(animate ? 0 : score);
-  const [offset, setOffset] = useState(animate ? circumference : targetOffset);
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!animate) {
-      setDisplayed(score);
-      setOffset(targetOffset);
-      return;
-    }
-    // Force a paint with the initial 0 state, then transition the ring via
-    // CSS by setting the final offset on the next frame. Counter animates
-    // alongside via rAF for smooth tabular-num updates.
-    const start = performance.now();
-    const dur = 1400;
-    function tick(now: number) {
-      const p = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setDisplayed(Math.round(eased * score));
-      if (p < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    }
-    // Kick the ring transition first (one frame later so the 0 state paints).
-    rafRef.current = requestAnimationFrame(() => {
-      setOffset(targetOffset);
-      rafRef.current = requestAnimationFrame(tick);
-    });
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [animate, score, targetOffset]);
-
-  return (
-    <div style={{ position: 'relative', width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--dark-8)" strokeWidth={stroke} />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={ringColor}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1.4s cubic-bezier(0.2,0,0,1)' }}
-        />
-      </svg>
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div
-          style={{
-            fontSize: size * 0.22,
-            fontWeight: 500,
-            color: 'var(--dark-90)',
-            letterSpacing: '-1.5px',
-            lineHeight: 1,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {displayed}
-          <span style={{ fontSize: size * 0.1, color: 'var(--dark-40)', marginLeft: 2 }}>%</span>
-        </div>
-        <div
-          style={{
-            fontSize: 12,
-            color: 'var(--dark-60)',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginTop: 6,
-          }}
-        >
-          Complete
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Mini ring used in the home "Profile strength" card (no animation).
 function MiniRing({ score, size = 72, stroke = 6 }: { score: number; size?: number; stroke?: number }) {
   const radius = (size - stroke) / 2;
@@ -266,113 +159,73 @@ function MiniRing({ score, size = 72, stroke = 6 }: { score: number; size?: numb
 
 function AuditStep({ onNext }: { onNext: () => void }) {
   const completeness = 36;
-  const verdict =
-    completeness < 50 ? 'missing some pieces' : completeness < 80 ? 'almost there' : 'in great shape';
+  const fixesPending = AUDIT_GAPS.length;
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', padding: '36px 28px 60px' }}>
-      <div
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 7,
-          background: 'var(--green-10)',
-          color: 'var(--status-approved)',
-          borderRadius: 999,
-          padding: '5px 12px 5px 8px',
-          fontSize: 12,
-          fontWeight: 500,
-          marginBottom: 18,
-        }}
-      >
-        <span
-          style={{
-            width: 16,
-            height: 16,
-            borderRadius: '50%',
-            background: 'var(--status-approved)',
-            color: 'var(--light-100)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Check size={10} />
-        </span>
-        Connected to Google
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          background: 'var(--light-100)',
-          border: '1px solid var(--dark-8)',
-          borderRadius: 12,
-          padding: '14px 16px',
-          marginBottom: 26,
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 10,
-            background:
-              "center/cover url('https://images.unsplash.com/photo-1605045174877-cf9d8c1b69cd?w=200&q=70'), #2A3F2C",
-            flexShrink: 0,
-          }}
-        />
-        <div>
-          <div style={{ fontWeight: 500, fontSize: 16, letterSpacing: '0.05px', color: 'var(--dark-90)' }}>
-            Apex Roofing &amp; Restoration
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>
-            Roofing contractor · Austin, TX · 23 reviews
+    <>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '36px 28px 140px' }}>
+        {/* section: header — business + inline progress */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 10,
+              background:
+                "center/cover url('https://images.unsplash.com/photo-1605045174877-cf9d8c1b69cd?w=200&q=70'), #2A3F2C",
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <Heading level={2} style={{ marginBottom: 2 }}>
+              Apex Roofing &amp; Restoration
+            </Heading>
+            <Text variant="secondary">Roofing contractor · Austin, TX · 23 reviews</Text>
           </div>
         </div>
-      </div>
 
-      <div
-        style={{
-          fontSize: 11,
-          textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          color: 'var(--dark-60)',
-          fontWeight: 500,
-          marginBottom: 8,
-        }}
-      >
-        Profile audit
-      </div>
-      <h1
-        style={{
-          fontSize: 32,
-          fontWeight: 500,
-          lineHeight: 1.1,
-          letterSpacing: '-0.4px',
-          color: 'var(--dark-90)',
-          marginBottom: 12,
-        }}
-      >
-        Your profile is {verdict}.
-      </h1>
-      <p style={{ fontSize: 15, color: 'var(--dark-60)', lineHeight: 1.55, maxWidth: 560, marginBottom: 28 }}>
-        We pulled your current Google Business Profile and ran a completeness check against top-ranked competitors
-        in Austin.
-      </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <Text variant="primary" style={{ fontWeight: 500 }}>
+            {completeness}% complete
+          </Text>
+          <Text variant="secondary">·</Text>
+          <Text variant="secondary">
+            {fixesPending} {fixesPending === 1 ? 'fix' : 'fixes'} pending
+          </Text>
+        </div>
+        <div
+          style={{
+            height: 4,
+            borderRadius: 999,
+            background: 'var(--dark-8)',
+            overflow: 'hidden',
+            marginBottom: 32,
+          }}
+        >
+          <div
+            style={{
+              width: `${completeness}%`,
+              height: '100%',
+              background: 'var(--dark-90)',
+              borderRadius: 999,
+            }}
+          />
+        </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '280px 1fr',
-          gap: 32,
-          alignItems: 'center',
-          margin: '28px 0 32px',
-        }}
-      >
-        <ScoreRing score={completeness} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* section: recommended fixes */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            paddingBottom: 12,
+            borderBottom: '1px solid var(--dark-8)',
+            marginBottom: 4,
+          }}
+        >
+          <Heading level={3}>Recommended fixes</Heading>
+          <Text variant="metadata">Drafted by the agent</Text>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {AUDIT_GAPS.map((g, i) => {
             const Ic = g.icon;
             return (
@@ -380,15 +233,16 @@ function AuditStep({ onNext }: { onNext: () => void }) {
                 key={g.t}
                 style={{
                   display: 'flex',
-                  gap: 12,
-                  opacity: 0,
-                  animation: `mr-fade-in-up 0.45s cubic-bezier(0.2,0,0,1) ${1100 + i * 130}ms forwards`,
+                  gap: 14,
+                  alignItems: 'flex-start',
+                  padding: '16px 0',
+                  borderBottom: i < AUDIT_GAPS.length - 1 ? '1px solid var(--dark-4)' : 'none',
                 }}
               >
                 <div
                   style={{
-                    width: 28,
-                    height: 28,
+                    width: 32,
+                    height: 32,
                     borderRadius: 8,
                     background: 'var(--dark-4)',
                     color: 'var(--dark-80)',
@@ -398,121 +252,77 @@ function AuditStep({ onNext }: { onNext: () => void }) {
                     flexShrink: 0,
                   }}
                 >
-                  <Ic size={14} />
+                  <Ic size={16} />
                 </div>
-                <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 2 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <Heading level={3} style={{ marginBottom: 4 }}>
                     {g.t}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.45 }}>{g.s}</div>
+                  </Heading>
+                  <Text variant="secondary">{g.s}</Text>
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
 
-      {/* Inline keyframe so the staggered fade-in works without an SCSS module. */}
-      <style>{`
-        @keyframes mr-fade-in-up {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: none; }
-        }
-      `}</style>
-
-      <div
-        style={{
-          background: 'linear-gradient(180deg, #FCFAF5 0%, #F8F4EA 100%)',
-          border: '1px solid rgba(252,183,40,0.3)',
-          borderRadius: 14,
-          padding: '22px 24px',
-          margin: '16px 0 8px',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18 }}>
-            {[
-              { num: '+38%', label: 'Map Pack visibility, 30 days after launch' },
-              { num: '~5 min', label: 'to confirm — we do the rest' },
-              { num: '$0', label: 'extra ad spend. Just your profile.' },
-            ].map((s) => (
-              <div key={s.num} style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                <div
-                  style={{
-                    fontSize: 28,
-                    fontWeight: 500,
-                    color: 'var(--dark-90)',
-                    letterSpacing: '-0.4px',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
+        {/* section: outcome strip */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '8px 20px',
+            padding: '16px 0',
+            marginTop: 12,
+            borderTop: '1px solid var(--dark-8)',
+            borderBottom: '1px solid var(--dark-8)',
+          }}
+        >
+          {[
+            { num: '+38%', label: 'map visibility' },
+            { num: '~5 min', label: 'to confirm' },
+            { num: '$0', label: 'extra ad spend' },
+          ].map((s, i) => (
+            <div key={s.num} style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                <Text variant="primary" style={{ fontWeight: 500 }}>
                   {s.num}
-                </div>
-                <div style={{ fontSize: 11.5, color: 'var(--dark-60)', lineHeight: 1.4 }}>{s.label}</div>
+                </Text>
+                <Text variant="secondary">{s.label}</Text>
               </div>
-            ))}
-          </div>
-          <div style={{ height: 1, background: 'rgba(252,183,40,0.3)' }} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px 18px' }}>
-            {[
-              'Auto-drafts services, hours and description in your tone',
-              'Publishes weekly Google Posts for you',
-              'Replies to reviews within 2 hours, on average',
-              'Nothing goes live without your approval',
-            ].map((b) => (
-              <div
-                key={b}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 8,
-                  fontSize: 12.5,
-                  color: 'var(--dark-80)',
-                  lineHeight: 1.45,
-                }}
-              >
+              {i < 2 && (
                 <span
-                  style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    background: '#B06000',
-                    color: 'var(--light-100)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    marginTop: 1,
-                  }}
-                >
-                  <Check size={9} />
-                </span>
-                {b}
-              </div>
-            ))}
-          </div>
+                  style={{ width: 1, height: 14, background: 'var(--dark-8)', display: 'inline-block' }}
+                />
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
+      {/* sticky primary CTA */}
       <div
         style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 238,
+          right: 0,
+          background: 'var(--light-100)',
+          borderTop: '1px solid var(--dark-8)',
+          padding: '16px 28px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           gap: 12,
-          marginTop: 32,
-          paddingTop: 20,
-          borderTop: '1px solid var(--dark-4)',
+          zIndex: 10,
         }}
       >
-        <div style={{ fontSize: 13, color: 'var(--dark-60)' }}>
-          The agent has already drafted fixes for everything above.
-        </div>
-        <Button variant="primary" size="md" endIcon={ArrowRightSm} onPress={onNext}>
-          Let&apos;s fix this — takes about 5 min
+        <Text variant="secondary">Auto-replies + Google Posts handled · nothing goes live without your approval</Text>
+        <Button variant="primary" size="lg" endIcon={ArrowRightSm} onPress={onNext}>
+          Let&apos;s fix this — about 5 min
         </Button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -694,8 +504,12 @@ function LoadingStep({ onAdvance }: { onAdvance: () => void }) {
 
 function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const { showToast } = useToast();
+
+  const totalChanges = SUMMARY_BLOCKS.reduce((sum, b) => sum + b.items.length, 0);
+
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', padding: '36px 28px 60px' }}>
+    <>
+    <div style={{ maxWidth: 880, margin: '0 auto', padding: '36px 28px 140px' }}>
       <div
         style={{
           fontSize: 11,
@@ -889,16 +703,36 @@ function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void
         <Button variant="tertiary" size="md" onPress={onBack}>
           Back
         </Button>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Button variant="secondary" size="md" onPress={() => showToast({ message: 'Edit step (out of scope here)' })}>
-            Edit changes
-          </Button>
-          <Button variant="primary" size="lg" frontIcon={Lightning} onPress={onNext}>
-            Confirm &amp; go live
-          </Button>
-        </div>
+        <Button variant="secondary" size="md" onPress={() => showToast({ message: 'Edit step (out of scope here)' })}>
+          Edit changes
+        </Button>
       </div>
     </div>
+
+    <div
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 238,
+        right: 0,
+        background: 'var(--light-100)',
+        borderTop: '1px solid var(--dark-8)',
+        padding: '16px 28px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 12,
+        zIndex: 10,
+      }}
+    >
+      <Text variant="secondary">
+        {totalChanges} changes across {SUMMARY_BLOCKS.length} areas · nothing live yet
+      </Text>
+      <Button variant="primary" size="lg" frontIcon={Lightning} onPress={onNext}>
+        Confirm &amp; go live
+      </Button>
+    </div>
+    </>
   );
 }
 
@@ -1286,155 +1120,79 @@ function HomeView({ onReset }: { onReset: () => void }) {
         </div>
 
         <div>
-          <div
+          <h3
             style={{
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 12,
-              padding: 18,
+              fontSize: 14,
+              fontWeight: 500,
+              color: 'var(--dark-90)',
+              margin: '0 0 12px',
+              letterSpacing: '0.05px',
             }}
           >
-            <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: 'var(--dark-90)' }}>
-              Profile strength
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-              <MiniRing score={78} />
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>78% complete</div>
-                <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2, lineHeight: 1.4 }}>
-                  Almost fully optimized
-                </div>
+            Profile strength
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+            <MiniRing score={78} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>78% complete</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2, lineHeight: 1.4 }}>
+                Almost fully optimized
               </div>
             </div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {IMPROVE_LIST.map((it) => {
-                const Ic = it.icon;
-                return (
-                  <li
-                    key={it.t}
-                    onClick={() => showToast({ message: it.toast })}
+          </div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {IMPROVE_LIST.map((it) => {
+              const Ic = it.icon;
+              return (
+                <li
+                  key={it.t}
+                  onClick={() => showToast({ message: it.toast })}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '32px 1fr 16px',
+                    gap: 12,
+                    alignItems: 'center',
+                    padding: '10px 0',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '32px 1fr 16px',
-                      gap: 12,
-                      alignItems: 'center',
-                      padding: '10px 8px',
+                      width: 32,
+                      height: 32,
                       borderRadius: 8,
-                      cursor: 'pointer',
+                      background: 'var(--dark-4)',
+                      color: 'var(--dark-80)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    <span
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: 'var(--dark-4)',
-                        color: 'var(--dark-80)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Ic size={16} />
-                    </span>
-                    <div>
-                      <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--dark-90)' }}>{it.t}</div>
-                      <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{it.s}</div>
-                    </div>
-                    <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}>
-                      <ArrowRightSm size={14} />
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-            <div
-              style={{
-                fontSize: 12,
-                color: 'var(--dark-60)',
-                background: 'rgba(124,92,252,0.06)',
-                border: '1px solid rgba(124,92,252,0.16)',
-                borderRadius: 8,
-                padding: '10px 12px',
-                lineHeight: 1.5,
-              }}
-            >
-              Want to handle these in 30 seconds? Our team can take care of profile maintenance for you.{' '}
-              <a style={{ color: 'var(--purple)', fontWeight: 500, cursor: 'pointer', textDecoration: 'none' }}>
-                Learn more →
-              </a>
-            </div>
-          </div>
-
+                    <Ic size={16} />
+                  </span>
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--dark-90)' }}>{it.t}</div>
+                    <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{it.s}</div>
+                  </div>
+                  <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}>
+                    <ArrowRightSm size={14} />
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
           <div
             style={{
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 12,
-              padding: 18,
-              marginTop: 14,
+              fontSize: 12,
+              color: 'var(--dark-60)',
+              lineHeight: 1.5,
             }}
           >
-            <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 14, color: 'var(--dark-90)' }}>
-              This month at a glance
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              {[
-                { l: 'Posts', v: '4', d: '+1' },
-                { l: 'Reviews', v: '5', d: '+2' },
-                { l: 'Replies', v: '100%', d: '<2h avg' },
-                { l: 'Q&A', v: '3', d: 'drafted' },
-              ].map((s) => (
-                <div key={s.l}>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: 'var(--dark-40)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {s.l}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 22,
-                      fontWeight: 500,
-                      letterSpacing: '-0.2px',
-                      marginTop: 4,
-                      fontVariantNumeric: 'tabular-nums',
-                      color: 'var(--dark-90)',
-                    }}
-                  >
-                    {s.v}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--dark-40)', marginTop: 2 }}>{s.d}</div>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => showToast({ message: 'Monthly report (out of scope here)' })}
-              style={{
-                width: '100%',
-                marginTop: 14,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '10px 14px',
-                background: 'none',
-                border: '1px solid var(--dark-8)',
-                borderRadius: 8,
-                fontFamily: 'inherit',
-                fontSize: 13,
-                color: 'var(--dark-90)',
-                cursor: 'pointer',
-              }}
-            >
-              See monthly report
-              <ArrowRightSm size={14} />
-            </button>
+            Want to handle these in 30 seconds? Our team can take care of profile maintenance for you.{' '}
+            <a style={{ color: 'var(--purple)', fontWeight: 500, cursor: 'pointer', textDecoration: 'none' }}>
+              Learn more →
+            </a>
           </div>
         </div>
       </div>
@@ -1549,6 +1307,8 @@ function MetricCard({ icon: Ic, label, value, delta, deltaKind, unit, foot }: Me
 export function MapRankingRoute() {
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { getState, setState: setDevState } = useDevState();
+  const devState = getState('/h2/map-ranking');
   // Initial view derives from localStorage on first render. The `?reset=1`
   // query param wipes that flag and forces 'audit'.
   const [view, setView] = useState<View>(() => {
@@ -1567,6 +1327,16 @@ export function MapRankingRoute() {
       return 'audit';
     }
   });
+
+  // Sync dev-state toggle → view. Cold lands on 'audit'; steady on 'home'.
+  useEffect(() => {
+    setView((prev) => {
+      if (devState === 'cold') return 'audit';
+      // For 'steady', skip the intermediate setup steps and go straight to home.
+      if (prev === 'audit' || prev === 'loading' || prev === 'review') return 'home';
+      return prev;
+    });
+  }, [devState]);
 
   // Strip `?reset=1` after consuming it so refresh doesn't re-reset on every load.
   useEffect(() => {
@@ -1588,9 +1358,10 @@ export function MapRankingRoute() {
         /* ignore */
       }
       setView('home');
+      setDevState('/h2/map-ranking', 'steady');
     }, 1700);
     return () => clearTimeout(id);
-  }, [view]);
+  }, [view, setDevState]);
 
   const handleReset = () => {
     try {
@@ -1599,6 +1370,7 @@ export function MapRankingRoute() {
       /* ignore */
     }
     setView('audit');
+    setDevState('/h2/map-ranking', 'cold');
     showToast({ message: 'Setup reset — starting from the audit' });
   };
 

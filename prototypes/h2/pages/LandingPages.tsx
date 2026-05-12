@@ -9,6 +9,8 @@ import Computer from '@/icons/20/Computer';
 import Plus from '@/icons/20/Plus';
 import Settings from '@/icons/20/Settings';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
+import { LandingPagesColdView } from './ColdViews';
 
 /**
  * /h2/landing-pages — deep port of `~/dev/Blaze H2 Features/landing-pages.html`.
@@ -1679,6 +1681,8 @@ export function LandingPagesRoute() {
 function LandingPagesRouteInner() {
   const { showToast } = useToast();
   const { openModal, closeModal } = useModals();
+  const { getState } = useDevState();
+  const isCold = getState('/h2/landing-pages') === 'cold';
   const [view, setView] = useState<View>('hub');
   const [pages, setPages] = useState<Page[]>(INITIAL_PAGES);
   const [campaign, setCampaign] = useState<Campaign | null>(CAMPAIGNS[0]);
@@ -1767,6 +1771,14 @@ function LandingPagesRouteInner() {
     if (view === 'published') return 'Landing Pages › CRM for small teams';
     return 'Landing Pages';
   }, [view]);
+
+  if (isCold) {
+    return (
+      <H2Layout>
+        <LandingPagesColdView />
+      </H2Layout>
+    );
+  }
 
   return (
     <H2Layout title={title} topbarRight={topbarRight}>

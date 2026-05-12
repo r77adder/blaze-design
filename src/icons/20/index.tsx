@@ -242,6 +242,7 @@ export { default as Logout1 } from './Logout1';
 export { default as Mail } from './Mail';
 export { default as Mailchimp } from './Mailchimp';
 export { default as MailOpened } from './MailOpened';
+export { default as Map02 } from './Map02';
 export { default as Marker } from './Marker';
 export { default as Marker03 } from './Marker03';
 export { default as Marker2 } from './Marker2';

@@ -26,6 +26,7 @@ export interface FeedItem {
   time: string;
   primary: string | null;
   secondary: string | null;
+  thumbnails?: string[];
 }
 
 export const FEED_ITEMS: FeedItem[] = [
@@ -40,6 +41,10 @@ export const FEED_ITEMS: FeedItem[] = [
     time: '12m ago',
     primary: 'Review & reply',
     secondary: 'Skip',
+    thumbnails: [
+      'https://picsum.photos/seed/rep-maria-1/120/90',
+      'https://picsum.photos/seed/rep-maria-2/120/90',
+    ],
   },
   {
     id: 'seo-1',
@@ -76,6 +81,13 @@ export const FEED_ITEMS: FeedItem[] = [
     time: '3h ago',
     primary: 'Review',
     secondary: 'Approve all',
+    thumbnails: [
+      'https://picsum.photos/seed/ugc-sofia-1/120/90',
+      'https://picsum.photos/seed/ugc-sofia-2/120/90',
+      'https://picsum.photos/seed/ugc-elise-1/120/90',
+      'https://picsum.photos/seed/ugc-elise-2/120/90',
+      'https://picsum.photos/seed/ugc-day-heel/120/90',
+    ],
   },
   {
     id: 'em-1',
@@ -100,6 +112,14 @@ export const FEED_ITEMS: FeedItem[] = [
     time: '5h ago',
     primary: 'Review posts',
     secondary: null,
+    thumbnails: [
+      'https://picsum.photos/seed/cmp-tips-1/120/90',
+      'https://picsum.photos/seed/cmp-tips-2/120/90',
+      'https://picsum.photos/seed/cmp-tips-3/120/90',
+      'https://picsum.photos/seed/cmp-tips-4/120/90',
+      'https://picsum.photos/seed/cmp-tips-5/120/90',
+      'https://picsum.photos/seed/cmp-tips-6/120/90',
+    ],
   },
   {
     id: 'map-1',
@@ -124,6 +144,7 @@ export const FEED_ITEMS: FeedItem[] = [
     time: 'Yesterday',
     primary: 'Open page',
     secondary: null,
+    thumbnails: ['https://picsum.photos/seed/lp-crm-hero/120/90'],
   },
   {
     id: 'em-2',
@@ -140,7 +161,7 @@ export const FEED_ITEMS: FeedItem[] = [
   {
     id: 'os-1',
     source: 'organic',
-    sourceLabel: 'Organic Social',
+    sourceLabel: 'Organic Campaigns',
     href: 'organic-social.html',
     kind: 'action',
     title: 'Schedule 3 Reels for next week',
@@ -148,6 +169,46 @@ export const FEED_ITEMS: FeedItem[] = [
     time: 'Yesterday',
     primary: 'Schedule',
     secondary: 'Preview',
+    thumbnails: [
+      'https://picsum.photos/seed/os-reel-1/120/90',
+      'https://picsum.photos/seed/os-reel-2/120/90',
+      'https://picsum.photos/seed/os-reel-3/120/90',
+    ],
+  },
+  {
+    id: 'os-2',
+    source: 'organic',
+    sourceLabel: 'Organic Campaigns',
+    href: 'organic-social.html',
+    kind: 'action',
+    title: '5 posts ready for next week — approve to schedule',
+    body: 'Lifestyle grid for Mon/Wed/Fri + two carousels for Tue/Thu. Tone passes brand check. Posting times match your peak engagement window.',
+    time: 'Yesterday',
+    primary: 'Approve & schedule',
+    secondary: 'Preview',
+    thumbnails: [
+      'https://picsum.photos/seed/os-post-mon/120/90',
+      'https://picsum.photos/seed/os-post-tue/120/90',
+      'https://picsum.photos/seed/os-post-wed/120/90',
+      'https://picsum.photos/seed/os-post-thu/120/90',
+    ],
+  },
+  {
+    id: 'os-3',
+    source: 'organic',
+    sourceLabel: 'Organic Campaigns',
+    href: 'organic-social.html',
+    kind: 'insight',
+    title: 'Carousel posts outperformed single-image by 1.8× last week',
+    body: 'Agent will lean into carousel format for the next two weeks. Review the proposed cadence shift in the calendar.',
+    time: '2d ago',
+    primary: 'Open calendar',
+    secondary: 'See breakdown',
+    thumbnails: [
+      'https://picsum.photos/seed/os-carousel-1/120/90',
+      'https://picsum.photos/seed/os-carousel-2/120/90',
+      'https://picsum.photos/seed/os-carousel-3/120/90',
+    ],
   },
   {
     id: 'rep-2',
@@ -160,6 +221,7 @@ export const FEED_ITEMS: FeedItem[] = [
     time: '2d ago',
     primary: 'Open thread',
     secondary: null,
+    thumbnails: ['https://picsum.photos/seed/rep-yelp-thread/120/90'],
   },
   {
     id: 'inf-2',
@@ -172,6 +234,11 @@ export const FEED_ITEMS: FeedItem[] = [
     time: '2d ago',
     primary: 'Open Avatars',
     secondary: null,
+    thumbnails: [
+      'https://picsum.photos/seed/inf-sofia-still-1/120/90',
+      'https://picsum.photos/seed/inf-sofia-still-2/120/90',
+      'https://picsum.photos/seed/inf-sofia-still-3/120/90',
+    ],
   },
   {
     id: 'cmp-2',
@@ -184,6 +251,10 @@ export const FEED_ITEMS: FeedItem[] = [
     time: '2d ago',
     primary: 'Review posts',
     secondary: null,
+    thumbnails: [
+      'https://picsum.photos/seed/cmp-spring-1/120/90',
+      'https://picsum.photos/seed/cmp-spring-2/120/90',
+    ],
   },
   {
     id: 'aeo-1',

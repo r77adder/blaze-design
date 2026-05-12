@@ -7,6 +7,7 @@ import AlertTriangle from '@/icons/20/AlertTriangle';
 import Check2 from '@/icons/20/Check2';
 import Stars from '@/icons/20/Stars';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
 
 /**
  * /h2/paid-search — deep port of `~/dev/Blaze H2 Features/paid-search.html`.
@@ -361,19 +362,6 @@ function CampaignsList({
   const showAnomaly = !anomaly.resolved;
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 28px 60px' }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
-          marginBottom: 14,
-        }}
-      >
-        <h2 style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.2px', margin: 0 }}>
-          Campaigns <span style={{ color: 'var(--dark-40)', fontWeight: 450, marginLeft: 8 }}>1</span>
-        </h2>
-      </div>
-
       {showAnomaly && (
         <div
           style={{
@@ -1600,8 +1588,19 @@ export function PaidSearchRoute() {
 function PaidSearchRouteInner() {
   const { showToast } = useToast();
   const { openModal } = useModals();
+  const { getState } = useDevState();
+  const devState = getState('/h2/paid-search');
   const [view, setView] = useState<View>('campaigns');
   const [anomaly, setAnomaly] = useState<AnomalyState>({ resolved: false, action: null });
+
+  // Sync dev-state toggle → view. Cold = empty; steady = campaigns list.
+  useEffect(() => {
+    setView((prev) => {
+      if (devState === 'cold') return 'empty';
+      if (prev === 'empty') return 'campaigns';
+      return prev;
+    });
+  }, [devState]);
 
   const handleOpenWizard = () => {
     openModal(WizardModal, {

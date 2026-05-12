@@ -1,14 +1,24 @@
 import { useMemo, useState } from 'react';
-import { Heading, Text } from '@/components';
+import { Heading, ModalStack, Text, useModals } from '@/components';
 import { TabChip, useToast } from '@/staging';
-import { FEED_ITEMS } from '../feed-data';
+import { FEED_ITEMS, type FeedItem as FeedItemData } from '../feed-data';
 import { FeedItem } from '../FeedItem';
+import { FeedItemModal } from '../FeedItemModal';
 
 type FilterKey = 'all' | 'action' | 'insight';
 
 export function Home() {
+  return (
+    <ModalStack>
+      <HomeInner />
+    </ModalStack>
+  );
+}
+
+function HomeInner() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const { showToast } = useToast();
+  const { openModal } = useModals();
 
   const counts = useMemo(
     () => ({
@@ -29,6 +39,11 @@ export function Home() {
 
   const handleAction = (label: string, source: string) => {
     showToast({ message: `${label} · ${source}` });
+  };
+
+  const handleOpen = (item: FeedItemData) => {
+    const initialIndex = Math.max(0, visible.findIndex((i) => i.id === item.id));
+    openModal(FeedItemModal, { items: visible, initialIndex, onAction: handleAction });
   };
 
   return (
@@ -82,7 +97,7 @@ export function Home() {
       {/* FEED */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {visible.map((item) => (
-          <FeedItem key={item.id} item={item} onAction={handleAction} />
+          <FeedItem key={item.id} item={item} onAction={handleAction} onOpen={handleOpen} />
         ))}
       </div>
     </div>
