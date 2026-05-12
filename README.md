@@ -4,11 +4,13 @@ Blaze's design system + a prototype playground for designers and PMs.
 
 ## For designers/PMs — getting started
 
-Open this folder in Claude Code (desktop app). Paste this to Claude as your first message:
+Open this folder in Claude Code (desktop app). On your first day, paste this:
 
-> Read CLAUDE.md, install dependencies (`pnpm install`), start the dev server in the background (`pnpm dev`), and open the prototype playground in my browser.
+> /setup
 
-That's it. From then on, ask Claude things like:
+Claude walks you through installing the four things you need (Homebrew, Node, pnpm, the GitHub CLI), authenticates GitHub, installs dependencies, and opens the playground in your browser. About 5-10 minutes start to finish. You only do this once per machine.
+
+After that, every session just ask Claude what you want:
 
 - "Make a new prototype called inbox-v3"
 - "Port this HTML mockup: /Users/me/Downloads/somefile.html"
@@ -19,6 +21,7 @@ Slash commands also work:
 - `/new-prototype <slug>` — scaffold + open browser
 - `/preview [slug]` — open a prototype
 - `/port-html <path>` — convert an HTML mockup into a real prototype
+- `/rebase` — catch up with the latest `main` (safe, walks through any conflicts)
 - `/share` — push your work and open a PR for the team to review
 
 ## Sharing your work
