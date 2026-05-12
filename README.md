@@ -44,7 +44,7 @@ The `main` branch is protected — all changes ship via PR. If you (or Claude) a
 
 The prototype playground deploys to gen-v2-qa on every push:
 
-- **Main:** https://gen-v2-qa-55ha5sekpq-uc.a.run.app/prototypes/
+- **Main:** https://qa.blaze.ai/prototypes/
 - **PR previews:** posted as a sticky comment on each PR
 
 Requires `@blaze.ai` Google sign-in (Identity-Aware Proxy). External viewers can't access prototypes — this is intentional.

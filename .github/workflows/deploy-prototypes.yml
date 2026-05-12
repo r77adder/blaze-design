@@ -77,6 +77,6 @@ jobs:
           message: |
             ## Prototype preview ready
 
-            **URL:** https://gen-v2-qa-55ha5sekpq-uc.a.run.app/prototypes/pr/${{ steps.target.outputs.pr_number }}/
+            **URL:** https://qa.blaze.ai/prototypes/pr/${{ steps.target.outputs.pr_number }}/
 
             Requires `@blaze.ai` Google sign-in (IAP). Updated automatically on every push.
