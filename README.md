@@ -40,6 +40,17 @@ Claude uses your phrasing to write the PR title and description.
 
 The `main` branch is protected — all changes ship via PR. If you (or Claude) accidentally try to push directly to `main`, GitHub will reject it. Use `/share` instead.
 
+## Prototype hosting
+
+The prototype playground deploys to gen-v2-qa on every push:
+
+- **Main:** https://gen-v2-qa-55ha5sekpq-uc.a.run.app/prototypes/
+- **PR previews:** posted as a sticky comment on each PR
+
+Requires `@blaze.ai` Google sign-in (Identity-Aware Proxy). External viewers can't access prototypes — this is intentional.
+
+The build (`pnpm build:playground`) produces `dist/` which is rsynced to `gs://blaze-design-prototypes/` by `.github/workflows/deploy-prototypes.yml`.
+
 ## For engineers — getting started
 
 ```bash
