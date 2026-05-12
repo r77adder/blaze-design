@@ -23,18 +23,27 @@ Identify what's changed. Determine the **primary scope**:
 
 If nothing is modified AND nothing is untracked, tell the user there's nothing to share and stop.
 
-### 2. Branch
+### 2. Branch (origin-aware)
 
-Check the current branch:
+First, refresh the view of the remote so we branch from current main, not stale local main:
+
 ```bash
+git -C /Users/kevinaleman/dev/blaze-design fetch origin
 git -C /Users/kevinaleman/dev/blaze-design rev-parse --abbrev-ref HEAD
 ```
 
-- If on `main`: create + switch to a new branch named after the primary scope (e.g. `prototype/inbox-v3`, `staging/avatar-color-variants`).
+- **If on `main`** — create + switch to a new branch named after the primary scope (e.g. `prototype/inbox-v3`, `staging/avatar-color-variants`), branching directly from **fresh `origin/main`** (not local main, which may be stale if the user hasn't pulled in days):
   ```bash
-  git -C /Users/kevinaleman/dev/blaze-design checkout -b <branch-name>
+  git -C /Users/kevinaleman/dev/blaze-design switch -c <branch-name> origin/main
   ```
-- If already on a non-main branch: keep using it. Don't switch.
+- **If already on a non-main branch** — keep using it. Don't switch. But check how far behind `origin/main` it is:
+  ```bash
+  git -C /Users/kevinaleman/dev/blaze-design rev-list --count HEAD..origin/main
+  ```
+  If the count is `0`, you're current — proceed. If it's `1-3`, mention it but proceed (small drift is fine for prototype PRs). If it's `4+`, surface this to the user before continuing:
+  > Your branch is 7 commits behind `origin/main`. Want me to `/rebase` first so your PR is based on the latest main? Or keep going and rebase later? (Either's fine — just calling it out.)
+
+  Default to continuing if they don't object. CI rebase merges will handle the actual integration.
 
 ### 3. Commit
 
