@@ -68,7 +68,11 @@ const CAMPAIGNS: Array<{
   },
 ];
 
-export function CampaignsScreen() {
+interface Props {
+  onSettingsClick?: () => void;
+}
+
+export function CampaignsScreen({ onSettingsClick }: Props) {
   return (
     <div style={{ fontFamily: font, background: 'white', minHeight: '100%', paddingBottom: 120 }}>
 
@@ -77,7 +81,7 @@ export function CampaignsScreen() {
         variant="screen"
         title="Campaigns"
         rightButtons={<>
-          <GlassIconButton icon={settingsIcon} label="Settings" />
+          <GlassIconButton icon={settingsIcon} label="Settings" onClick={onSettingsClick} />
           <GlassIconButton icon={historyIcon} label="History" />
         </>}
       />
