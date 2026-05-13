@@ -295,7 +295,11 @@
 }
 
 .panelBody {
-  flex: 1;
+  // Size to content; don't shrink when replies + reply input crowd the panel.
+  // ~2 lines minimum so the original comment is always readable.
+  flex: 0 0 auto;
+  min-height: 42px;
+  max-height: 200px;
   font-size: 14px;
   line-height: 1.5;
   color: var(--dark-90, #1a1a1a);
@@ -378,6 +382,19 @@
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--dark-8, #f0f0f0);
+  // Absorb any squeeze when the panel runs out of vertical room — replies shrink
+  // first (and scroll internally), parent body stays at min-height: 42px.
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// .replies inside .repliesWrap fills the available height so the wrap's
+// flex sizing actually constrains the scroll viewport.
+.repliesWrap .replies {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .replies {
