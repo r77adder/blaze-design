@@ -114,6 +114,23 @@ function computePanelPlacement(pin: { x: number; y: number }): PanelPlacement {
   return { left, top, side };
 }
 
+// Editor uses position: absolute with document-coord left/top (pinX/pinY include
+// scroll). Clamp to viewport by translating current scroll + viewport edges into
+// document space.
+function clampEditorPosition(pinX: number, pinY: number): { left: number; top: number } {
+  const EDITOR_WIDTH = 280;
+  const EDITOR_HEIGHT_ESTIMATE = 200;
+  const GUTTER = 8;
+  const maxLeft = window.scrollX + window.innerWidth - EDITOR_WIDTH - GUTTER;
+  const maxTop = window.scrollY + window.innerHeight - EDITOR_HEIGHT_ESTIMATE - GUTTER;
+  const minLeft = window.scrollX + GUTTER;
+  const minTop = window.scrollY + GUTTER;
+  return {
+    left: Math.max(minLeft, Math.min(pinX, maxLeft)),
+    top: Math.max(minTop, Math.min(pinY, maxTop)),
+  };
+}
+
 function pinPosition(comment: Comment): { x: number; y: number; stale: boolean } {
   if (comment.anchor_selector) {
     try {
@@ -605,7 +622,7 @@ export function CommentOverlay() {
       {pending && (
         <div
           className={styles.editor}
-          style={{ left: pending.pinX, top: pending.pinY }}
+          style={clampEditorPosition(pending.pinX, pending.pinY)}
           onClick={(e) => e.stopPropagation()}
         >
           <textarea
