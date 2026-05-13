@@ -1,0 +1,1 @@
+For design rationale, patterns, and component intent, read ios/DESIGN.md before generating iOS prototypes.

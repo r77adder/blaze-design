@@ -6,7 +6,10 @@ export default defineConfig({
   base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [react()],
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: {
+      '@':    path.resolve(__dirname, 'src'),
+      '@ios': path.resolve(__dirname, 'ios'),
+    },
   },
   server: { port: 5173, open: '/' },
 });
