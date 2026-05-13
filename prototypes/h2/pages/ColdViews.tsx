@@ -1,7 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Button, Heading, Text } from '@/components';
 import { useToast } from '@/staging';
-import Mail from '@/icons/20/Mail';
 import Globe from '@/icons/20/Globe';
 import Star from '@/icons/20/Star';
 import Camera1 from '@/icons/20/Camera1';
@@ -93,14 +92,14 @@ export function OrganicSocialColdView() {
   );
 }
 
-export function EmailSmsColdView() {
+export function SdrColdView() {
   return (
     <EmptyState
-      icon={<Mail size={28} />}
-      title="No programs running"
-      subhead="Welcome, win-back, abandoned-cart, and more — start a program and Blaze will draft the full sequence."
-      ctaLabel="Start your first program"
-      ctaMessage="Opening new-program flow"
+      icon={<UserProfileGroup size={28} />}
+      title="No deals or programs yet"
+      subhead="Connect a data source to import contacts. Blaze SDR will qualify leads, draft email and SMS outreach, and run the full pipeline end-to-end."
+      ctaLabel="Connect a data source"
+      ctaMessage="Opening data-source connect flow"
     />
   );
 }
@@ -137,18 +136,6 @@ export function UgcColdView() {
       subhead="Brief creators, collect deliverables, and approve final cuts — all in one place. Spin up your first campaign to get started."
       ctaLabel="Create UGC campaign"
       ctaMessage="Opening UGC campaign brief"
-    />
-  );
-}
-
-export function CrmColdView() {
-  return (
-    <EmptyState
-      icon={<UserProfileGroup size={28} />}
-      title="No deals yet"
-      subhead="Connect a data source to import contacts and let Blaze SDR start qualifying leads and drafting follow-ups."
-      ctaLabel="Connect a data source"
-      ctaMessage="Opening data-source connect flow"
     />
   );
 }

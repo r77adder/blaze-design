@@ -11,4 +11,7 @@ export interface KindBadgeProps
   kind: KindBadgeKind;
   /** Override the canonical label per kind. */
   label?: string;
+  /** Hide the leading icon (star/warning). Default false. Text-only kinds
+   *  (insight) ignore this — they never had an icon. */
+  iconless?: boolean;
 }

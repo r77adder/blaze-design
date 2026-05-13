@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Heading, IconButton, Text } from '@/components';
+import { Button, Heading, Text } from '@/components';
 import { useToast } from '@/staging';
 import ArrowRightSm from '@/icons/16/ArrowRightSm';
 import Check from '@/icons/16/Check';
-import X02 from '@/icons/16/X02';
 import Camera1 from '@/icons/20/Camera1';
 import Clock1 from '@/icons/20/Clock1';
 import Document from '@/icons/20/Document';
@@ -17,12 +16,13 @@ import Send1 from '@/icons/20/Send1';
 import ShieldChecked from '@/icons/20/ShieldChecked';
 import Star from '@/icons/20/Star';
 import Stars from '@/icons/20/Stars';
-import { H2Layout } from '../H2Layout';
 import { useDevState } from '../dev-state-context';
 import type { Icon } from '@/components';
 
 /**
- * /h2/map-ranking — deep port of `~/dev/Blaze H2 Features/map-ranking.html`.
+ * Map Ranking experience body — extracted from the deleted `/h2/map-ranking`
+ * route so it can be rendered inside the AEO page as a sub-tab. Does NOT
+ * wrap in <H2Layout> — the host (AEO) owns the chrome.
  *
  * Five views gated on a localStorage flag:
  *   1. audit   — connected pill, business card, animated SVG score ring,
@@ -34,13 +34,13 @@ import type { Icon } from '@/components';
  *                competitor ladder, recent activity, profile strength,
  *                month-at-a-glance.
  *
+ * The host passes its own `pathname` so the dev-state context can key the
+ * cold/steady toggle to the parent page (e.g. `/h2/aeo`) rather than the
+ * removed `/h2/map-ranking`.
+ *
  * On mount: if localStorage[STORAGE_KEY] is set, jumps straight to 'home'.
  * Otherwise renders 'audit'. Designers can replay the setup via the
  * `?reset=1` query param OR the "Reset setup" pill in the bottom-right.
- *
- * Topbar action:
- *   - 'home' view → "View on Google" (toast).
- *   - Setup views (audit/loading/review/live) → no topbar action.
  */
 
 const STORAGE_KEY = 'h2-map-ranking:setup-complete';
@@ -98,7 +98,33 @@ const COMPETITORS = [
   { rank: 4, name: 'Hill Country Roofs', reviews: 68, recent: '+1 this month', you: false },
 ];
 
-const ACTIVITY: { icon: Icon; kind: 'success' | 'info' | ''; t: string; s: string; time: string }[] = [
+interface ActivityRow {
+  icon: Icon;
+  kind: 'success' | 'info' | 'action' | '';
+  t: string;
+  s: string;
+  /** Right-side meta. Used when the row is read-only history. */
+  time?: string;
+  /** Set when the row represents an open action item. Renders a small
+   *  "Needs action" chip on the left and an inline button on the right. */
+  action?: { label: string; toast: string };
+}
+
+const ACTIVITY: ActivityRow[] = [
+  {
+    icon: MessageChat01,
+    kind: 'action',
+    t: 'Reply to 3 new reviews from Maria H. and 2 others',
+    s: 'The agent drafted replies. Approve to publish, or tap to edit.',
+    action: { label: 'Review & reply', toast: 'Replies queued — review in your inbox' },
+  },
+  {
+    icon: Clock1,
+    kind: 'action',
+    t: 'Add holiday hours for Memorial Day',
+    s: 'Coming up in 4 weeks · customers searching this weekend',
+    action: { label: 'Add hours', toast: 'Holiday hours added' },
+  },
   { icon: Star, kind: 'success', t: 'New 5-star review from Daniel K.', s: '"Crew was on time and cleaned up perfectly. Highly recommend."', time: '2h ago' },
   { icon: Send1, kind: 'info', t: 'Post published to Google', s: 'Storm prep checklist · 47 views in the first hour', time: 'Yesterday' },
   { icon: MessageChat01, kind: 'info', t: 'Replied to a 4-star review', s: 'Drafted by Blaze · Approved by you · Published', time: 'Yesterday' },
@@ -110,7 +136,6 @@ const ACTIVITY: { icon: Icon; kind: 'success' | 'info' | ''; t: string; s: strin
 const IMPROVE_LIST: { icon: Icon; t: string; s: string; toast: string }[] = [
   { icon: Camera1, t: 'Add 5+ recent job photos', s: 'Biggest single boost · +12% to score', toast: 'Photo upload opened' },
   { icon: MessageChat01, t: 'Answer 3 customer questions', s: 'Drafts ready · 1-min review', toast: 'Q&A drafted — tap to review' },
-  { icon: Clock1, t: 'Add holiday hours for Memorial Day', s: 'Coming up in 4 weeks', toast: 'Holiday hours added' },
 ];
 
 // Mini ring used in the home "Profile strength" card (no animation).
@@ -807,79 +832,22 @@ function LiveStep() {
 
 function HomeView({ onReset }: { onReset: () => void }) {
   const { showToast } = useToast();
-  const [actionDismissed, setActionDismissed] = useState(false);
   return (
     <div style={{ padding: '24px 28px 40px', maxWidth: 1200, margin: '0 auto', position: 'relative' }}>
-      {!actionDismissed && (
-        <div
-          style={{
-            display: 'flex',
-            gap: 16,
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            background: 'linear-gradient(180deg, #FFFAF0 0%, #FFF4DC 100%)',
-            border: '1px solid rgba(252,183,40,0.32)',
-            borderRadius: 14,
-            padding: '18px 22px',
-            marginBottom: 14,
-          }}
+      {/* Inline "View on Google" action — preserved from the standalone page's
+       *  topbar action, now lives in the body since AEO owns the topbar. */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onPress={() => showToast({ message: 'Open Google Business Profile' })}
         >
-          <div>
-            <div
-              style={{
-                fontSize: 12,
-                color: '#B06000',
-                fontWeight: 500,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                marginBottom: 6,
-              }}
-            >
-              Action needed
-            </div>
-            <h2
-              style={{
-                fontSize: 17,
-                fontWeight: 500,
-                color: 'var(--dark-90)',
-                letterSpacing: '0.05px',
-                margin: '4px 0',
-              }}
-            >
-              Reply to 3 new reviews from Maria H. and 2 others.
-            </h2>
-            <p style={{ fontSize: 12.5, color: 'var(--dark-80)', lineHeight: 1.5, maxWidth: 540, margin: 0 }}>
-              The agent drafted replies. Approve to publish, or tap to edit. Most homeowners read responses before
-              booking.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-            <Button variant="ghost" size="sm" onPress={() => setActionDismissed(true)}>
-              Skip for now
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onPress={() => {
-                setActionDismissed(true);
-                showToast({ message: 'Replies queued — review in your inbox' });
-              }}
-            >
-              Review &amp; reply
-            </Button>
-            <IconButton
-              icon={X02}
-              size="sm"
-              variant="ghost"
-              aria-label="Dismiss"
-              onPress={() => setActionDismissed(true)}
-            />
-          </div>
-        </div>
-      )}
+          View on Google
+        </Button>
+      </div>
 
       {/* Metric strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 22 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         <MetricCard
           icon={Marker03}
           label="Map Pack rank"
@@ -922,8 +890,8 @@ function HomeView({ onReset }: { onReset: () => void }) {
           background: 'var(--light-100)',
           border: '1px solid var(--dark-8)',
           borderRadius: 14,
-          padding: '22px 24px',
-          marginBottom: 26,
+          padding: '24px 24px',
+          marginBottom: 24,
         }}
       >
         <div>
@@ -976,7 +944,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
               See full insight
             </Button>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 14 }}>
+          <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 16 }}>
             Rather have us handle this?{' '}
             <a style={{ color: 'var(--purple)', fontWeight: 500, cursor: 'pointer', textDecoration: 'none' }}>
               Upgrade to Done-for-You →
@@ -988,19 +956,19 @@ function HomeView({ onReset }: { onReset: () => void }) {
             background: 'var(--dark-2)',
             border: '1px solid var(--dark-4)',
             borderRadius: 10,
-            padding: '12px 6px',
+            padding: '12px 4px',
             alignSelf: 'start',
           }}
         >
           <div
             style={{
-              fontSize: 10.5,
+              fontSize: 11,
               color: 'var(--dark-40)',
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
               fontWeight: 500,
-              padding: '0 12px 6px',
-              marginBottom: 6,
+              padding: '0 12px 8px',
+              marginBottom: 4,
               borderBottom: '1px solid var(--dark-4)',
             }}
           >
@@ -1031,7 +999,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
                 #{c.rank}
               </div>
               <div>
-                <div style={{ fontSize: 12.5, color: 'var(--dark-90)', fontWeight: c.you ? 500 : 400 }}>
+                <div style={{ fontSize: 13, color: 'var(--dark-90)', fontWeight: c.you ? 500 : 400 }}>
                   {c.name}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>{c.recent}</div>
@@ -1066,10 +1034,23 @@ function HomeView({ onReset }: { onReset: () => void }) {
           >
             {ACTIVITY.map((a, i) => {
               const Ic = a.icon;
+              const isAction = a.kind === 'action';
               const iconBg =
-                a.kind === 'success' ? 'var(--green-10)' : a.kind === 'info' ? 'var(--info-10, rgba(0,131,226,0.10))' : 'var(--dark-4)';
+                a.kind === 'success'
+                  ? 'var(--green-10)'
+                  : a.kind === 'info'
+                    ? 'var(--info-10, rgba(0,131,226,0.10))'
+                    : isAction
+                      ? 'rgba(252,183,40,0.16)'
+                      : 'var(--dark-4)';
               const iconColor =
-                a.kind === 'success' ? 'var(--status-approved)' : a.kind === 'info' ? 'rgb(0,131,226)' : 'var(--dark-80)';
+                a.kind === 'success'
+                  ? 'var(--status-approved)'
+                  : a.kind === 'info'
+                    ? 'rgb(0,131,226)'
+                    : isAction
+                      ? '#B06000'
+                      : 'var(--dark-80)';
               return (
                 <div
                   key={i}
@@ -1077,7 +1058,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
                     display: 'grid',
                     gridTemplateColumns: '32px 1fr auto',
                     gap: 12,
-                    alignItems: 'flex-start',
+                    alignItems: 'center',
                     padding: '12px 16px',
                     borderBottom: i < ACTIVITY.length - 1 ? '1px solid var(--dark-4)' : 'none',
                   }}
@@ -1099,20 +1080,66 @@ function HomeView({ onReset }: { onReset: () => void }) {
                   <div>
                     <div
                       style={{
-                        fontSize: 13,
-                        fontWeight: 500,
-                        color: 'var(--dark-90)',
-                        letterSpacing: '0.05px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        flexWrap: 'wrap',
                         marginBottom: 2,
                       }}
                     >
-                      {a.t}
+                      {isAction && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            fontSize: 10.5,
+                            fontWeight: 500,
+                            color: '#B06000',
+                            background: 'rgba(252,183,40,0.16)',
+                            borderRadius: 4,
+                            padding: '2px 6px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.06em',
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              background: '#B06000',
+                            }}
+                          />
+                          Needs action
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: 'var(--dark-90)',
+                          letterSpacing: '0.05px',
+                        }}
+                      >
+                        {a.t}
+                      </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.45 }}>{a.s}</div>
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--dark-40)', flexShrink: 0, paddingTop: 4 }}>
-                    {a.time}
-                  </div>
+                  {isAction && a.action ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onPress={() => showToast({ message: a.action!.toast })}
+                    >
+                      {a.action.label}
+                    </Button>
+                  ) : (
+                    <div style={{ fontSize: 11, color: 'var(--dark-40)', flexShrink: 0 }}>
+                      {a.time}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1131,7 +1158,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
           >
             Profile strength
           </h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
             <MiniRing score={78} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>78% complete</div>
@@ -1152,7 +1179,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
                     gridTemplateColumns: '32px 1fr 16px',
                     gap: 12,
                     alignItems: 'center',
-                    padding: '10px 0',
+                    padding: '12px 0',
                     borderRadius: 8,
                     cursor: 'pointer',
                   }}
@@ -1205,15 +1232,15 @@ function HomeView({ onReset }: { onReset: () => void }) {
           position: 'fixed',
           bottom: 20,
           right: 20,
-          padding: '6px 10px',
+          padding: '8px 12px',
           background: 'var(--light-100)',
           border: '1px solid var(--dark-15)',
           borderRadius: 999,
           fontFamily: 'inherit',
-          fontSize: 11,
+          fontSize: 12,
           color: 'var(--dark-60)',
           cursor: 'pointer',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           zIndex: 50,
         }}
       >
@@ -1247,16 +1274,16 @@ function MetricCard({ icon: Ic, label, value, delta, deltaKind, unit, foot }: Me
         background: 'var(--light-100)',
         border: '1px solid var(--dark-8)',
         borderRadius: 12,
-        padding: '14px 16px',
+        padding: '16px 16px',
       }}
     >
       <div
         style={{
-          fontSize: 11.5,
+          fontSize: 12,
           color: 'var(--dark-60)',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 5,
+          gap: 4,
           marginBottom: 8,
           letterSpacing: '0.02em',
         }}
@@ -1280,12 +1307,12 @@ function MetricCard({ icon: Ic, label, value, delta, deltaKind, unit, foot }: Me
         {delta && deltaKind && (
           <span
             style={{
-              fontSize: 11.5,
+              fontSize: 12,
               fontWeight: 500,
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 3,
-              padding: '2px 7px',
+              gap: 4,
+              padding: '4px 8px',
               borderRadius: 5,
               lineHeight: 1,
               background: deltaStyle[deltaKind].bg,
@@ -1295,20 +1322,28 @@ function MetricCard({ icon: Ic, label, value, delta, deltaKind, unit, foot }: Me
             {delta}
           </span>
         )}
-        {unit && <span style={{ fontSize: 13, color: 'var(--dark-60)', fontWeight: 400 }}>{unit}</span>}
+        {unit && <span style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>{unit}</span>}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--dark-40)', marginTop: 4 }}>{foot}</div>
+      <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 4 }}>{foot}</div>
     </div>
   );
 }
 
-// ─── ROUTE ────────────────────────────────────────────────────────────
+// ─── BODY ─────────────────────────────────────────────────────────────
 
-export function MapRankingRoute() {
+export interface MapRankingBodyProps {
+  /** Pathname used as the dev-state key. The Map Ranking experience reads
+   *  cold/steady from this key so the dev panel toggle on the host page
+   *  controls the audit-vs-home jump. */
+  devStatePath: string;
+}
+
+export function MapRankingBody({ devStatePath }: MapRankingBodyProps) {
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { getState, setState: setDevState } = useDevState();
-  const devState = getState('/h2/map-ranking');
+  const devState = getState(devStatePath);
+
   // Initial view derives from localStorage on first render. The `?reset=1`
   // query param wipes that flag and forces 'audit'.
   const [view, setView] = useState<View>(() => {
@@ -1358,10 +1393,10 @@ export function MapRankingRoute() {
         /* ignore */
       }
       setView('home');
-      setDevState('/h2/map-ranking', 'steady');
+      setDevState(devStatePath, 'steady');
     }, 1700);
     return () => clearTimeout(id);
-  }, [view, setDevState]);
+  }, [view, setDevState, devStatePath]);
 
   const handleReset = () => {
     try {
@@ -1370,23 +1405,12 @@ export function MapRankingRoute() {
       /* ignore */
     }
     setView('audit');
-    setDevState('/h2/map-ranking', 'cold');
+    setDevState(devStatePath, 'cold');
     showToast({ message: 'Setup reset — starting from the audit' });
   };
 
-  const topbarRight =
-    view === 'home' ? (
-      <Button
-        variant="secondary"
-        size="md"
-        onPress={() => showToast({ message: 'Open Google Business Profile' })}
-      >
-        View on Google
-      </Button>
-    ) : undefined;
-
   return (
-    <H2Layout topbarRight={topbarRight}>
+    <>
       {view === 'audit' && <AuditStep onNext={() => setView('loading')} />}
       {view === 'loading' && <LoadingStep onAdvance={() => setView('review')} />}
       {view === 'review' && (
@@ -1394,6 +1418,6 @@ export function MapRankingRoute() {
       )}
       {view === 'live' && <LiveStep />}
       {view === 'home' && <HomeView onReset={handleReset} />}
-    </H2Layout>
+    </>
   );
 }

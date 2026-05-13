@@ -20,11 +20,11 @@ const KIND_ICONS: Record<
 };
 
 export const KindBadge = forwardRef<HTMLSpanElement, KindBadgeProps>(
-  ({ kind, label, className, ...rest }, ref) => {
+  ({ kind, label, iconless = false, className, ...rest }, ref) => {
     const classes = [styles.root, styles[`kind-${kind}`], className]
       .filter(Boolean)
       .join(' ');
-    const Icon = KIND_ICONS[kind];
+    const Icon = iconless ? null : KIND_ICONS[kind];
     return (
       <span ref={ref} className={classes} {...rest}>
         {Icon ? (

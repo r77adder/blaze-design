@@ -5,7 +5,10 @@ import { TopBar } from './TopBar';
 import { StatePickerControls } from './StatePicker';
 
 export interface PrototypeShellProps {
-  title: string;
+  /** String renders as the standard topbar title; a ReactNode renders as-is
+   *  so prototypes can drop in custom left-aligned clusters (e.g. detail-view
+   *  back-button + name + status pill). */
+  title: string | ReactNode;
   topbarRight?: ReactNode;
   /** Optional content rendered in the topbar's center slot. Useful for
    *  page-level tab strips (e.g. General / Blogs). */

@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Modal, ModalStack, useModals } from '@/components';
+import { Button, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { useToast } from '@/staging';
+import { TabChip, useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import Check2 from '@/icons/20/Check2';
 import Stars from '@/icons/20/Stars';
+import Globe from '@/icons/20/Globe';
 import { H2Layout } from '../H2Layout';
+import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 
 /**
@@ -42,16 +44,215 @@ const KPIS = [
   { label: 'CPA', value: '$5.40', delta: 'on target', tone: 'up' as const },
 ];
 
+interface FatigueFlag {
+  ageDays: number;
+  signal: string;
+  reason: string;
+  competitors: string;
+  proposals: string[];
+}
+
+// Inline fatigue flags surface on the Campaigns list row + one keyword in
+// the Live view. Clicking opens FatigueRefreshModal — same proposed-refresh
+// experience the home-feed item triggers via FeedItemModal.
+const CAMPAIGN_FATIGUE: FatigueFlag = {
+  ageDays: 21,
+  signal: 'CTR -32% past 7d',
+  reason:
+    "Asset combo 'RSA Variant A' has dropped 32% CTR over the past 7 days while impressions held steady. Headline 1 has run unchanged for 21 days.",
+  competitors:
+    'Two competitors rotated to question-led headlines this week ("Tired by 3pm?" pattern) and lifted CTR ~30%. NorthSun Wellness added a free-shipping callout extension.',
+  proposals: [
+    'Rotate Headline 1 to a question-led variant',
+    'Add a new "free shipping" callout extension',
+    'Pin a freshness signal — "Updated for May" — in description 2',
+  ],
+};
+
+const LOCAL_AUSTIN_FATIGUE: FatigueFlag = {
+  ageDays: 18,
+  signal: 'CTR -24% past 7d',
+  reason:
+    "Asset combo 'Local — Austin Outdoors' has dropped 24% CTR over the past 7 days. The Austin-skyline hero image has been live for 18 days and is losing freshness.",
+  competitors:
+    'Two regional competitors rotated to user-shot lifestyle photos in the past week and lifted CTR ~18% on local geo terms.',
+  proposals: [
+    'Swap hero image to user-shot lifestyle photo (Austin trail)',
+    'Add a "Austin pickup available" callout extension',
+    'Rotate Headline 2 to lead with a local landmark',
+  ],
+};
+
+const REPURCHASE_FATIGUE: FatigueFlag = {
+  ageDays: 24,
+  signal: 'CTR -29% past 7d',
+  reason:
+    "Asset combo 'Refill — 2nd order discount' has dropped 29% CTR over the past 7 days. The 'Welcome back' headline has been unchanged for 24 days.",
+  competitors:
+    'Two competitors launched loyalty-framed refill campaigns this month, leading with a subscription discount instead of a one-time refill offer.',
+  proposals: [
+    'Rotate to a loyalty-framed headline — "Your routine, restocked"',
+    'Test a subscription-framed CTA over the one-time refill CTA',
+    'Add a "Free express shipping on refills" callout',
+  ],
+};
+
+const KEYWORD_FATIGUE: FatigueFlag = {
+  ageDays: 28,
+  signal: 'CPC +42% past 7d',
+  reason:
+    'CPC climbed 42% as 3 new competitors entered the auction. Quality Score holding at 8, but bid pressure is winning.',
+  competitors:
+    'NorthSun Wellness and Helia Botanicals both launched campaigns targeting this exact match in the past 10 days.',
+  proposals: [
+    'Switch from broad to phrase match to reduce auction overlap',
+    'Add 4 negative keywords competitors are bidding on',
+    'Test a lower max-CPC of $1.40 with Maximize Conversions',
+  ],
+};
+
+// ─── CAMPAIGN LIST DATA ────────────────────────────────────────────────
+
+type CampaignStatus =
+  | 'live'
+  | 'on-track'
+  | 'testing'
+  | 'winner'
+  | 'spending-fast'
+  | 'paused'
+  | 'over-budget';
+
+interface Campaign {
+  id: string;
+  name: string;
+  channel: string;
+  budget: number; // daily budget
+  spend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  cpa: number;
+  status: CampaignStatus;
+  startedLabel: string;
+  // Optional flags shown alongside the status pill
+  anomaly?: boolean; // CPC spike — only the primary live campaign
+  fatigue?: FatigueFlag;
+  // The 'live' campaign drills into the LiveCampaign detail view; others
+  // route to the same view as a stub (no detail screen for them in this
+  // prototype).
+  primary?: boolean;
+}
+
+const CAMPAIGNS: Campaign[] = [
+  {
+    id: 'daily-wellness',
+    name: 'Daily Wellness Bundle',
+    channel: 'Search · $40/day · Started 2h 14m ago',
+    budget: 40,
+    spend: 32.4,
+    impressions: 8432,
+    clicks: 187,
+    conversions: 6,
+    cpa: 5.4,
+    status: 'live',
+    startedLabel: 'Started 2h 14m ago',
+    anomaly: true,
+    fatigue: CAMPAIGN_FATIGUE,
+    primary: true,
+  },
+  {
+    id: 'branded-radiant',
+    name: 'Branded — Radiant Health',
+    channel: 'Search · $25/day · Running 6 weeks',
+    budget: 25,
+    spend: 21.3,
+    impressions: 4210,
+    clicks: 312,
+    conversions: 18,
+    cpa: 1.18,
+    status: 'on-track',
+    startedLabel: 'Running 6 weeks',
+  },
+  {
+    id: 'wellness-supplements',
+    name: 'Wellness terms — supplements',
+    channel: 'Search · $30/day · Testing 4 days',
+    budget: 30,
+    spend: 24.85,
+    impressions: 6120,
+    clicks: 142,
+    conversions: 3,
+    cpa: 8.28,
+    status: 'testing',
+    startedLabel: 'Testing 4 days',
+  },
+  {
+    id: 'best-of-adaptogens',
+    name: 'Best-of comparison — adaptogens',
+    channel: 'Search · $35/day · Running 3 weeks',
+    budget: 35,
+    spend: 33.6,
+    impressions: 7820,
+    clicks: 268,
+    conversions: 22,
+    cpa: 1.53,
+    status: 'winner',
+    startedLabel: 'Running 3 weeks',
+  },
+  {
+    id: 'local-austin',
+    name: 'Local searches — Austin',
+    channel: 'Search · $20/day · Running 18 days',
+    budget: 20,
+    spend: 19.4,
+    impressions: 2950,
+    clicks: 96,
+    conversions: 4,
+    cpa: 4.85,
+    status: 'spending-fast',
+    startedLabel: 'Running 18 days',
+    fatigue: LOCAL_AUSTIN_FATIGUE,
+  },
+  {
+    id: 'refill-repurchase',
+    name: 'Refill / repurchase',
+    channel: 'Search · $15/day · Paused 2 days ago',
+    budget: 15,
+    spend: 0,
+    impressions: 0,
+    clicks: 0,
+    conversions: 0,
+    cpa: 0,
+    status: 'paused',
+    startedLabel: 'Paused 2 days ago',
+    fatigue: REPURCHASE_FATIGUE,
+  },
+  {
+    id: 'discovery-natural-energy',
+    name: "Discovery: 'natural energy'",
+    channel: 'Search · $50/day · Running 9 days',
+    budget: 50,
+    spend: 58.2,
+    impressions: 12340,
+    clicks: 410,
+    conversions: 9,
+    cpa: 6.47,
+    status: 'over-budget',
+    startedLabel: 'Running 9 days',
+  },
+];
+
 interface Keyword {
   name: string;
   clicks: number;
   conv: number;
   status: 'ok' | 'alert' | 'paused' | 'watching';
+  fatigue?: FatigueFlag;
 }
 
 const BASE_KEYWORDS: Keyword[] = [
   { name: 'daily wellness routine', clicks: 62, conv: 3, status: 'ok' },
-  { name: 'best adaptogens', clicks: 48, conv: 2, status: 'ok' },
+  { name: 'best adaptogens', clicks: 48, conv: 2, status: 'ok', fatigue: KEYWORD_FATIGUE },
   { name: 'ashwagandha benefits', clicks: 31, conv: 1, status: 'ok' },
   { name: 'wellness supplements', clicks: 23, conv: 0, status: 'alert' },
   { name: 'stress supplements', clicks: 14, conv: 0, status: 'ok' },
@@ -293,6 +494,8 @@ interface AnomalyState {
   action: AnomalyAction | null;
 }
 
+type SubTab = 'campaigns' | 'market-intelligence';
+
 // ─── EMPTY STATE ───────────────────────────────────────────────────────
 
 function EmptyState({ onStart }: { onStart: () => void }) {
@@ -359,47 +562,32 @@ function CampaignsList({
   anomaly: AnomalyState;
   onOpenLive: () => void;
 }) {
+  const { openModal } = useModals();
+  const { showToast } = useToast();
   const showAnomaly = !anomaly.resolved;
+  // One consolidated banner — inline list of every fatigued campaign.
+  const fatigued = CAMPAIGNS.filter((c) => c.fatigue);
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 28px 60px' }}>
-      {showAnomaly && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            background: 'var(--yellow-bg, #FEF3C7)',
-            border: '1px solid rgba(217,119,6,0.32)',
-            borderRadius: 10,
-            padding: '10px 14px',
-            marginBottom: 12,
-            fontSize: 12.5,
-            color: '#713F12',
-          }}
-        >
-          <AlertTriangle size={14} />
-          <span>
-            Blaze flagged a CPC spike on <strong>"wellness supplements"</strong>
-          </span>
-          <button
-            type="button"
-            onClick={onOpenLive}
-            style={{
-              marginLeft: 'auto',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: 12.5,
-              color: 'var(--dark-90)',
-              fontWeight: 450,
-              textDecoration: 'underline',
-              textUnderlineOffset: 2,
-              textDecorationColor: 'var(--dark-15)',
-            }}
-          >
-            Review →
-          </button>
+      {fatigued.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <FatigueSummaryBanner
+            items={fatigued.map((c) => ({
+              key: c.id,
+              name: c.name,
+              signal: c.fatigue!.signal,
+              onSelect: () => {
+                if (c.primary) {
+                  onOpenLive();
+                } else {
+                  openModal(FatigueRefreshModal, {
+                    fatigue: c.fatigue!,
+                    adName: `${c.name} — Asset combo`,
+                  });
+                }
+              },
+            }))}
+          />
         </div>
       )}
 
@@ -436,85 +624,349 @@ function CampaignsList({
           <div style={{ textAlign: 'right' }}>CPA</div>
           <div />
         </div>
-        <button
-          type="button"
-          onClick={onOpenLive}
+        {CAMPAIGNS.map((c, i) => (
+          <CampaignRow
+            key={c.id}
+            campaign={c}
+            isFirst={i === 0}
+            isLast={i === CAMPAIGNS.length - 1}
+            showAnomaly={showAnomaly && !!c.anomaly}
+            onOpen={() => {
+              if (c.primary) onOpenLive();
+              else showToast({ message: `${c.name} — detail view not built for this prototype yet` });
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CampaignRow({
+  campaign,
+  isFirst,
+  isLast: _isLast,
+  showAnomaly,
+  onOpen,
+}: {
+  campaign: Campaign;
+  isFirst: boolean;
+  isLast: boolean;
+  showAnomaly: boolean;
+  onOpen: () => void;
+}) {
+  const isPaused = campaign.status === 'paused';
+  const fmtMoney = (n: number) => `$${n.toFixed(2)}`;
+  const fmtInt = (n: number) => n.toLocaleString('en-US');
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr 90px 100px 90px 80px 90px 28px',
+        gap: 14,
+        alignItems: 'center',
+        padding: '14px 16px',
+        background: 'transparent',
+        border: 'none',
+        borderTop: isFirst ? 'none' : '1px solid var(--dark-8)',
+        width: '100%',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        textAlign: 'left',
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 13.5, fontWeight: 450, color: 'var(--dark-90)' }}>{campaign.name}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 2 }}>{campaign.channel}</div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+        <CampaignStatusPill status={campaign.status} />
+        {showAnomaly && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              background: 'var(--yellow-bg, #FEF3C7)',
+              color: '#713F12',
+              padding: '2px 7px',
+              borderRadius: 5,
+              fontSize: 10.5,
+              fontWeight: 500,
+            }}
+          >
+            <AlertTriangle size={11} />1 anomaly
+          </span>
+        )}
+        {campaign.fatigue && (
+          <FatigueFlagPill
+            fatigue={campaign.fatigue}
+            adName={`${campaign.name} — Asset combo`}
+            asSpan
+          />
+        )}
+      </div>
+      <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+        {fmtMoney(campaign.spend)}
+      </div>
+      <div style={{ textAlign: 'right', fontSize: 13, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+        {fmtInt(campaign.impressions)}
+      </div>
+      <div style={{ textAlign: 'right', fontSize: 13, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+        {fmtInt(campaign.clicks)}
+      </div>
+      <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+        {fmtInt(campaign.conversions)}
+      </div>
+      <div style={{ textAlign: 'right', fontSize: 13, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+        {campaign.conversions > 0 ? fmtMoney(campaign.cpa) : '—'}
+      </div>
+      <div style={{ color: 'var(--dark-40)' }}>
+        <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="m9 6 6 6-6 6" />
+        </svg>
+      </div>
+    </button>
+  );
+}
+
+function CampaignStatusPill({ status }: { status: CampaignStatus }) {
+  const config: Record<CampaignStatus, { label: string; bg: string; color: string; dot?: string; pulse?: boolean }> = {
+    live: {
+      label: 'Live',
+      bg: '#DCFCE7',
+      color: '#14532D',
+      dot: 'var(--status-approved)',
+      pulse: true,
+    },
+    'on-track': {
+      label: 'On track',
+      bg: '#DCFCE7',
+      color: '#14532D',
+      dot: 'var(--status-approved)',
+    },
+    testing: {
+      label: 'Testing',
+      bg: 'rgba(59,130,246,0.10)',
+      color: '#1E40AF',
+      dot: 'var(--status-posting)',
+    },
+    winner: {
+      label: 'Winner',
+      bg: 'rgba(167,139,250,0.14)',
+      color: '#5B21B6',
+      dot: 'var(--status-posted)',
+    },
+    'spending-fast': {
+      label: 'Spending too fast',
+      bg: 'var(--yellow-bg, #FEF3C7)',
+      color: '#713F12',
+      dot: 'var(--status-connect)',
+    },
+    paused: {
+      label: 'Paused',
+      bg: 'var(--dark-4)',
+      color: 'var(--dark-60)',
+      dot: 'var(--dark-40)',
+    },
+    'over-budget': {
+      label: 'Over budget',
+      bg: 'rgba(188,1,11,0.10)',
+      color: 'var(--red-90)',
+      dot: 'var(--red-70)',
+    },
+  };
+  const c = config[status];
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        padding: '2px 8px',
+        borderRadius: 5,
+        fontSize: 11,
+        fontWeight: 450,
+        background: c.bg,
+        color: c.color,
+      }}
+    >
+      {c.dot && (
+        <span
           style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 90px 100px 90px 80px 90px 28px',
-            gap: 14,
-            alignItems: 'center',
-            padding: '14px 16px',
-            background: 'transparent',
-            border: 'none',
-            width: '100%',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            textAlign: 'left',
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: c.dot,
+            animation: c.pulse ? 'pulse 1.6s ease-out infinite' : undefined,
           }}
-        >
-          <div>
-            <div style={{ fontSize: 13.5, fontWeight: 450, color: 'var(--dark-90)' }}>Daily Wellness Bundle</div>
-            <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 2 }}>
-              Search · $40/day · Started 2h 14m ago
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+        />
+      )}
+      {c.label}
+    </span>
+  );
+}
+
+// ─── WARNING BANNER (shared) ──────────────────────────────────────────
+// Used for both the campaign-detail CPC spike + Creative Fatigue warnings
+// AND the campaign-list fatigue banner stack.
+
+function WarningBanner({
+  tone,
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  tone: 'cpc' | 'fatigue';
+  title: string;
+  body: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  // Softer treatment — less dramatic tint, lighter border, smaller icon.
+  // tone === 'cpc' uses --status-connect (orange) family.
+  // tone === 'fatigue' uses --status-failed (red) family.
+  const palette =
+    tone === 'cpc'
+      ? {
+          bg: 'rgba(237,124,44,0.04)',
+          border: 'rgba(237,124,44,0.14)',
+          iconColor: 'var(--status-connect)',
+          titleColor: 'var(--dark-90)',
+        }
+      : {
+          bg: 'rgba(188,1,11,0.04)',
+          border: 'rgba(188,1,11,0.12)',
+          iconColor: 'var(--red-90)',
+          titleColor: 'var(--dark-90)',
+        };
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        background: palette.bg,
+        border: `1px solid ${palette.border}`,
+        borderRadius: 12,
+        padding: 12,
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: palette.iconColor,
+          flexShrink: 0,
+        }}
+      >
+        <AlertTriangle size={16} />
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 500, color: palette.titleColor, marginBottom: 2 }}>{title}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>{body}</div>
+      </div>
+      <div style={{ flexShrink: 0, alignSelf: 'center' }}>
+        <Button variant="secondary" size="sm" onPress={onAction}>
+          {actionLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── FATIGUE SUMMARY BANNER (consolidated, list view) ──────────────────
+// One softer red banner above the campaign table — inline list of fatigued
+// campaigns, each row click opens the relevant FatigueRefreshModal (or drills
+// into the live view for the primary campaign).
+
+interface FatigueSummaryItem {
+  key: string;
+  name: string;
+  signal: string;
+  onSelect: () => void;
+}
+
+function FatigueSummaryBanner({ items }: { items: FatigueSummaryItem[] }) {
+  return (
+    <div
+      style={{
+        padding: 12,
+        borderRadius: 12,
+        background: 'rgba(188, 1, 11, 0.04)',
+        border: '1px solid rgba(188, 1, 11, 0.12)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '0 4px 8px',
+        }}
+      >
+        <AlertTriangle size={16} color="var(--red-90)" />
+        <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--dark-90)' }}>
+          Creative fatigue · {items.length} ad set{items.length === 1 ? '' : 's'} need attention
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {items.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={item.onSelect}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '8px 4px',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              textAlign: 'left',
+              width: '100%',
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: 'var(--red-70)',
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', flexShrink: 0 }}>
+              {item.name}
+            </span>
             <span
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '2px 8px',
-                borderRadius: 5,
-                fontSize: 11,
-                fontWeight: 450,
-                background: '#DCFCE7',
-                color: '#14532D',
+                fontSize: 12.5,
+                color: 'var(--dark-60)',
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: 'var(--status-approved)',
-                  animation: 'pulse 1.6s ease-out infinite',
-                }}
-              />
-              Live
+              {item.signal}
             </span>
-            {showAnomaly && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'var(--yellow-bg, #FEF3C7)',
-                  color: '#713F12',
-                  padding: '2px 7px',
-                  borderRadius: 5,
-                  fontSize: 10.5,
-                  fontWeight: 500,
-                }}
-              >
-                <AlertTriangle size={11} />1 anomaly
-              </span>
-            )}
-          </div>
-          <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
-            $32.40
-          </div>
-          <div style={{ textAlign: 'right', fontSize: 13, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>8,432</div>
-          <div style={{ textAlign: 'right', fontSize: 13, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>187</div>
-          <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>6</div>
-          <div style={{ textAlign: 'right', fontSize: 13, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>$5.40</div>
-          <div style={{ color: 'var(--dark-40)' }}>
-            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="m9 6 6 6-6 6" />
-            </svg>
-          </div>
-        </button>
+            <span style={{ marginLeft: 'auto', color: 'var(--dark-40)' }} aria-hidden>
+              <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -531,6 +983,7 @@ function LiveCampaign({
   onBack: () => void;
   onResolveAnomaly: (action: AnomalyAction) => void;
 }) {
+  const { openModal } = useModals();
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
       <button
@@ -573,6 +1026,35 @@ function LiveCampaign({
         Search campaign · <strong>$40/day budget</strong> · Targeting wellness-curious adults 25–45, US
       </div>
 
+      {/* Warning banner stack — both warnings surface above the metrics. The
+          CPC banner falls back to a 'resolved' confirmation once the user has
+          chosen a remediation action. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+        {anomaly.resolved ? (
+          <AnomalyResolved action={anomaly.action} />
+        ) : (
+          <WarningBanner
+            tone="cpc"
+            title="CPC spike detected"
+            body={'CPC up 38% in the last 4 hours on "wellness supplements". The agent suggests pausing the keyword or lowering max bid.'}
+            actionLabel="Review bid"
+            onAction={() => openModal(BidReviewModal, { onResolve: onResolveAnomaly })}
+          />
+        )}
+        <WarningBanner
+          tone="fatigue"
+          title="Creative Fatigue detected"
+          body={"Asset combo 'RSA Variant A' has dropped 32% CTR over the past 7 days. A refresh proposal is ready."}
+          actionLabel="Review refresh"
+          onAction={() =>
+            openModal(FatigueRefreshModal, {
+              fatigue: CAMPAIGN_FATIGUE,
+              adName: 'Daily Wellness Bundle — RSA · Variant A',
+            })
+          }
+        />
+      </div>
+
       {/* KPI strip */}
       <div
         style={{
@@ -608,9 +1090,6 @@ function LiveCampaign({
           </div>
         ))}
       </div>
-
-      {/* Anomaly block — either card with actions or resolved success */}
-      {anomaly.resolved ? <AnomalyResolved action={anomaly.action} /> : <AnomalyCard onResolve={onResolveAnomaly} />}
 
       {/* CTR chart card */}
       <div
@@ -698,7 +1177,12 @@ function LiveCampaign({
                   alignItems: 'center',
                 }}
               >
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{kw.name}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{kw.name}</span>
+                  {kw.fatigue && (
+                    <FatigueFlagPill fatigue={kw.fatigue} adName={`Keyword: "${kw.name}"`} />
+                  )}
+                </span>
                 <span style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
                   {kw.clicks} clicks
                 </span>
@@ -741,84 +1225,82 @@ function KeywordStatusPill({ status }: { status: Keyword['status'] }) {
   );
 }
 
-// ─── ANOMALY CARD + RESOLVED ──────────────────────────────────────────
+// ─── ANOMALY RESOLVED + BID REVIEW MODAL ──────────────────────────────
 
-function AnomalyCard({ onResolve }: { onResolve: (a: AnomalyAction) => void }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 16,
-        background: 'linear-gradient(135deg, #FFF8E1 0%, #FFF3D6 100%)',
-        border: '1px solid rgba(245,158,11,0.32)',
-        borderRadius: 14,
-        padding: '18px 22px',
-        marginBottom: 22,
-        alignItems: 'flex-start',
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: 'rgba(245,158,11,0.18)',
-          color: 'var(--status-review)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <AlertTriangle size={18} />
-      </div>
-      <div style={{ flex: 1 }}>
-        <h4 style={{ fontSize: 14.5, fontWeight: 500, color: 'var(--dark-90)', margin: '0 0 5px' }}>
-          CPC spike on "wellness supplements"
-        </h4>
-        <p style={{ fontSize: 12.5, color: 'var(--dark-80)', lineHeight: 1.55, margin: '0 0 14px' }}>
-          Cost-per-click jumped <strong>+47%</strong> in the last hour ($0.92 → $1.35). Likely a competitor's
-          auction-time bid bump. Three options:
-        </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <AnomalyActionButton onClick={() => onResolve('pause')}>Pause keyword</AnomalyActionButton>
-          <AnomalyActionButton onClick={() => onResolve('lower')}>Lower max bid to $1.40</AnomalyActionButton>
-          <AnomalyActionButton primary onClick={() => onResolve('monitor')}>
-            Continue monitoring
-          </AnomalyActionButton>
-        </div>
-      </div>
-    </div>
-  );
+interface BidReviewModalProps {
+  onResolve: (a: AnomalyAction) => void;
 }
 
-function AnomalyActionButton({
-  primary,
-  onClick,
-  children,
-}: {
-  primary?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+function BidReviewModal({ close, onResolve }: StackModalProps & BidReviewModalProps) {
+  const handle = (a: AnomalyAction) => {
+    onResolve(a);
+    close();
+  };
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        background: primary ? 'var(--dark-90)' : 'var(--light-100)',
-        color: primary ? 'var(--light-100)' : 'var(--dark-90)',
-        border: `1px solid ${primary ? 'var(--dark-90)' : 'var(--dark-15)'}`,
-        borderRadius: 7,
-        padding: '7px 13px',
-        fontFamily: 'inherit',
-        fontSize: 12.5,
-        fontWeight: 450,
-        cursor: 'pointer',
-      }}
-    >
-      {children}
-    </button>
+    <Modal.Root size="md" aria-labelledby="paid-search-bid-review-title">
+      <Modal.Header
+        title='CPC spike — "wellness supplements"'
+        id="paid-search-bid-review-title"
+        onClose={close}
+        compact={false}
+      />
+      <Modal.Content compact={false}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <span
+            aria-hidden
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: 'rgba(237,124,44,0.18)',
+              color: 'var(--status-connect)',
+              flexShrink: 0,
+            }}
+          >
+            <AlertTriangle size={18} />
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <Text variant="largeList" style={{ color: 'var(--dark-90)' }}>
+              CPC up 38% in 4h
+            </Text>
+            <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
+              $0.92 → $1.27 — likely a competitor's auction-time bid bump
+            </Text>
+          </div>
+        </div>
+
+        <FatigueSection title="Why we flagged this">
+          {`Cost-per-click on "wellness supplements" jumped 38% in the last 4 hours while Quality Score held at 8. Three new competitors entered the auction this week.`}
+        </FatigueSection>
+
+        <FatigueBulletSection
+          title="Proposed actions"
+          bullets={[
+            'Pause the keyword until competitor bid pressure normalizes',
+            'Lower max-CPC to $1.40 — saves ~$8/day at current pace',
+            'Continue monitoring — agent re-alerts if CPC stays elevated 4+ hours',
+          ]}
+        />
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="ghost" onPress={() => handle('monitor')}>
+            Continue monitoring
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="tertiary" onPress={() => handle('pause')}>
+            Pause keyword
+          </Modal.FooterButton>
+          <Modal.FooterButton variant="primary" onPress={() => handle('lower')}>
+            Lower max bid to $1.40
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
   );
 }
 
@@ -840,7 +1322,6 @@ function AnomalyResolved({ action }: { action: AnomalyAction | null }) {
         border: '1px solid rgba(4,175,0,0.32)',
         borderRadius: 12,
         padding: '13px 18px',
-        marginBottom: 22,
         fontSize: 13,
         fontWeight: 450,
       }}
@@ -1592,6 +2073,7 @@ function PaidSearchRouteInner() {
   const devState = getState('/h2/paid-search');
   const [view, setView] = useState<View>('campaigns');
   const [anomaly, setAnomaly] = useState<AnomalyState>({ resolved: false, action: null });
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>('campaigns');
 
   // Sync dev-state toggle → view. Cold = empty; steady = campaigns list.
   useEffect(() => {
@@ -1624,24 +2106,53 @@ function PaidSearchRouteInner() {
   };
 
   const topbarRight = (
-    <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenWizard}>
-      New campaign
-    </Button>
+    <>
+      {activeSubTab === 'campaigns' && (
+        <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenWizard}>
+          New campaign
+        </Button>
+      )}
+      <GenerateReportButton />
+    </>
+  );
+
+  const topbarCenter = (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {(
+        [
+          { key: 'campaigns', label: 'Campaigns' },
+          { key: 'market-intelligence', label: 'Market Intelligence' },
+        ] as const
+      ).map((t) => (
+        <TabChip
+          key={t.key}
+          selected={activeSubTab === t.key}
+          onSelect={() => setActiveSubTab(t.key)}
+        >
+          {t.label}
+        </TabChip>
+      ))}
+    </div>
   );
 
   return (
-    <H2Layout topbarRight={topbarRight}>
-      {view === 'empty' && <EmptyState onStart={handleOpenWizard} />}
-      {view === 'campaigns' && (
-        <CampaignsList anomaly={anomaly} onOpenLive={() => setView('live')} />
+    <H2Layout topbarCenter={topbarCenter} topbarRight={topbarRight}>
+      {activeSubTab === 'campaigns' && (
+        <>
+          {view === 'empty' && <EmptyState onStart={handleOpenWizard} />}
+          {view === 'campaigns' && (
+            <CampaignsList anomaly={anomaly} onOpenLive={() => setView('live')} />
+          )}
+          {view === 'live' && (
+            <LiveCampaign
+              anomaly={anomaly}
+              onBack={() => setView('campaigns')}
+              onResolveAnomaly={handleResolveAnomaly}
+            />
+          )}
+        </>
       )}
-      {view === 'live' && (
-        <LiveCampaign
-          anomaly={anomaly}
-          onBack={() => setView('campaigns')}
-          onResolveAnomaly={handleResolveAnomaly}
-        />
-      )}
+      {activeSubTab === 'market-intelligence' && <PaidSearchMarketIntelligenceView />}
 
       {/* Keyframes used by the loading spinner + pulse + caret blink. */}
       <style>{`
@@ -1656,3 +2167,646 @@ function PaidSearchRouteInner() {
     </H2Layout>
   );
 }
+
+// ─── MARKET INTELLIGENCE VIEW (Paid Search) ────────────────────────────
+
+interface SearchMarketIntelCard {
+  id: string;
+  peer: string;
+  peerDomain: string;
+  metric: string;
+  observedImage: string;
+  adaptedImage: string;
+  observedHeadline: string;
+  observedDesc: string;
+  observed: string;
+  observedSummary: string;
+  adaptedHeadline: string;
+  adaptedDesc: string;
+  adapted: string;
+  adaptedSummary: string;
+}
+
+// Unsplash photo IDs picked for product close-ups / staged supplement scenes.
+const MARKET_INTEL_SEARCH: SearchMarketIntelCard[] = [
+  {
+    id: 'mi-q-1',
+    peer: 'NorthSun Wellness',
+    peerDomain: 'northsunwellness.com',
+    metric: '3.2x ROAS',
+    observedImage: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+    observedHeadline: '5-Supplement Stack | Backed by Naturopaths',
+    observedDesc:
+      'Built by clinicians. Free shipping. 30-day money-back guarantee.',
+    observed: 'Lead with naturopath credibility in headline + free shipping in description.',
+    observedSummary: 'Naturopath credibility + free shipping hook.',
+    adaptedHeadline: 'Daily Wellness Bundle — Naturopath-Built Stack',
+    adaptedDesc:
+      '5 supplements for energy, focus, and stress. Free shipping. 30-day guarantee.',
+    adapted: 'Same credibility hook, swapped to your bundle name + your guarantee.',
+    adaptedSummary: 'Credibility hook · your bundle name + guarantee.',
+  },
+  {
+    id: 'mi-q-2',
+    peer: 'Helia Botanicals',
+    peerDomain: 'helia.co',
+    metric: 'CTR 4.8%',
+    observedImage: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1559757175-7cb056fba93d?w=600&q=80',
+    observedHeadline: 'Tired by 3pm? Try Our Adaptogen Stack',
+    observedDesc:
+      "Real ingredients, real results. 4.7★ from 8,000+ reviewers. Save 20% on your first order.",
+    observed: 'Question-led headline targeting a specific pain point.',
+    observedSummary: 'Question-led pain-point hook.',
+    adaptedHeadline: 'Tired by 3pm? Daily Wellness Bundle Helps',
+    adaptedDesc:
+      "Naturopath-formulated. 4.8★ from 12,000+ reviews. 20% off your first order.",
+    adapted: 'Same question-led hook, our review count, our discount.',
+    adaptedSummary: 'Same question hook · our 4.8★ social proof.',
+  },
+  {
+    id: 'mi-q-3',
+    peer: 'Quiet Mind Co.',
+    peerDomain: 'quietmind.com',
+    metric: '2.4x ROAS',
+    observedImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80',
+    observedHeadline: 'The Stress Stack — Ashwagandha + Magnesium',
+    observedDesc:
+      'Two clinically-studied ingredients in one daily routine. Save 15% with code CALM.',
+    observed: 'Ingredient-led headline calls out two hero actives.',
+    observedSummary: 'Ingredient-led · two hero actives.',
+    adaptedHeadline: 'Stress Stack — Ashwagandha + Magnesium Daily',
+    adaptedDesc:
+      "Both clinical doses in your Daily Wellness Bundle. Save 20% — code RADIANT.",
+    adapted: 'Lean into our existing ingredient credibility + our promo code.',
+    adaptedSummary: 'Our ingredient credibility + RADIANT promo.',
+  },
+  {
+    id: 'mi-q-4',
+    peer: 'Verdant Daily',
+    peerDomain: 'verdantdaily.co',
+    metric: 'CTR 5.6%',
+    observedImage: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1564594985645-4427056e22e2?w=600&q=80',
+    observedHeadline: 'Skip the Pharmacy. 5-Supplement Wellness Routine.',
+    observedDesc:
+      'Curated daily routine for adults 25–45. Third-party tested. Made in the USA.',
+    observed: 'Anti-pharmacy framing with concrete demographic targeting.',
+    observedSummary: 'Anti-pharmacy framing · 25–45 demo.',
+    adaptedHeadline: 'Skip the Pharmacy — Try the Daily Wellness Bundle',
+    adaptedDesc:
+      'Naturopath-curated for adults 25–45. Third-party tested. Made in the USA.',
+    adapted: 'Mirror the anti-pharmacy hook, retain your existing demographic.',
+    adaptedSummary: 'Anti-pharmacy hook · our existing demo.',
+  },
+  {
+    id: 'mi-q-5',
+    peer: 'Aster & Oak',
+    peerDomain: 'asterandoak.com',
+    metric: '2.9x ROAS',
+    observedImage: 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&q=80',
+    observedHeadline: 'Just Started? Our 30-Day Wellness Routine',
+    observedDesc:
+      'Built for first-time supplement buyers. 4.8★ rated. Risk-free, cancel anytime.',
+    observed: 'Beginner-targeted framing — explicit "just started" hook.',
+    observedSummary: 'Beginner-targeted · "just started" hook.',
+    adaptedHeadline: 'New to Supplements? Try Our 30-Day Bundle',
+    adaptedDesc:
+      'Naturopath-formulated for first-time buyers. 4.8★ rated. 30-day money-back.',
+    adapted: 'Beginner hook applied to your existing 30-day guarantee.',
+    adaptedSummary: 'Beginner hook · our 30-day guarantee.',
+  },
+  {
+    id: 'mi-q-6',
+    peer: 'Ground State Labs',
+    peerDomain: 'groundstate.io',
+    metric: 'CTR 4.1%',
+    observedImage: 'https://images.unsplash.com/photo-1542736667-069246bdbc6d?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&q=80',
+    observedHeadline: 'The Cleanest Supplement Stack You Can Buy',
+    observedDesc:
+      'Zero fillers, zero artificial colors. Third-party tested. NSF certified.',
+    observed: 'Purity-led headline with specific NSF certification cue.',
+    observedSummary: 'Purity hook · NSF certification cue.',
+    adaptedHeadline: 'Clean Supplements — Zero Fillers, Naturopath Built',
+    adaptedDesc:
+      'No artificial colors, no fillers. Third-party tested. 12,000+ reviewers.',
+    adapted: 'Purity hook with our existing review-volume social proof.',
+    adaptedSummary: 'Purity hook · our 12k+ reviews social proof.',
+  },
+];
+
+function PaidSearchMarketIntelligenceView() {
+  return (
+    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '20px 28px 60px' }}>
+      <div style={{ marginBottom: 20 }}>
+        <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
+          Successful ad creative from peer businesses, adapted for your brand. Approve to add to your library.
+        </Text>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gap: 16,
+        }}
+      >
+        {MARKET_INTEL_SEARCH.map((card) => (
+          <SearchMarketIntelCardView key={card.id} card={card} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SearchMarketIntelCardView({ card }: { card: SearchMarketIntelCard }) {
+  const { openModal } = useModals();
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => openModal(SearchMarketIntelComparisonModal, { card })}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'var(--light-100)',
+        border: `1px solid ${hovered ? 'var(--dark-15)' : 'var(--dark-8)'}`,
+        boxShadow: hovered ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+        borderRadius: 12,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 0,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        textAlign: 'left',
+        transition: 'border-color 160ms ease, box-shadow 160ms ease',
+      }}
+    >
+      {/* header */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--dark-8)',
+        }}
+      >
+        <Globe size={16} color="var(--dark-60)" />
+        <Text variant="smallList" style={{ color: 'var(--dark-60)' }}>
+          Observed at:
+        </Text>
+        <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
+          {card.peer}
+        </Text>
+        <span
+          style={{
+            marginLeft: 'auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '4px 8px',
+            borderRadius: 999,
+            background: 'rgba(4, 175, 0, 0.10)',
+            color: 'var(--status-approved)',
+            fontSize: 11,
+            fontWeight: 500,
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {card.metric}
+        </span>
+      </div>
+
+      {/* Stock image teaser */}
+      <div
+        aria-hidden
+        style={{
+          height: 180,
+          background: `var(--dark-4) center / cover no-repeat url(${card.observedImage})`,
+        }}
+      />
+
+      {/* body — trimmed summary, no CTAs */}
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        <div>
+          <Text
+            variant="metadata"
+            style={{
+              color: 'var(--dark-60)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              fontSize: 11,
+              display: 'block',
+              marginBottom: 4,
+            }}
+          >
+            Observed
+          </Text>
+          <Text variant="smallList" style={{ color: 'var(--dark-90)' }}>
+            {card.observedSummary}
+          </Text>
+        </div>
+        <div>
+          <Text
+            variant="metadata"
+            style={{
+              color: 'var(--dark-60)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              fontSize: 11,
+              display: 'block',
+              marginBottom: 4,
+            }}
+          >
+            Adapted for Radiant Health
+          </Text>
+          <Text variant="smallList" style={{ color: 'var(--dark-90)' }}>
+            {card.adaptedSummary}
+          </Text>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ─── MARKET INTELLIGENCE COMPARISON MODAL (Paid Search) ────────────────
+
+interface SearchMarketIntelComparisonModalProps {
+  card: SearchMarketIntelCard;
+}
+
+function SearchMarketIntelComparisonModal({
+  close,
+  card,
+}: StackModalProps & SearchMarketIntelComparisonModalProps) {
+  return (
+    <Modal.Root size="lg" aria-labelledby="search-mi-comparison-title">
+      <Modal.Header
+        title="Compare creative"
+        id="search-mi-comparison-title"
+        onClose={close}
+        compact={false}
+      />
+      <Modal.Content compact={false}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: 16,
+          }}
+        >
+          <SearchComparisonPanel
+            heading={`Observed at: ${card.peer}`}
+            metricPill={card.metric}
+            image={card.observedImage}
+            domain={card.peerDomain}
+            adHeadline={card.observedHeadline}
+            adDesc={card.observedDesc}
+            label="Observed"
+            body={card.observed}
+          />
+          <SearchComparisonPanel
+            heading="Proposed for Radiant Health"
+            image={card.adaptedImage}
+            domain="radianthealth.com"
+            adHeadline={card.adaptedHeadline}
+            adDesc={card.adaptedDesc}
+            label="Adapted"
+            body={card.adapted}
+          />
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="ghost" onPress={close}>
+            Skip
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={close}>
+            Approve &amp; add to library
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+// ─── INLINE FATIGUE FLAG + REFRESH MODAL ───────────────────────────────
+
+function FatigueFlagPill({
+  fatigue,
+  adName,
+  asSpan = false,
+}: {
+  fatigue: FatigueFlag;
+  adName: string;
+  // Render as a span role=button when nested inside another <button> to keep
+  // HTML valid (e.g. the Campaigns list row is a clickable <button>).
+  asSpan?: boolean;
+}) {
+  const { openModal } = useModals();
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openModal(FatigueRefreshModal, { fatigue, adName });
+  };
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      openModal(FatigueRefreshModal, { fatigue, adName });
+    }
+  };
+  const style: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    padding: '4px 8px',
+    borderRadius: 999,
+    background: 'rgba(188, 1, 11, 0.10)',
+    color: 'var(--red-70)',
+    fontFamily: 'inherit',
+    fontSize: 11.5,
+    fontWeight: 500,
+    lineHeight: 1,
+    border: '1px solid rgba(188, 1, 11, 0.20)',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  };
+  const content = (
+    <>
+      <AlertTriangle size={12} color="var(--red-70)" />
+      Fatigue Day {fatigue.ageDays}
+    </>
+  );
+  if (asSpan) {
+    return (
+      <span role="button" tabIndex={0} onClick={handleClick} onKeyDown={handleKeyDown} style={style}>
+        {content}
+      </span>
+    );
+  }
+  return (
+    <button type="button" onClick={handleClick} style={style}>
+      {content}
+    </button>
+  );
+}
+
+interface FatigueRefreshModalProps {
+  fatigue: FatigueFlag;
+  adName: string;
+}
+
+function FatigueRefreshModal({
+  close,
+  fatigue,
+  adName,
+}: StackModalProps & FatigueRefreshModalProps) {
+  return (
+    <Modal.Root size="md" aria-labelledby="paid-search-fatigue-refresh-title">
+      <Modal.Header
+        title={`Creative Fatigue — ${adName}`}
+        id="paid-search-fatigue-refresh-title"
+        onClose={close}
+        compact={false}
+      />
+      <Modal.Content compact={false}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: 'rgba(188, 1, 11, 0.10)',
+              color: 'var(--red-70)',
+              flexShrink: 0,
+            }}
+          >
+            <AlertTriangle size={18} />
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <Text variant="largeList" style={{ color: 'var(--dark-90)' }}>
+              Day {fatigue.ageDays}
+            </Text>
+            <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
+              {fatigue.signal}
+            </Text>
+          </div>
+        </div>
+
+        <FatigueSection title="Why we flagged this">{fatigue.reason}</FatigueSection>
+        <FatigueSection title="What competitors are doing">{fatigue.competitors}</FatigueSection>
+        <FatigueBulletSection title="Proposed refresh" bullets={fatigue.proposals} />
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="ghost" onPress={close}>
+            Snooze 7 days
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={close}>
+            Approve refresh
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+function FatigueSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section style={{ marginBottom: 20 }}>
+      <Text
+        variant="metadata"
+        style={{
+          color: 'var(--dark-60)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+          fontSize: 11,
+          display: 'block',
+          marginBottom: 6,
+        }}
+      >
+        {title}
+      </Text>
+      <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+        {children}
+      </p>
+    </section>
+  );
+}
+
+function FatigueBulletSection({ title, bullets }: { title: string; bullets: string[] }) {
+  return (
+    <section style={{ marginBottom: 4 }}>
+      <Text
+        variant="metadata"
+        style={{
+          color: 'var(--dark-60)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+          fontSize: 11,
+          display: 'block',
+          marginBottom: 8,
+        }}
+      >
+        {title}
+      </Text>
+      <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {bullets.map((b) => (
+          <li key={b} style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.55 }}>
+            {b}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function SearchComparisonPanel({
+  heading,
+  metricPill,
+  image,
+  domain,
+  adHeadline,
+  adDesc,
+  label,
+  body,
+}: {
+  heading: string;
+  metricPill?: string;
+  image: string;
+  domain: string;
+  adHeadline: string;
+  adDesc: string;
+  label: string;
+  body: string;
+}) {
+  return (
+    <div
+      style={{
+        background: 'var(--light-100)',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 12,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--dark-8)',
+        }}
+      >
+        <Globe size={16} color="var(--dark-60)" />
+        <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
+          {heading}
+        </Text>
+        {metricPill && (
+          <span
+            style={{
+              marginLeft: 'auto',
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '4px 8px',
+              borderRadius: 999,
+              background: 'rgba(4, 175, 0, 0.10)',
+              color: 'var(--status-approved)',
+              fontSize: 11,
+              fontWeight: 500,
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {metricPill}
+          </span>
+        )}
+      </div>
+      <div
+        aria-hidden
+        style={{
+          height: 220,
+          background: `var(--dark-4) center / cover no-repeat url(${image})`,
+        }}
+      />
+      <div style={{ padding: '16px 16px 12px', background: 'var(--dark-2)', borderTop: '1px solid var(--dark-8)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '1px 6px',
+              borderRadius: 4,
+              border: '1px solid var(--dark-15)',
+              background: 'var(--light-100)',
+              color: 'var(--dark-80)',
+              fontSize: 10.5,
+              fontWeight: 500,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}
+          >
+            Sponsored
+          </span>
+          <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
+            {domain}
+          </Text>
+        </div>
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 500,
+            color: '#1a0dab',
+            marginBottom: 4,
+            lineHeight: 1.3,
+          }}
+        >
+          {adHeadline}
+        </div>
+        <Text variant="smallList" style={{ color: 'var(--dark-80)' }}>
+          {adDesc}
+        </Text>
+      </div>
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+        <Text
+          variant="metadata"
+          style={{
+            color: 'var(--dark-60)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            fontSize: 11,
+            display: 'block',
+          }}
+        >
+          {label}
+        </Text>
+        <Text variant="smallList" style={{ color: 'var(--dark-90)', lineHeight: 1.55 }}>
+          {body}
+        </Text>
+      </div>
+    </div>
+  );
+}
+

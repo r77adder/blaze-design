@@ -9,20 +9,19 @@ const TOOL_LABELS = new Set<string>(ALL_TOOLS);
 const PAGE_TITLES: Record<string, string> = {
   '/h2': 'Home',
   '/h2/organic-social': 'Organic Campaigns',
-  '/h2/seo-aeo': 'SEO/AEO',
-  '/h2/map-ranking': 'Map Ranking',
+  '/h2/seo': 'SEO',
+  '/h2/aeo': 'AEO',
   '/h2/influencer-content': 'UGC Content',
   '/h2/paid-social': 'Paid Social',
   '/h2/paid-search': 'Paid Search',
-  '/h2/email-sms': 'Email & SMS Programs',
   '/h2/landing-pages': 'Landing Pages',
-  '/h2/crm': 'CRM',
+  '/h2/sdr': 'SDR',
   '/h2/reputation': 'Reputation',
   '/h2/content-plan': 'Content Plan',
   '/h2/campaigns': 'Campaigns',
   '/h2/multi-change': 'Multi-Change',
   '/h2/content-settings': 'Content Preferences',
-  '/h2/tools': 'Tools',
+  '/h2/tools': 'Meta Strategy',
 };
 
 /** Filter Demand Gen + Conversion sections down to the user's enabled tools.
@@ -45,8 +44,10 @@ function filterSectionsForEnabledTools(
 
 export interface H2LayoutProps {
   children: ReactNode;
-  /** Override the auto-derived page title (defaults to PAGE_TITLES[pathname]). */
-  title?: string;
+  /** Override the auto-derived page title (defaults to PAGE_TITLES[pathname]).
+   *  Accepts a string for the standard title or a ReactNode (e.g. a custom
+   *  left-aligned cluster like back-button + name + status pill on detail views). */
+  title?: string | ReactNode;
   /** Optional content rendered in the topbar BEFORE the default chrome cluster.
    *  Use for page-level actions like "Create new". */
   topbarRight?: ReactNode;
