@@ -6,6 +6,7 @@ import type { StackModalProps } from '@/components';
 import { TabChip, useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import { H2Layout } from '../H2Layout';
+import { GenerateReportButton } from '../GenerateReportButton';
 import { CrosspostWarningModal } from '../CrosspostWarningModal';
 
 /**
@@ -1826,7 +1827,7 @@ function CampaignsRouteInner() {
     view.kind === 'detail' ? campaigns.find((c) => c.id === view.campaignId) ?? null : null;
 
   return (
-    <H2Layout topbarCenter={topbarCenter}>
+    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
       <div style={{ margin: '-24px -24px 0', display: 'flex', flexDirection: 'column', height: '100%' }}>
         {view.kind === 'gantt' && (
           <>

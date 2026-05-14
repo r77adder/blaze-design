@@ -40,11 +40,9 @@ export function ContentSettingsRoute() {
     </div>
   );
 
-  const bodyMaxWidth = tab === 'avatars' ? 1180 : 760;
-
   return (
     <H2Layout title="Content Preferences" topbarCenter={tabs}>
-      <div style={{ maxWidth: bodyMaxWidth, margin: '0 auto', padding: '8px 4px 80px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '8px 4px 80px' }}>
         {tab === 'general' && <GeneralTab />}
         {tab === 'avatars' && <AvatarsTab />}
         {tab === 'blogs' && <BlogsTab />}

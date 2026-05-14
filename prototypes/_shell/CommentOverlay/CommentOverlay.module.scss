@@ -1,0 +1,509 @@
+// Flex cluster anchored bottom-right; holds the comment-mode toggle, the pin-
+// visibility toggle, and the show-resolved toggle. Individual buttons drop
+// their own positioning and lay out horizontally inside the cluster.
+.toggleCluster {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--dark-90, #1a1a1a);
+  color: var(--light-100, #fff);
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.toggleActive {
+  background: var(--accent-blue, #4f7df3);
+}
+
+.placingOverlay {
+  position: fixed;
+  inset: 0;
+  cursor: crosshair;
+  background: rgba(79, 125, 243, 0.04);
+  z-index: 999;
+  pointer-events: none; // Allow clicks through to underlying prototype
+}
+
+.placingHint {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--dark-90, #1a1a1a);
+  color: var(--light-100, #fff);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.editor {
+  position: absolute;
+  width: 280px;
+  background: var(--light-100, #fff);
+  border: 1px solid var(--dark-12, #e5e5e5);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 10px;
+  z-index: 1002;
+
+  textarea {
+    width: 100%;
+    border: 1px solid var(--dark-12, #e5e5e5);
+    border-radius: 6px;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+
+    &:focus {
+      outline: 2px solid var(--accent-blue, #4f7df3);
+      outline-offset: 0;
+    }
+  }
+}
+
+.editorError {
+  color: var(--status-warning, #d04848);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.editorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+
+  button {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:first-child {
+      background: transparent;
+      color: var(--dark-60, #666);
+    }
+
+    &:last-child {
+      background: var(--accent-blue, #4f7df3);
+      color: var(--light-100, #fff);
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.pinToggle {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: none;
+  background: var(--dark-90, #1a1a1a);
+  color: var(--light-100, #fff);
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.pinToggleHidden {
+  background: var(--dark-60, #666);
+  opacity: 0.8;
+}
+
+.resolvedToggle {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: none;
+  background: var(--dark-60, #666);
+  color: var(--light-100, #fff);
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.8;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.resolvedToggleOn {
+  background: var(--dark-90, #1a1a1a);
+  opacity: 1;
+}
+
+.pin {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--light-100, #fff);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 998;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+.pin_open {
+  background: var(--accent-blue, #4f7df3);
+}
+
+.pin_resolved {
+  background: var(--dark-40, #999);
+}
+
+.pinStale {
+  border-style: dashed;
+  border-color: var(--status-warning, #d04848);
+}
+
+.panelBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.08);
+  z-index: 1003;
+}
+
+.panel {
+  position: fixed;
+  // left / top / max-height set via inline style from JS.
+  width: 320px;
+  background: var(--light-100, #fff);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1004;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  overflow: hidden;
+}
+
+// Pointer chevron — a small triangle on the side facing the pin.
+// `top: 24px` is a v1 approximation; the panel is vertically centered on the
+// pin so for most clicks the chevron lines up reasonably. A real production
+// version would compute chevron offset from panelPlacement.top vs pin_y.
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.panel_right::before {
+  // Panel sits to the right of the pin → chevron points left toward the pin.
+  left: -8px;
+  border-right: 8px solid var(--light-100, #fff);
+  filter: drop-shadow(-2px 0 1px rgba(0, 0, 0, 0.08));
+}
+
+.panel_left::before {
+  // Panel sits to the left of the pin → chevron points right toward the pin.
+  right: -8px;
+  border-left: 8px solid var(--light-100, #fff);
+  filter: drop-shadow(2px 0 1px rgba(0, 0, 0, 0.08));
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.panelMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panelAuthor {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dark-90, #1a1a1a);
+}
+
+.panelTime {
+  font-size: 11.5px;
+  color: var(--dark-60, #666);
+}
+
+.panelBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.panelBadge_open {
+  background: rgba(79, 125, 243, 0.12);
+  color: var(--accent-blue, #4f7df3);
+}
+
+.panelBadge_resolved {
+  background: var(--dark-8, #f0f0f0);
+  color: var(--dark-60, #666);
+}
+
+.panelBody {
+  // Size to content; don't shrink when replies + reply input crowd the panel.
+  // ~2 lines minimum so the original comment is always readable.
+  flex: 0 0 auto;
+  min-height: 42px;
+  max-height: 200px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dark-90, #1a1a1a);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+}
+
+.panelTextarea {
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--dark-12, #e5e5e5);
+  border-radius: 6px;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: none;
+
+  &:focus {
+    outline: 2px solid var(--accent-blue, #4f7df3);
+    outline-offset: 0;
+  }
+}
+
+.panelResolvedNote {
+  font-size: 12px;
+  color: var(--dark-60, #666);
+  padding: 8px 10px;
+  background: var(--dark-4, #f8f8f8);
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.panelError {
+  color: var(--status-warning, #d04848);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.panelActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+
+  button {
+    border: 1px solid var(--dark-12, #e5e5e5);
+    background: var(--light-100, #fff);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--dark-4, #f8f8f8);
+    }
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.actionPrimary {
+  background: var(--accent-blue, #4f7df3) !important;
+  color: var(--light-100, #fff);
+  border-color: transparent !important;
+}
+
+.actionDanger {
+  color: var(--status-warning, #d04848);
+}
+
+// Wrapper holds the scroll container + the absolute-positioned fade overlay.
+// The fade is OUTSIDE the scrollable region so it stays glued to the visible
+// bottom edge regardless of scroll position (sticky-inside-scroll merged with
+// the last row when scrolled all the way down — bug we hit before).
+.repliesWrap {
+  position: relative;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--dark-8, #f0f0f0);
+  // Absorb any squeeze when the panel runs out of vertical room — replies shrink
+  // first (and scroll internally), parent body stays at min-height: 42px.
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// .replies inside .repliesWrap fills the available height so the wrap's
+// flex sizing actually constrains the scroll viewport.
+.repliesWrap .replies {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.replies {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 230px;
+  overflow-y: auto;
+}
+
+.repliesFade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--light-100, #fff) 85%);
+  pointer-events: none;
+}
+
+.reply {
+  position: relative;
+  padding: 8px 28px 8px 10px;
+  background: var(--dark-4, #f8f8f8);
+  border-radius: 8px;
+}
+
+.replyMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--dark-60, #666);
+  margin-bottom: 4px;
+}
+
+.replyAuthor {
+  font-weight: 500;
+  color: var(--dark-90, #1a1a1a);
+}
+
+.replyTime {
+  color: var(--dark-60, #666);
+}
+
+.replyBody {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--dark-90, #1a1a1a);
+  white-space: pre-wrap;
+}
+
+.replyDelete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--dark-40, #999);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover {
+    background: var(--dark-8, #f0f0f0);
+    color: var(--status-warning, #d04848);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.replyInput {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  textarea {
+    width: 100%;
+    border: 1px solid var(--dark-12, #e5e5e5);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+
+    &:focus {
+      outline: 2px solid var(--accent-blue, #4f7df3);
+      outline-offset: 0;
+    }
+  }
+
+  button {
+    align-self: flex-end;
+    padding: 6px 14px;
+    background: var(--accent-blue, #4f7df3);
+    color: var(--light-100, #fff);
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

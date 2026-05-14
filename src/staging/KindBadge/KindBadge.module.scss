@@ -34,6 +34,9 @@
 }
 
 .kind-insight {
-  background: var(--dark-4);
-  color: var(--dark-60);
+  // Soft tinted green derived from the --status-approved token (#04af00).
+  // The 0.10 alpha matches the action-pill tint weight, keeping the
+  // visual hierarchy consistent across kinds.
+  background: rgba(4, 175, 0, 0.10);
+  color: var(--status-approved);
 }

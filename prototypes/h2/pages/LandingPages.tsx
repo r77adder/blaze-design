@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, IconButton, Modal, ModalStack, useModals } from '@/components';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Heading, IconButton, Modal, ModalStack, Text, useModals } from '@/components';
 import { useToast } from '@/staging';
 import type { StackModalProps } from '@/components';
 import ArrowLeft from '@/icons/20/ArrowLeft';
-import ArrowRefresh from '@/icons/20/ArrowRefresh';
 import Check2 from '@/icons/20/Check2';
-import Computer from '@/icons/20/Computer';
 import Plus from '@/icons/20/Plus';
-import Settings from '@/icons/20/Settings';
+import Send1 from '@/icons/20/Send1';
 import { H2Layout } from '../H2Layout';
+import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { LandingPagesColdView } from './ColdViews';
 
@@ -23,18 +22,15 @@ import { LandingPagesColdView } from './ColdViews';
  *                  ending with "Done — your page is ready." Manual CTA
  *                  "Review your page →" appears after the sequence and
  *                  advances to editor. Cleanup on unmount cancels timers.
- *   3. editor    — 3-pane: section list (left) + canvas page preview
- *                  (center, with sticky review-progress bar) + edit panel
- *                  (right). Inner editor-topbar replaces page content top
- *                  with back / page-name input / Insert / viewport / zoom /
- *                  settings / Publish. Publish is gated on approving all 5
- *                  sections.
+ *   3. editor    — 2-pane: canvas page preview (left) + chat panel (right).
+ *                  Chat is the only edit surface — there are no inline inputs,
+ *                  no section navigator, no per-section approvals. Topbar:
+ *                  back / page-name / source-label / Publish.
  *   4. published — success banner + URL + KPI sparkline + AI suggestions
  *                  + top-sources & section-engagement cards.
  *
- * Approval state is per-section (Set<SectionId>) — sticking with the source's
- * model. Suggestions are also a Set<string>. selectedCampaign feeds the page
- * source label and loading line.
+ * Suggestions are a Set<string>. selectedCampaign feeds the page source label
+ * and loading line.
  *
  * For routes that need a modal (campaign chooser, new page), the route is
  * wrapped in <ModalStack> and uses useModals.
@@ -783,60 +779,180 @@ function SectionBody({ id }: { id: SectionId }) {
   );
 }
 
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'agent';
+  text: string;
+}
+
+const SEEDED_MESSAGES: ChatMessage[] = [
+  { id: 'm1', role: 'user', text: 'Make the headline punchier' },
+  { id: 'm2', role: 'agent', text: "Updated. New headline: 'Climb to #1 in Local Search'." },
+  { id: 'm3', role: 'user', text: 'Use the brand yellow for the CTA' },
+  { id: 'm4', role: 'agent', text: 'Done. The Get Started button now uses the brand color.' },
+  { id: 'm5', role: 'user', text: 'Add a customer logo strip under the hero' },
+];
+
+function ChatPanel() {
+  const [messages, setMessages] = useState<ChatMessage[]>(SEEDED_MESSAGES);
+  const [draft, setDraft] = useState('');
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const send = () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: 'user', text: trimmed };
+    setMessages((prev) => [...prev, userMsg]);
+    setDraft('');
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { id: `a-${Date.now()}`, role: 'agent', text: 'On it. Applying the change to the page now.' },
+      ]);
+    }, 600);
+  };
+
+  return (
+    <aside
+      style={{
+        background: 'var(--light-100)',
+        borderLeft: '1px solid var(--dark-8)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          padding: '16px 20px 12px',
+          borderBottom: '1px solid var(--dark-4)',
+          flexShrink: 0,
+        }}
+      >
+        <Heading level={5}>Edit with chat</Heading>
+        <div style={{ marginTop: 4 }}>
+          <Text variant="secondary">Describe what to change. The agent applies it.</Text>
+        </div>
+      </div>
+
+      <div
+        ref={listRef}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+        }}
+      >
+        {messages.map((m) => {
+          const isUser = m.role === 'user';
+          return (
+            <div
+              key={m.id}
+              style={{
+                display: 'flex',
+                justifyContent: isUser ? 'flex-end' : 'flex-start',
+              }}
+            >
+              <div
+                style={{
+                  maxWidth: '85%',
+                  padding: '8px 12px',
+                  borderRadius: 12,
+                  background: isUser ? 'var(--dark-90)' : 'var(--dark-4)',
+                  color: isUser ? 'var(--light-100)' : 'var(--dark-90)',
+                  fontSize: 13,
+                  lineHeight: 1.45,
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {m.text}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div
+        style={{
+          padding: 12,
+          borderTop: '1px solid var(--dark-4)',
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 8,
+            border: '1px solid var(--dark-8)',
+            background: 'var(--light-100)',
+            borderRadius: 12,
+            padding: 8,
+          }}
+        >
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder="Tell the agent what to change…"
+            rows={2}
+            style={{
+              flex: 1,
+              resize: 'none',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              lineHeight: 1.45,
+              color: 'var(--dark-90)',
+              padding: '4px 4px',
+              minHeight: 36,
+            }}
+          />
+          <IconButton
+            variant="primary"
+            size="sm"
+            icon={Send1}
+            aria-label="Send"
+            onPress={send}
+          />
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 function EditorView({
   pageName,
   setPageName,
   campaign,
-  selectedSection,
-  setSelectedSection,
-  approved,
-  setApproved,
   onBack,
   onPublish,
 }: {
   pageName: string;
   setPageName: (v: string) => void;
   campaign: Campaign | null;
-  selectedSection: SectionId;
-  setSelectedSection: (id: SectionId) => void;
-  approved: Set<SectionId>;
-  setApproved: (next: Set<SectionId>) => void;
   onBack: () => void;
   onPublish: () => void;
 }) {
-  const { showToast } = useToast();
-  const c = COPY[selectedSection];
-  const sec = SECTIONS.find((s) => s.id === selectedSection)!;
-  const isApproved = approved.has(selectedSection);
-  const allApproved = approved.size === SECTIONS.length;
-  const publishUnlocked = allApproved;
   const srcLabel = campaign?.name.split('—')[0].trim() ?? 'Built from scratch';
 
-  const approveSection = useCallback(() => {
-    const next = new Set(approved);
-    next.add(selectedSection);
-    setApproved(next);
-    const nextSec = SECTIONS.find((s) => !next.has(s.id));
-    if (nextSec) setSelectedSection(nextSec.id);
-    if (next.size === SECTIONS.length) {
-      showToast({ message: 'All sections approved — ready to publish' });
-    }
-  }, [approved, selectedSection, setApproved, setSelectedSection, showToast]);
-
-  const unapprove = () => {
-    const next = new Set(approved);
-    next.delete(selectedSection);
-    setApproved(next);
-  };
-
-  const approveAll = () => {
-    const next = new Set<SectionId>();
-    SECTIONS.forEach((s) => next.add(s.id));
-    setApproved(next);
-    showToast({ message: 'Approved all 5 sections' });
-  };
-
-  // 3-pane layout escapes the .content padding (24px) via negative margin.
+  // 2-pane layout escapes the .content padding (24px) via negative margin.
   return (
     <div
       style={{
@@ -853,7 +969,7 @@ function EditorView({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 12,
           padding: '10px 16px',
           background: 'var(--light-100)',
           borderBottom: '1px solid var(--dark-8)',
@@ -864,6 +980,7 @@ function EditorView({
         <input
           value={pageName}
           onChange={(e) => setPageName(e.target.value)}
+          aria-label="Page name"
           style={{
             border: 'none',
             background: 'transparent',
@@ -886,82 +1003,12 @@ function EditorView({
             border: '1px solid var(--dark-4)',
             borderRadius: 6,
             padding: '3px 9px',
-            marginLeft: 6,
           }}
         >
           Built from: <b style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{srcLabel}</b>
         </span>
         <div style={{ flex: 1 }} />
-        <Button variant="secondary" size="sm" frontIcon={Plus} onPress={() => showToast({ message: 'Insert section (TODO)' })}>
-          Insert
-        </Button>
-        <div
-          style={{
-            display: 'inline-flex',
-            border: '1px solid var(--dark-8)',
-            borderRadius: 7,
-            overflow: 'hidden',
-          }}
-        >
-          <button
-            type="button"
-            aria-label="Desktop"
-            style={{
-              background: 'var(--dark-90)',
-              border: 'none',
-              padding: '6px 9px',
-              cursor: 'pointer',
-              color: '#fff',
-              display: 'inline-flex',
-              alignItems: 'center',
-            }}
-          >
-            <Computer size={14} />
-          </button>
-          <button
-            type="button"
-            aria-label="Mobile"
-            onClick={() => showToast({ message: 'Mobile preview (TODO)' })}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              padding: '6px 9px',
-              cursor: 'pointer',
-              color: 'var(--dark-60)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              fontFamily: 'inherit',
-              fontSize: 12,
-            }}
-          >
-            ▢
-          </button>
-        </div>
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            border: '1px solid var(--dark-8)',
-            borderRadius: 7,
-            overflow: 'hidden',
-          }}
-        >
-          <button
-            type="button"
-            style={{ background: 'none', border: 'none', width: 26, height: 30, cursor: 'pointer', color: 'var(--dark-60)', fontSize: 14, fontFamily: 'inherit' }}
-          >
-            −
-          </button>
-          <span style={{ padding: '0 8px', fontSize: 12, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>100%</span>
-          <button
-            type="button"
-            style={{ background: 'none', border: 'none', width: 26, height: 30, cursor: 'pointer', color: 'var(--dark-60)', fontSize: 14, fontFamily: 'inherit' }}
-          >
-            +
-          </button>
-        </div>
-        <IconButton variant="secondary" size="md" icon={Settings} aria-label="Settings" onPress={() => showToast({ message: 'Page settings (TODO)' })} />
-        <Button variant="primary" size="md" onPress={onPublish} aria-disabled={!publishUnlocked}>
+        <Button variant="primary" size="md" onPress={onPublish}>
           Publish
         </Button>
       </div>
@@ -970,122 +1017,11 @@ function EditorView({
         style={{
           flex: 1,
           display: 'grid',
-          gridTemplateColumns: '220px 1fr 280px',
+          gridTemplateColumns: '1fr 360px',
           overflow: 'hidden',
         }}
       >
-        {/* Left pane: section navigator */}
-        <aside
-          style={{
-            background: 'var(--light-100)',
-            borderRight: '1px solid var(--dark-8)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'auto',
-          }}
-        >
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--dark-4)' }}>
-            <button
-              type="button"
-              style={{
-                flex: 1,
-                background: 'none',
-                border: 'none',
-                padding: '11px 14px',
-                fontFamily: 'inherit',
-                fontSize: 11,
-                color: 'var(--dark-90)',
-                letterSpacing: '0.08em',
-                fontWeight: 500,
-                cursor: 'pointer',
-                borderBottom: '2px solid var(--dark-90)',
-              }}
-            >
-              SECTIONS
-            </button>
-            <button
-              type="button"
-              onClick={() => showToast({ message: 'Chat (TODO)' })}
-              style={{
-                flex: 1,
-                background: 'none',
-                border: 'none',
-                padding: '11px 14px',
-                fontFamily: 'inherit',
-                fontSize: 11,
-                color: 'var(--dark-40)',
-                letterSpacing: '0.08em',
-                fontWeight: 500,
-                cursor: 'pointer',
-                borderBottom: '2px solid transparent',
-              }}
-            >
-              CHAT
-            </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 14px 8px' }}>
-            <span style={{ fontSize: 11, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>
-              Page sections
-            </span>
-            <button
-              type="button"
-              aria-label="Add"
-              onClick={() => showToast({ message: 'Add section (TODO)' })}
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                color: 'var(--dark-60)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Plus size={12} />
-            </button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '0 8px 12px', gap: 2 }}>
-            {SECTIONS.map((s) => {
-              const sel = s.id === selectedSection;
-              const okay = approved.has(s.id);
-              return (
-                <div
-                  key={s.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedSection(s.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedSection(s.id);
-                    }
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 10px',
-                    borderRadius: 7,
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    color: sel ? 'var(--dark-90)' : 'var(--dark-80)',
-                    background: sel ? 'var(--dark-4)' : 'transparent',
-                    transition: 'background 0.1s',
-                  }}
-                >
-                  <span style={{ color: 'var(--dark-25)', fontSize: 14, cursor: 'grab', userSelect: 'none' }}>⋮⋮</span>
-                  <span style={{ flex: 1 }}>{s.name}</span>
-                  <span style={{ color: 'rgb(32,161,79)', fontSize: 12, opacity: okay ? 1 : 0 }}>✓</span>
-                </div>
-              );
-            })}
-          </div>
-        </aside>
-
-        {/* Center pane: canvas preview */}
+        {/* Left: canvas preview */}
         <div
           style={{
             overflowY: 'auto',
@@ -1094,7 +1030,6 @@ function EditorView({
             flexDirection: 'column',
             alignItems: 'center',
             background: '#f0f0f0',
-            position: 'relative',
           }}
         >
           <div
@@ -1109,238 +1044,26 @@ function EditorView({
             }}
           >
             {SECTIONS.map((s) => {
-              const sel = s.id === selectedSection;
-              const okay = approved.has(s.id);
               const isCta = s.id === 'cta';
               return (
                 <div
                   key={s.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedSection(s.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedSection(s.id);
-                    }
-                  }}
                   style={{
                     padding: '36px 40px',
                     borderBottom: s.id === 'cta' ? 'none' : '1px solid var(--dark-4)',
-                    position: 'relative',
-                    cursor: 'pointer',
-                    boxShadow: sel ? 'inset 0 0 0 2px var(--dark-90)' : 'none',
-                    borderRadius: sel ? 8 : 0,
                     background: isCta ? 'linear-gradient(135deg, #1A1D55 0%, #2F3B82 100%)' : undefined,
                     color: isCta ? '#fff' : undefined,
                   }}
                 >
-                  {sel && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        background: 'var(--dark-90)',
-                        color: '#fff',
-                        fontSize: 10.5,
-                        fontWeight: 500,
-                        padding: '2px 7px',
-                        borderRadius: 5,
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      {s.name}
-                    </span>
-                  )}
-                  {okay && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        background: 'rgba(32,161,79,0.10)',
-                        color: 'rgb(32,161,79)',
-                        fontSize: 10.5,
-                        fontWeight: 500,
-                        padding: '2px 7px',
-                        borderRadius: 5,
-                        letterSpacing: '0.02em',
-                      }}
-                    >
-                      ✓ Approved
-                    </span>
-                  )}
                   <SectionBody id={s.id} />
                 </div>
               );
             })}
           </div>
-
-          {/* Sticky review status bar */}
-          <div
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              width: '100%',
-              maxWidth: 880,
-              marginTop: 14,
-              background: 'var(--dark-90)',
-              color: '#fff',
-              borderRadius: 10,
-              padding: '10px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
-              boxShadow: '0 12px 28px rgba(0,0,0,0.18)',
-            }}
-          >
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <span style={{ fontSize: 12, fontWeight: 500 }}>
-                {approved.size} of {SECTIONS.length} sections approved
-              </span>
-              <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.16)', borderRadius: 2, overflow: 'hidden' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    background: 'rgb(32,161,79)',
-                    borderRadius: 2,
-                    transition: 'width 0.3s cubic-bezier(0.2,0,0,1)',
-                    width: `${(approved.size / SECTIONS.length) * 100}%`,
-                  }}
-                />
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={approveAll}
-              style={{
-                background: 'var(--light-100)',
-                color: 'var(--dark-90)',
-                border: 'none',
-                borderRadius: 7,
-                padding: '7px 12px',
-                fontFamily: 'inherit',
-                fontSize: 12.5,
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              Approve all
-            </button>
-          </div>
         </div>
 
-        {/* Right pane: edit panel */}
-        <aside
-          style={{
-            background: 'var(--light-100)',
-            borderLeft: '1px solid var(--dark-8)',
-            overflowY: 'auto',
-            padding: 18,
-          }}
-        >
-          <div style={{ fontSize: 11, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: 6 }}>
-            Editing
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 12, letterSpacing: '0.05px' }}>
-            {sec.name}
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginBottom: 6, fontWeight: 500 }}>Eyebrow</div>
-            <input
-              defaultValue={c.eyebrow}
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                border: '1px solid var(--dark-8)',
-                borderRadius: 7,
-                fontFamily: 'inherit',
-                fontSize: 13,
-                color: 'var(--dark-90)',
-                background: 'var(--light-100)',
-                outline: 'none',
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginBottom: 6, fontWeight: 500 }}>Headline</div>
-            <input
-              defaultValue={c.headline}
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                border: '1px solid var(--dark-8)',
-                borderRadius: 7,
-                fontFamily: 'inherit',
-                fontSize: 13,
-                color: 'var(--dark-90)',
-                background: 'var(--light-100)',
-                outline: 'none',
-              }}
-            />
-          </div>
-          {c.sub !== undefined && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginBottom: 6, fontWeight: 500 }}>Body</div>
-              <textarea
-                defaultValue={c.sub}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  border: '1px solid var(--dark-8)',
-                  borderRadius: 7,
-                  fontFamily: 'inherit',
-                  fontSize: 13,
-                  color: 'var(--dark-90)',
-                  background: 'var(--light-100)',
-                  outline: 'none',
-                  minHeight: 80,
-                  resize: 'vertical',
-                  lineHeight: 1.5,
-                }}
-              />
-            </div>
-          )}
-          {c.cta && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginBottom: 6, fontWeight: 500 }}>CTA label</div>
-              <input
-                defaultValue={c.cta}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  border: '1px solid var(--dark-8)',
-                  borderRadius: 7,
-                  fontFamily: 'inherit',
-                  fontSize: 13,
-                  color: 'var(--dark-90)',
-                  background: 'var(--light-100)',
-                  outline: 'none',
-                }}
-              />
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-            <Button
-              variant="secondary"
-              size="md"
-              frontIcon={ArrowRefresh}
-              onPress={() => showToast({ message: 'Regenerated by Blaze ✦' })}
-            >
-              Regenerate
-            </Button>
-            {isApproved ? (
-              <Button variant="secondary" size="md" frontIcon={Check2} onPress={unapprove}>
-                Approved
-              </Button>
-            ) : (
-              <Button variant="secondary" size="md" onPress={approveSection}>
-                Approve
-              </Button>
-            )}
-          </div>
-        </aside>
+        {/* Right: chat panel — the only edit surface */}
+        <ChatPanel />
       </div>
     </div>
   );
@@ -1687,15 +1410,11 @@ function LandingPagesRouteInner() {
   const [pages, setPages] = useState<Page[]>(INITIAL_PAGES);
   const [campaign, setCampaign] = useState<Campaign | null>(CAMPAIGNS[0]);
   const [pageName, setPageName] = useState('CRM for small teams — landing page');
-  const [selectedSection, setSelectedSection] = useState<SectionId>('hero');
-  const [approved, setApproved] = useState<Set<SectionId>>(() => new Set());
 
   const openCampaignChooser = useCallback(() => {
     openModal(CampaignChooserModal, {
       onGenerate: (c) => {
         setCampaign(c);
-        setApproved(new Set());
-        setSelectedSection('hero');
         setPageName('CRM for small teams — landing page');
         closeModal();
         setView('loading');
@@ -1709,10 +1428,6 @@ function LandingPagesRouteInner() {
   };
 
   const publish = () => {
-    if (approved.size !== SECTIONS.length) {
-      showToast({ message: 'Approve all 5 sections before publishing' });
-      return;
-    }
     setPages((prev) => {
       const exists = prev.find((p) => p.name === pageName);
       if (exists) return prev;
@@ -1734,36 +1449,40 @@ function LandingPagesRouteInner() {
   const topbarRight = useMemo(() => {
     if (view === 'hub') {
       return (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="secondary" size="md" onPress={() => showToast({ message: 'Import URL (TODO)' })}>
-            Import URL
-          </Button>
+        <>
           <Button variant="secondary" size="md" frontIcon={Plus} onPress={openCampaignChooser}>
             New Landing Page
           </Button>
-        </div>
+          <GenerateReportButton />
+        </>
       );
     }
     if (view === 'loading') {
       return (
-        <Button variant="ghost" size="md" onPress={() => setView('hub')}>
-          Cancel
-        </Button>
+        <>
+          <Button variant="ghost" size="md" onPress={() => setView('hub')}>
+            Cancel
+          </Button>
+          <GenerateReportButton />
+        </>
       );
     }
     if (view === 'published') {
       return (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="secondary" size="md" onPress={() => showToast({ message: 'View live page (TODO)' })}>
-            View live page ↗
-          </Button>
-          <Button variant="secondary" size="md" onPress={() => setView('editor')}>
-            Edit
-          </Button>
-        </div>
+        <>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="secondary" size="md" onPress={() => showToast({ message: 'View live page (TODO)' })}>
+              View live page ↗
+            </Button>
+            <Button variant="secondary" size="md" onPress={() => setView('editor')}>
+              Edit
+            </Button>
+          </div>
+          <GenerateReportButton />
+        </>
       );
     }
-    return undefined;
+    return <GenerateReportButton />;
   }, [view, showToast, openCampaignChooser]);
 
   const title = useMemo(() => {
@@ -1794,10 +1513,6 @@ function LandingPagesRouteInner() {
           pageName={pageName}
           setPageName={setPageName}
           campaign={campaign}
-          selectedSection={selectedSection}
-          setSelectedSection={setSelectedSection}
-          approved={approved}
-          setApproved={setApproved}
           onBack={() => setView('hub')}
           onPublish={publish}
         />

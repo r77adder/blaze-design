@@ -1,7 +1,11 @@
 /**
  * Feed payload from Ivan's index.html. Microcopy preserved verbatim.
  */
-export type FeedKind = 'action' | 'alert' | 'insight';
+// Collapsed from `'action' | 'alert' | 'insight'` — heads-up items were folded
+// into the to-do (action) bucket. The KindBadge component still accepts 'alert'
+// in its own KindBadgeKind union (other surfaces and the staging test matrix
+// may depend on it), but H2's feed data no longer surfaces that variant.
+export type FeedKind = 'action' | 'insight';
 
 export type FeedSource =
   | 'reputation'
@@ -15,6 +19,18 @@ export type FeedSource =
   | 'organic'
   | 'paid-social';
 
+/**
+ * When present, the FeedItemModal renders a "Proposed solution" section
+ * surfacing the agent's refresh proposal (typically for Creative Fatigue
+ * detected items). Existing items leave this undefined — no rendering
+ * change. See FeedItemModal.tsx for the rendering path.
+ */
+export interface ProposedSolution {
+  reason: string;
+  competitorResearch: string;
+  bullets: string[];
+}
+
 export interface FeedItem {
   id: string;
   source: FeedSource;
@@ -27,8 +43,15 @@ export interface FeedItem {
   primary: string | null;
   secondary: string | null;
   thumbnails?: string[];
+  proposedSolution?: ProposedSolution;
 }
 
+// One representative item per FeedSource (10 total). Most are actions
+// awaiting sign-off; map/landing surface insights because that's the most
+// compelling signal those tools currently have. Paid Social and Paid
+// Search slots are filled by their Creative Fatigue items (those with
+// `proposedSolution`) — these get a distinct "Fatigue alert" badge in
+// FeedItem.tsx instead of the generic "Needs sign-off" amber.
 export const FEED_ITEMS: FeedItem[] = [
   {
     id: 'rep-1',
@@ -49,26 +72,14 @@ export const FEED_ITEMS: FeedItem[] = [
   {
     id: 'seo-1',
     source: 'seo',
-    sourceLabel: 'SEO/AEO',
-    href: 'seo-aeo.html',
+    sourceLabel: 'AEO',
+    href: 'aeo.html',
     kind: 'action',
-    title: '7 proposed actions waiting — 4 issue fixes + 3 new content pieces',
-    body: 'Gemini is sourcing the wrong founding year, 12 high-intent comparison queries have no Blaze content, and a 2,200-word pillar can close 3 citation gaps.',
+    title: '3 content pieces waiting for your approval',
+    body: 'Gemini and Perplexity have citation gaps on high-intent queries. A 2,200-word adaptogen pillar can close 3 of them at once.',
     time: '1h ago',
-    primary: 'Open SEO/AEO',
+    primary: 'Open AEO',
     secondary: 'Approve all',
-  },
-  {
-    id: 'ps-1',
-    source: 'paid-search',
-    sourceLabel: 'Paid Search',
-    href: 'paid-search.html',
-    kind: 'alert',
-    title: 'CPC spike on "wellness supplements"',
-    body: 'Daily Wellness Bundle campaign · CPC up 38% in the last 4 hours. Agent suggests pausing the keyword or lowering max bid to $1.40.',
-    time: '2h ago',
-    primary: 'Review',
-    secondary: null,
   },
   {
     id: 'inf-1',
@@ -92,7 +103,7 @@ export const FEED_ITEMS: FeedItem[] = [
   {
     id: 'em-1',
     source: 'email',
-    sourceLabel: 'Email & SMS',
+    sourceLabel: 'SDR',
     href: 'email&sms.html',
     kind: 'action',
     title: '3 agent proposals waiting on Welcome Stack',
@@ -122,6 +133,24 @@ export const FEED_ITEMS: FeedItem[] = [
     ],
   },
   {
+    id: 'os-2',
+    source: 'organic',
+    sourceLabel: 'Organic Campaigns',
+    href: 'organic-social.html',
+    kind: 'action',
+    title: '5 posts ready for next week — approve to schedule',
+    body: 'Lifestyle grid for Mon/Wed/Fri + two carousels for Tue/Thu. Tone passes brand check. Posting times match your peak engagement window.',
+    time: 'Yesterday',
+    primary: 'Approve & schedule',
+    secondary: 'Preview',
+    thumbnails: [
+      'https://picsum.photos/seed/os-post-mon/120/90',
+      'https://picsum.photos/seed/os-post-tue/120/90',
+      'https://picsum.photos/seed/os-post-wed/120/90',
+      'https://picsum.photos/seed/os-post-thu/120/90',
+    ],
+  },
+  {
     id: 'map-1',
     source: 'map',
     sourceLabel: 'Map Ranking',
@@ -147,138 +176,49 @@ export const FEED_ITEMS: FeedItem[] = [
     thumbnails: ['https://picsum.photos/seed/lp-crm-hero/120/90'],
   },
   {
-    id: 'em-2',
-    source: 'email',
-    sourceLabel: 'Email & SMS',
-    href: 'email&sms.html',
-    kind: 'insight',
-    title: 'A/B test won — Welcome Stack subject line variant B',
-    body: '+9.2% open rate · auto-applied. The agent will test against the new winner next week.',
-    time: 'Yesterday',
-    primary: 'Open Welcome Stack',
-    secondary: null,
-  },
-  {
-    id: 'os-1',
-    source: 'organic',
-    sourceLabel: 'Organic Campaigns',
-    href: 'organic-social.html',
+    id: 'pso-cf-1',
+    source: 'paid-social',
+    sourceLabel: 'Paid Social',
+    href: 'paid-social.html',
     kind: 'action',
-    title: 'Schedule 3 Reels for next week',
-    body: 'Drafts ready across Instagram + TikTok. Two unscripted lifestyle moments and one 60-second routine demo.',
-    time: 'Yesterday',
-    primary: 'Schedule',
-    secondary: 'Preview',
-    thumbnails: [
-      'https://picsum.photos/seed/os-reel-1/120/90',
-      'https://picsum.photos/seed/os-reel-2/120/90',
-      'https://picsum.photos/seed/os-reel-3/120/90',
-    ],
+    title: 'Creative Fatigue detected — Hiring · Reel A',
+    body: 'CTR dropped 32% over 7 days while spend held steady. A proposed refresh is ready to review.',
+    time: '2h ago',
+    primary: 'Review refresh',
+    secondary: 'Snooze 7 days',
+    proposedSolution: {
+      reason: 'CTR dropped 32% over 7 days while spend held steady; CPM up 18%. Frequency hit 4.6 and Meta is widening delivery to weaker placements.',
+      competitorResearch:
+        'Three direct competitors switched to short-form vertical video with stat overlays in the past 14 days — NorthSun Wellness and Helia Botanicals are seeing 2.4–3.2x ROAS lifts.',
+      bullets: [
+        'Switch from carousel to a 15s vertical reel',
+        'Move the stat hook from the caption to the first frame',
+        'Add a Sofia avatar voice-over for the first 2 seconds',
+      ],
+    },
   },
   {
-    id: 'os-2',
-    source: 'organic',
-    sourceLabel: 'Organic Campaigns',
-    href: 'organic-social.html',
-    kind: 'action',
-    title: '5 posts ready for next week — approve to schedule',
-    body: 'Lifestyle grid for Mon/Wed/Fri + two carousels for Tue/Thu. Tone passes brand check. Posting times match your peak engagement window.',
-    time: 'Yesterday',
-    primary: 'Approve & schedule',
-    secondary: 'Preview',
-    thumbnails: [
-      'https://picsum.photos/seed/os-post-mon/120/90',
-      'https://picsum.photos/seed/os-post-tue/120/90',
-      'https://picsum.photos/seed/os-post-wed/120/90',
-      'https://picsum.photos/seed/os-post-thu/120/90',
-    ],
-  },
-  {
-    id: 'os-3',
-    source: 'organic',
-    sourceLabel: 'Organic Campaigns',
-    href: 'organic-social.html',
-    kind: 'insight',
-    title: 'Carousel posts outperformed single-image by 1.8× last week',
-    body: 'Agent will lean into carousel format for the next two weeks. Review the proposed cadence shift in the calendar.',
-    time: '2d ago',
-    primary: 'Open calendar',
-    secondary: 'See breakdown',
-    thumbnails: [
-      'https://picsum.photos/seed/os-carousel-1/120/90',
-      'https://picsum.photos/seed/os-carousel-2/120/90',
-      'https://picsum.photos/seed/os-carousel-3/120/90',
-    ],
-  },
-  {
-    id: 'rep-2',
-    source: 'reputation',
-    sourceLabel: 'Reputation',
-    href: 'reputation.html',
-    kind: 'alert',
-    title: 'Yelp billing complaint is escalating',
-    body: 'Sentiment dropped 2 points overnight. The agent drafted an escalation reply and routed it to your inbox first.',
-    time: '2d ago',
-    primary: 'Open thread',
-    secondary: null,
-    thumbnails: ['https://picsum.photos/seed/rep-yelp-thread/120/90'],
-  },
-  {
-    id: 'inf-2',
-    source: 'influencer',
-    sourceLabel: 'UGC Content',
-    href: 'influencer-content.html',
-    kind: 'insight',
-    title: 'Sofia avatar is outperforming the rest by 2.3×',
-    body: 'Lifestyle videos with Sofia driving 5.1% CTR — well above the 2.2% benchmark on Meta.',
-    time: '2d ago',
-    primary: 'Open Avatars',
-    secondary: null,
-    thumbnails: [
-      'https://picsum.photos/seed/inf-sofia-still-1/120/90',
-      'https://picsum.photos/seed/inf-sofia-still-2/120/90',
-      'https://picsum.photos/seed/inf-sofia-still-3/120/90',
-    ],
-  },
-  {
-    id: 'cmp-2',
-    source: 'campaigns',
-    sourceLabel: 'Campaigns',
-    href: 'campaigns.html',
-    kind: 'action',
-    title: 'Spring Sale 2026 — 2 posts to review before launch',
-    body: 'Mar 1 – Apr 14 · Organic + Meta + Search + landing page. Brief is approved.',
-    time: '2d ago',
-    primary: 'Review posts',
-    secondary: null,
-    thumbnails: [
-      'https://picsum.photos/seed/cmp-spring-1/120/90',
-      'https://picsum.photos/seed/cmp-spring-2/120/90',
-    ],
-  },
-  {
-    id: 'aeo-1',
-    source: 'seo',
-    sourceLabel: 'SEO/AEO',
-    href: 'seo-aeo.html',
-    kind: 'insight',
-    title: 'Lifestyle AI videos are driving 5.1% CTR on Instagram',
-    body: 'Up from a 2.2% baseline. The agent will lean into this format on the next two campaigns.',
-    time: '3d ago',
-    primary: null,
-    secondary: null,
-  },
-  {
-    id: 'ps-2',
+    id: 'ps-cf-1',
     source: 'paid-search',
     sourceLabel: 'Paid Search',
     href: 'paid-search.html',
-    kind: 'insight',
-    title: 'Daily Wellness Bundle is hitting $5.40 CPA — under your $8 target',
-    body: '2h 14m live · 6 conversions · 187 clicks · agent will keep budget steady through tomorrow.',
-    time: '3d ago',
-    primary: 'Open campaign',
-    secondary: null,
+    kind: 'action',
+    title: 'Creative Fatigue detected — RSA · Daily Wellness Bundle Variant A',
+    body: 'CTR dropped 28% over 7 days while impressions held steady. A proposed refresh is ready to review.',
+    time: '5h ago',
+    primary: 'Review refresh',
+    secondary: 'Snooze 7 days',
+    proposedSolution: {
+      reason:
+        'CTR is down 28% over 7 days while impressions held steady. Headline 1 has run unchanged for 21 days — asset rotation is exhausted.',
+      competitorResearch:
+        'Two competitors rotated to question-led headlines this week ("Tired by 3pm?" pattern) and lifted CTR ~30%. NorthSun Wellness added a free-shipping callout extension.',
+      bullets: [
+        'Rotate Headline 1 to a question-led variant',
+        'Add a new "free shipping" callout extension',
+        'Pin a freshness signal — "Updated for May" — in description 2',
+      ],
+    },
   },
 ];
 

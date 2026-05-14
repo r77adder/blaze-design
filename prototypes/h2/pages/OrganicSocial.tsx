@@ -13,6 +13,7 @@ import TikTok from '@/icons/20/TikTok';
 import LinkedIn from '@/icons/20/LinkedIn';
 import Twitter from '@/icons/20/Twitter';
 import { H2Layout } from '../H2Layout';
+import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { OrganicSocialColdView } from './ColdViews';
 
@@ -885,7 +886,7 @@ function OrganicSocialRouteInner() {
   }
 
   return (
-    <H2Layout topbarCenter={topbarCenter}>
+    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
       <div style={{ margin: '-24px -24px 0', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div
           style={{

@@ -8,6 +8,7 @@ import Plus from '@/icons/20/Plus';
 import Stars from '@/icons/20/Stars';
 import PenEdit from '@/icons/16/PenEdit';
 import { H2Layout } from '../H2Layout';
+import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { UgcColdView } from './ColdViews';
 
@@ -939,7 +940,14 @@ function InfluencerContentRouteInner() {
   };
 
   return (
-    <H2Layout topbarRight={<InfluencerContentTopbarAction onNew={openSummary} />}>
+    <H2Layout
+      topbarRight={
+        <>
+          <InfluencerContentTopbarAction onNew={openSummary} />
+          <GenerateReportButton />
+        </>
+      }
+    >
       <TabBar active={tab} onChange={setTab} />
       {tab === 'overview' && <OverviewTab onJump={setTab} />}
       {tab === 'content' && <ContentTab />}

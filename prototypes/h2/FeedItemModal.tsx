@@ -1,23 +1,32 @@
-import { useState } from 'react';
-import { IconButton, Modal } from '@/components';
+import { useState, type ComponentType } from 'react';
+import { IconButton, Modal, Text } from '@/components';
 import type { StackModalProps } from '@/components';
 import ChevronUp from '@/icons/20/ChevronUp';
 import ChevronDown from '@/icons/20/ChevronDown';
-import { SourcePill } from '@/staging';
-import type { SourceName } from '@/staging';
-import type { FeedItem as FeedItemData, FeedSource } from './feed-data';
+import Calendar1 from '@/icons/20/Calendar1';
+import Cursor04 from '@/icons/20/Cursor04';
+import FileSearch1 from '@/icons/20/FileSearch1';
+import Google from '@/icons/20/Google';
+import Mail from '@/icons/20/Mail';
+import Map02 from '@/icons/20/Map02';
+import Star from '@/icons/20/Star';
+import Target2 from '@/icons/20/Target2';
+import Templates from '@/icons/20/Templates';
+import UserProfileCircle from '@/icons/20/UserProfileCircle';
+import { KindBadge } from '@/staging';
+import type { FeedItem as FeedItemData, FeedSource, ProposedSolution } from './feed-data';
 
-const SOURCE_KEY_MAP: Record<FeedSource, SourceName> = {
-  campaigns: 'campaigns',
-  seo: 'seoaeo',
-  organic: 'organicsocial',
-  influencer: 'ugc',
-  map: 'mapranking',
-  landing: 'landingpages',
-  'paid-search': 'paidsearch',
-  'paid-social': 'paidsocial',
-  reputation: 'reputation',
-  email: 'emailsms',
+const SOURCE_ICONS: Record<FeedSource, ComponentType<{ size?: number; color?: string }>> = {
+  campaigns: Target2,
+  seo: FileSearch1,
+  organic: Calendar1,
+  influencer: UserProfileCircle,
+  map: Map02,
+  landing: Templates,
+  'paid-search': Google,
+  'paid-social': Cursor04,
+  reputation: Star,
+  email: Mail,
 };
 
 const SOURCE_CONTEXT: Record<FeedSource, { why: string; steps: string[] }> = {
@@ -33,7 +42,7 @@ const SOURCE_CONTEXT: Record<FeedSource, { why: string; steps: string[] }> = {
     why: 'Visibility in AI search engines (ChatGPT, Perplexity, Gemini) depends on whether your brand can be cited authoritatively. The agent finds and fixes citation gaps continuously.',
     steps: [
       'Approve all to roll out the proposed fixes in one click',
-      'Or open SEO/AEO to review each action individually',
+      'Or open AEO to review each action individually',
       'Re-run analysis after content publishes to confirm citations',
     ],
   },
@@ -56,9 +65,9 @@ const SOURCE_CONTEXT: Record<FeedSource, { why: string; steps: string[] }> = {
   email: {
     why: 'Multi-step lifecycle programs need fresh copy each cycle to keep engagement. The agent regenerates variants and waits for your approval before pushing live.',
     steps: [
-      'Review each proposed step\'s copy in the program editor',
+      'Review each proposed step\'s copy in the SDR outreach editor',
       'Approve to push live in the next send window',
-      'Or open Email & SMS to edit any step manually',
+      'Or open SDR to edit any step manually',
     ],
   },
   campaigns: {
@@ -117,6 +126,8 @@ export function FeedItemModal({
   const item = items[index] ?? items[0];
   const ctx = SOURCE_CONTEXT[item.source];
   const total = items.length;
+  const SourceIcon = SOURCE_ICONS[item.source];
+  const kindLabel = item.kind === 'action' ? 'Needs sign-off' : undefined;
 
   const goPrev = () => {
     if (index > 0) setIndex(index - 1);
@@ -183,10 +194,39 @@ export function FeedItemModal({
             marginBottom: 16,
           }}
         >
-          <SourcePill source={SOURCE_KEY_MAP[item.source]} label={item.sourceLabel} />
-          <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>
-            {item.time}
+          <KindBadge kind={item.kind} label={kindLabel} iconless />
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: 'var(--dark-60)',
+            }}
+          >
+            <SourceIcon size={16} color="var(--dark-60)" />
+            <Text
+              variant="metadata"
+              style={{
+                color: 'var(--dark-60)',
+                fontSize: '12px',
+                fontWeight: 500,
+                letterSpacing: '0.04em',
+              }}
+            >
+              {item.sourceLabel}
+            </Text>
           </span>
+          <Text
+            variant="metadata"
+            style={{
+              marginLeft: 'auto',
+              fontVariantNumeric: 'tabular-nums',
+              color: 'var(--dark-40)',
+              fontSize: '11.5px',
+            }}
+          >
+            {item.time}
+          </Text>
         </div>
 
         <p
@@ -236,19 +276,25 @@ export function FeedItemModal({
           </div>
         )}
 
-        <Section title="Why this matters">
-          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-60)', lineHeight: 1.6 }}>
-            {ctx.why}
-          </p>
-        </Section>
+        {item.proposedSolution ? (
+          <ProposedSolutionView solution={item.proposedSolution} />
+        ) : (
+          <>
+            <Section title="Why this matters">
+              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-60)', lineHeight: 1.6 }}>
+                {ctx.why}
+              </p>
+            </Section>
 
-        <Section title="Recommended next steps">
-          <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {ctx.steps.map((s) => (
-              <li key={s} style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.55 }}>{s}</li>
-            ))}
-          </ol>
-        </Section>
+            <Section title="Recommended next steps">
+              <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {ctx.steps.map((s) => (
+                  <li key={s} style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.55 }}>{s}</li>
+                ))}
+              </ol>
+            </Section>
+          </>
+        )}
       </Modal.Content>
       <Modal.Footer>
         <Modal.FooterContent slot="left">
@@ -272,6 +318,42 @@ export function FeedItemModal({
         </Modal.FooterContent>
       </Modal.Footer>
     </Modal.Root>
+  );
+}
+
+function ProposedSolutionView({ solution }: { solution: ProposedSolution }) {
+  return (
+    <>
+      <Section title="Why we flagged this">
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+          {solution.reason}
+        </p>
+      </Section>
+
+      <Section title="What competitors are doing">
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+          {solution.competitorResearch}
+        </p>
+      </Section>
+
+      <Section title="Proposed refresh">
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+          }}
+        >
+          {solution.bullets.map((b) => (
+            <li key={b} style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.55 }}>
+              {b}
+            </li>
+          ))}
+        </ul>
+      </Section>
+    </>
   );
 }
 

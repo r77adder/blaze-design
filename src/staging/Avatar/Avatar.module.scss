@@ -58,3 +58,21 @@
     font-size: 14px;
   }
 }
+
+.size-xl {
+  width: 56px;
+  height: 56px;
+
+  .fallback {
+    font-size: 20px;
+  }
+}
+
+.size-xxl {
+  width: 72px;
+  height: 72px;
+
+  .fallback {
+    font-size: 26px;
+  }
+}

@@ -1,0 +1,12 @@
+// One-off CSS module for the H2 feed item. CLAUDE.md says "no CSS files in
+// prototypes" and prefers inline style={}, but inline styles can't express
+// :hover, so this file is the minimum-viable exception. Contains ONLY the
+// hover-border override; everything else stays inline in FeedItem.tsx.
+//
+// The doubled class selector (.feedCard.feedCard) bumps specificity above
+// Card.module.scss's `.root.interactive:hover` rule so our --dark-8 border
+// color wins. We keep the box-shadow from Card's hover intact (no shadow
+// rule here means Card's transition + shadow still apply).
+.feedCard.feedCard:hover {
+  border-color: var(--dark-8);
+}

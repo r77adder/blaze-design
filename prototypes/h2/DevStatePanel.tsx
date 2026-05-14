@@ -90,9 +90,14 @@ export function DevStatePanel() {
     }
   };
 
+  // Default: sit inside the sidebar's bottom area, just above the 2
+  // sticky bottom items (Invite Team Members + Help & Learn Blaze).
+  // ~88px clears those two NavItems + their container padding. Left 8
+  // tucks it inside the sidebar's left edge. Once the user drags, the
+  // saved x/y wins.
   const positionStyles = position
     ? { left: position.x, top: position.y }
-    : { right: 16, bottom: 16 };
+    : { left: 8, bottom: 88 };
 
   return (
     <div

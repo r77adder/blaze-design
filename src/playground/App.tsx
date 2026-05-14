@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { prototypeRoutes, iosPrototypeRoutes } from './router';
+import { prototypeRoutes } from './router';
+import { CommentOverlay } from '../../prototypes/_shell/CommentOverlay';
 import '../tokens/colors.css';
 import '../tokens/fonts.scss';
 import '../tokens/reset.css';
@@ -42,6 +44,7 @@ function Index() {
 export function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <CommentOverlay />
       <Routes>
         <Route path="/" element={<Index />} />
         {prototypeRoutes.map(({ slug, Component }) => (

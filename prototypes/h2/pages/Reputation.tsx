@@ -2,8 +2,9 @@ import { useState, type MouseEvent } from 'react';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { Facebook, Google, Instagram, TikTok, Twitter } from '@/icons/20';
-import { useToast } from '@/staging';
+import { TabChip, useToast } from '@/staging';
 import { H2Layout } from '../H2Layout';
+import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { ReputationColdView } from './ColdViews';
 
@@ -543,6 +544,31 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: Atte
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 10.5,
+            fontWeight: 500,
+            color: '#B06000',
+            background: 'rgba(252,183,40,0.16)',
+            borderRadius: 4,
+            padding: '2px 6px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: '#B06000',
+            }}
+          />
+          Needs action
+        </span>
         <SourceBadge source={item.source} label={item.sourceLabel} />
         {item.stars !== undefined && <Stars n={item.stars} />}
         <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.customer}</span>
@@ -582,9 +608,11 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: Atte
           <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>{item.velocity}</span>
         )}
         {!item.aiDraft && (
-          <span style={{ fontSize: 11, color: 'var(--purple)', marginLeft: 'auto', fontWeight: 500 }}>
-            Open thread →
-          </span>
+          <div onClick={stop} style={{ marginLeft: 'auto' }}>
+            <Button variant="secondary" size="sm" onClick={() => onOpenDetail(item)}>
+              Review &amp; reply
+            </Button>
+          </div>
         )}
       </div>
     </div>
@@ -927,59 +955,6 @@ function ListeningPane() {
 
 type TabKey = 'reviews' | 'insights' | 'listening';
 
-function Tabs({ active, onChange, counts }: {
-  active: TabKey;
-  onChange: (k: TabKey) => void;
-  counts: { reviews?: number; insights?: number };
-}) {
-  const tabs: { key: TabKey; label: string; count?: number }[] = [
-    { key: 'reviews', label: 'Reviews & Comments', count: counts.reviews },
-    { key: 'insights', label: 'Business Insights', count: counts.insights },
-    { key: 'listening', label: 'Social Listening' },
-  ];
-  return (
-    <div style={{ display: 'flex', borderBottom: '1px solid var(--dark-8)', marginBottom: 16 }}>
-      {tabs.map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => onChange(t.key)}
-          style={{
-            padding: '11px 16px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: `2px solid ${active === t.key ? 'var(--dark-90)' : 'transparent'}`,
-            marginBottom: -1,
-            fontFamily: 'inherit',
-            fontSize: 13.5,
-            fontWeight: active === t.key ? 500 : 400,
-            color: active === t.key ? 'var(--dark-90)' : 'var(--dark-60)',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          {t.label}
-          {t.count !== undefined && (
-            <span
-              style={{
-                fontSize: 11,
-                color: active === t.key ? 'var(--dark-90)' : 'var(--dark-40)',
-                background: active === t.key ? 'var(--dark-8)' : 'var(--dark-4)',
-                padding: '1px 7px',
-                borderRadius: 99,
-              }}
-            >
-              {t.count}
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // ─── ITEM-DETAIL MODAL ────────────────────────────────────────────
 
 function ItemDetailModal({
@@ -1272,36 +1247,32 @@ function ReputationRouteInner() {
     );
   }
 
-  return (
-    <H2Layout>
-      <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
-        <div style={{ marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              fontSize: 12,
-              color: 'var(--dark-60)',
-              padding: '6px 12px',
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 99,
-            }}
-          >
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: '#20A14F',
-                boxShadow: '0 0 0 4px rgba(32,161,79,0.16)',
-              }}
-            />
-            Scan complete · 6 sources · 1,248 signals analyzed
-          </span>
-        </div>
+  // Sub-tabs lifted into the topbar's center slot — state (active key + counts)
+  // stays here, only the rendered chips are passed up.
+  const topbarCenter = (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {(
+        [
+          { key: 'reviews', label: 'Reviews & Comments', count: reviewCount },
+          { key: 'insights', label: 'Business Insights', count: 5 },
+          { key: 'listening', label: 'Social Listening' },
+        ] as const
+      ).map((t) => (
+        <TabChip
+          key={t.key}
+          selected={tab === t.key}
+          count={t.count}
+          onSelect={() => setTab(t.key)}
+        >
+          {t.label}
+        </TabChip>
+      ))}
+    </div>
+  );
 
+  return (
+    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
+      <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
         {/* KPI strip */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
           <KpiCard label="Reputation Health" value="82" unit="/100" delta={{ tone: 'good', text: '+4' }} sub="vs last 30 days" />
@@ -1310,8 +1281,6 @@ function ReputationRouteInner() {
           <KpiCard label="Negative Sentiment" value="11%" delta={{ tone: 'bad', text: '+1.4%' }} sub="trending up" />
           <KpiCard label="Needs Attention" value={String(reviewCount)} delta={{ tone: 'warn', text: '2 urgent' }} sub="reviews + comments" />
         </div>
-
-        <Tabs active={tab} onChange={setTab} counts={{ reviews: reviewCount, insights: 5 }} />
 
         {tab === 'reviews' && (
           <>

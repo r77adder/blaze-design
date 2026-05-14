@@ -11,22 +11,19 @@ import {
   Cursor04,
   FileSearch1,
   Folder,
-  Gift01,
   Globe,
   Help,
   Image as ImageIcon,
   Lightning,
-  Mail,
-  Map02,
   MetaBrand,
   Plus,
   Search,
   Star,
+  Stars,
   Templates,
   UserProfileAdd,
   UserProfileCircle,
   UserProfileGroup,
-  Users,
   Wrench,
 } from '@/icons/20';
 import {
@@ -142,12 +139,11 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Organic Campaigns', icon: Calendar1Sm, href: '/h2/organic-social' },
-      { label: 'SEO/AEO', icon: FileSearch1, href: '/h2/seo-aeo' },
-      { label: 'Map Ranking', icon: Map02, href: '/h2/map-ranking' },
+      { label: 'SEO', icon: FileSearch1, href: '/h2/seo' },
+      { label: 'AEO', icon: Stars, href: '/h2/aeo' },
       { label: 'UGC Content', icon: UserProfileCircle, href: '/h2/influencer-content' },
       { label: 'Paid Social', icon: Cursor04, href: '/h2/paid-social' },
       { label: 'Paid Search', icon: BarChartSquare, href: '/h2/paid-search' },
-      { label: 'Email & SMS', icon: Mail, href: '/h2/email-sms' },
     ],
   },
   {
@@ -155,7 +151,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Landing Pages', icon: Templates, href: '/h2/landing-pages' },
-      { label: 'CRM', icon: UserProfileGroup, href: '/h2/crm' },
+      { label: 'SDR', icon: UserProfileGroup, href: '/h2/sdr' },
       { label: 'Reputation', icon: Star, href: '/h2/reputation' },
     ],
   },
@@ -163,7 +159,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     label: 'Settings',
     collapsible: true,
     items: [
-      { label: 'Tools', icon: Wrench, href: '/h2/tools' },
+      { label: 'Meta Strategy', icon: Wrench, href: '/h2/tools' },
       { label: 'Content Settings', icon: AudioSettings, href: '/h2/content-settings' },
       { label: 'Brand Kit', icon: Brand },
       { label: 'Integrations', icon: Lightning, trail: '3/10' },
@@ -255,16 +251,6 @@ export function Sidebar({
         ))}
       </nav>
       <div className={styles.footer}>
-        {/*
-          Mirrors prod's BottomItems
-          (apps/blaze/.../WorkspaceDashboardSidebar/components/More/components/BottomItems/BottomItems.tsx).
-          Order matches prod: Refer & Earn / Join our Community / Invite Team
-          Members / Help & Learn Blaze.
-        */}
-        <BottomItem icon={Gift01}>Refer & Earn</BottomItem>
-        <BottomItem icon={Users} href="https://community.blaze.ai">
-          Join our Community
-        </BottomItem>
         <BottomItem icon={UserProfileAdd}>Invite Team Members</BottomItem>
         <BottomItem icon={Help}>Help & Learn Blaze</BottomItem>
       </div>

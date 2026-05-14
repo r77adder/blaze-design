@@ -1,17 +1,15 @@
 import type { ComponentType, ReactNode } from 'react';
-import { Heading, Text } from '@/components';
-import Check from '@/icons/16/Check';
+import { Button, Heading, Text } from '@/components';
 import CustomerService from '@/icons/20/CustomerService';
 import Marker from '@/icons/20/Marker';
-import Map02 from '@/icons/20/Map02';
 import Bag04 from '@/icons/20/Bag04';
 import Calendar1 from '@/icons/20/Calendar1';
 import FileSearch1 from '@/icons/20/FileSearch1';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
 import Cursor04 from '@/icons/20/Cursor04';
-import Mail from '@/icons/20/Mail';
 import Templates from '@/icons/20/Templates';
 import Star from '@/icons/20/Star';
+import Stars from '@/icons/20/Stars';
 import Google from '@/icons/20/Google';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
 import { H2Layout } from '../H2Layout';
@@ -27,14 +25,13 @@ import {
 
 const TOOL_ICONS: Record<ToolId, ComponentType<{ size?: number; color?: string }>> = {
   'Organic Campaigns': Calendar1,
-  'SEO/AEO': FileSearch1,
-  'Map Ranking': Map02,
+  SEO: FileSearch1,
+  AEO: Stars,
   'UGC Content': UserProfileCircle,
   'Paid Social': Cursor04,
   'Paid Search': Google,
-  'Email & SMS': Mail,
   'Landing Pages': Templates,
-  CRM: UserProfileGroup,
+  SDR: UserProfileGroup,
   Reputation: Star,
 };
 
@@ -44,16 +41,27 @@ const PRESET_ICONS: Record<BusinessType, ComponentType<{ size?: number; color?: 
   products: Bag04,
 };
 
+// Reserve space at the bottom of the scroll body so the last row isn't
+// covered by the fixed Save footer. 96px = 64px footer height + 32px breathing.
+const FOOTER_RESERVE_HEIGHT = 96;
+
 export function ToolsRoute() {
   return (
-    <H2Layout title="Tools">
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '8px 4px 80px' }}>
+    <H2Layout title="Meta Strategy">
+      <div
+        style={{
+          maxWidth: 820,
+          margin: '0 auto',
+          padding: `8px 4px ${FOOTER_RESERVE_HEIGHT}px`,
+        }}
+      >
         <Intro />
         <PresetRow />
         <ToolGroup title="Awareness" tools={DEMAND_GEN_TOOLS} />
         <ToolGroup title="Conversion" tools={CONVERSION_TOOLS} />
-        <Footer />
+        <FootnoteText />
       </div>
+      <SaveFooter />
     </H2Layout>
   );
 }
@@ -61,10 +69,10 @@ export function ToolsRoute() {
 function Intro() {
   return (
     <div style={{ padding: '8px 0 24px' }}>
-      <Heading level={2} style={{ lineHeight: 1.2, letterSpacing: '-0.3px', marginBottom: 6 }}>
+      <Heading level={2} style={{ marginBottom: 8 }}>
         Pick the tools you want.
       </Heading>
-      <Text style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.5 }}>
+      <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
         Start from a preset that matches your business, then fine-tune. Anything you turn off here
         is hidden from your sidebar.
       </Text>
@@ -81,7 +89,7 @@ function PresetRow() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 10,
+          gap: 12,
         }}
       >
         {BUSINESS_TYPES.map((b) => {
@@ -96,7 +104,7 @@ function PresetRow() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
-                gap: 10,
+                gap: 12,
                 padding: 16,
                 border: `1px solid ${selected ? 'var(--dark-90)' : 'var(--dark-8)'}`,
                 borderRadius: 12,
@@ -121,11 +129,11 @@ function PresetRow() {
               >
                 <Icon size={20} color="var(--purple)" />
               </span>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Text style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <Text variant="smallList" style={{ color: 'var(--dark-90)' }}>
                   {b.label}
                 </Text>
-                <Text style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>
+                <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
                   {b.description}
                 </Text>
               </span>
@@ -141,26 +149,19 @@ function ToolGroup({ title, tools }: { title: string; tools: ToolId[] }) {
   return (
     <section style={{ marginBottom: 36 }}>
       <SectionHeader title={title} />
-      <div
-        style={{
-          border: '1px solid var(--dark-8)',
-          borderRadius: 12,
-          background: 'var(--light-100)',
-          overflow: 'hidden',
-        }}
-      >
+      <div>
         {tools.map((id, i) => (
-          <ToolRow key={id} id={id} divider={i < tools.length - 1} />
+          <ToolRow key={id} id={id} showTopBorder={i > 0} />
         ))}
       </div>
     </section>
   );
 }
 
-function ToolRow({ id, divider }: { id: ToolId; divider: boolean }) {
-  const { isEnabled, toggle } = useTools();
+function ToolRow({ id, showTopBorder }: { id: ToolId; showTopBorder: boolean }) {
+  const { isDraftEnabled, toggle } = useTools();
   const Icon = TOOL_ICONS[id];
-  const on = isEnabled(id);
+  const on = isDraftEnabled(id);
   return (
     <button
       type="button"
@@ -168,11 +169,11 @@ function ToolRow({ id, divider }: { id: ToolId; divider: boolean }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 14,
+        gap: 16,
         width: '100%',
-        padding: '14px 16px',
+        padding: '16px 0',
         border: 'none',
-        borderBottom: divider ? '1px solid var(--dark-4)' : 'none',
+        borderTop: showTopBorder ? '1px solid var(--dark-8)' : 'none',
         background: 'transparent',
         cursor: 'pointer',
         textAlign: 'left',
@@ -196,44 +197,54 @@ function ToolRow({ id, divider }: { id: ToolId; divider: boolean }) {
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <Text
+          variant="smallList"
           style={{
             display: 'block',
-            fontSize: 14,
-            fontWeight: 500,
             color: 'var(--dark-90)',
-            marginBottom: 2,
+            marginBottom: 4,
           }}
         >
           {id}
         </Text>
-        <Text style={{ display: 'block', fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>
+        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
           {TOOL_DESCRIPTIONS[id]}
         </Text>
       </span>
-      <Checkbox checked={on} />
+      <Toggle checked={on} />
     </button>
   );
 }
 
-function Checkbox({ checked }: { checked: boolean }) {
+function Toggle({ checked }: { checked: boolean }) {
   return (
     <span
-      aria-hidden
+      role="switch"
+      aria-checked={checked}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 20,
+        position: 'relative',
+        display: 'inline-block',
+        width: 36,
         height: 20,
         flexShrink: 0,
-        borderRadius: 5,
-        background: checked ? 'var(--dark-90)' : 'var(--light-100)',
-        border: checked ? '1px solid var(--dark-90)' : '1.5px solid var(--dark-15)',
-        color: 'var(--light-100)',
-        transition: 'background-color 120ms ease, border-color 120ms ease',
+        borderRadius: 999,
+        background: checked ? 'var(--dark-90)' : 'var(--dark-15)',
+        transition: 'background-color 160ms ease',
       }}
     >
-      {checked && <Check size={14} color="var(--light-100)" />}
+      <span
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 2,
+          left: checked ? 18 : 2,
+          width: 16,
+          height: 16,
+          borderRadius: '50%',
+          background: 'var(--light-100)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+          transition: 'left 160ms ease',
+        }}
+      />
     </span>
   );
 }
@@ -243,29 +254,80 @@ function SectionHeader({ title }: { title: string }) {
     <div
       style={{
         borderBottom: '1px solid var(--dark-8)',
-        paddingBottom: 10,
+        paddingBottom: 12,
         marginBottom: 16,
       }}
     >
-      <Heading level={3} style={{ fontSize: 18, fontWeight: 500, letterSpacing: '-0.2px' }}>
-        {title}
-      </Heading>
+      <Heading level={4}>{title}</Heading>
     </div>
   );
 }
 
-function Footer(): ReactNode {
+function FootnoteText(): ReactNode {
   return (
     <Text
+      variant="metadata"
       style={{
         display: 'block',
         marginTop: 12,
-        fontSize: 12.5,
         color: 'var(--dark-40)',
         textAlign: 'center',
       }}
     >
       Disabled tools are hidden from your sidebar. You can still reach them by URL.
     </Text>
+  );
+}
+
+/**
+ * Fixed footer that appears when the draft set differs from the committed
+ * set. Anchored to the bottom of the H2 main column (i.e. inside the shell's
+ * right pane, NOT spanning the viewport — the sidebar stays clear). Slides
+ * in via `transform: translateY` so it animates on every dirty→clean flip.
+ *
+ * The footer lives outside the scrollable `<H2Layout>` body content, so it
+ * stays stuck to the viewport bottom while the page scrolls. We position it
+ * `left: 238px` (the sidebar width — see `_shell/Sidebar.module.scss`) so it
+ * starts at the right edge of the sidebar.
+ */
+function SaveFooter() {
+  const { hasUnsavedChanges, saveChanges, discardChanges } = useTools();
+  return (
+    <div
+      role="region"
+      aria-label="Unsaved changes"
+      aria-hidden={!hasUnsavedChanges}
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 238,
+        right: 0,
+        background: 'var(--light-100)',
+        borderTop: '1px solid var(--dark-8)',
+        boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.04)',
+        padding: '16px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 16,
+        transform: hasUnsavedChanges ? 'translateY(0)' : 'translateY(100%)',
+        opacity: hasUnsavedChanges ? 1 : 0,
+        pointerEvents: hasUnsavedChanges ? 'auto' : 'none',
+        transition: 'transform 160ms ease, opacity 160ms ease',
+        zIndex: 10,
+      }}
+    >
+      <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
+        Unsaved changes
+      </Text>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Button variant="ghost" size="md" onPress={() => discardChanges()}>
+          Discard
+        </Button>
+        <Button variant="primary" size="md" onPress={() => saveChanges()}>
+          Save Changes
+        </Button>
+      </div>
+    </div>
   );
 }

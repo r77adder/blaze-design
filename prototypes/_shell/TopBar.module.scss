@@ -40,12 +40,6 @@
   gap: 12px;
 }
 
-// Credits cluster + Upgrade button both use our real <Button> component now
-// (variant="tertiary" size="md" for credits, variant="secondary" size="md"
-// for Upgrade). Both verified 1:1 against prod via Chrome DevTools MCP. No
-// custom topbar SCSS needed for either — Button.module.scss carries all the
-// styling.
-
 // Avatar — verified via Chrome DevTools MCP against prod's
 // `.Avatar_avatar.Avatar_blaze` in the topbar:
 //   32x32, border-radius 50%, bg rgb(223,223,223), color white, font 20px
