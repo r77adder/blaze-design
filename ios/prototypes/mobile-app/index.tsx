@@ -67,6 +67,7 @@ export default function MobileApp() {
   const [showCampToast, setShowCampToast]   = useState(false);
 
   function handleCampConfirm() {
+    setCampSettingsOpen(false);
     setShowCampToast(true);
     setTimeout(() => setShowCampToast(false), 5000);
   }

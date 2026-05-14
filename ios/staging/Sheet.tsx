@@ -40,6 +40,11 @@ export interface SheetProps {
   onRightPress?: () => void;
   /** Optional note rendered below the primary/secondary buttons in the footer. */
   footerNote?: ReactNode;
+  /**
+   * Left toolbar button variant shown in the header.
+   * Defaults to "close" for sheet sizes, "back" for full.
+   */
+  leftButton?: import('./ToolbarButton').ToolbarButtonVariant | null;
 }
 
 const SIZE_MAP: Record<SheetSize, number> = {
@@ -63,6 +68,7 @@ export function Sheet({
   rightButton,
   onRightPress,
   footerNote,
+  leftButton,
 }: SheetProps) {
   if (!visible) return null;
 
@@ -157,7 +163,7 @@ export function Sheet({
         {showHeader && (
           <ToolbarHeader
             title={title}
-            leftButton={isFull ? 'back' : 'close'}
+            leftButton={leftButton !== undefined ? leftButton : (isFull ? 'back' : 'close')}
             rightButton={rightButton ?? undefined}
             onLeftPress={onClose}
             onRightPress={onRightPress}

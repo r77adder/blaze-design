@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sheet, Toggle, Stepper } from '@ios/staging';
+import { Sheet, Toggle, Stepper, SelectionPill } from '@ios/staging';
 import { ASSETS } from './assets';
 
 // section: constants
@@ -346,36 +346,36 @@ function AccountSection({
 
 // section: content type sheet
 
-const CONTENT_TYPES: { view: View; title: string; icon: () => JSX.Element; subtitle: (mode: ContentMode, postsPerWeek: number, postDay: string) => string }[] = [
+const CONTENT_TYPES: { view: View; title: string; icon: () => JSX.Element; subtitle: (mode: ContentMode, postsPerWeek: number, postDays: string[]) => string }[] = [
   {
     view: 'still-image',
     title: 'Still image post',
     icon: IconStillImage,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'carousel',
     title: 'Carousel post',
     icon: IconCarousel,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'feed-video',
     title: 'Feed video post',
     icon: IconVideo,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'blogs',
     title: 'Blogs',
     icon: IconBlog,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'emails',
     title: 'Emails',
     icon: IconEmail,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
 ];
 
@@ -398,7 +398,13 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
     linkedin: 0,
     google: 0,
   });
-  const [postDay, setPostDay] = useState('Any day');
+  const [postDays, setPostDays] = useState<string[]>([]);
+
+  function togglePostDay(day: string) {
+    setPostDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  }
   const [confirmedIds, setConfirmedIds] = useState<Set<number>>(new Set([1, 2, 3, 4, 5, 6]));
 
   function push(v: View) {
@@ -485,6 +491,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
         visible={view === 'content'}
         title="Content defaults"
         size="large"
+        leftButton="back"
         onClose={back}
         primaryLabel="Save Changes"
         onPrimary={() => push('confirm')}
@@ -502,60 +509,8 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
               Post the same content or tailor per channel?
             </span>
             <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => setMode('crosspost')}
-                style={mode === 'crosspost' ? {
-                  border: '1px solid var(--ios-dark-90)',
-                  background: 'var(--ios-light-100)',
-                  borderRadius: 99,
-                  padding: '8px 14px',
-                  cursor: 'pointer',
-                  fontFamily: font,
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: 'var(--ios-dark-90)',
-                } : {
-                  border: '1px solid var(--ios-dark-4)',
-                  background: 'rgba(0,0,0,0.03)',
-                  borderRadius: 99,
-                  padding: '8px 14px',
-                  cursor: 'pointer',
-                  fontFamily: font,
-                  fontSize: 16,
-                  fontWeight: 400,
-                  color: 'var(--ios-dark-90)',
-                }}
-              >
-                Crosspost
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('unique')}
-                style={mode === 'unique' ? {
-                  border: '1px solid var(--ios-dark-90)',
-                  background: 'var(--ios-light-100)',
-                  borderRadius: 99,
-                  padding: '8px 14px',
-                  cursor: 'pointer',
-                  fontFamily: font,
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: 'var(--ios-dark-90)',
-                } : {
-                  border: '1px solid var(--ios-dark-4)',
-                  background: 'rgba(0,0,0,0.03)',
-                  borderRadius: 99,
-                  padding: '8px 14px',
-                  cursor: 'pointer',
-                  fontFamily: font,
-                  fontSize: 16,
-                  fontWeight: 400,
-                  color: 'var(--ios-dark-90)',
-                }}
-              >
-                Unique posts per channel
-              </button>
+              <SelectionPill label="Crosspost" selected={mode === 'crosspost'} onClick={() => setMode('crosspost')} />
+              <SelectionPill label="Unique posts per channel" selected={mode === 'unique'} onClick={() => setMode('unique')} />
             </div>
           </div>
 
@@ -599,7 +554,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)', lineHeight: 1.4 }}>{type.title}</div>
                   <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>
-                    {type.subtitle(mode, postsPerWeek, postDay)}
+                    {type.subtitle(mode, postsPerWeek, postDays)}
                   </div>
                 </div>
                 <IconChevronRight />
@@ -611,7 +566,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
 
       {/* Content type screens — still-image, carousel, feed-video, blogs, emails */}
       {(['still-image', 'carousel', 'feed-video', 'blogs', 'emails'] as View[]).map(ct => (
-        <Sheet key={ct} visible={view === ct} title={titleForView(ct)} size="large" onClose={back}>
+        <Sheet key={ct} visible={view === ct} title={titleForView(ct)} size="large" leftButton="back" onClose={back}>
           <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Accounts section label */}
             <span style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', paddingLeft: 15 }}>
@@ -646,8 +601,14 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                 <PostDayRow
                   key={day}
                   day={day}
-                  selected={postDay === day}
-                  onSelect={() => setPostDay(day)}
+                  selected={day === 'Any day' ? postDays.length === 0 : postDays.includes(day)}
+                  onSelect={() => {
+                    if (day === 'Any day') {
+                      setPostDays([]);
+                    } else {
+                      togglePostDay(day);
+                    }
+                  }}
                   isLast={i === POST_DAYS.length - 1}
                 />
               ))}
@@ -661,6 +622,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
         visible={view === 'confirm'}
         title="Confirm"
         size="large"
+        leftButton="back"
         onClose={back}
         primaryLabel="Confirm"
         onPrimary={onConfirm}
