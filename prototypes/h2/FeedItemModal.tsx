@@ -13,7 +13,7 @@ import Star from '@/icons/20/Star';
 import Target2 from '@/icons/20/Target2';
 import Templates from '@/icons/20/Templates';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
-import { KindBadge } from '@/staging';
+import { KindBadge, StatusPill } from '@/staging';
 import type { FeedItem as FeedItemData, FeedSource, ProposedSolution } from './feed-data';
 
 const SOURCE_ICONS: Record<FeedSource, ComponentType<{ size?: number; color?: string }>> = {
@@ -127,7 +127,7 @@ export function FeedItemModal({
   const ctx = SOURCE_CONTEXT[item.source];
   const total = items.length;
   const SourceIcon = SOURCE_ICONS[item.source];
-  const kindLabel = item.kind === 'action' ? 'Needs sign-off' : undefined;
+  const isFatigue = item.kind === 'action' && Boolean(item.proposedSolution);
 
   const goPrev = () => {
     if (index > 0) setIndex(index - 1);
@@ -194,7 +194,13 @@ export function FeedItemModal({
             marginBottom: 16,
           }}
         >
-          <KindBadge kind={item.kind} label={kindLabel} iconless />
+          {isFatigue ? (
+            <StatusPill tone="danger" size="sm">Fatigue alert</StatusPill>
+          ) : item.kind === 'action' ? (
+            <StatusPill tone="warning" size="sm">Needs sign-off</StatusPill>
+          ) : (
+            <KindBadge kind={item.kind} iconless />
+          )}
           <span
             style={{
               display: 'inline-flex',
@@ -281,7 +287,7 @@ export function FeedItemModal({
         ) : (
           <>
             <Section title="Why this matters">
-              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-60)', lineHeight: 1.6 }}>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.6 }}>
                 {ctx.why}
               </p>
             </Section>
@@ -289,7 +295,7 @@ export function FeedItemModal({
             <Section title="Recommended next steps">
               <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {ctx.steps.map((s) => (
-                  <li key={s} style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.55 }}>{s}</li>
+                  <li key={s} style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.55 }}>{s}</li>
                 ))}
               </ol>
             </Section>
@@ -325,13 +331,13 @@ function ProposedSolutionView({ solution }: { solution: ProposedSolution }) {
   return (
     <>
       <Section title="Why we flagged this">
-        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.6 }}>
           {solution.reason}
         </p>
       </Section>
 
       <Section title="What competitors are doing">
-        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.6 }}>
           {solution.competitorResearch}
         </p>
       </Section>
@@ -347,7 +353,7 @@ function ProposedSolutionView({ solution }: { solution: ProposedSolution }) {
           }}
         >
           {solution.bullets.map((b) => (
-            <li key={b} style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.55 }}>
+            <li key={b} style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.55 }}>
               {b}
             </li>
           ))}

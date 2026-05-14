@@ -21,6 +21,10 @@ export interface PrototypeShellProps {
   sidebarActiveLabel?: string;
   /** Workspace name shown in the sidebar header. Defaults to "Acme Co". */
   workspaceName?: string;
+  /** Remove the default 24px content padding so the child can own the full
+   *  area (used by detail views with their own internal chrome / sticky
+   *  composers). */
+  fullBleed?: boolean;
   children: ReactNode;
 }
 
@@ -32,6 +36,7 @@ export function PrototypeShell({
   sidebarItems,
   sidebarActiveLabel,
   workspaceName,
+  fullBleed,
   children,
 }: PrototypeShellProps) {
   return (
@@ -48,7 +53,9 @@ export function PrototypeShell({
           centerContent={topbarCenter}
           rightContent={topbarRight ?? <StatePickerControls />}
         />
-        <section className={styles.content}>{children}</section>
+        <section className={fullBleed ? `${styles.content} ${styles.contentFullBleed}` : styles.content}>
+          {children}
+        </section>
       </div>
     </div>
   );

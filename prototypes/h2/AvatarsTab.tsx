@@ -9,6 +9,7 @@ import {
   useModals,
 } from '@/components';
 import type { StackModalProps } from '@/components';
+import { StatusPill } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import PenEdit from '@/icons/16/PenEdit';
 import MetaBrand from '@/icons/20/MetaBrand';
@@ -804,7 +805,7 @@ function AvatarCard({ avatar, onEdit }: { avatar: AvatarProfile; onEdit: () => v
               background: 'rgba(0, 0, 0, 0.6)',
               color: 'var(--light-100)',
               fontFamily: "'Sohne', sans-serif",
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 500,
               letterSpacing: '0.04em',
               textTransform: 'uppercase',
@@ -826,7 +827,7 @@ function AvatarCard({ avatar, onEdit }: { avatar: AvatarProfile; onEdit: () => v
         <Heading level={5} style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
           {avatar.name}
         </Heading>
-        <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 13 }}>
+        <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 14 }}>
           {avatar.summary}
         </Text>
       </div>
@@ -1155,24 +1156,13 @@ function OptionCard({
           }}
         />
         {recommended && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 8,
-              left: 8,
-              padding: '4px 8px',
-              background: 'var(--purple)',
-              color: 'var(--light-100)',
-              fontFamily: "'Sohne', sans-serif",
-              fontSize: 10,
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              borderRadius: 6,
-            }}
+          <StatusPill
+            tone="accent"
+            size="sm"
+            style={{ position: 'absolute', top: 8, left: 8 }}
           >
             Recommended
-          </div>
+          </StatusPill>
         )}
       </div>
       <div
@@ -1185,7 +1175,7 @@ function OptionCard({
       >
         <Text
           style={{
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             color: 'var(--dark-90)',
             overflow: 'hidden',
@@ -1337,7 +1327,7 @@ function AvatarEditor({
             <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
               Include in content rotation
             </Text>
-            <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+            <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>
               When off, this avatar will be skipped during generation.
             </Text>
           </div>
@@ -1385,7 +1375,7 @@ function ExampleVideosStrip({ videos }: { videos: ExampleVideo[] }) {
       <Text
         variant="metadata"
         style={{
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 500,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
@@ -1435,7 +1425,7 @@ function ExampleVideosStrip({ videos }: { videos: ExampleVideo[] }) {
                 background: 'rgba(0,0,0,0.65)',
                 color: 'var(--light-100)',
                 fontFamily: "'Sohne', sans-serif",
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: 500,
                 letterSpacing: '0.02em',
                 borderRadius: 4,
@@ -1506,24 +1496,13 @@ function VideoCard({ video }: { video: AvatarVideo }) {
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
         {video.topPerformer && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 8,
-              left: 8,
-              padding: '4px 8px',
-              background: 'var(--purple)',
-              color: 'var(--light-100)',
-              fontFamily: "'Sohne', sans-serif",
-              fontSize: 10,
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              borderRadius: 6,
-            }}
+          <StatusPill
+            tone="accent"
+            size="sm"
+            style={{ position: 'absolute', top: 8, left: 8 }}
           >
             Top performer
-          </div>
+          </StatusPill>
         )}
       </div>
       <div
@@ -1536,7 +1515,7 @@ function VideoCard({ video }: { video: AvatarVideo }) {
       >
         <Text
           style={{
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             color: 'var(--dark-90)',
             overflow: 'hidden',
@@ -1657,7 +1636,7 @@ function CampaignRow({
       >
         <Text
           style={{
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             color: 'var(--dark-90)',
             overflow: 'hidden',
@@ -1695,7 +1674,7 @@ function TypeChip({ color, children }: { color: string; children: ReactNode }) {
         alignItems: 'center',
         padding: '2px 8px',
         fontFamily: "'Sohne', sans-serif",
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 500,
         letterSpacing: '0.02em',
         color,
@@ -1748,7 +1727,7 @@ function SectionHeader({ title, caption }: { title: string; caption: string }) {
         borderTop: '1px solid var(--dark-8)',
       }}
     >
-      <Heading level={5} style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>
+      <Heading level={5} style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
         {title}
       </Heading>
       <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>
@@ -1777,7 +1756,7 @@ function Field({
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <Text style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{label}</Text>
+      <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{label}</Text>
       {hint && (
         <Text style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: -4 }}>
           {hint}

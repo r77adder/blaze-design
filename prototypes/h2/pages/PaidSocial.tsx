@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Button, Heading, IconButton, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { TabChip } from '@/staging';
+import { StatusPill, TabChip } from '@/staging';
 import MetaBrand from '@/icons/20/MetaBrand';
 import MoreDots from '@/icons/20/MoreDots';
 import Plus from '@/icons/20/Plus';
@@ -281,8 +281,19 @@ function PaidSocialRouteInner() {
     </div>
   );
 
+  const topbarRight = (
+    <>
+      {activeSubTab === 'campaigns' && (
+        <Button variant="secondary" size="md" frontIcon={Plus}>
+          New campaign
+        </Button>
+      )}
+      <GenerateReportButton />
+    </>
+  );
+
   return (
-    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
+    <H2Layout topbarCenter={topbarCenter} topbarRight={topbarRight}>
       {activeSubTab === 'campaigns' && <PaidSocialBody />}
       {activeSubTab === 'market-intelligence' && <MarketIntelligenceView />}
     </H2Layout>
@@ -331,7 +342,7 @@ function PaidSocialBody() {
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 28px 60px' }}>
       {fatigues.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 32 }}>
           <FatigueSummaryBanner items={fatigues} />
         </div>
       )}
@@ -361,11 +372,6 @@ function PaidSocialBody() {
         })}
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        <Button variant="ghost" size="md" frontIcon={Plus}>
-          Create New Campaign
-        </Button>
-      </div>
     </div>
   );
 }
@@ -379,10 +385,10 @@ function FatigueSummaryBanner({ items }: { items: FatigueBannerItem[] }) {
   return (
     <div
       style={{
-        padding: 12,
         borderRadius: 12,
-        background: 'rgba(188, 1, 11, 0.04)',
-        border: '1px solid rgba(188, 1, 11, 0.12)',
+        background: 'var(--dark-2)',
+        border: '1px solid var(--dark-4)',
+        overflow: 'hidden',
       }}
     >
       {/* header row */}
@@ -391,66 +397,84 @@ function FatigueSummaryBanner({ items }: { items: FatigueBannerItem[] }) {
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          padding: '0 4px 8px',
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--dark-4)',
         }}
       >
-        <AlertTriangle size={16} color="var(--red-90)" />
-        <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
+        <AlertTriangle size={16} color="var(--status-connect)" />
+        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
           Creative fatigue · {items.length} ad set{items.length === 1 ? '' : 's'} need attention
-        </Text>
+        </span>
       </div>
 
       {/* inline list — each row clickable */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {items.map((item) => (
-          <button
+        {items.map((item, i) => (
+          <FatigueSummaryRow
             key={item.key}
-            type="button"
-            onClick={() => openModal(FatigueRefreshModal, { fatigue: item.fatigue, adName: item.adName })}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '8px 4px',
-              background: 'transparent',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              width: '100%',
-            }}
-          >
-            <span
-              aria-hidden
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: 'var(--red-70)',
-                flexShrink: 0,
-              }}
-            />
-            <Text
-              style={{
-                color: 'var(--dark-90)',
-                fontSize: 13,
-                flexShrink: 0,
-                fontWeight: 500,
-              }}
-            >
-              {item.adName}
-            </Text>
-            <Text variant="secondary" style={{ color: 'var(--dark-60)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {item.fatigue.signal}
-            </Text>
-            <span style={{ marginLeft: 'auto', display: 'inline-flex', color: 'var(--dark-40)' }}>
-              <ChevronRightSmall size={16} />
-            </span>
-          </button>
+            name={item.adName}
+            signal={item.fatigue.signal}
+            onSelect={() => openModal(FatigueRefreshModal, { fatigue: item.fatigue, adName: item.adName })}
+            isLast={i === items.length - 1}
+          />
         ))}
       </div>
     </div>
+  );
+}
+
+function FatigueSummaryRow({
+  name,
+  signal,
+  onSelect,
+  isLast,
+}: {
+  name: string;
+  signal: string;
+  onSelect: () => void;
+  isLast: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '12px 16px',
+        background: hovered ? 'var(--dark-4)' : 'transparent',
+        border: 'none',
+        borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        textAlign: 'left',
+        width: '100%',
+        transition: 'background-color 120ms ease',
+      }}
+    >
+      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', flexShrink: 0 }}>
+        {name}
+      </span>
+      <span
+        style={{
+          fontSize: 12,
+          color: 'var(--dark-60)',
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {signal}
+      </span>
+      <span style={{ marginLeft: 'auto', display: 'inline-flex', color: 'var(--dark-40)' }} aria-hidden>
+        <ChevronRightSmall size={16} />
+      </span>
+    </button>
   );
 }
 
@@ -464,8 +488,7 @@ function TableHeader() {
         gridTemplateColumns: COLS,
         gap: 12,
         alignItems: 'center',
-        padding: '12px 16px',
-        background: 'var(--dark-2)',
+        padding: '6px 16px',
         borderBottom: '1px solid var(--dark-8)',
       }}
     >
@@ -489,9 +512,8 @@ function HeaderCell({ children }: { children: ReactNode }) {
       variant="metadata"
       style={{
         color: 'var(--dark-60)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.04em',
-        fontSize: 11,
+        fontSize: 12,
+        fontWeight: 400,
       }}
     >
       {children}
@@ -716,28 +738,19 @@ function FatigueFlagPill({ fatigue, adName }: { fatigue: FatigueFlag; adName: st
   return (
     <button
       type="button"
-      onClick={() =>
-        openModal(FatigueRefreshModal, { fatigue, adName })
-      }
+      onClick={() => openModal(FatigueRefreshModal, { fatigue, adName })}
       style={{
         display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding: '4px 8px',
-        borderRadius: 999,
-        background: 'rgba(188, 1, 11, 0.10)',
-        color: 'var(--red-70)',
-        fontFamily: 'inherit',
-        fontSize: 11.5,
-        fontWeight: 500,
-        lineHeight: 1,
-        border: '1px solid rgba(188, 1, 11, 0.20)',
+        background: 'transparent',
+        border: 'none',
+        padding: 0,
         cursor: 'pointer',
-        whiteSpace: 'nowrap',
+        fontFamily: 'inherit',
       }}
     >
-      <AlertTriangle size={12} color="var(--red-70)" />
-      Fatigue Day {fatigue.ageDays}
+      <StatusPill tone="warning" size="sm">
+        Fatigue day {fatigue.ageDays}
+      </StatusPill>
     </button>
   );
 }
@@ -851,7 +864,7 @@ function FatigueCreativePanel({
             color: 'var(--dark-60)',
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
-            fontSize: 11,
+            fontSize: 12,
             display: 'block',
           }}
         >
@@ -909,7 +922,7 @@ function FatigueSignalRow({
       <Text variant="secondary" style={{ color: 'var(--dark-60)', minWidth: 140 }}>
         {signal.label}
       </Text>
-      <Text style={{ color: 'var(--dark-90)', fontSize: 13 }}>{signal.value}</Text>
+      <Text style={{ color: 'var(--dark-90)', fontSize: 14 }}>{signal.value}</Text>
     </div>
   );
 }
@@ -918,73 +931,33 @@ function FatigueSignalRow({
 
 interface StatusStyle {
   label: string;
-  fg: string;
-  // rgba derived from the status hex — see CLAUDE.md note: derived rgba is
-  // allowed where a tint background is needed.
-  bg: string;
+  tone: 'success' | 'warning' | 'danger' | 'neutral';
   withArrow?: boolean;
 }
 
 const STATUS_STYLES: Record<Status, StatusStyle> = {
-  'on-track': {
-    label: 'On track',
-    fg: 'var(--status-approved)',
-    bg: 'rgba(4, 175, 0, 0.10)',
-  },
-  'spending-too-fast': {
-    label: 'Spending too fast',
-    fg: 'var(--status-connect)',
-    bg: 'rgba(237, 124, 44, 0.12)',
-    withArrow: true,
-  },
-  winner: {
-    label: 'Winner',
-    fg: 'var(--status-approved)',
-    bg: 'rgba(4, 175, 0, 0.10)',
-  },
-  testing: {
-    label: 'Testing',
-    fg: 'var(--status-review)',
-    bg: 'rgba(237, 182, 44, 0.14)',
-  },
-  paused: {
-    label: 'Paused',
-    fg: 'var(--status-draft)',
-    bg: 'rgba(117, 124, 138, 0.12)',
-  },
-  'over-budget': {
-    label: 'Over budget',
-    fg: 'var(--status-failed)',
-    bg: 'rgba(188, 1, 11, 0.10)',
-  },
-  'spending-slowly': {
-    label: 'Spending slowly',
-    fg: 'var(--status-posted)',
-    bg: 'rgba(127, 36, 183, 0.10)',
-  },
+  'on-track': { label: 'On track', tone: 'success' },
+  'spending-too-fast': { label: 'Spending too fast', tone: 'warning', withArrow: true },
+  winner: { label: 'Winner', tone: 'success' },
+  testing: { label: 'Testing', tone: 'warning' },
+  paused: { label: 'Paused', tone: 'neutral' },
+  'over-budget': { label: 'Over budget', tone: 'danger' },
+  'spending-slowly': { label: 'Spending slowly', tone: 'neutral' },
 };
 
 function StatusChip({ status }: { status: Status }) {
   const s = STATUS_STYLES[status];
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding: '4px 8px',
-        borderRadius: 999,
-        background: s.bg,
-        color: s.fg,
-        fontSize: 12,
-        fontWeight: 500,
-        lineHeight: 1,
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {s.label}
-      {s.withArrow && <ArrowUpSm size={12} color={s.fg} />}
-    </span>
+    <StatusPill tone={s.tone} size="sm">
+      {s.withArrow ? (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          {s.label}
+          <ArrowUpSm size={12} />
+        </span>
+      ) : (
+        s.label
+      )}
+    </StatusPill>
   );
 }
 
@@ -1148,7 +1121,7 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
 function MarketIntelligenceView() {
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '20px 28px 60px' }}>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 32 }}>
         <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
           Successful ad creative from peer businesses, adapted for your brand. Click a card to compare side-by-side.
         </Text>
@@ -1219,7 +1192,7 @@ function MarketIntelCardView({ card }: { card: MarketIntelCard }) {
             borderRadius: 999,
             background: 'rgba(4, 175, 0, 0.10)',
             color: 'var(--status-approved)',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 500,
             lineHeight: 1,
             whiteSpace: 'nowrap',
@@ -1247,7 +1220,7 @@ function MarketIntelCardView({ card }: { card: MarketIntelCard }) {
             borderRadius: 4,
             background: 'rgba(0,0,0,0.5)',
             color: 'var(--light-100)',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 500,
           }}
         >
@@ -1264,7 +1237,7 @@ function MarketIntelCardView({ card }: { card: MarketIntelCard }) {
               color: 'var(--dark-60)',
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
-              fontSize: 11,
+              fontSize: 12,
               display: 'block',
               marginBottom: 4,
             }}
@@ -1282,7 +1255,7 @@ function MarketIntelCardView({ card }: { card: MarketIntelCard }) {
               color: 'var(--dark-60)',
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
-              fontSize: 11,
+              fontSize: 12,
               display: 'block',
               marginBottom: 4,
             }}
@@ -1402,7 +1375,7 @@ function ComparisonPanel({
               borderRadius: 999,
               background: 'rgba(4, 175, 0, 0.10)',
               color: 'var(--status-approved)',
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 500,
               lineHeight: 1,
               whiteSpace: 'nowrap',
@@ -1426,7 +1399,7 @@ function ComparisonPanel({
             color: 'var(--dark-60)',
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
-            fontSize: 11,
+            fontSize: 12,
             display: 'block',
           }}
         >

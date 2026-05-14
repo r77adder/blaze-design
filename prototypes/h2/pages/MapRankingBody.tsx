@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Heading, Text } from '@/components';
-import { useToast } from '@/staging';
+import { StatusPill, useToast } from '@/staging';
 import ArrowRightSm from '@/icons/16/ArrowRightSm';
 import Check from '@/icons/16/Check';
 import Camera1 from '@/icons/20/Camera1';
@@ -447,7 +447,7 @@ function LoadingStep({ onAdvance }: { onAdvance: () => void }) {
 
       <div
         style={{
-          fontSize: 11,
+          fontSize: 12,
           textTransform: 'uppercase',
           letterSpacing: '0.12em',
           color: 'var(--dark-60)',
@@ -469,7 +469,7 @@ function LoadingStep({ onAdvance }: { onAdvance: () => void }) {
       >
         The agent is fixing your profile.
       </h1>
-      <p style={{ fontSize: 15, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 auto 24px' }}>
+      <p style={{ fontSize: 16, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 auto 24px' }}>
         This usually takes about 10 seconds. Hold tight — nothing is published yet.
       </p>
 
@@ -518,7 +518,7 @@ function LoadingStep({ onAdvance }: { onAdvance: () => void }) {
               <span style={{ color: 'var(--dark-60)', display: 'inline-flex' }}>
                 <Ic size={14} />
               </span>
-              <span style={{ fontSize: 13, color: 'var(--dark-90)', flex: 1 }}>{step.t}</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-90)', flex: 1 }}>{step.t}</span>
             </div>
           );
         })}
@@ -537,7 +537,7 @@ function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void
     <div style={{ maxWidth: 880, margin: '0 auto', padding: '36px 28px 140px' }}>
       <div
         style={{
-          fontSize: 11,
+          fontSize: 12,
           textTransform: 'uppercase',
           letterSpacing: '0.12em',
           color: 'var(--dark-60)',
@@ -559,7 +559,7 @@ function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void
       >
         Here&apos;s what we set up for you.
       </h1>
-      <p style={{ fontSize: 15, color: 'var(--dark-60)', lineHeight: 1.55, maxWidth: 560, marginBottom: 28 }}>
+      <p style={{ fontSize: 16, color: 'var(--dark-60)', lineHeight: 1.55, maxWidth: 560, marginBottom: 28 }}>
         Nothing is live yet. Glance through the changes — when you confirm, we&apos;ll publish your profile and queue
         your posts.
       </p>
@@ -632,7 +632,7 @@ function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div
                         style={{
-                          fontSize: 13.5,
+                          fontSize: 14,
                           fontWeight: 500,
                           color: 'var(--dark-90)',
                           marginBottom: 2,
@@ -643,30 +643,9 @@ function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.45 }}>{it.s}</div>
                     </div>
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        fontSize: 11.5,
-                        color: 'var(--status-approved)',
-                        fontWeight: 500,
-                        background: 'var(--green-10)',
-                        borderRadius: 6,
-                        padding: '4px 8px',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          background: 'var(--status-approved)',
-                        }}
-                      />
+                    <StatusPill tone="success" size="sm" style={{ flexShrink: 0 }}>
                       Ready
-                    </div>
+                    </StatusPill>
                   </div>
                 );
               })}
@@ -685,7 +664,7 @@ function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void
           borderRadius: 12,
           padding: '14px 16px',
           marginTop: 16,
-          fontSize: 13,
+          fontSize: 14,
           color: 'var(--dark-80)',
           lineHeight: 1.55,
         }}
@@ -821,7 +800,7 @@ function LiveStep() {
       >
         You&apos;re live.
       </h1>
-      <p style={{ fontSize: 15, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 auto 8px' }}>
+      <p style={{ fontSize: 16, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 auto 8px' }}>
         Your profile is published. Loading your overview…
       </p>
     </div>
@@ -847,7 +826,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
       </div>
 
       {/* Metric strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 32 }}>
         <MetricCard
           icon={Marker03}
           label="Map Pack rank"
@@ -891,7 +870,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
           border: '1px solid var(--dark-8)',
           borderRadius: 14,
           padding: '24px 24px',
-          marginBottom: 24,
+          marginBottom: 32,
         }}
       >
         <div>
@@ -923,7 +902,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
           >
             Up 2 spots this week — let&apos;s keep the momentum going.
           </h2>
-          <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.55, marginBottom: 16, maxWidth: 480 }}>
+          <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.55, marginBottom: 16, maxWidth: 480 }}>
             You moved from #4 → #2 for &quot;roof repair austin.&quot; The Texas Star team is still adding reviews
             fast. One more push and you could take #1 by month-end.
           </p>
@@ -962,7 +941,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
         >
           <div
             style={{
-              fontSize: 11,
+              fontSize: 12,
               color: 'var(--dark-40)',
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
@@ -999,12 +978,12 @@ function HomeView({ onReset }: { onReset: () => void }) {
                 #{c.rank}
               </div>
               <div>
-                <div style={{ fontSize: 13, color: 'var(--dark-90)', fontWeight: c.you ? 500 : 400 }}>
+                <div style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: c.you ? 500 : 400 }}>
                   {c.name}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>{c.recent}</div>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{c.recent}</div>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>★ {c.reviews}</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>★ {c.reviews}</div>
             </div>
           ))}
         </div>
@@ -1088,35 +1067,11 @@ function HomeView({ onReset }: { onReset: () => void }) {
                       }}
                     >
                       {isAction && (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            fontSize: 10.5,
-                            fontWeight: 500,
-                            color: '#B06000',
-                            background: 'rgba(252,183,40,0.16)',
-                            borderRadius: 4,
-                            padding: '2px 6px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              background: '#B06000',
-                            }}
-                          />
-                          Needs action
-                        </span>
+                        <StatusPill tone="warning" size="sm">Needs action</StatusPill>
                       )}
                       <span
                         style={{
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: 500,
                           color: 'var(--dark-90)',
                           letterSpacing: '0.05px',
@@ -1136,7 +1091,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
                       {a.action.label}
                     </Button>
                   ) : (
-                    <div style={{ fontSize: 11, color: 'var(--dark-40)', flexShrink: 0 }}>
+                    <div style={{ fontSize: 12, color: 'var(--dark-40)', flexShrink: 0 }}>
                       {a.time}
                     </div>
                   )}
@@ -1199,7 +1154,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
                     <Ic size={16} />
                   </span>
                   <div>
-                    <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--dark-90)' }}>{it.t}</div>
+                    <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{it.t}</div>
                     <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{it.s}</div>
                   </div>
                   <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}>

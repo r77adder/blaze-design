@@ -3,7 +3,8 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { TabChip, useToast } from '@/staging';
+import { StatusPill, TabChip, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
@@ -195,7 +196,7 @@ const TODAY = new Date(2026, 1, 11);
 const RANGE_START = new Date(2026, 1, 1);
 const RANGE_END = new Date(2026, 3, 30);
 const DAY_W = 14;
-const ROW_H = 72;
+const ROW_H = 84;
 
 function parseISO(s: string): Date {
   const [y, m, d] = s.split('-').map(Number);
@@ -235,22 +236,25 @@ const TOTAL_DAYS = daysBetween(RANGE_START, RANGE_END) + 1;
 interface BarStyle {
   bg: string;
   border: string;
-  edge: string;
-  statusColor: string;
+  pillTone: StatusPillTone;
 }
 
+/** Each campaign-row bar uses a soft tint matching the row's status, with a
+ *  consistent 1px solid border in a slightly darker shade of the bg. No more
+ *  dashed borders, no more left-edge accent strips. Status text is rendered
+ *  as a StatusPill below the campaign name. */
 function barStyleFor(status: CampaignStatus): BarStyle {
   switch (status) {
     case 'posting':
-      return { bg: 'rgba(0,131,226,0.10)', border: '1px solid rgba(0,131,226,0.18)', edge: '#0083E2', statusColor: '#0083E2' };
+      return { bg: 'rgba(1, 121, 207, 0.08)', border: '1px solid rgba(1, 121, 207, 0.20)', pillTone: 'info' };
     case 'approved':
-      return { bg: 'rgba(32,161,79,0.10)', border: 'none', edge: 'var(--status-approved)', statusColor: 'var(--status-approved)' };
+      return { bg: 'rgba(4, 175, 0, 0.08)', border: '1px solid rgba(4, 175, 0, 0.20)', pillTone: 'success' };
     case 'review':
-      return { bg: 'rgba(255,180,0,0.14)', border: 'none', edge: '#FFB400', statusColor: '#B57700' };
+      return { bg: 'rgba(237, 124, 44, 0.10)', border: '1px solid rgba(237, 124, 44, 0.22)', pillTone: 'warning' };
     case 'generating':
-      return { bg: 'rgba(0,0,0,0.04)', border: '1px dashed rgba(0,0,0,0.18)', edge: '#7383A2', statusColor: 'var(--dark-60)' };
+      return { bg: 'var(--dark-2)', border: '1px solid var(--dark-4)', pillTone: 'neutral' };
     case 'proposed':
-      return { bg: 'rgba(106,0,255,0.04)', border: '1.5px dashed rgba(106,0,255,0.45)', edge: 'var(--purple)', statusColor: 'var(--purple)' };
+      return { bg: 'rgba(124, 92, 252, 0.08)', border: '1px solid rgba(124, 92, 252, 0.22)', pillTone: 'accent' };
   }
 }
 
@@ -293,11 +297,8 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
     }
   }
 
-  // weekend stripes + week + month gridlines
-  const weekendStripes: { x: number }[] = [];
-  for (let i = 0; i < TOTAL_DAYS; i++) {
-    if (isWeekend(addDays(RANGE_START, i))) weekendStripes.push({ x: i * DAY_W });
-  }
+  // week + month gridlines (weekend shading removed per the design pass —
+  // the underlying day-grid carries enough rhythm on its own).
   const weekGridLines: number[] = [];
   {
     let mw = new Date(RANGE_START);
@@ -358,7 +359,7 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                   width: m.w,
                   borderRight: '1px solid var(--dark-8)',
                   padding: '6px 12px',
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 500,
                   color: 'var(--dark-90)',
                   display: 'flex',
@@ -380,7 +381,7 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                   width: w.w,
                   borderRight: '1px solid var(--dark-8)',
                   padding: '0 8px',
-                  fontSize: 11,
+                  fontSize: 12,
                   color: 'var(--dark-60)',
                   display: 'flex',
                   alignItems: 'center',
@@ -396,21 +397,8 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
 
         {/* Body */}
         <div style={{ position: 'relative', width: totalW, height: totalH }}>
-          {/* Weekend stripes */}
+          {/* Week + month gridlines (no weekend shading) */}
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-            {weekendStripes.map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  left: s.x,
-                  width: DAY_W,
-                  background: 'rgba(0,0,0,0.018)',
-                }}
-              />
-            ))}
             {weekGridLines.map((x, i) => (
               <div
                 key={'w' + i}
@@ -468,15 +456,15 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                   data-testid={`gantt-bar-${c.id}`}
                   style={{
                     position: 'absolute',
-                    top: 10,
+                    top: 14,
                     left,
                     width,
-                    height: 52,
+                    height: 56,
                     borderRadius: 10,
-                    padding: veryTight ? '0 6px' : '0 12px 0 8px',
+                    padding: veryTight ? '0 8px' : '0 14px 0 10px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 10,
+                    gap: 12,
                     cursor: 'pointer',
                     overflow: 'hidden',
                     minWidth: 28,
@@ -488,18 +476,6 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                     color: 'inherit',
                   }}
                 >
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      bottom: 0,
-                      left: 0,
-                      width: 4,
-                      borderRadius: '10px 0 0 10px',
-                      background: bs.edge,
-                      opacity: c.proposed ? 0.6 : 1,
-                    }}
-                  />
                   {showThumb && (
                     <span
                       style={{
@@ -533,78 +509,34 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                     </span>
                   )}
                   {c.isNew && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 6,
-                        right: 8,
-                        background: 'var(--brand)',
-                        color: '#1A1A1A',
-                        fontSize: 9.5,
-                        fontWeight: 500,
-                        padding: '2px 7px',
-                        borderRadius: 5,
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        zIndex: 2,
-                      }}
+                    <StatusPill
+                      tone="accent"
+                      size="sm"
+                      style={{ position: 'absolute', top: 6, right: 8, zIndex: 2 }}
                     >
                       New
-                    </span>
+                    </StatusPill>
                   )}
                   {!veryTight && (
-                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: 1 }}>
                       <span
                         style={{
-                          fontSize: 13,
-                          fontWeight: c.proposed ? 500 : 450,
+                          fontSize: 14,
+                          fontWeight: 500,
                           color: c.proposed ? 'var(--purple)' : 'var(--dark-90)',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           letterSpacing: '0.05px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
                         }}
                       >
-                        {c.status === 'posting' && (
-                          <span
-                            style={{
-                              width: 7,
-                              height: 7,
-                              borderRadius: '50%',
-                              background: '#0083E2',
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
                         {c.name}
                       </span>
                       {!tight && (
-                        <span
-                          style={{
-                            fontSize: 11,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            fontWeight: 450,
-                            color: bs.statusColor,
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              flexShrink: 0,
-                              background: 'currentColor',
-                            }}
-                          />
-                          {c.statusLabel}
+                        <span style={{ display: 'inline-flex' }}>
+                          <StatusPill tone={bs.pillTone} size="sm">
+                            {c.statusLabel}
+                          </StatusPill>
                         </span>
                       )}
                     </span>
@@ -633,7 +565,7 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                 top: -22,
                 left: '50%',
                 transform: 'translateX(-50%)',
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 500,
                 letterSpacing: '0.06em',
                 color: '#fff',
@@ -743,7 +675,7 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
               borderRadius: 999,
               background: pillBg,
               color: '#fff',
-              fontSize: 11.5,
+              fontSize: 12,
               fontWeight: 500,
               marginBottom: 10,
             }}
@@ -810,7 +742,7 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
         >
           <span
             style={{
-              fontSize: 12.5,
+              fontSize: 12,
               padding: '5px 10px',
               borderRadius: 6,
               background: 'var(--light-100)',
@@ -821,7 +753,7 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
           >
             {genStatus}
           </span>
-          <span style={{ flex: 1, fontSize: 13.5, color: 'var(--dark-80)' }}>{genText}</span>
+          <span style={{ flex: 1, fontSize: 14, color: 'var(--dark-80)' }}>{genText}</span>
         </div>
 
         {/* Campaign details */}
@@ -873,7 +805,7 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
                   border: 'none',
                   padding: 0,
                   color: 'var(--dark-60)',
-                  fontSize: 13,
+                  fontSize: 14,
                   textDecoration: 'underline',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
@@ -891,14 +823,13 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
             <h3 style={{ fontSize: 18, fontWeight: 500, letterSpacing: '-0.2px', color: 'var(--dark-90)', margin: 0, flex: 1 }}>
               What's in this campaign
             </h3>
-            <span style={{ fontSize: 12.5, color: 'var(--dark-60)' }}>Click any section to review</span>
+            <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>Click any section to review</span>
           </header>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {c.sections.map((sid) => {
               const meta = SECTION_META[sid];
               if (!meta) return null;
-              const pillBgC = meta.pillKind === 'ok' ? 'rgba(32,161,79,0.10)' : 'rgba(255,180,0,0.14)';
-              const pillFg = meta.pillKind === 'ok' ? 'var(--status-approved)' : '#B57700';
+              const pillTone: StatusPillTone = meta.pillKind === 'ok' ? 'success' : 'warning';
               return (
                 <button
                   key={sid}
@@ -934,25 +865,11 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                      <h4 style={{ flex: 1, fontSize: 15.5, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>
+                      <h4 style={{ flex: 1, fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>
                         {meta.title}
                       </h4>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            padding: '3px 9px',
-                            borderRadius: 6,
-                            fontSize: 11.5,
-                            fontWeight: 500,
-                            background: pillBgC,
-                            color: pillFg,
-                          }}
-                        >
-                          {meta.pill}
-                        </span>
+                        <StatusPill tone={pillTone} size="sm">{meta.pill}</StatusPill>
                         <span style={{ color: 'var(--dark-40)' }}>
                           <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                             <path d="M9 6l6 6-6 6" />
@@ -960,17 +877,17 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
                         </span>
                       </span>
                     </div>
-                    <div style={{ fontSize: 12.5, color: 'var(--dark-80)', marginBottom: 8 }}>{meta.desc}</div>
+                    <div style={{ fontSize: 12, color: 'var(--dark-80)', marginBottom: 8 }}>{meta.desc}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {meta.chips.map((ch) => (
                         <span
                           key={ch}
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             padding: '3px 8px',
                             borderRadius: 999,
                             background: 'var(--dark-4)',
-                            fontWeight: 450,
+                            fontWeight: 500,
                           }}
                         >
                           {ch}
@@ -1023,11 +940,11 @@ function DetailRow({
         alignItems: 'start',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--dark-60)' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--dark-60)' }}>
         <span style={{ width: 18, height: 18, color: 'var(--dark-40)', display: 'inline-flex' }}>{icon}</span>
         {label}
       </span>
-      <span style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.5 }}>{children}</span>
+      <span style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5 }}>{children}</span>
     </div>
   );
 }
@@ -1079,8 +996,8 @@ function ChooserCard({
       >
         {icon}
       </span>
-      <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px' }}>{label}</span>
-      <span style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>{description}</span>
+      <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px' }}>{label}</span>
+      <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{description}</span>
     </button>
   );
 }
@@ -1097,7 +1014,7 @@ function CreateChooserModal({
     <Modal.Root size="md" aria-labelledby="cmp-chooser-title" data-testid="cmp-create-chooser">
       <Modal.Header title="What do you want to create?" id="cmp-chooser-title" onClose={close} compact={false} />
       <Modal.Content compact={false}>
-        <p style={{ margin: '0 0 16px 0', fontSize: 13.5, color: 'var(--dark-60)' }}>
+        <p style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--dark-60)' }}>
           Pick one — the agent takes it from there.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -1388,7 +1305,7 @@ function NewCampaignWizardModal({
           compact={false}
         />
         <Modal.Content compact={false}>
-          <p style={{ margin: '0 0 16px 0', fontSize: 13.5, color: 'var(--dark-60)' }}>
+          <p style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--dark-60)' }}>
             Pick a strategy. The agent picks the channel mix, drafts the brief, and stages everything for your review.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
@@ -1432,7 +1349,7 @@ function NewCampaignWizardModal({
                 <div>
                   <div
                     style={{
-                      fontSize: 14.5,
+                      fontSize: 14,
                       fontWeight: 500,
                       color: 'var(--dark-90)',
                       marginBottom: 3,
@@ -1444,25 +1361,10 @@ function NewCampaignWizardModal({
                   >
                     {s.name}
                     {s.context && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          fontSize: 10,
-                          fontWeight: 500,
-                          padding: '2px 7px',
-                          borderRadius: 5,
-                          background: 'var(--dark-4)',
-                          color: 'var(--dark-60)',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
-                        }}
-                      >
-                        Needs context
-                      </span>
+                      <StatusPill tone="neutral" size="sm">Needs context</StatusPill>
                     )}
                   </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>{s.desc}</div>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{s.desc}</div>
                 </div>
               </button>
             ))}
@@ -1479,7 +1381,7 @@ function NewCampaignWizardModal({
       <Modal.Root size="md" aria-labelledby="nc-ctx-title" data-testid="cmp-wizard-context">
         <Modal.Header title="One quick detail" id="nc-ctx-title" onBack={goBackToPick} onClose={close} compact={false} />
         <Modal.Content compact={false}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 8 }}>{ctx.q}</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 8 }}>{ctx.q}</div>
           <input
             type="text"
             placeholder={ctx.placeholder}
@@ -1573,7 +1475,7 @@ function NewCampaignWizardModal({
                 </svg>
               </div>
             </div>
-            <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 24, textAlign: 'center', maxWidth: 480 }}>
+            <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 24, textAlign: 'center', maxWidth: 480 }}>
               Pulling the right channels, tone, and cadence — this takes about 5 seconds.
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: 460 }}>
@@ -1615,7 +1517,7 @@ function NewCampaignWizardModal({
                         </svg>
                       )}
                     </span>
-                    <span style={{ fontSize: 13, color: 'var(--dark-90)' }}>{t}</span>
+                    <span style={{ fontSize: 14, color: 'var(--dark-90)' }}>{t}</span>
                   </div>
                 );
               })}
@@ -1639,7 +1541,7 @@ function NewCampaignWizardModal({
               borderLeft: '3px solid var(--dark-90)',
               borderRadius: 10,
               padding: '14px 18px',
-              fontSize: 13.5,
+              fontSize: 14,
               color: 'var(--dark-80)',
               lineHeight: 1.6,
               marginBottom: 24,
@@ -1656,8 +1558,8 @@ function NewCampaignWizardModal({
                 padding: '11px 14px',
               }}
             >
-              <div style={{ fontSize: 10.5, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Strategy</div>
-              <div style={{ fontSize: 13, fontWeight: 450, color: 'var(--dark-90)' }}>{strategy.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Strategy</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{strategy.name}</div>
             </div>
             <div
               style={{
@@ -1667,8 +1569,8 @@ function NewCampaignWizardModal({
                 padding: '11px 14px',
               }}
             >
-              <div style={{ fontSize: 10.5, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Schedule</div>
-              <div style={{ fontSize: 13, fontWeight: 450, color: 'var(--dark-90)' }}>{dateStr}</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Schedule</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{dateStr}</div>
             </div>
           </div>
           <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--dark-60)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>
@@ -1707,8 +1609,8 @@ function NewCampaignWizardModal({
                     <span style={{ display: 'inline-flex', width: 15, height: 15 }}>{meta.icon}</span>
                   </span>
                   <div>
-                    <div style={{ fontSize: 13.5, fontWeight: 450, color: 'var(--dark-90)' }}>{meta.title}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 1 }}>{meta.desc}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{meta.title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 1 }}>{meta.desc}</div>
                   </div>
                 </div>
               );
@@ -1757,7 +1659,7 @@ function NewCampaignWizardModal({
             <h2 style={{ fontSize: 20, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.1px', marginBottom: 8 }}>
               {state.name} added to campaigns
             </h2>
-            <p style={{ fontSize: 13.5, color: 'var(--dark-60)', maxWidth: 440, margin: '0 auto', lineHeight: 1.55 }}>
+            <p style={{ fontSize: 14, color: 'var(--dark-60)', maxWidth: 440, margin: '0 auto', lineHeight: 1.55 }}>
               The agent is staging the briefs and creative. We'll surface anything that needs your sign-off in your campaign view.
             </p>
           </div>
@@ -1827,8 +1729,8 @@ function CampaignsRouteInner() {
     view.kind === 'detail' ? campaigns.find((c) => c.id === view.campaignId) ?? null : null;
 
   return (
-    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
-      <div style={{ margin: '-24px -24px 0', display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />} fullBleed>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {view.kind === 'gantt' && (
           <>
             <div

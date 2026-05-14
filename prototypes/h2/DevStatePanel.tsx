@@ -181,7 +181,7 @@ function DevStateButton({
         border: 'none',
         cursor: 'pointer',
         fontFamily: 'inherit',
-        fontSize: 11,
+        fontSize: 12,
         padding: '4px 8px',
         borderRadius: 4,
         background: selected ? 'var(--brand)' : 'transparent',

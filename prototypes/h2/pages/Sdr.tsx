@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button, Heading, IconButton, ModalStack, Text } from '@/components';
-import { Avatar, TabChip } from '@/staging';
+import { Avatar, StatusPill, TabChip } from '@/staging';
 import Filter from '@/icons/20/Filter';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import { H2Layout } from '../H2Layout';
@@ -172,6 +172,7 @@ function SdrInner() {
       <H2Layout
         title={<DetailTitleCluster lead={activeLead} onBack={() => setActiveLeadId(null)} />}
         topbarRight={<GenerateReportButton />}
+        fullBleed
       >
         <SdrDetail lead={activeLead} onUpdateLead={updateLead} />
       </H2Layout>
@@ -248,16 +249,13 @@ function SdrInner() {
             style={{
               display: 'grid',
               gridTemplateColumns:
-                'minmax(220px, 1.6fr) 140px minmax(240px, 1.8fr) 100px 140px',
-              background: 'var(--dark-2)',
+                '220px 140px minmax(280px, 2fr) 64px 116px',
               borderBottom: '1px solid var(--dark-8)',
-              padding: '10px 16px',
-              gap: 12,
-              fontSize: 11,
-              color: 'var(--dark-40)',
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
+              padding: '6px 20px',
+              gap: 20,
+              fontSize: 12,
+              color: 'var(--dark-60)',
+              fontWeight: 400,
             }}
           >
             <span>Prospect</span>
@@ -313,25 +311,14 @@ function DetailTitleCluster({ lead, onBack }: { lead: Lead; onBack: () => void }
         aria-hidden
         style={{ width: 1, height: 16, background: 'var(--dark-15)' }}
       />
-      <Text variant="largeList" style={{ color: 'var(--dark-90)' }}>
+      <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
         {lead.prospect.name}
+        <span style={{ color: 'var(--dark-60)', fontWeight: 400 }}>
+          {' · '}
+          {lead.prospect.company}
+        </span>
       </Text>
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '3px 10px',
-          borderRadius: 999,
-          background: ss.bg,
-          color: ss.fg,
-          fontSize: 11.5,
-          fontWeight: 500,
-        }}
-      >
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: ss.fg }} />
-        {ss.label}
-      </span>
+      <StatusPill tone={ss.tone} size="md">{ss.label}</StatusPill>
     </div>
   );
 }
@@ -470,9 +457,9 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
       style={{
         display: 'grid',
         gridTemplateColumns:
-          'minmax(220px, 1.6fr) 140px minmax(240px, 1.8fr) 100px 140px',
-        gap: 12,
-        padding: '12px 16px',
+          '220px 140px minmax(280px, 2fr) 64px 116px',
+        gap: 20,
+        padding: '12px 20px',
         borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
         alignItems: 'center',
         cursor: 'pointer',
@@ -481,8 +468,32 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-2)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--light-100)')}
     >
-      {/* Prospect */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+      {/* Prospect — blue dot at the row's left edge signals fresh activity.
+          Absolute-positioned so it never shifts column widths. */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          minWidth: 0,
+          position: 'relative',
+        }}
+      >
+        {relativeMinutesAgo(lead.last_activity_at) <= 20 && (
+          <span
+            aria-label="New activity"
+            style={{
+              position: 'absolute',
+              left: -16,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: 'var(--status-posting)',
+            }}
+          />
+        )}
         <Avatar
           src={lead.prospect.avatarUrl}
           fallback={initials(lead.prospect.name)}
@@ -493,7 +504,7 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
             style={{
               fontWeight: 500,
               color: 'var(--dark-90)',
-              fontSize: 13.5,
+              fontSize: 14,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -504,13 +515,13 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
           <Text
             variant="secondary"
             style={{
-              fontSize: 11.5,
+              fontSize: 12,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}
           >
-            {lead.prospect.phone} · {lead.prospect.email}
+            {lead.prospect.company}
           </Text>
         </div>
       </div>
@@ -519,26 +530,23 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
         <ChannelGlyph channel={lead.channel} size={16} />
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <Text style={{ fontSize: 12.5, color: 'var(--dark-90)' }}>
+          <Text style={{ fontSize: 12, color: 'var(--dark-90)' }}>
             {CHANNEL_LABELS[lead.channel]}
           </Text>
           {lead.channel === 'missed-call' && (
-            <Text style={{ fontSize: 10.5, color: 'var(--red-70)', fontWeight: 500 }}>
+            <Text style={{ fontSize: 12, color: 'var(--red-70)', fontWeight: 500 }}>
               missed
             </Text>
           )}
         </div>
       </div>
 
-      {/* Last activity */}
+      {/* Last activity — snippet on top, relative timestamp underneath. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-        <Text style={{ fontSize: 11.5, color: 'var(--dark-60)' }}>
-          {formatRelative(lead.last_activity_at)}
-        </Text>
         <Text
           style={{
-            fontSize: 12.5,
-            color: 'var(--dark-80)',
+            fontSize: 12,
+            color: 'var(--dark-90)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -547,11 +555,13 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
         >
           {truncate(snippet, 60)}
         </Text>
+        <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+          {formatRelative(lead.last_activity_at)}
+        </Text>
       </div>
 
-      {/* Score — color-coded number with matching dot */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: sc.fg }} />
+      {/* Score — color-coded number. */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <Text
           style={{
             fontSize: 14,
@@ -566,22 +576,7 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
 
       {/* Status */}
       <div>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '3px 10px',
-            borderRadius: 999,
-            background: ss.bg,
-            color: ss.fg,
-            fontSize: 11.5,
-            fontWeight: 500,
-          }}
-        >
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: ss.fg }} />
-          {ss.label}
-        </span>
+        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
       </div>
     </div>
   );

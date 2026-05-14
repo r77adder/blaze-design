@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { SourcePill, useToast } from '@/staging';
-import type { SourceName } from '@/staging';
+import { SourcePill, StatusPill, useToast } from '@/staging';
+import type { SourceName, StatusPillTone } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import Stars from '@/icons/20/Stars';
 import PenEdit from '@/icons/16/PenEdit';
@@ -34,14 +34,13 @@ type CampaignStatusKey = 'production' | 'review' | 'ads';
 
 interface CampaignStatusStyle {
   label: string;
-  bg: string;
-  fg: string;
+  tone: StatusPillTone;
 }
 
 const CAMPAIGN_STATUS: Record<CampaignStatusKey, CampaignStatusStyle> = {
-  production: { label: 'In Production', bg: '#DCF5E2', fg: '#157A3A' },
-  review: { label: 'In Review', bg: '#DBE9FF', fg: '#1A56C2' },
-  ads: { label: 'Running Ads', bg: '#FBE5DC', fg: '#B8440A' },
+  production: { label: 'In Production', tone: 'success' },
+  review: { label: 'In Review', tone: 'info' },
+  ads: { label: 'Running Ads', tone: 'warning' },
 };
 
 interface Campaign {
@@ -210,7 +209,7 @@ function TabBar({ active, onChange }: { active: TabKey; onChange: (t: TabKey) =>
               borderBottom: `2px solid ${isActive ? 'var(--dark-90)' : 'transparent'}`,
               cursor: 'pointer',
               fontFamily: 'inherit',
-              fontSize: 13.5,
+              fontSize: 14,
               color: isActive ? 'var(--dark-90)' : 'var(--dark-60)',
               fontWeight: isActive ? 500 : 400,
               letterSpacing: '0.1px',
@@ -231,7 +230,7 @@ function OverviewTab({ onJump }: { onJump: (t: TabKey) => void }) {
   const { showToast } = useToast();
   return (
     <div style={{ padding: '24px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 32 }}>
         {STATS.map((s) => {
           const clickable = !!s.tab;
           return (
@@ -248,7 +247,7 @@ function OverviewTab({ onJump }: { onJump: (t: TabKey) => void }) {
               <div style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 2, letterSpacing: '-0.2px' }}>
                 {s.value}
               </div>
-              <div style={{ fontSize: 11.5, color: 'var(--dark-60)' }}>{s.label}</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{s.label}</div>
             </div>
           );
         })}
@@ -282,7 +281,7 @@ function CampaignCard({ campaign, onClick }: { campaign: Campaign; onClick: () =
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontWeight: 500, fontSize: 13.5, color: 'var(--dark-90)', marginBottom: 6, letterSpacing: '0.05px' }}>
+          <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)', marginBottom: 6, letterSpacing: '0.05px' }}>
             {campaign.name}
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -295,42 +294,23 @@ function CampaignCard({ campaign, onClick }: { campaign: Campaign; onClick: () =
             <span>🎭 {campaign.avatars.join(' · ')}</span>
           </div>
         </div>
-        <span
-          style={{
-            padding: '3px 9px',
-            borderRadius: 5,
-            fontSize: 11.5,
-            fontWeight: 500,
-            flexShrink: 0,
-            background: sty.bg,
-            color: sty.fg,
-          }}
-        >
+        <StatusPill tone={sty.tone} size="sm" style={{ flexShrink: 0 }}>
           {sty.label}
-        </span>
+        </StatusPill>
       </div>
     </div>
   );
 }
 
-function statusPillStyle(status: ContentStatusKey): CSSProperties {
-  const map: Record<ContentStatusKey, { bg: string; fg: string }> = {
-    approved: { bg: '#DCF5E2', fg: '#2D7A3A' },
-    reviewing: { bg: '#FFEDD9', fg: '#B06000' },
-  };
-  const s = map[status];
-  return {
-    display: 'inline-flex',
-    alignItems: 'center',
-    borderRadius: 5,
-    padding: '3px 8px',
-    fontSize: 11.5,
-    fontWeight: 500,
-    background: s.bg,
-    color: s.fg,
-    whiteSpace: 'nowrap',
-  };
-}
+const CONTENT_STATUS_TONE: Record<ContentStatusKey, StatusPillTone> = {
+  approved: 'success',
+  reviewing: 'warning',
+};
+
+const CONTENT_STATUS_LABEL: Record<ContentStatusKey, string> = {
+  approved: 'Approved',
+  reviewing: 'Reviewing',
+};
 
 // ─── CONTENT TAB ─────────────────────────────────────────────────
 
@@ -415,14 +395,16 @@ function ContentTab() {
               <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                   <div>
-                    <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--dark-90)' }}>{c.type}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 1 }}>
+                    <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{c.type}</div>
+                    <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 1 }}>
                       {c.creator} · {c.platform} · {c.duration}
                     </div>
                   </div>
-                  <span style={statusPillStyle(c.status)}>{c.status}</span>
+                  <StatusPill tone={CONTENT_STATUS_TONE[c.status]} size="sm">
+                    {CONTENT_STATUS_LABEL[c.status]}
+                  </StatusPill>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--dark-60)', margin: '2px 0 8px' }}>{c.note}</div>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)', margin: '2px 0 8px' }}>{c.note}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
                   {c.status === 'reviewing' && (
                     <Button variant="secondary" size="sm" onClick={() => showToast({ message: `Reviewing ${c.type}` })}>
@@ -462,7 +444,7 @@ function ContentStatPill({ icon, value, label }: { icon: string; value: number; 
       <span style={{ fontSize: 16 }}>{icon}</span>
       <div>
         <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{value}</div>
-        <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>{label}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</div>
       </div>
     </div>
   );
@@ -597,7 +579,7 @@ function SummaryLoading({ taskIdx }: { taskIdx: number }) {
       </div>
       <p
         style={{
-          fontSize: 13,
+          fontSize: 14,
           color: 'var(--dark-60)',
           lineHeight: 1.55,
           margin: '0 0 18px',
@@ -652,7 +634,7 @@ function SummaryLoading({ taskIdx }: { taskIdx: number }) {
                   </svg>
                 )}
               </span>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{task}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{task}</div>
             </div>
           );
         })}
@@ -761,7 +743,7 @@ function SummaryRows({
   const fields: EditField[] = ['product', 'avatar', 'style', 'tone', 'volume', 'usage', 'exclusivity'];
   return (
     <div>
-      <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 0 16px' }}>
+      <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 0 16px' }}>
         We pre-selected sensible defaults based on your brand kit and past campaigns. Edit any field below, or hit{' '}
         <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>Create</strong> to launch.
       </p>
@@ -786,11 +768,11 @@ function SummaryRows({
                 borderBottom: i < fields.length - 1 ? '1px solid var(--dark-4)' : 'none',
               }}
             >
-              <div style={{ width: 96, fontSize: 12.5, color: 'var(--dark-60)', flexShrink: 0 }}>
+              <div style={{ width: 96, fontSize: 12, color: 'var(--dark-60)', flexShrink: 0 }}>
                 {FIELD_LABEL[f]}
               </div>
               {hasVisual && <FieldVisual field={f} value={state[f]} />}
-              <div style={{ flex: 1, fontSize: 13.5, color: 'var(--dark-90)', fontWeight: 500 }}>
+              <div style={{ flex: 1, fontSize: 14, color: 'var(--dark-90)', fontWeight: 500 }}>
                 {state[f]}
               </div>
               <button

@@ -2,14 +2,16 @@ import { useMemo, useState } from 'react';
 import {
   Button,
   Heading,
+  IconButton,
   Modal,
   ModalStack,
   Text,
   useModals,
 } from '@/components';
 import type { StackModalProps } from '@/components';
-import { MoreDots } from '@/icons/20';
-import { TabChip, useToast } from '@/staging';
+import { ChevronDown, MoreDots } from '@/icons/20';
+import { StatusPill, TabChip, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { MapRankingBody } from './MapRankingBody';
@@ -156,7 +158,8 @@ const QUERIES: QueryRow[] = [
   { id: 12, q: 'how long until adaptogens start working', intent: 'Educational', icp: 'Wellness-curious', status: ['cited', 'cited', 'competitor', 'cited', 'neither'], content: 'live+cited', lastChecked: '2d ago' },
 ];
 
-const CELL_GREEN = 'var(--status-approved)';
+const CELL_GREEN_BG = 'rgba(4,175,0,0.10)';
+const CELL_GREEN_FG = 'var(--status-approved)';
 const CELL_RED_BG = 'rgba(188,1,11,0.10)';
 const CELL_RED_FG = 'var(--status-failed)';
 
@@ -248,17 +251,17 @@ const STATUS_COLOR: Record<FactStatus, string> = {
   wrong: 'var(--status-failed)',
   missing: 'var(--dark-15)',
 };
-const STATUS_BG: Record<FactStatus, string> = {
-  accurate: 'rgba(4,175,0,0.10)',
-  partial: 'rgba(237,182,44,0.15)',
-  wrong: 'rgba(188,1,11,0.10)',
-  missing: 'var(--dark-4)',
-};
 const STATUS_LABEL: Record<FactStatus, string> = {
-  accurate: '✓ Accurate',
-  partial: '△ Partial',
-  wrong: '✕ Wrong',
-  missing: '○ Missing',
+  accurate: 'Accurate',
+  partial: 'Partial',
+  wrong: 'Wrong',
+  missing: 'Missing',
+};
+const STATUS_TONE: Record<FactStatus, StatusPillTone> = {
+  accurate: 'success',
+  partial: 'warning',
+  wrong: 'danger',
+  missing: 'neutral',
 };
 
 // ─── ROUTE ────────────────────────────────────────────────────────────
@@ -349,7 +352,7 @@ function OverviewCards() {
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gap: 12,
-        marginBottom: 24,
+        marginBottom: 32,
       }}
     >
       <OverviewCard label="Citations this week" value="7" delta="+2" deltaTone="up" sub="of 24 target queries" />
@@ -386,10 +389,7 @@ function OverviewCard({
         variant="metadata"
         style={{
           color: 'var(--dark-60)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          fontWeight: 500,
-          fontSize: 11,
+          fontSize: 12,
         }}
       >
         {label}
@@ -443,9 +443,8 @@ function FilterRow({
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: 12,
-        padding: '6px 0 20px',
-        borderBottom: '1px solid var(--dark-8)',
-        marginBottom: 20,
+        padding: '6px 0 16px',
+        marginBottom: 12,
       }}
     >
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -506,39 +505,99 @@ function ApprovalCard({
   onApprove: () => void;
   onReject: () => void;
 }) {
+  // Parse "Perplexity · \"best adaptogens for stress and anxiety\"" into
+  // engine name + keyword (keyword keeps its surrounding quotes when rendered).
+  const sep = item.citationSource.indexOf('·');
+  const agentName =
+    sep >= 0 ? item.citationSource.slice(0, sep).trim() : item.citationSource;
+  const keyword = sep >= 0 ? item.citationSource.slice(sep + 1).trim() : '';
+  const agentTool = TOOLS.find(
+    (t) => t.name.toLowerCase() === agentName.toLowerCase(),
+  );
+  const agentColor = agentTool?.color ?? 'var(--dark-40)';
+
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
-        padding: '20px 24px',
+        gap: 10,
+        padding: '16px 20px',
         background: 'var(--light-100)',
         border: '1px solid var(--dark-8)',
         borderRadius: 12,
       }}
     >
-      <Text
-        variant="metadata"
-        style={{ display: 'block', color: 'var(--dark-60)', fontSize: 12 }}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
       >
-        {item.citationSource}
-      </Text>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 8,
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
+          <StatusPill tone="neutral" size="sm">
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: agentColor,
+                }}
+              />
+              {agentName}
+            </span>
+          </StatusPill>
+          {keyword && (
+            <Text
+              variant="metadata"
+              style={{ color: 'var(--dark-60)', fontSize: 12 }}
+            >
+              {keyword}
+            </Text>
+          )}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            flexShrink: 0,
+          }}
+        >
+          <Button variant="secondary" size="sm" onPress={onApprove}>
+            Approve
+          </Button>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            icon={MoreDots}
+            aria-label="More options"
+            onPress={onReject}
+          />
+        </div>
+      </div>
       <Heading level={5} style={{ color: 'var(--dark-90)', lineHeight: 1.35 }}>
         {item.headline}
       </Heading>
-      <Text
-        variant="secondary"
-        style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.55 }}
-      >
-        {item.preview}
-      </Text>
       <div
         style={{
           background: 'var(--dark-2)',
           borderLeft: '4px solid var(--dark-15)',
           borderRadius: 4,
           padding: '8px 12px',
+          marginTop: -2,
         }}
       >
         <Text
@@ -553,38 +612,12 @@ function ApprovalCard({
           {item.excerpt}
         </Text>
       </div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          gap: 4,
-          paddingTop: 4,
-        }}
+      <Text
+        variant="secondary"
+        style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.55 }}
       >
-        <button
-          type="button"
-          onClick={onReject}
-          aria-label="More options"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-            color: 'var(--dark-60)',
-          }}
-        >
-          <MoreDots size={16} color="var(--dark-60)" />
-        </button>
-        <Button variant="secondary" size="md" onPress={onApprove}>
-          Approve
-        </Button>
-      </div>
+        {item.preview}
+      </Text>
     </div>
   );
 }
@@ -676,7 +709,7 @@ function EngineChip({ engine }: { engine: Engine }) {
         gap: 6,
         padding: '4px 8px',
         borderRadius: 6,
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 500,
         background: 'var(--dark-4)',
         color: 'var(--dark-90)',
@@ -698,19 +731,11 @@ function EngineChip({ engine }: { engine: Engine }) {
 
 // ─── CITATIONS SUB-TAB ───────────────────────────────────────────────
 
-type CitationFilter = 'all' | 'gap' | 'cited';
-
 function CitationsSubTab() {
   const { showToast } = useToast();
   const { openModal } = useModals();
-  const [filter, setFilter] = useState<CitationFilter>('all');
 
-  const filtered =
-    filter === 'all'
-      ? QUERIES
-      : filter === 'gap'
-        ? QUERIES.filter((q) => !q.status.includes('cited'))
-        : QUERIES.filter((q) => q.status.includes('cited'));
+  const filtered = QUERIES;
 
   // Sparkline
   const data = [2, 3, 3, 4, 3, 4, 5, 5, 6, 5, 6, 7, 7];
@@ -734,8 +759,8 @@ function CitationsSubTab() {
           background: 'var(--light-100)',
           border: '1px solid var(--dark-8)',
           borderRadius: 12,
-          padding: '24px',
-          marginBottom: 24,
+          padding: '20px',
+          marginBottom: 32,
         }}
       >
         <div>
@@ -744,10 +769,8 @@ function CitationsSubTab() {
             style={{
               display: 'block',
               color: 'var(--dark-60)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
               fontWeight: 500,
-              fontSize: 11,
+              fontSize: 12,
               marginBottom: 8,
             }}
           >
@@ -755,16 +778,16 @@ function CitationsSubTab() {
           </Text>
           <div
             style={{
-              fontSize: 64,
+              fontSize: 24,
               fontWeight: 500,
               color: 'var(--dark-90)',
-              letterSpacing: '-1.5px',
+              letterSpacing: '-0.4px',
               fontVariantNumeric: 'tabular-nums',
               lineHeight: 1,
             }}
           >
             7
-            <span style={{ fontSize: 24, color: 'var(--dark-40)' }}> / 24</span>
+            <span style={{ fontSize: 18, color: 'var(--dark-40)' }}> / 24</span>
           </div>
           <Text
             variant="secondary"
@@ -800,45 +823,52 @@ function CitationsSubTab() {
             style={{
               display: 'block',
               color: 'var(--dark-60)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
               marginBottom: 8,
             }}
           >
             Citations over time · last 13 weeks
           </Text>
-          <svg
-            viewBox={`0 0 ${w} ${h}`}
-            preserveAspectRatio="none"
-            style={{ width: '100%', height: 60 }}
-          >
-            <polyline
-              points={points}
-              fill="none"
-              stroke="var(--status-approved)"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle
-              cx={(data.length - 1) * step}
-              cy={h - (data[data.length - 1] / max) * (h - 8) - 4}
-              r={3.5}
-              fill="var(--status-approved)"
-            />
-          </svg>
           <div
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: 4,
-              fontSize: 11,
-              color: 'var(--dark-40)',
+              background: 'var(--light-100)',
+              border: '1px solid var(--dark-8)',
+              borderRadius: 12,
+              padding: 16,
             }}
           >
-            <span>Mar 1</span>
-            <span>Apr 5</span>
-            <span>May 6</span>
+            <svg
+              viewBox={`0 0 ${w} ${h}`}
+              preserveAspectRatio="none"
+              style={{ width: '100%', height: 60 }}
+            >
+              <polyline
+                points={points}
+                fill="none"
+                stroke="var(--status-approved)"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle
+                cx={(data.length - 1) * step}
+                cy={h - (data[data.length - 1] / max) * (h - 8) - 4}
+                r={3.5}
+                fill="var(--status-approved)"
+              />
+            </svg>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: 4,
+                fontSize: 12,
+                color: 'var(--dark-40)',
+              }}
+            >
+              <span>Mar 1</span>
+              <span>Apr 5</span>
+              <span>May 6</span>
+            </div>
           </div>
         </div>
       </div>
@@ -854,7 +884,7 @@ function CitationsSubTab() {
         }}
       >
         <div>
-          <Heading level={5} style={{ color: 'var(--dark-90)', margin: 0 }}>
+          <Heading level={3} style={{ color: 'var(--dark-90)', margin: 0 }}>
             Target queries
           </Heading>
           <Text
@@ -877,88 +907,12 @@ function CitationsSubTab() {
         </div>
       </div>
 
-      {/* Filter row */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '12px 16px',
-          background: 'var(--light-100)',
-          border: '1px solid var(--dark-8)',
-          borderBottom: 'none',
-          borderRadius: '10px 10px 0 0',
-        }}
-      >
-        <Text
-          variant="metadata"
-          style={{
-            color: 'var(--dark-40)',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Filter
-        </Text>
-        <FilterChip active={filter === 'all'} onClick={() => setFilter('all')}>
-          All {QUERIES.length} queries
-        </FilterChip>
-        <FilterChip active={filter === 'gap'} onClick={() => setFilter('gap')}>
-          Gaps only
-        </FilterChip>
-        <FilterChip active={filter === 'cited'} onClick={() => setFilter('cited')}>
-          Where you're cited
-        </FilterChip>
-        <span style={{ flex: 1 }} />
-        <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 8,
-              height: 8,
-              background: CELL_GREEN,
-              borderRadius: 2,
-              marginRight: 4,
-              verticalAlign: 'middle',
-            }}
-          />
-          Cited
-          <span
-            style={{
-              display: 'inline-block',
-              width: 8,
-              height: 8,
-              background: CELL_RED_BG,
-              border: `1px solid ${CELL_RED_FG}`,
-              borderRadius: 2,
-              marginLeft: 12,
-              marginRight: 4,
-              verticalAlign: 'middle',
-            }}
-          />
-          Competitor
-          <span
-            style={{
-              display: 'inline-block',
-              width: 8,
-              height: 8,
-              background: 'var(--dark-4)',
-              borderRadius: 2,
-              marginLeft: 12,
-              marginRight: 4,
-              verticalAlign: 'middle',
-            }}
-          />
-          Neither
-        </Text>
-      </div>
-
       <table
         style={{
           width: '100%',
           background: 'var(--light-100)',
           border: '1px solid var(--dark-8)',
-          borderRadius: '0 0 10px 10px',
+          borderRadius: 10,
           borderCollapse: 'separate',
           borderSpacing: 0,
         }}
@@ -968,32 +922,15 @@ function CitationsSubTab() {
             <th style={qThStyle('left', 280)}>Query</th>
             {TOOLS.map((t) => (
               <th key={t.id} style={qThStyle('center')}>
-                <div
+                <span
                   style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 4,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: ENGINE_COLOR[t.name as Engine],
                   }}
                 >
-                  <div
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 6,
-                      background: t.color,
-                      color: 'var(--light-100)',
-                      fontSize: 10,
-                      fontWeight: 500,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {t.logo}
-                  </div>
-                  <span style={{ fontSize: 11, color: 'var(--dark-80)' }}>{t.name}</span>
-                </div>
+                  {t.name}
+                </span>
               </th>
             ))}
             <th style={{ ...qThStyle('left'), width: 120 }}>Your content</th>
@@ -1004,7 +941,7 @@ function CitationsSubTab() {
           {filtered.map((q, qi) => (
             <tr key={q.id}>
               <td style={qTdStyle(qi === filtered.length - 1)}>
-                <div style={{ fontSize: 13, color: 'var(--dark-90)', marginBottom: 4 }}>
+                <div style={{ fontSize: 14, color: 'var(--dark-90)', marginBottom: 4 }}>
                   {q.q}
                 </div>
                 <div
@@ -1012,7 +949,7 @@ function CitationsSubTab() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
-                    fontSize: 11,
+                    fontSize: 12,
                     color: 'var(--dark-60)',
                   }}
                 >
@@ -1021,7 +958,7 @@ function CitationsSubTab() {
                       background: 'var(--dark-4)',
                       padding: '2px 8px',
                       borderRadius: 5,
-                      fontSize: 11,
+                      fontSize: 12,
                     }}
                   >
                     {q.intent}
@@ -1029,52 +966,60 @@ function CitationsSubTab() {
                   <span>{q.icp}</span>
                 </div>
               </td>
-              {q.status.map((s, ti) => (
-                <td
-                  key={ti}
-                  style={{
-                    ...qTdStyle(qi === filtered.length - 1),
-                    textAlign: 'center',
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openModal(CellDrawerModal, { query: q, toolIdx: ti, status: s })
-                    }
+              {q.status.map((s, ti) => {
+                const cellStyle =
+                  s === 'cited'
+                    ? {
+                        background: CELL_GREEN_BG,
+                        color: CELL_GREEN_FG,
+                      }
+                    : s === 'competitor'
+                      ? {
+                          background: CELL_RED_BG,
+                          color: CELL_RED_FG,
+                        }
+                      : {
+                          background: 'var(--dark-2)',
+                          color: 'var(--dark-40)',
+                        };
+                return (
+                  <td
+                    key={ti}
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 6,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      border:
-                        s === 'competitor' ? `1px solid ${CELL_RED_FG}` : 'none',
-                      background:
-                        s === 'cited'
-                          ? CELL_GREEN
-                          : s === 'competitor'
-                            ? CELL_RED_BG
-                            : 'var(--dark-4)',
-                      color:
-                        s === 'cited'
-                          ? 'var(--light-100)'
-                          : s === 'competitor'
-                            ? CELL_RED_FG
-                            : 'var(--dark-40)',
-                      font: 'inherit',
+                      ...qTdStyle(qi === filtered.length - 1),
+                      textAlign: 'center',
                     }}
-                    title={`${TOOLS[ti].name}: ${s}`}
                   >
-                    {s === 'cited' ? '✓' : s === 'competitor' ? '✕' : '–'}
-                  </button>
-                </td>
-              ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openModal(CellDrawerModal, { query: q, toolIdx: ti, status: s })
+                      }
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        border: 'none',
+                        background: cellStyle.background,
+                        color: cellStyle.color,
+                        font: 'inherit',
+                        lineHeight: 1,
+                      }}
+                      title={`${TOOLS[ti].name}: ${s}`}
+                      aria-label={`${TOOLS[ti].name}: ${s}`}
+                    >
+                      {s === 'cited' ? '✓' : s === 'competitor' ? '✕' : '—'}
+                    </button>
+                  </td>
+                );
+              })}
               <td style={qTdStyle(qi === filtered.length - 1)}>
                 <ContentPill
                   content={q.content}
@@ -1102,15 +1047,14 @@ function CitationsSubTab() {
 
 function qThStyle(align: 'left' | 'center', minWidth?: number): React.CSSProperties {
   return {
-    fontSize: 11,
-    color: 'var(--dark-40)',
+    fontSize: 12,
+    color: 'var(--dark-60)',
     textAlign: align,
-    padding: '12px',
-    background: 'var(--dark-2)',
+    padding: '6px 12px',
     borderBottom: '1px solid var(--dark-8)',
-    letterSpacing: '0.06em',
-    fontWeight: 500,
+    fontWeight: 400,
     minWidth,
+    whiteSpace: 'nowrap',
   };
 }
 
@@ -1118,41 +1062,9 @@ function qTdStyle(isLast: boolean): React.CSSProperties {
   return {
     padding: '12px',
     borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
-    fontSize: 13,
+    fontSize: 14,
     verticalAlign: 'middle',
   };
-}
-
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        background: active ? 'var(--dark-90)' : 'var(--dark-4)',
-        color: active ? 'var(--light-100)' : 'var(--dark-80)',
-        border: 'none',
-        borderRadius: 6,
-        padding: '4px 12px',
-        fontSize: 12,
-        fontWeight: active ? 500 : 400,
-        cursor: 'pointer',
-        font: 'inherit',
-      }}
-    >
-      {children}
-    </button>
-  );
 }
 
 function ContentPill({
@@ -1162,35 +1074,23 @@ function ContentPill({
   content: ContentState;
   onClickIfNone: () => void;
 }) {
-  const map: Record<ContentState, { color: string; dot: string; label: string }> = {
-    'live+cited': { color: 'var(--status-approved)', dot: 'var(--status-approved)', label: 'Live + cited' },
-    live: { color: 'var(--dark-90)', dot: 'var(--dark-60)', label: 'Live' },
-    draft: { color: 'var(--status-review)', dot: 'var(--status-review)', label: 'Draft' },
-    none: { color: 'var(--dark-40)', dot: 'var(--dark-15)', label: 'No content · Ideas →' },
+  const map: Record<ContentState, { tone: StatusPillTone; label: string }> = {
+    'live+cited': { tone: 'success', label: 'Live + cited' },
+    live: { tone: 'success', label: 'Live' },
+    draft: { tone: 'neutral', label: 'Draft' },
+    none: { tone: 'neutral', label: 'No content' },
   };
   const m = map[content];
+  const clickable = content === 'none';
   return (
-    <span
-      onClick={content === 'none' ? onClickIfNone : undefined}
-      style={{
-        fontSize: 12,
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        color: m.color,
-        cursor: content === 'none' ? 'pointer' : 'default',
-      }}
+    <StatusPill
+      tone={m.tone}
+      size="sm"
+      onClick={clickable ? onClickIfNone : undefined}
+      style={clickable ? { cursor: 'pointer' } : undefined}
     >
-      <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          background: m.dot,
-        }}
-      />
       {m.label}
-    </span>
+    </StatusPill>
   );
 }
 
@@ -1222,18 +1122,8 @@ function CellDrawerModal({
       : status === 'competitor'
         ? 'Competitor cited'
         : 'No citation';
-  const statusColor =
-    status === 'cited'
-      ? 'var(--status-approved)'
-      : status === 'competitor'
-        ? 'var(--status-failed)'
-        : 'var(--dark-40)';
-  const statusBg =
-    status === 'cited'
-      ? 'rgba(4,175,0,0.10)'
-      : status === 'competitor'
-        ? 'rgba(188,1,11,0.10)'
-        : 'var(--dark-4)';
+  const statusTone: StatusPillTone =
+    status === 'cited' ? 'success' : status === 'competitor' ? 'danger' : 'neutral';
 
   return (
     <Modal.Root size="md" aria-labelledby="aeo-cell-title" data-testid="aeo-cell-drawer">
@@ -1269,20 +1159,7 @@ function CellDrawerModal({
           >
             {tool.logo}
           </div>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '4px 12px',
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 500,
-              background: statusBg,
-              color: statusColor,
-            }}
-          >
-            {statusLabel}
-          </span>
+          <StatusPill tone={statusTone} size="sm">{statusLabel}</StatusPill>
           <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>
             Last seen {query.lastChecked}
           </Text>
@@ -1319,7 +1196,7 @@ function CellDrawerModal({
                 background: 'var(--dark-4)',
                 padding: '2px 8px',
                 borderRadius: 5,
-                fontSize: 11,
+                fontSize: 12,
               }}
             >
               {query.intent}
@@ -1351,7 +1228,7 @@ function CellDrawerModal({
           </Text>
           <div
             style={{
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-80)',
               lineHeight: 1.55,
               fontStyle: 'italic',
@@ -1413,7 +1290,7 @@ function DrawerMeta({
       </Text>
       <div
         style={{
-          fontSize: 13,
+          fontSize: 14,
           color: linkLike ? 'var(--purple)' : 'var(--dark-90)',
           textDecoration: linkLike ? 'underline' : 'none',
           textUnderlineOffset: 2,
@@ -1442,44 +1319,6 @@ function BrandFactsSubTab() {
 
   return (
     <div style={{ padding: '24px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          marginBottom: 16,
-          gap: 20,
-        }}
-      >
-        <div>
-          <Heading level={5} style={{ color: 'var(--dark-90)', margin: 0 }}>
-            Brand fact check
-          </Heading>
-          <Text
-            variant="secondary"
-            style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}
-          >
-            What AI tools say about you when asked directly · checked weekly
-          </Text>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Button
-            variant="tertiary"
-            size="sm"
-            onPress={() => showToast({ message: 'Add question (TODO)' })}
-          >
-            + Add question
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={() => showToast({ message: 'Re-checking…' })}
-          >
-            Re-check now
-          </Button>
-        </div>
-      </div>
-
       {/* Stats + bar */}
       <div
         style={{
@@ -1490,8 +1329,8 @@ function BrandFactsSubTab() {
           background: 'var(--light-100)',
           border: '1px solid var(--dark-8)',
           borderRadius: 12,
-          padding: '20px 24px',
-          marginBottom: 16,
+          padding: '20px',
+          marginBottom: 32,
         }}
       >
         <FactsStat num={counts.accurate} label="Accurate" color="var(--status-approved)" />
@@ -1521,6 +1360,45 @@ function BrandFactsSubTab() {
         </div>
       </div>
 
+      {/* Section header */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+          gap: 20,
+        }}
+      >
+        <div>
+          <Heading level={3} style={{ color: 'var(--dark-90)', margin: 0 }}>
+            Brand fact check
+          </Heading>
+          <Text
+            variant="secondary"
+            style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}
+          >
+            What AI tools say about you when asked directly · checked weekly
+          </Text>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onPress={() => showToast({ message: 'Add question (TODO)' })}
+          >
+            + Add question
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() => showToast({ message: 'Re-checking…' })}
+          >
+            Re-check now
+          </Button>
+        </div>
+      </div>
+
       {/* Accordion table */}
       <div
         style={{
@@ -1536,14 +1414,11 @@ function BrandFactsSubTab() {
             gridTemplateColumns: `1fr repeat(${TOOLS.length},40px) 28px`,
             gap: 8,
             alignItems: 'center',
-            padding: '12px 16px',
-            background: 'var(--dark-2)',
+            padding: '6px 16px',
             borderBottom: '1px solid var(--dark-8)',
-            fontSize: 11,
-            color: 'var(--dark-40)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            fontWeight: 500,
+            fontSize: 12,
+            color: 'var(--dark-60)',
+            fontWeight: 400,
           }}
         >
           <div>Brand fact</div>
@@ -1556,7 +1431,7 @@ function BrandFactsSubTab() {
                   borderRadius: 6,
                   background: t.color,
                   color: 'var(--light-100)',
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: 500,
                   display: 'flex',
                   alignItems: 'center',
@@ -1600,14 +1475,12 @@ function BrandFactsSubTab() {
                     style={{
                       display: 'block',
                       color: 'var(--dark-40)',
-                      letterSpacing: '0.06em',
-                      textTransform: 'uppercase',
                       marginBottom: 4,
                     }}
                   >
                     {f.cat}
                   </Text>
-                  <div style={{ fontSize: 13, color: 'var(--dark-90)', fontWeight: 500 }}>
+                  <div style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 500 }}>
                     {f.q}
                   </div>
                 </div>
@@ -1626,12 +1499,15 @@ function BrandFactsSubTab() {
                 ))}
                 <div
                   style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     color: 'var(--dark-40)',
-                    textAlign: 'center',
-                    fontSize: 11,
+                    transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                    transition: 'transform 120ms ease',
                   }}
                 >
-                  {isOpen ? '▾' : '▸'}
+                  <ChevronDown size={20} color="var(--dark-40)" />
                 </div>
               </div>
               {isOpen && (
@@ -1656,19 +1532,17 @@ function BrandFactsSubTab() {
                       style={{
                         display: 'block',
                         color: 'var(--dark-40)',
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
                         marginBottom: 4,
                       }}
                     >
                       Your truth
                     </Text>
-                    <div style={{ fontSize: 13, color: 'var(--dark-90)' }}>{f.truth}</div>
+                    <div style={{ fontSize: 14, color: 'var(--dark-90)' }}>{f.truth}</div>
                   </div>
                   <div
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(2,1fr)',
+                      display: 'flex',
+                      flexDirection: 'column',
                       gap: 12,
                     }}
                   >
@@ -1682,9 +1556,6 @@ function BrandFactsSubTab() {
                             border: '1px solid var(--dark-8)',
                             borderRadius: 8,
                             padding: '12px 16px',
-                            borderLeftWidth: 4,
-                            borderLeftStyle: 'solid',
-                            borderLeftColor: STATUS_COLOR[a.status],
                           }}
                         >
                           <div
@@ -1695,46 +1566,18 @@ function BrandFactsSubTab() {
                               marginBottom: 8,
                             }}
                           >
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                fontSize: 12,
-                                fontWeight: 500,
-                                color: 'var(--dark-90)',
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: 20,
-                                  height: 20,
-                                  borderRadius: 5,
-                                  background: tool.color,
-                                  color: 'var(--light-100)',
-                                  fontSize: 10,
-                                  fontWeight: 500,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                {tool.logo}
-                              </div>
-                              {tool.name}
-                            </div>
                             <span
                               style={{
-                                fontSize: 11,
-                                padding: '2px 8px',
-                                borderRadius: 5,
+                                fontSize: 12,
                                 fontWeight: 500,
-                                background: STATUS_BG[a.status],
-                                color: STATUS_COLOR[a.status],
+                                color: ENGINE_COLOR[tool.name as Engine],
                               }}
                             >
-                              {STATUS_LABEL[a.status]}
+                              {tool.name}
                             </span>
+                            <StatusPill tone={STATUS_TONE[a.status]} size="sm">
+                              {STATUS_LABEL[a.status]}
+                            </StatusPill>
                           </div>
                           <div
                             style={{
@@ -1803,8 +1646,6 @@ function FactsStat({
         style={{
           display: 'block',
           color: 'var(--dark-60)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
           marginTop: 4,
           fontWeight: 500,
         }}
