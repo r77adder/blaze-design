@@ -2,6 +2,23 @@ import { useState } from 'react';
 import { Sheet, Toggle, Stepper, SelectionPill } from '@ios/staging';
 import { ASSETS } from './assets';
 
+// section: icon imports
+import contentIcon from '@ios/icons/lighter_weight/image-03.svg';
+import calendarIcon from '@ios/icons/lighter_weight/calendar-01.png';
+import growthIcon from '@ios/icons/lighter_weight/line-chart-up-01.svg';
+import addAccountIcon from '@ios/icons/lighter_weight/add-square-04.svg';
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-ignore – filenames with spaces are resolved by Vite at build time
+import stillImageIcon from '@ios/icons/lighter_weight/Property 1=still image.svg';
+// @ts-ignore
+import carouselIcon from '@ios/icons/lighter_weight/Property 1=carousel.svg';
+// @ts-ignore
+import feedVideoIcon from '@ios/icons/lighter_weight/Property 1=feed video posts.svg';
+// @ts-ignore
+import blogsIcon from '@ios/icons/lighter_weight/Property 1=blogs.svg';
+// @ts-ignore
+import emailsIcon from '@ios/icons/lighter_weight/Property 1=emails.svg';
+
 // section: constants
 
 const font = 'var(--ios-font)';
@@ -54,80 +71,6 @@ interface Props {
 }
 
 // section: inline SVG icons
-
-function IconSettings() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="3" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
-      <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M14.36 5.64l1.42-1.42M4.22 15.78l1.42-1.42" stroke="var(--ios-dark-80)" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconCalendar() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="2" y="4" width="16" height="14" rx="3" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
-      <path d="M2 8h16M6 2v4M14 2v4" stroke="var(--ios-dark-80)" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconBarChart() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="2" y="11" width="4" height="7" rx="1" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
-      <rect x="8" y="6" width="4" height="12" rx="1" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
-      <rect x="14" y="2" width="4" height="16" rx="1" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function IconStillImage() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="2" y="3" width="16" height="14" rx="3" stroke="#E8672A" strokeWidth="1.5" />
-      <circle cx="7" cy="8" r="1.5" stroke="#E8672A" strokeWidth="1.5" />
-      <path d="M2 14l4-4 3 3 3-3 4 4" stroke="#E8672A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconCarousel() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="4" y="3" width="12" height="14" rx="2" stroke="#E8672A" strokeWidth="1.5" />
-      <path d="M1 6v8M19 6v8" stroke="#E8672A" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconVideo() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="2" y="4" width="12" height="12" rx="3" stroke="#7C5CFC" strokeWidth="1.5" />
-      <path d="M14 8l4-2v8l-4-2V8z" stroke="#7C5CFC" strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconBlog() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="3" y="2" width="14" height="16" rx="2" stroke="#34A853" strokeWidth="1.5" />
-      <path d="M6 7h8M6 10h8M6 13h5" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconEmail() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="2" y="4" width="16" height="12" rx="2" stroke="#FBBC05" strokeWidth="1.5" />
-      <path d="M2 7l8 5 8-5" stroke="#FBBC05" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function IconChevronRight() {
   return (
@@ -336,8 +279,9 @@ function AccountSection({
       {/* Add New Account */}
       <button
         type="button"
-        style={{ width: '100%', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)' }}
+        style={{ width: '100%', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)' }}
       >
+        <img src={addAccountIcon} alt="" aria-hidden="true" style={{ width: 20, height: 20, opacity: 0.9 }} />
         Add New Account
       </button>
     </div>
@@ -346,35 +290,35 @@ function AccountSection({
 
 // section: content type sheet
 
-const CONTENT_TYPES: { view: View; title: string; icon: () => JSX.Element; subtitle: (mode: ContentMode, postsPerWeek: number, postDays: string[]) => string }[] = [
+const CONTENT_TYPES: { view: View; title: string; iconSrc: string; subtitle: (mode: ContentMode, postsPerWeek: number, postDays: string[]) => string }[] = [
   {
     view: 'still-image',
     title: 'Still image post',
-    icon: IconStillImage,
+    iconSrc: stillImageIcon as unknown as string,
     subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'carousel',
     title: 'Carousel post',
-    icon: IconCarousel,
+    iconSrc: carouselIcon as unknown as string,
     subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'feed-video',
     title: 'Feed video post',
-    icon: IconVideo,
+    iconSrc: feedVideoIcon as unknown as string,
     subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'blogs',
     title: 'Blogs',
-    icon: IconBlog,
+    iconSrc: blogsIcon as unknown as string,
     subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
   {
     view: 'emails',
     title: 'Emails',
-    icon: IconEmail,
+    iconSrc: emailsIcon as unknown as string,
     subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
   },
 ];
@@ -431,19 +375,19 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
   // section: settings screen
   const settingsRows = [
     {
-      icon: <IconSettings />,
+      iconSrc: contentIcon,
       title: 'Content',
       description: 'Change channels, number of posts, and frequencies per campaign',
       onClick: () => push('content'),
     },
     {
-      icon: <IconCalendar />,
+      iconSrc: calendarIcon,
       title: 'Schedule',
       description: 'Edit when campaigns and content should be generated',
       onClick: () => {},
     },
     {
-      icon: <IconBarChart />,
+      iconSrc: growthIcon,
       title: 'Growth settings',
       description: 'Adjust how quickly your playbook expands and posting scales up',
       onClick: () => {},
@@ -474,7 +418,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                   textAlign: 'left',
                 }}
               >
-                <div style={{ width: 20, height: 20, flexShrink: 0 }}>{row.icon}</div>
+                <img src={row.iconSrc} alt="" aria-hidden="true" style={{ width: 20, height: 20, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)', lineHeight: 1.4 }}>{row.title}</div>
                   <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>{row.description}</div>
@@ -550,7 +494,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                   textAlign: 'left',
                 }}
               >
-                <div style={{ width: 20, height: 20, flexShrink: 0 }}><type.icon /></div>
+                <img src={type.iconSrc} alt="" aria-hidden="true" style={{ width: 20, height: 20, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)', lineHeight: 1.4 }}>{type.title}</div>
                   <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>

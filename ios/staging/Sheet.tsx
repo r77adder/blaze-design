@@ -126,7 +126,7 @@ export function Sheet({
         style={{
           position: 'absolute',
           height: isModal ? undefined : sheetHeight,
-          background: 'var(--ios-background-light)',
+          background: isModal ? 'var(--ios-light-100)' : 'var(--ios-background-gray)',
           boxShadow: '0 15px 75px rgba(0,0,0,0.18)',
           display: 'flex',
           flexDirection: 'column',

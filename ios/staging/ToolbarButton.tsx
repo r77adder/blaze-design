@@ -177,7 +177,7 @@ export function ToolbarButton({
         style={{
           width: 32,
           height: 32,
-          borderRadius: 6,
+          borderRadius: 99,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
