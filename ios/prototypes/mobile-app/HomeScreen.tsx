@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { ASSETS } from './assets';
-import { CampaignListItem, ContentAreaButton, SidebarDrawer, ToolbarHeader, GlassIconButton } from '@ios/staging';
+import { CampaignListItem, ContentAreaButton, SidebarDrawer, ToolbarHeader, GlassIconButton, ToolbarButton } from '@ios/staging';
 import type { WorkspaceItem } from '@ios/staging';
-import creditsIcon from '@ios/icons/credits.svg';
 import approvalsIcon from '@ios/icons/approvals.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
@@ -122,17 +121,7 @@ export function HomeScreen() {
           </button>
         }
         rightButtons={
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '6px 12px', borderRadius: 99,
-            background: 'rgba(255,255,255,0.6)',
-            backdropFilter: 'var(--ios-glass-blur)',
-            WebkitBackdropFilter: 'var(--ios-glass-blur)',
-            boxShadow: '0 0 32px rgba(0,0,0,0.08)',
-          }}>
-            <img src={creditsIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
-            <span style={{ fontFamily: font, fontSize: 14, fontWeight: 500, lineHeight: 1.4, color: 'var(--ios-dark-90)' }}>96</span>
-          </div>
+          <ToolbarButton variant="credits" credits={96} />
         }
       />
 

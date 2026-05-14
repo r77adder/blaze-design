@@ -1,5 +1,4 @@
-import { MenuItem, ToolbarHeader } from '@ios/staging';
-import creditsIcon from '@ios/icons/credits.svg';
+import { MenuItem, ToolbarHeader, ToolbarButton } from '@ios/staging';
 import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import folderIcon from '@ios/icons/folder.svg';
@@ -67,17 +66,7 @@ export function MoreScreen() {
         variant="screen"
         title="More"
         rightButtons={
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', borderRadius: 99,
-            background: 'var(--ios-light-60)',
-            backdropFilter: 'var(--ios-glass-blur)',
-            WebkitBackdropFilter: 'var(--ios-glass-blur)',
-            boxShadow: 'var(--ios-glass-shadow), inset 0 0 0 0.5px var(--ios-dark-8)',
-          }}>
-            <img src={creditsIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
-            <span style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)' }}>96</span>
-          </div>
+          <ToolbarButton variant="credits" credits={96} />
         }
       />
 

@@ -20,8 +20,8 @@ export type { ContentStatusPillProps, ContentStatusVariant } from './ContentStat
 export { SelectionPill } from './SelectionPill';
 export type { SelectionPillProps } from './SelectionPill';
 
-export { ToolbarButton } from './ToolbarButton';
-export type { ToolbarButtonProps, ToolbarButtonVariant, ToolbarButtonStyle } from './ToolbarButton';
+export { ToolbarButton, ToolbarButtonGroup, FilterIcon } from './ToolbarButton';
+export type { ToolbarButtonProps, ToolbarButtonVariant, ToolbarButtonStyle, ToolbarButtonGroupProps, ToolbarGroupSlot } from './ToolbarButton';
 
 export { ToolbarHeader } from './ToolbarHeader';
 export type { ToolbarHeaderProps, ToolbarHeaderVariant } from './ToolbarHeader';
