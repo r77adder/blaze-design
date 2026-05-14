@@ -55,3 +55,6 @@ export type { GlassIconButtonProps } from './GlassIconButton';
 
 export { CampaignListItem } from './CampaignListItem';
 export type { CampaignListItemProps, CampaignStatusVariant } from './CampaignListItem';
+
+export { Stepper } from './Stepper';
+export type { StepperProps } from './Stepper';

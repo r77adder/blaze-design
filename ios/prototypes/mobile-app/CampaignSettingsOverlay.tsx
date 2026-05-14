@@ -1,97 +1,419 @@
 import { useState } from 'react';
+import { Sheet, Toggle, Stepper } from '@ios/staging';
 import { ASSETS } from './assets';
-import { SegmentSelector, Toggle } from '@ios/staging';
-import chevronLeftIcon  from '@ios/icons/chevron-left.svg';
-import chevronRightIcon from '@ios/icons/chevron-right-small.svg';
-import checkIcon        from '@ios/icons/check-02.svg';
-import layoutIcon       from '@ios/icons/layout-01.svg';
-import calendarIcon     from '@ios/icons/calendar-01.svg';
-import barGroupIcon     from '@ios/icons/bar-group-03.svg';
-import imageIcon        from '@ios/icons/image-03.svg';
-import layersIcon       from '@ios/icons/layers-05.svg';
-import playIcon         from '@ios/icons/play.svg';
-import plusIcon         from '@ios/icons/plus-01.svg';
-
-const font = 'var(--ios-font)';
 
 // section: constants
+
+const font = 'var(--ios-font)';
 
 const POST_DAYS = ['Any day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const CONFIRM_CAMPAIGNS = [
-  { id: 1, img: ASSETS.campThumb1, title: 'Savor The Origins: Craft Coffee Revealed',     category: '🎿 Lifestyle Content' },
-  { id: 2, img: ASSETS.campThumb2, title: 'Signature Blends: Crafted for Coffee Lovers',   category: '💡 Quick Tips' },
-  { id: 3, img: ASSETS.campThumb3, title: 'Brew Bold: Signature Blends, Local Pride',       category: '🛍️ Offer & Services' },
-  { id: 4, img: ASSETS.campThumb4, title: 'Brewed for You: Curated Coffee Subscriptions',   category: '🏠 Product Showcase' },
-  { id: 5, img: ASSETS.campThumb5, title: "Mother's Day Blend: Share Local Pride",          category: '🎿 Lifestyle Content' },
-  { id: 6, img: ASSETS.campThumb6, title: 'Product Updates Q1',                             category: '🏠 Product Showcase' },
+  {
+    id: 1,
+    thumb: ASSETS.campThumb1,
+    dates: 'Fri, Feb 8 – Mon, Feb 12',
+    title: 'Brew Bold: Signature Blends, Local Pride',
+    category: '🛍️ Offer & Services',
+    badge: 'Generates in 4 days',
+  },
+  {
+    id: 2,
+    thumb: ASSETS.campThumb2,
+    dates: 'Mon, Feb 19 – Fri, Feb 23',
+    title: 'Brew Masters: Techniques from Around the World',
+    category: '🛍️ Offer & Services',
+    badge: 'Generates in 10 days',
+  },
+  {
+    id: 3,
+    thumb: ASSETS.campThumb3,
+    dates: 'Sat, Feb 24 – Wed, Feb 28',
+    title: 'Sustainability in Every Sip: Eco-Friendly Coffee Practices',
+    category: '🛍️ Offer & Services',
+    badge: 'Generates in 16 days',
+  },
+  {
+    id: 4,
+    thumb: ASSETS.campThumb4,
+    dates: 'Thu, Feb 29 – Mon, Mar 4',
+    title: 'Coffee and Culture: Traditions Across Continents',
+    category: '🛍️ Offer & Services',
+    badge: 'Generates in 6 days',
+  },
 ];
 
 // section: types
 
-type View = 'settings' | 'content' | 'still-image' | 'confirm';
+type View = 'settings' | 'content' | 'still-image' | 'carousel' | 'feed-video' | 'blogs' | 'emails' | 'confirm';
+type ContentMode = 'crosspost' | 'unique';
 
 interface Props {
   onClose: () => void;
   onConfirm: () => void;
 }
 
-// section: shared sub-renders
+// section: inline SVG icons
 
-function ScreenHeader({ title, onBack }: { title: string; onBack: () => void }) {
+function IconSettings() {
   return (
-    <div style={{ flexShrink: 0, height: 56, display: 'flex', alignItems: 'center', padding: '0 20px', position: 'relative' }}>
-      <button type="button" onClick={onBack} style={{ width: 32, height: 32, borderRadius: 99, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, position: 'absolute', left: 20 }}>
-        <img src={chevronLeftIcon} alt="Back" style={{ width: 24, height: 24 }} />
-      </button>
-      <span style={{ fontFamily: font, fontSize: 18, fontWeight: 400, color: 'var(--ios-dark-90)', margin: '0 auto' }}>{title}</span>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="3" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
+      <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M14.36 5.64l1.42-1.42M4.22 15.78l1.42-1.42" stroke="var(--ios-dark-80)" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCalendar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2" y="4" width="16" height="14" rx="3" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
+      <path d="M2 8h16M6 2v4M14 2v4" stroke="var(--ios-dark-80)" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconBarChart() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2" y="11" width="4" height="7" rx="1" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
+      <rect x="8" y="6" width="4" height="12" rx="1" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
+      <rect x="14" y="2" width="4" height="16" rx="1" stroke="var(--ios-dark-80)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function IconStillImage() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2" y="3" width="16" height="14" rx="3" stroke="#E8672A" strokeWidth="1.5" />
+      <circle cx="7" cy="8" r="1.5" stroke="#E8672A" strokeWidth="1.5" />
+      <path d="M2 14l4-4 3 3 3-3 4 4" stroke="#E8672A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconCarousel() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="4" y="3" width="12" height="14" rx="2" stroke="#E8672A" strokeWidth="1.5" />
+      <path d="M1 6v8M19 6v8" stroke="#E8672A" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconVideo() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2" y="4" width="12" height="12" rx="3" stroke="#7C5CFC" strokeWidth="1.5" />
+      <path d="M14 8l4-2v8l-4-2V8z" stroke="#7C5CFC" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconBlog() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="3" y="2" width="14" height="16" rx="2" stroke="#34A853" strokeWidth="1.5" />
+      <path d="M6 7h8M6 10h8M6 13h5" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconEmail() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2" y="4" width="16" height="12" rx="2" stroke="#FBBC05" strokeWidth="1.5" />
+      <path d="M2 7l8 5 8-5" stroke="#FBBC05" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconChevronRight() {
+  return (
+    <svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden="true">
+      <path d="M1 1l6 6-6 6" stroke="var(--ios-dark-40)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconCheckmark() {
+  return (
+    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+      <path d="M1 4l3 3 5-6" stroke="var(--ios-light-100)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// section: sub-components
+
+function CreditsNote() {
+  return (
+    <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-60)' }}>
+      12 posts per week&nbsp;&nbsp;•&nbsp;&nbsp;165 credits&nbsp;&nbsp;•&nbsp;&nbsp;+15 more credits per week
+    </span>
+  );
+}
+
+function AccountAvatar({ type }: { type: 'radiantHealth' | 'adamNathan' | 'x' | 'linkedin' | 'google' }) {
+  if (type === 'radiantHealth') {
+    return (
+      <div style={{ position: 'relative', width: 20, height: 20, flexShrink: 0 }}>
+        <div style={{ width: 20, height: 20, borderRadius: 99, background: '#45164a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontFamily: font, fontSize: 7, fontWeight: 600, color: 'var(--ios-light-100)' }}>RH</span>
+        </div>
+        {/* Instagram badge */}
+        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 10, height: 10, borderRadius: 3, background: 'linear-gradient(135deg, #E1306C, #F77737)', border: '1px solid var(--ios-light-100)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
+            <rect x="0.5" y="0.5" width="5" height="5" rx="1.5" stroke="white" strokeWidth="0.8" />
+            <circle cx="3" cy="3" r="1.2" stroke="white" strokeWidth="0.8" />
+            <circle cx="4.5" cy="1.5" r="0.5" fill="white" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+  if (type === 'adamNathan') {
+    return (
+      <div style={{ position: 'relative', width: 20, height: 20, flexShrink: 0 }}>
+        <div style={{ width: 20, height: 20, borderRadius: 99, background: '#6b6b6b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontFamily: font, fontSize: 7, fontWeight: 600, color: 'var(--ios-light-100)' }}>AN</span>
+        </div>
+        {/* LinkedIn badge */}
+        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 10, height: 10, borderRadius: 2, background: '#0077B5', border: '1px solid var(--ios-light-100)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontFamily: font, fontSize: 6, fontWeight: 700, color: 'white', lineHeight: 1 }}>in</span>
+        </div>
+      </div>
+    );
+  }
+  if (type === 'x') {
+    return (
+      <div style={{ width: 20, height: 20, borderRadius: 4, background: '#15171a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M7.5 1.5L2.5 8.5M2.5 1.5L7.5 8.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+  if (type === 'linkedin') {
+    return (
+      <div style={{ width: 20, height: 20, borderRadius: 4, background: '#0077B5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <span style={{ fontFamily: font, fontSize: 9, fontWeight: 700, color: 'white', lineHeight: 1 }}>in</span>
+      </div>
+    );
+  }
+  // google
+  return (
+    <div style={{ width: 20, height: 20, borderRadius: 4, background: 'white', border: '1px solid var(--ios-dark-8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontFamily: font, fontSize: 9, fontWeight: 700, background: 'linear-gradient(180deg,#4285F4,#34A853,#FBBC05,#EA4335)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>G</span>
     </div>
   );
 }
 
-function SectionHeader({ label }: { label: string }) {
+// section: post-day radio row
+
+function PostDayRow({ day, selected, onSelect, isLast }: { day: string; selected: boolean; onSelect: () => void; isLast: boolean }) {
   return (
-    <div style={{ padding: '16px 0 8px' }}>
-      <span style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', letterSpacing: '0.14px' }}>{label}</span>
-    </div>
+    <button
+      type="button"
+      onClick={onSelect}
+      style={{
+        width: '100%',
+        height: 52,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        background: 'var(--ios-light-100)',
+        border: 'none',
+        borderBottom: isLast ? 'none' : '1px solid var(--ios-dark-4)',
+        cursor: 'pointer',
+        textAlign: 'left',
+      }}
+    >
+      <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)' }}>{day}</span>
+      {selected ? (
+        <div style={{ width: 20, height: 20, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <IconCheckmark />
+        </div>
+      ) : (
+        <div style={{ width: 20, height: 20, borderRadius: 99, border: '1.5px solid var(--ios-dark-40)', flexShrink: 0 }} />
+      )}
+    </button>
   );
 }
 
-function PlatformBadge({ platform }: { platform: 'x' | 'linkedin' | 'google' }) {
-  const styles: Record<string, { bg: string; color: string; text: string }> = {
-    x:        { bg: '#000', color: '#fff', text: 'X' },
-    linkedin: { bg: '#0A66C2', color: '#fff', text: 'in' },
-    google:   { bg: '#fff', color: '#4285F4', text: 'G' },
+// section: account rows for content type screens
+
+function AccountSection({
+  mode,
+  toggles,
+  setToggles,
+  uniquePosts,
+  setUniquePosts,
+}: {
+  mode: ContentMode;
+  toggles: { radiantHealth: boolean; adamNathan: boolean };
+  setToggles: (t: { radiantHealth: boolean; adamNathan: boolean }) => void;
+  uniquePosts: Record<string, number>;
+  setUniquePosts: (p: Record<string, number>) => void;
+}) {
+  const rowStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '0 16px',
+    height: 51,
+    borderBottom: '1px solid var(--ios-dark-4)',
   };
-  const s = styles[platform];
+
   return (
-    <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, border: platform === 'google' ? '1px solid rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <span style={{ fontFamily: font, fontSize: 14, fontWeight: 700, color: s.color }}>{s.text}</span>
+    <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden', marginBottom: 20 }}>
+      {/* Radiant Health */}
+      <div style={rowStyle}>
+        <AccountAvatar type="radiantHealth" />
+        <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>Radiant Health</span>
+        {mode === 'crosspost' ? (
+          <Toggle on={toggles.radiantHealth} onChange={v => setToggles({ ...toggles, radiantHealth: v })} />
+        ) : (
+          <Stepper value={uniquePosts.radiantHealth} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, radiantHealth: v })} />
+        )}
+      </div>
+
+      {/* Adam Nathan */}
+      <div style={rowStyle}>
+        <AccountAvatar type="adamNathan" />
+        <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>Adam Nathan</span>
+        {mode === 'crosspost' ? (
+          <Toggle on={toggles.adamNathan} onChange={v => setToggles({ ...toggles, adamNathan: v })} />
+        ) : (
+          <Stepper value={uniquePosts.adamNathan} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, adamNathan: v })} />
+        )}
+      </div>
+
+      {/* X/Twitter */}
+      <div style={rowStyle}>
+        <AccountAvatar type="x" />
+        <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>X/Twitter</span>
+        {mode === 'crosspost' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+            <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-60)' }}>Connect</span>
+            <IconChevronRight />
+          </div>
+        ) : (
+          <Stepper value={uniquePosts.twitter} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, twitter: v })} />
+        )}
+      </div>
+
+      {/* LinkedIn */}
+      <div style={rowStyle}>
+        <AccountAvatar type="linkedin" />
+        <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>LinkedIn</span>
+        {mode === 'crosspost' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+            <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-60)' }}>Connect</span>
+            <IconChevronRight />
+          </div>
+        ) : (
+          <Stepper value={uniquePosts.linkedin} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, linkedin: v })} />
+        )}
+      </div>
+
+      {/* Google */}
+      <div style={rowStyle}>
+        <AccountAvatar type="google" />
+        <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>Google Business Profile</span>
+        {mode === 'crosspost' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+            <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-60)' }}>Connect</span>
+            <IconChevronRight />
+          </div>
+        ) : (
+          <Stepper value={uniquePosts.google} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, google: v })} />
+        )}
+      </div>
+
+      {/* Add New Account */}
+      <button
+        type="button"
+        style={{ width: '100%', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)' }}
+      >
+        Add New Account
+      </button>
     </div>
   );
+}
+
+// section: content type sheet
+
+const CONTENT_TYPES: { view: View; title: string; icon: () => JSX.Element; subtitle: (mode: ContentMode, postsPerWeek: number, postDay: string) => string }[] = [
+  {
+    view: 'still-image',
+    title: 'Still image post',
+    icon: IconStillImage,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+  },
+  {
+    view: 'carousel',
+    title: 'Carousel post',
+    icon: IconCarousel,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+  },
+  {
+    view: 'feed-video',
+    title: 'Feed video post',
+    icon: IconVideo,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+  },
+  {
+    view: 'blogs',
+    title: 'Blogs',
+    icon: IconBlog,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+  },
+  {
+    view: 'emails',
+    title: 'Emails',
+    icon: IconEmail,
+    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd}` : `4 accounts · Total 8 posts · ${pd}`,
+  },
+];
+
+function titleForView(v: View): string {
+  return CONTENT_TYPES.find(t => t.view === v)?.title ?? '';
 }
 
 // section: main component
 
 export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
   const [view, setView] = useState<View>('settings');
-
-  // form state
-  const [mode, setMode] = useState<'Crosspost' | 'Unique posts per channel'>('Unique posts per channel');
+  const [history, setHistory] = useState<View[]>([]);
+  const [mode, setMode] = useState<ContentMode>('crosspost');
   const [postsPerWeek, setPostsPerWeek] = useState(2);
-  const [accountsOn, setAccountsOn] = useState({ radiantHealth: true, adamNathan: true });
-  const [postDays, setPostDays] = useState<Set<string>>(new Set(['Any day']));
-  const [perAccount, setPerAccount] = useState({ radiantHealth: 5, adamNathan: 3 });
-  const [showPicker, setShowPicker] = useState<'radiantHealth' | 'adamNathan' | null>(null);
-  const [confirmedIds, setConfirmedIds] = useState<Set<number>>(new Set(CONFIRM_CAMPAIGNS.map(c => c.id)));
+  const [toggles, setToggles] = useState({ radiantHealth: true, adamNathan: true });
+  const [uniquePosts, setUniquePosts] = useState<Record<string, number>>({
+    radiantHealth: 5,
+    adamNathan: 5,
+    twitter: 0,
+    linkedin: 0,
+    google: 0,
+  });
+  const [postDay, setPostDay] = useState('Any day');
+  const [confirmedIds, setConfirmedIds] = useState<Set<number>>(new Set([1, 2, 3, 4, 5, 6]));
 
-  function toggleDay(day: string) {
-    if (day === 'Any day') { setPostDays(new Set(['Any day'])); return; }
-    const next = new Set(postDays);
-    next.delete('Any day');
-    if (next.has(day)) next.delete(day); else next.add(day);
-    if (next.size === 0) next.add('Any day');
-    setPostDays(next);
+  function push(v: View) {
+    setHistory(h => [...h, view]);
+    setView(v);
+  }
+
+  function back() {
+    if (history.length === 0) {
+      onClose();
+      return;
+    }
+    const prev = history[history.length - 1];
+    setHistory(h => h.slice(0, -1));
+    setView(prev);
   }
 
   function toggleCampaign(id: number) {
@@ -100,305 +422,295 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
     setConfirmedIds(next);
   }
 
-  function handleConfirm() {
-    onConfirm();
-    onClose();
-  }
+  // section: settings screen
+  const settingsRows = [
+    {
+      icon: <IconSettings />,
+      title: 'Content',
+      description: 'Change channels, number of posts, and frequencies per campaign',
+      onClick: () => push('content'),
+    },
+    {
+      icon: <IconCalendar />,
+      title: 'Schedule',
+      description: 'Edit when campaigns and content should be generated',
+      onClick: () => {},
+    },
+    {
+      icon: <IconBarChart />,
+      title: 'Growth settings',
+      description: 'Adjust how quickly your playbook expands and posting scales up',
+      onClick: () => {},
+    },
+  ];
 
   return (
     <>
-      {/* Scrim */}
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.08)', zIndex: 40 }} />
-
-      {/* Full-screen overlay */}
-      <div style={{ position: 'absolute', inset: 0, background: 'white', zIndex: 50, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-
-        {/* — Settings menu — */}
-        {view === 'settings' && (
-          <>
-            <ScreenHeader title="Settings" onBack={onClose} />
-            <div style={{ flex: 1, padding: '8px 20px 32px', background: 'var(--ios-background-gray)' }}>
-              <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--ios-dark-4)', overflow: 'hidden' }}>
-                {[
-                  { icon: layoutIcon, title: 'Content', sub: 'Change channels, number of posts, and frequencies per campaign', onClick: () => setView('content') },
-                  { icon: calendarIcon, title: 'Schedule', sub: 'Edit when campaigns and content should be generated', onClick: () => {} },
-                  { icon: barGroupIcon, title: 'Growth settings', sub: 'Adjust how quickly your playbook expands and posting scales up', onClick: () => {} },
-                ].map((row, i, arr) => (
-                  <button
-                    key={row.title} type="button" onClick={row.onClick}
-                    style={{ width: '100%', padding: '16px', display: 'flex', alignItems: 'center', gap: 14, background: 'none', border: 'none', cursor: 'pointer', borderBottom: i < arr.length - 1 ? '1px solid var(--ios-dark-4)' : 'none', textAlign: 'left' }}
-                  >
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--ios-dark-4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <img src={row.icon} alt="" aria-hidden="true" style={{ width: 20, height: 20 }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1.3 }}>{row.title}</div>
-                      <div style={{ fontFamily: font, fontSize: 12, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2, letterSpacing: '0.12px' }}>{row.sub}</div>
-                    </div>
-                    <img src={chevronRightIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16, opacity: 0.3, flexShrink: 0 }} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* — Content defaults — */}
-        {view === 'content' && (
-          <>
-            <ScreenHeader title="Content defaults" onBack={() => setView('settings')} />
-            <div style={{ flex: 1, padding: '0 20px', overflowY: 'auto', paddingBottom: 130 }}>
-              {/* Description */}
-              <p style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-60)', lineHeight: 1.5, margin: '0 0 20px', letterSpacing: '0.14px' }}>
-                Set the default channels, cadence, and weekly post count that each strategy applies to its campaigns.
-              </p>
-
-              {/* Mode toggle */}
-              <div style={{ marginBottom: 12 }}>
-                <span style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', display: 'block', marginBottom: 10 }}>
-                  Post the same content or tailor per channel?
-                </span>
-                <SegmentSelector
-                  options={['Crosspost', 'Unique posts per channel']}
-                  selected={mode}
-                  onSelect={v => setMode(v as typeof mode)}
-                  fullWidth
-                />
-              </div>
-
-              {/* Warning banner — unique posts mode only */}
-              {mode === 'Unique posts per channel' && (
-                <div style={{ background: 'rgba(255,174,0,0.1)', border: '1px solid rgba(255,174,0,0.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠️</span>
-                  <div>
-                    <div style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1.3 }}>Unique posts per account use more credits</div>
-                    <div style={{ fontFamily: font, fontSize: 12, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>Add additional credits or scale back your weekly posts to stay on track.</div>
-                  </div>
+      {/* Settings */}
+      <Sheet visible={view === 'settings'} title="Settings" size="large" onClose={back}>
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)' }}>
+          <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden' }}>
+            {settingsRows.map((row, i) => (
+              <button
+                key={row.title}
+                type="button"
+                onClick={row.onClick}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  padding: '16px 20px',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: i < settingsRows.length - 1 ? '1px solid var(--ios-dark-4)' : 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ width: 20, height: 20, flexShrink: 0 }}>{row.icon}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)', lineHeight: 1.4 }}>{row.title}</div>
+                  <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>{row.description}</div>
                 </div>
-              )}
-
-              {/* Content type cards */}
-              {[
-                { icon: imageIcon,  label: 'Still image post',  onClick: () => setView('still-image') },
-                { icon: layersIcon, label: 'Carousel post',     onClick: () => {} },
-                { icon: playIcon,   label: 'Feed video post',   onClick: () => {} },
-              ].map((type) => (
-                <div key={type.label} style={{ border: '1px solid var(--ios-dark-8)', borderRadius: 12, marginBottom: 10, overflow: 'hidden' }}>
-                  <button type="button" onClick={type.onClick} style={{ width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: '1px solid var(--ios-dark-4)', cursor: 'pointer', textAlign: 'left' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 6, background: 'var(--ios-dark-4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <img src={type.icon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
-                    </div>
-                    <span style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', flex: 1, textAlign: 'left' }}>{type.label}</span>
-                    <img src={chevronRightIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16, opacity: 0.3 }} />
-                  </button>
-                  <div style={{ padding: '0 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--ios-dark-4)' }}>
-                      <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-60)', width: 80, flexShrink: 0 }}>Accounts</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 99, background: '#45164a', overflow: 'hidden' }}>
-                          <img src={ASSETS.adamAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                        <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-90)' }}>Adam Nathan</span>
-                        <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-60)' }}>+ 3</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '10px 0' }}>
-                      <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-60)', width: 80, flexShrink: 0 }}>Posting</span>
-                      <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-60)' }}>
-                        {mode === 'Crosspost' ? `Anyday, ${postsPerWeek} posts/week` : 'Anyday, total 8 posts'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Sticky footer */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 24px', background: 'white', borderTop: '1px solid var(--ios-dark-4)' }}>
-              <button type="button" onClick={() => setView('confirm')} style={{ width: '100%', height: 52, borderRadius: 99, background: 'var(--ios-dark-90)', border: 'none', cursor: 'pointer', fontFamily: font, fontSize: 16, fontWeight: 500, color: 'white' }}>
-                Save Changes
+                <IconChevronRight />
               </button>
-              <div style={{ textAlign: 'center', marginTop: 8 }}>
-                <span style={{ fontFamily: font, fontSize: 12, color: 'var(--ios-dark-60)' }}>12 posts per week · 165 credits · +15 more credits per week</span>
+            ))}
+          </div>
+        </div>
+      </Sheet>
+
+      {/* Content defaults */}
+      <Sheet
+        visible={view === 'content'}
+        title="Content defaults"
+        size="large"
+        onClose={back}
+        primaryLabel="Save Changes"
+        onPrimary={() => push('confirm')}
+        footerNote={<CreditsNote />}
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Description */}
+          <p style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.5, margin: 0 }}>
+            Set the default channels, cadence, and weekly post count that each strategy applies to its campaigns.
+          </p>
+
+          {/* Mode pills */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)' }}>
+              Post the same content or tailor per channel?
+            </span>
+            <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setMode('crosspost')}
+                style={mode === 'crosspost' ? {
+                  border: '1px solid var(--ios-dark-90)',
+                  background: 'var(--ios-light-100)',
+                  borderRadius: 99,
+                  padding: '8px 14px',
+                  cursor: 'pointer',
+                  fontFamily: font,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: 'var(--ios-dark-90)',
+                } : {
+                  border: '1px solid var(--ios-dark-4)',
+                  background: 'rgba(0,0,0,0.03)',
+                  borderRadius: 99,
+                  padding: '8px 14px',
+                  cursor: 'pointer',
+                  fontFamily: font,
+                  fontSize: 16,
+                  fontWeight: 400,
+                  color: 'var(--ios-dark-90)',
+                }}
+              >
+                Crosspost
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('unique')}
+                style={mode === 'unique' ? {
+                  border: '1px solid var(--ios-dark-90)',
+                  background: 'var(--ios-light-100)',
+                  borderRadius: 99,
+                  padding: '8px 14px',
+                  cursor: 'pointer',
+                  fontFamily: font,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: 'var(--ios-dark-90)',
+                } : {
+                  border: '1px solid var(--ios-dark-4)',
+                  background: 'rgba(0,0,0,0.03)',
+                  borderRadius: 99,
+                  padding: '8px 14px',
+                  cursor: 'pointer',
+                  fontFamily: font,
+                  fontSize: 16,
+                  fontWeight: 400,
+                  color: 'var(--ios-dark-90)',
+                }}
+              >
+                Unique posts per channel
+              </button>
+            </div>
+          </div>
+
+          {/* Warning banner — unique mode only */}
+          {mode === 'unique' && (
+            <div style={{ background: 'rgba(255,200,0,0.1)', border: '1px solid rgba(255,200,0,0.1)', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 10 }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+              <div>
+                <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>
+                  <strong>Unique posts per account use more credits</strong>
+                </div>
+                <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>
+                  Add additional credits or scale back your weekly posts to stay on track.
+                </div>
               </div>
             </div>
-          </>
-        )}
+          )}
 
-        {/* — Still image post — */}
-        {view === 'still-image' && (
-          <>
-            <ScreenHeader title="Still image post" onBack={() => setView('content')} />
-            <div style={{ flex: 1, padding: '0 20px 40px', overflowY: 'auto' }}>
-
-              {/* Accounts section */}
-              <SectionHeader label={mode === 'Crosspost' ? 'Accounts' : 'Accounts / posts per week'} />
-              <div style={{ background: 'white', border: '1px solid var(--ios-dark-8)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-                {/* Connected accounts */}
-                {[
-                  { key: 'radiantHealth' as const, name: 'Radiant Health', avatar: ASSETS.workspaceAvatar },
-                  { key: 'adamNathan' as const,    name: 'Adam Nathan',    avatar: ASSETS.adamAvatar },
-                ].map((acct, i) => (
-                  <div key={acct.key} style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12, borderBottom: '1px solid var(--ios-dark-4)' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 99, background: '#45164a', overflow: 'hidden', flexShrink: 0 }}>
-                      <img src={acct.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', flex: 1 }}>{acct.name}</span>
-                    {mode === 'Crosspost' ? (
-                      <Toggle on={accountsOn[acct.key]} onChange={v => setAccountsOn(prev => ({ ...prev, [acct.key]: v }))} />
-                    ) : (
-                      <button type="button" onClick={() => setShowPicker(acct.key)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                        <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-60)' }}>{perAccount[acct.key]} posts</span>
-                        <img src={chevronRightIcon} alt="" style={{ width: 16, height: 16, opacity: 0.3 }} />
-                      </button>
-                    )}
+          {/* Content type list */}
+          <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden' }}>
+            {CONTENT_TYPES.map((type, i) => (
+              <button
+                key={type.view}
+                type="button"
+                onClick={() => push(type.view)}
+                style={{
+                  width: '100%',
+                  background: 'var(--ios-light-100)',
+                  borderRadius: 0,
+                  display: 'flex',
+                  gap: 16,
+                  alignItems: 'center',
+                  padding: '16px 16px 16px 20px',
+                  border: 'none',
+                  borderBottom: i < CONTENT_TYPES.length - 1 ? '1px solid var(--ios-dark-4)' : 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ width: 20, height: 20, flexShrink: 0 }}><type.icon /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)', lineHeight: 1.4 }}>{type.title}</div>
+                  <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>
+                    {type.subtitle(mode, postsPerWeek, postDay)}
                   </div>
-                ))}
-                {/* Unconnected platform accounts */}
-                {[
-                  { platform: 'x' as const,        name: 'X/Twitter' },
-                  { platform: 'linkedin' as const,  name: 'LinkedIn' },
-                  { platform: 'google' as const,    name: 'Google Business Profile' },
-                ].map(acct => (
-                  <div key={acct.name} style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', gap: 12, borderBottom: '1px solid var(--ios-dark-4)' }}>
-                    <PlatformBadge platform={acct.platform} />
-                    <span style={{ fontFamily: font, fontSize: 16, color: 'var(--ios-dark-90)', flex: 1 }}>{acct.name}</span>
-                    {mode === 'Crosspost' ? (
-                      <button type="button" style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                        <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-60)' }}>Connect</span>
-                        <img src={chevronRightIcon} alt="" style={{ width: 16, height: 16, opacity: 0.3 }} />
-                      </button>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-40)' }}>0 posts</span>
-                        <img src={chevronRightIcon} alt="" style={{ width: 16, height: 16, opacity: 0.2 }} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {/* Add New Account */}
-                <button type="button" style={{ width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 99, border: '1.5px dashed rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <img src={plusIcon} alt="" style={{ width: 16, height: 16, opacity: 0.4 }} />
-                  </div>
-                  <span style={{ fontFamily: font, fontSize: 16, color: 'var(--ios-dark-60)' }}>Add New Account</span>
-                </button>
-              </div>
+                </div>
+                <IconChevronRight />
+              </button>
+            ))}
+          </div>
+        </div>
+      </Sheet>
 
-              {/* Posts per week — crosspost mode only */}
-              {mode === 'Crosspost' && (
-                <>
-                  <SectionHeader label="Posts per week" />
-                  <div style={{ border: '1px solid var(--ios-dark-8)', borderRadius: 12, padding: '16px', marginBottom: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <button type="button" onClick={() => setPostsPerWeek(n => Math.max(0, n - 1))} style={{ width: 44, height: 44, borderRadius: 99, border: '1px solid var(--ios-dark-8)', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: font, fontSize: 20, color: 'var(--ios-dark-90)' }}>
-                        −
-                      </button>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontFamily: font, fontSize: 28, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1 }}>{postsPerWeek}</div>
-                        <div style={{ fontFamily: font, fontSize: 12, color: 'var(--ios-dark-60)', marginTop: 4 }}>Posts per week</div>
-                      </div>
-                      <button type="button" onClick={() => setPostsPerWeek(n => Math.min(20, n + 1))} style={{ width: 44, height: 44, borderRadius: 99, border: '1px solid var(--ios-dark-8)', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: font, fontSize: 20, color: 'var(--ios-dark-90)' }}>
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+      {/* Content type screens — still-image, carousel, feed-video, blogs, emails */}
+      {(['still-image', 'carousel', 'feed-video', 'blogs', 'emails'] as View[]).map(ct => (
+        <Sheet key={ct} visible={view === ct} title={titleForView(ct)} size="large" onClose={back}>
+          <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Accounts section label */}
+            <span style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', paddingLeft: 15 }}>
+              {mode === 'crosspost' ? 'Accounts' : 'Accounts / posts per week'}
+            </span>
 
-              {/* Post days */}
-              <SectionHeader label="Post days" />
-              <div style={{ border: '1px solid var(--ios-dark-8)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-                {POST_DAYS.map((day, i) => {
-                  const isSelected = postDays.has(day);
-                  return (
-                    <button
-                      key={day} type="button" onClick={() => toggleDay(day)}
-                      style={{ width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', border: 'none', borderBottom: i < POST_DAYS.length - 1 ? '1px solid var(--ios-dark-4)' : 'none', cursor: 'pointer', textAlign: 'left' }}
-                    >
-                      <span style={{ fontFamily: font, fontSize: 16, color: 'var(--ios-dark-90)' }}>{day}</span>
-                      {isSelected && (
-                        <div style={{ width: 24, height: 24, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <img src={checkIcon} alt="" style={{ width: 14, height: 14, filter: 'invert(1)' }} />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <AccountSection
+              mode={mode}
+              toggles={toggles}
+              setToggles={setToggles}
+              uniquePosts={uniquePosts}
+              setUniquePosts={setUniquePosts}
+            />
 
-            {/* Posts-per-account picker sheet */}
-            {showPicker && (
+            {/* Post frequency — crosspost only */}
+            {mode === 'crosspost' && (
               <>
-                <div onClick={() => setShowPicker(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.18)', zIndex: 10 }} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'white', borderRadius: '24px 24px 0 0', padding: '12px 20px 32px', zIndex: 20 }}>
-                  <div style={{ width: 58, height: 5, borderRadius: 99, background: 'rgba(0,0,0,0.08)', margin: '0 auto 20px' }} />
-                  <div style={{ fontFamily: font, fontSize: 18, fontWeight: 400, color: 'var(--ios-dark-90)', textAlign: 'center', marginBottom: 16 }}>Posts per week</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                    {[0, 1, 2, 3, 4].map(n => {
-                      const cur = perAccount[showPicker];
-                      const dist = Math.abs(n - cur);
-                      const opacity = dist === 0 ? 1 : dist === 1 ? 0.4 : 0.2;
-                      return (
-                        <button key={n} type="button" onClick={() => { setPerAccount(prev => ({ ...prev, [showPicker!]: n })); setShowPicker(null); }}
-                          style={{ width: '100%', height: 44, background: 'none', border: 'none', cursor: 'pointer', fontFamily: font, fontSize: dist === 0 ? 22 : 18, fontWeight: dist === 0 ? 500 : 400, color: 'var(--ios-dark-90)', opacity }}>
-                          {n}
-                        </button>
-                      );
-                    })}
+                <span style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)' }}>Post frequency</span>
+                <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px', height: 51 }}>
+                    <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>Posts per week</span>
+                    <Stepper value={postsPerWeek} min={1} max={14} onChange={setPostsPerWeek} />
                   </div>
                 </div>
               </>
             )}
-          </>
-        )}
 
-        {/* — Confirm — */}
-        {view === 'confirm' && (
-          <>
-            <ScreenHeader title="Confirm" onBack={() => setView('content')} />
-            <div style={{ flex: 1, padding: '0 20px', overflowY: 'auto', paddingBottom: 100 }}>
-              <p style={{ fontFamily: font, fontSize: 14, color: 'var(--ios-dark-90)', lineHeight: 1.5, margin: '0 0 20px', letterSpacing: '0.14px' }}>
-                All 6 planned campaigns and any future ones will be updated. Deselect any campaigns you'd like to keep unchanged.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid var(--ios-dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-                {CONFIRM_CAMPAIGNS.map((c, i) => {
-                  const isChecked = confirmedIds.has(c.id);
-                  return (
-                    <button
-                      key={c.id} type="button" onClick={() => toggleCampaign(c.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'white', border: 'none', borderBottom: i < CONFIRM_CAMPAIGNS.length - 1 ? '1px solid var(--ios-dark-4)' : 'none', cursor: 'pointer', textAlign: 'left' }}
-                    >
-                      <div style={{ width: 72, height: 72, borderRadius: 8, background: 'var(--ios-dark-4)', overflow: 'hidden', flexShrink: 0 }}>
-                        <img src={c.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: font, fontSize: 10, color: 'var(--ios-dark-40)', marginBottom: 2 }}>Fri, Feb 8 · Mon, Feb 12</div>
-                        <div style={{ fontFamily: font, fontSize: 15, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1.3, marginBottom: 4 }}>{c.title}</div>
-                        <div style={{ fontFamily: font, fontSize: 12, color: 'var(--ios-dark-60)', marginBottom: 6 }}>{c.category}</div>
-                        <div style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 6, background: 'rgba(0,0,0,0.04)', border: '1px solid var(--ios-dark-4)' }}>
-                          <span style={{ fontFamily: font, fontSize: 11, color: 'var(--ios-dark-60)' }}>Generates in 3 days</span>
-                        </div>
-                      </div>
-                      <div style={{ width: 32, height: 32, borderRadius: 99, flexShrink: 0, background: isChecked ? 'var(--ios-dark-90)' : 'transparent', border: isChecked ? 'none' : '1.5px solid rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {isChecked && <img src={checkIcon} alt="" style={{ width: 16, height: 16, filter: 'invert(1)' }} />}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Post days */}
+            <span style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)' }}>Post days</span>
+            <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden' }}>
+              {POST_DAYS.map((day, i) => (
+                <PostDayRow
+                  key={day}
+                  day={day}
+                  selected={postDay === day}
+                  onSelect={() => setPostDay(day)}
+                  isLast={i === POST_DAYS.length - 1}
+                />
+              ))}
             </div>
+          </div>
+        </Sheet>
+      ))}
 
-            {/* Confirm footer */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 28px', background: 'white', borderTop: '1px solid var(--ios-dark-4)' }}>
-              <button type="button" onClick={handleConfirm} style={{ width: '100%', height: 52, borderRadius: 99, background: 'var(--ios-dark-90)', border: 'none', cursor: 'pointer', fontFamily: font, fontSize: 16, fontWeight: 500, color: 'white' }}>
-                Confirm
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      {/* Confirm */}
+      <Sheet
+        visible={view === 'confirm'}
+        title="Confirm"
+        size="large"
+        onClose={back}
+        primaryLabel="Confirm"
+        onPrimary={onConfirm}
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <p style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.5, margin: 0 }}>
+            All 6 planned campaigns and any future ones will be updated. Deselect any campaigns you'd like to keep unchanged.
+          </p>
+
+          {/* Campaign list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {CONFIRM_CAMPAIGNS.map(c => {
+              const isSelected = confirmedIds.has(c.id);
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => toggleCampaign(c.id)}
+                  style={{ display: 'flex', gap: 17, alignItems: 'center', position: 'relative', cursor: 'pointer' }}
+                >
+                  {/* Thumbnail */}
+                  <img
+                    src={c.thumb}
+                    alt=""
+                    style={{ width: 104, height: 125, borderRadius: 16, objectFit: 'cover', flexShrink: 0 }}
+                  />
+
+                  {/* Content */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 125, paddingTop: 4, paddingBottom: 4 }}>
+                    <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-90)' }}>{c.dates}</span>
+                    <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>{c.title}</span>
+                    <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-60)' }}>{c.category}</span>
+                    <span style={{ border: '1px solid var(--ios-dark-4)', borderRadius: 5, padding: '2px 8px', fontSize: 12, fontFamily: font, color: 'var(--ios-dark-60)', background: 'rgba(0,0,0,0.08)', display: 'inline-block' }}>
+                      {c.badge}
+                    </span>
+                  </div>
+
+                  {/* Radio circle */}
+                  {isSelected ? (
+                    <div style={{ width: 20, height: 20, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <IconCheckmark />
+                    </div>
+                  ) : (
+                    <div style={{ width: 20, height: 20, borderRadius: 99, border: '1.5px solid var(--ios-dark-40)', flexShrink: 0 }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Sheet>
     </>
   );
 }

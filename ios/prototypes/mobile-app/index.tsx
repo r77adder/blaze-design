@@ -11,6 +11,7 @@ import { ContentPreviewSheet } from './ContentPreviewSheet';
 import { CampaignSettingsOverlay } from './CampaignSettingsOverlay';
 
 import plusIcon from '@ios/icons/plus-01.svg';
+import checkBrokenIcon from '@ios/icons/lighter_weight/check-broken.svg';
 import homeIcon from '@ios/icons/home-04.svg';
 import homeFilledIcon from '@ios/icons/home-filled.svg';
 import calendarIcon from '@ios/icons/calendar-01.svg';
@@ -111,7 +112,7 @@ function CampToast({ show }: { show: boolean }) {
       `}</style>
       <div className="camp-toast" style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.9)', borderRadius: 99, height: 52, padding: '0 20px', display: 'flex', alignItems: 'center', gap: 10, zIndex: 200, whiteSpace: 'nowrap' }}>
         <div style={{ width: 20, height: 20, borderRadius: 99, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: 12 }}>✓</span>
+          <img src={checkBrokenIcon} alt="" style={{ width: 16, height: 16 }} />
         </div>
         <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'white' }}>Changes applied to 6 campaigns</span>
       </div>

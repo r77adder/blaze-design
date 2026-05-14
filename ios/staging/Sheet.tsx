@@ -32,6 +32,14 @@ export interface SheetProps {
   onClose?: () => void;
   onPrimary?: () => void;
   onSecondary?: () => void;
+  /**
+   * Right toolbar button variant shown in the header.
+   * "primary" renders the dark-90 filled ✓ confirm button (Figma 4461-55664).
+   */
+  rightButton?: import('./ToolbarButton').ToolbarButtonVariant;
+  onRightPress?: () => void;
+  /** Optional note rendered below the primary/secondary buttons in the footer. */
+  footerNote?: ReactNode;
 }
 
 const SIZE_MAP: Record<SheetSize, number> = {
@@ -52,6 +60,9 @@ export function Sheet({
   onClose,
   onPrimary,
   onSecondary,
+  rightButton,
+  onRightPress,
+  footerNote,
 }: SheetProps) {
   if (!visible) return null;
 
@@ -119,8 +130,8 @@ export function Sheet({
           ...sheetStyle,
         }}
       >
-        {/* Drag handle (non-full, non-modal) */}
-        {!isFull && !isModal && (
+        {/* Drag handle — only shown when there is no header (no title, no-header size) */}
+        {!isFull && !isModal && !showHeader && (
           <div
             style={{
               width: '100%',
@@ -147,8 +158,9 @@ export function Sheet({
           <ToolbarHeader
             title={title}
             leftButton={isFull ? 'back' : 'close'}
-            rightButton={undefined}
+            rightButton={rightButton ?? undefined}
             onLeftPress={onClose}
+            onRightPress={onRightPress}
           />
         )}
 
@@ -178,11 +190,10 @@ export function Sheet({
         {(primaryLabel || secondaryLabel) && (
           <div
             style={{
-              padding: '12px 20px 24px',
+              padding: '12px 20px 40px',
               display: 'flex',
               flexDirection: 'column',
               gap: 10,
-              borderTop: '1px solid var(--ios-dark-4)',
               flexShrink: 0,
             }}
           >
@@ -203,6 +214,9 @@ export function Sheet({
                 fullWidth
                 onClick={onSecondary}
               />
+            )}
+            {footerNote && (
+              <div style={{ textAlign: 'center' }}>{footerNote}</div>
             )}
           </div>
         )}
