@@ -80,7 +80,7 @@ function GeneralTab() {
             <SubField label="Age">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <NumberInput value={25} />
-                <Text style={{ color: 'var(--dark-60)', fontSize: 13 }}>to</Text>
+                <Text style={{ color: 'var(--dark-60)', fontSize: 14 }}>to</Text>
                 <NumberInput value={54} />
               </div>
             </SubField>
@@ -113,7 +113,7 @@ function GeneralTab() {
               alignItems: 'center',
               gap: 4,
               fontFamily: "'Sohne', sans-serif",
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 500,
               color: 'var(--dark-90)',
               cursor: 'pointer',
@@ -128,7 +128,7 @@ function GeneralTab() {
       <ContentModificationSection />
 
       <Section title="Video Preferences">
-        <Text style={{ color: 'var(--dark-60)', fontSize: 13 }}>
+        <Text style={{ color: 'var(--dark-60)', fontSize: 14 }}>
           Configure default duration, aspect ratios, and captioning behavior for generated videos.
         </Text>
       </Section>
@@ -144,7 +144,7 @@ function ContentModificationSection() {
         style={{
           display: 'block',
           color: 'var(--dark-60)',
-          fontSize: 13,
+          fontSize: 14,
           lineHeight: 1.55,
           marginBottom: 16,
         }}
@@ -251,7 +251,7 @@ function ModeOption({
       </span>
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
         <Text style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{title}</Text>
-        <Text style={{ color: 'var(--dark-60)', fontSize: 13, lineHeight: 1.5 }}>
+        <Text style={{ color: 'var(--dark-60)', fontSize: 14, lineHeight: 1.5 }}>
           {description}
         </Text>
       </span>
@@ -339,7 +339,7 @@ function Field({
         {label}
       </Text>
       {hint && (
-        <Text style={{ display: 'block', fontSize: 13, color: 'var(--dark-60)', marginBottom: 10 }}>
+        <Text style={{ display: 'block', fontSize: 14, color: 'var(--dark-60)', marginBottom: 10 }}>
           {hint}
         </Text>
       )}
@@ -408,7 +408,7 @@ function OnOffToggle({ value, onChange }: { value: boolean; onChange: (v: boolea
     background: active ? 'var(--light-100)' : 'transparent',
     borderRadius: 6,
     fontFamily: "'Sohne', sans-serif",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: active ? 500 : 400,
     color: active ? 'var(--dark-90)' : 'var(--dark-60)',
     cursor: 'pointer',

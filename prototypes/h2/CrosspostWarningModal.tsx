@@ -110,7 +110,7 @@ export function CrosspostWarningModal({
             <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
               Each account will publish its own post
             </span>
-            <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
               Turning off crosspost means posts are no longer shared across accounts. A separate
               post will be created and sent for each account and channel below.
             </span>
@@ -120,7 +120,7 @@ export function CrosspostWarningModal({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               color: 'var(--dark-40)',
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
@@ -181,7 +181,7 @@ export function CrosspostWarningModal({
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'var(--light-100)',
-                      fontSize: 8,
+                      fontSize: 12,
                       fontWeight: 700,
                       lineHeight: 1,
                     }}
@@ -193,7 +193,7 @@ export function CrosspostWarningModal({
                   <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
                     {acct.name}
                   </span>
-                  <span style={{ fontSize: 12.5, color: 'var(--dark-60)' }}>{acct.channel}</span>
+                  <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{acct.channel}</span>
                 </div>
                 <div
                   style={{
@@ -204,7 +204,7 @@ export function CrosspostWarningModal({
                     background: 'var(--dark-4)',
                     borderRadius: 6,
                     color: 'var(--dark-60)',
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: 500,
                   }}
                 >

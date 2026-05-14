@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Modal, ModalStack, Text, useModals } from '@/components';
+import { Button, Heading, IconButton, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { TabChip, useToast } from '@/staging';
+import { StatusPill, TabChip, useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import Check2 from '@/icons/20/Check2';
 import Stars from '@/icons/20/Stars';
 import Globe from '@/icons/20/Globe';
+import ChevronRightSmall from '@/icons/20/ChevronRightSmall';
+import ArrowLeft from '@/icons/20/ArrowLeft';
+import LinkExternal from '@/icons/20/LinkExternal';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
@@ -122,6 +125,19 @@ type CampaignStatus =
   | 'paused'
   | 'over-budget';
 
+/** Google Ads campaign types we surface in the table. Mirrors the canonical
+ *  Google Ads categories so the table reads natively to anyone used to it. */
+type CampaignType = 'Search' | 'Display' | 'Shopping' | 'Video' | 'Performance Max' | 'App';
+
+/** Google Ads bid strategies (subset). The strings are the labels Google
+ *  itself uses, rendered verbatim in the table. */
+type BidStrategyType =
+  | 'Maximize conversions'
+  | 'Target CPA'
+  | 'Target ROAS'
+  | 'Manual CPC'
+  | 'Maximize clicks';
+
 interface Campaign {
   id: string;
   name: string;
@@ -133,6 +149,8 @@ interface Campaign {
   conversions: number;
   cpa: number;
   status: CampaignStatus;
+  campaignType: CampaignType;
+  bidStrategy: BidStrategyType;
   startedLabel: string;
   // Optional flags shown alongside the status pill
   anomaly?: boolean; // CPC spike — only the primary live campaign
@@ -155,6 +173,8 @@ const CAMPAIGNS: Campaign[] = [
     conversions: 6,
     cpa: 5.4,
     status: 'live',
+    campaignType: 'Search',
+    bidStrategy: 'Maximize conversions',
     startedLabel: 'Started 2h 14m ago',
     anomaly: true,
     fatigue: CAMPAIGN_FATIGUE,
@@ -171,6 +191,8 @@ const CAMPAIGNS: Campaign[] = [
     conversions: 18,
     cpa: 1.18,
     status: 'on-track',
+    campaignType: 'Search',
+    bidStrategy: 'Target CPA',
     startedLabel: 'Running 6 weeks',
   },
   {
@@ -184,6 +206,8 @@ const CAMPAIGNS: Campaign[] = [
     conversions: 3,
     cpa: 8.28,
     status: 'testing',
+    campaignType: 'Search',
+    bidStrategy: 'Maximize clicks',
     startedLabel: 'Testing 4 days',
   },
   {
@@ -197,6 +221,8 @@ const CAMPAIGNS: Campaign[] = [
     conversions: 22,
     cpa: 1.53,
     status: 'winner',
+    campaignType: 'Performance Max',
+    bidStrategy: 'Target ROAS',
     startedLabel: 'Running 3 weeks',
   },
   {
@@ -210,6 +236,8 @@ const CAMPAIGNS: Campaign[] = [
     conversions: 4,
     cpa: 4.85,
     status: 'spending-fast',
+    campaignType: 'Search',
+    bidStrategy: 'Maximize conversions',
     startedLabel: 'Running 18 days',
     fatigue: LOCAL_AUSTIN_FATIGUE,
   },
@@ -224,6 +252,8 @@ const CAMPAIGNS: Campaign[] = [
     conversions: 0,
     cpa: 0,
     status: 'paused',
+    campaignType: 'Search',
+    bidStrategy: 'Manual CPC',
     startedLabel: 'Paused 2 days ago',
     fatigue: REPURCHASE_FATIGUE,
   },
@@ -238,6 +268,8 @@ const CAMPAIGNS: Campaign[] = [
     conversions: 9,
     cpa: 6.47,
     status: 'over-budget',
+    campaignType: 'Search',
+    bidStrategy: 'Maximize conversions',
     startedLabel: 'Running 9 days',
   },
 ];
@@ -536,7 +568,7 @@ function EmptyState({ onStart }: { onStart: () => void }) {
       </h2>
       <p
         style={{
-          fontSize: 14.5,
+          fontSize: 14,
           color: 'var(--dark-60)',
           lineHeight: 1.55,
           margin: '0 auto 24px',
@@ -568,9 +600,9 @@ function CampaignsList({
   // One consolidated banner — inline list of every fatigued campaign.
   const fatigued = CAMPAIGNS.filter((c) => c.fatigue);
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 28px 60px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 28px 60px' }}>
       {fatigued.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 32 }}>
           <FatigueSummaryBanner
             items={fatigued.map((c) => ({
               key: c.id,
@@ -602,27 +634,24 @@ function CampaignsList({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '2fr 1fr 90px 100px 90px 80px 90px 28px',
+            gridTemplateColumns: 'minmax(240px, 2fr) 110px 110px 140px 80px 70px 60px 70px',
             gap: 14,
             alignItems: 'center',
-            padding: '11px 16px',
-            background: 'var(--surface-2, #FAFAFA)',
+            padding: '6px 16px',
             borderBottom: '1px solid var(--dark-8)',
-            fontSize: 11,
-            color: 'var(--dark-40)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            fontWeight: 450,
+            fontSize: 12,
+            color: 'var(--dark-60)',
+            fontWeight: 400,
           }}
         >
           <div>Campaign</div>
+          <div>Campaign type</div>
           <div>Status</div>
+          <div>Bid strategy</div>
           <div style={{ textAlign: 'right' }}>Spend</div>
-          <div style={{ textAlign: 'right' }}>Impr.</div>
           <div style={{ textAlign: 'right' }}>Clicks</div>
           <div style={{ textAlign: 'right' }}>Conv.</div>
           <div style={{ textAlign: 'right' }}>CPA</div>
-          <div />
         </div>
         {CAMPAIGNS.map((c, i) => (
           <CampaignRow
@@ -664,7 +693,7 @@ function CampaignRow({
       onClick={onOpen}
       style={{
         display: 'grid',
-        gridTemplateColumns: '2fr 1fr 90px 100px 90px 80px 90px 28px',
+        gridTemplateColumns: 'minmax(240px, 2fr) 110px 110px 140px 80px 70px 60px 70px',
         gap: 14,
         alignItems: 'center',
         padding: '14px 16px',
@@ -678,134 +707,63 @@ function CampaignRow({
       }}
     >
       <div>
-        <div style={{ fontSize: 13.5, fontWeight: 450, color: 'var(--dark-90)' }}>{campaign.name}</div>
-        <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 2 }}>{campaign.channel}</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{campaign.name}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{campaign.channel}</div>
+        {(showAnomaly || campaign.fatigue) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: 6 }}>
+            {showAnomaly && (
+              <StatusPill tone="warning" size="sm">1 anomaly</StatusPill>
+            )}
+            {campaign.fatigue && (
+              <FatigueFlagPill
+                fatigue={campaign.fatigue}
+                adName={`${campaign.name} — Asset combo`}
+                asSpan
+              />
+            )}
+          </div>
+        )}
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+      <div style={{ fontSize: 12, color: isPaused ? 'var(--dark-40)' : 'var(--dark-80)' }}>
+        {campaign.campaignType}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <CampaignStatusPill status={campaign.status} />
-        {showAnomaly && (
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              background: 'var(--yellow-bg, #FEF3C7)',
-              color: '#713F12',
-              padding: '2px 7px',
-              borderRadius: 5,
-              fontSize: 10.5,
-              fontWeight: 500,
-            }}
-          >
-            <AlertTriangle size={11} />1 anomaly
-          </span>
-        )}
-        {campaign.fatigue && (
-          <FatigueFlagPill
-            fatigue={campaign.fatigue}
-            adName={`${campaign.name} — Asset combo`}
-            asSpan
-          />
-        )}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ fontSize: 12, color: isPaused ? 'var(--dark-40)' : 'var(--dark-80)' }}>
+        {campaign.bidStrategy}
+      </div>
+      <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtMoney(campaign.spend)}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 13, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
-        {fmtInt(campaign.impressions)}
-      </div>
-      <div style={{ textAlign: 'right', fontSize: 13, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontSize: 14, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtInt(campaign.clicks)}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtInt(campaign.conversions)}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 13, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontSize: 14, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {campaign.conversions > 0 ? fmtMoney(campaign.cpa) : '—'}
-      </div>
-      <div style={{ color: 'var(--dark-40)' }}>
-        <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="m9 6 6 6-6 6" />
-        </svg>
       </div>
     </button>
   );
 }
 
 function CampaignStatusPill({ status }: { status: CampaignStatus }) {
-  const config: Record<CampaignStatus, { label: string; bg: string; color: string; dot?: string; pulse?: boolean }> = {
-    live: {
-      label: 'Live',
-      bg: '#DCFCE7',
-      color: '#14532D',
-      dot: 'var(--status-approved)',
-      pulse: true,
-    },
-    'on-track': {
-      label: 'On track',
-      bg: '#DCFCE7',
-      color: '#14532D',
-      dot: 'var(--status-approved)',
-    },
-    testing: {
-      label: 'Testing',
-      bg: 'rgba(59,130,246,0.10)',
-      color: '#1E40AF',
-      dot: 'var(--status-posting)',
-    },
-    winner: {
-      label: 'Winner',
-      bg: 'rgba(167,139,250,0.14)',
-      color: '#5B21B6',
-      dot: 'var(--status-posted)',
-    },
-    'spending-fast': {
-      label: 'Spending too fast',
-      bg: 'var(--yellow-bg, #FEF3C7)',
-      color: '#713F12',
-      dot: 'var(--status-connect)',
-    },
-    paused: {
-      label: 'Paused',
-      bg: 'var(--dark-4)',
-      color: 'var(--dark-60)',
-      dot: 'var(--dark-40)',
-    },
-    'over-budget': {
-      label: 'Over budget',
-      bg: 'rgba(188,1,11,0.10)',
-      color: 'var(--red-90)',
-      dot: 'var(--red-70)',
-    },
+  const config: Record<CampaignStatus, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
+    live: { label: 'Live', tone: 'success' },
+    'on-track': { label: 'On track', tone: 'success' },
+    testing: { label: 'Testing', tone: 'warning' },
+    winner: { label: 'Winner', tone: 'success' },
+    'spending-fast': { label: 'Spending too fast', tone: 'warning' },
+    paused: { label: 'Paused', tone: 'neutral' },
+    'over-budget': { label: 'Over budget', tone: 'danger' },
   };
   const c = config[status];
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        padding: '2px 8px',
-        borderRadius: 5,
-        fontSize: 11,
-        fontWeight: 450,
-        background: c.bg,
-        color: c.color,
-      }}
-    >
-      {c.dot && (
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: c.dot,
-            animation: c.pulse ? 'pulse 1.6s ease-out infinite' : undefined,
-          }}
-        />
-      )}
+    <StatusPill tone={c.tone} size="sm">
       {c.label}
-    </span>
+    </StatusPill>
   );
 }
 
@@ -868,8 +826,8 @@ function WarningBanner({
         <AlertTriangle size={16} />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 500, color: palette.titleColor, marginBottom: 2 }}>{title}</div>
-        <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>{body}</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: palette.titleColor, marginBottom: 2 }}>{title}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{body}</div>
       </div>
       <div style={{ flexShrink: 0, alignSelf: 'center' }}>
         <Button variant="secondary" size="sm" onPress={onAction}>
@@ -896,79 +854,95 @@ function FatigueSummaryBanner({ items }: { items: FatigueSummaryItem[] }) {
   return (
     <div
       style={{
-        padding: 12,
         borderRadius: 12,
-        background: 'rgba(188, 1, 11, 0.04)',
-        border: '1px solid rgba(188, 1, 11, 0.12)',
+        background: 'var(--dark-2)',
+        border: '1px solid var(--dark-4)',
+        overflow: 'hidden',
       }}
     >
+      {/* header row */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          padding: '0 4px 8px',
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--dark-4)',
         }}
       >
-        <AlertTriangle size={16} color="var(--red-90)" />
-        <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--dark-90)' }}>
+        <AlertTriangle size={16} color="var(--status-connect)" />
+        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
           Creative fatigue · {items.length} ad set{items.length === 1 ? '' : 's'} need attention
         </span>
       </div>
+      {/* inline list of fatigued rows */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {items.map((item) => (
-          <button
+        {items.map((item, i) => (
+          <FatigueSummaryRow
             key={item.key}
-            type="button"
-            onClick={item.onSelect}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '8px 4px',
-              background: 'transparent',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              width: '100%',
-            }}
-          >
-            <span
-              aria-hidden
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: 'var(--red-70)',
-                flexShrink: 0,
-              }}
-            />
-            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', flexShrink: 0 }}>
-              {item.name}
-            </span>
-            <span
-              style={{
-                fontSize: 12.5,
-                color: 'var(--dark-60)',
-                minWidth: 0,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {item.signal}
-            </span>
-            <span style={{ marginLeft: 'auto', color: 'var(--dark-40)' }} aria-hidden>
-              <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="m9 6 6 6-6 6" />
-              </svg>
-            </span>
-          </button>
+            name={item.name}
+            signal={item.signal}
+            onSelect={item.onSelect}
+            isLast={i === items.length - 1}
+          />
         ))}
       </div>
     </div>
+  );
+}
+
+function FatigueSummaryRow({
+  name,
+  signal,
+  onSelect,
+  isLast,
+}: {
+  name: string;
+  signal: string;
+  onSelect: () => void;
+  isLast: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '12px 16px',
+        background: hovered ? 'var(--dark-4)' : 'transparent',
+        border: 'none',
+        borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        textAlign: 'left',
+        width: '100%',
+        transition: 'background-color 120ms ease',
+      }}
+    >
+      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', flexShrink: 0 }}>
+        {name}
+      </span>
+      <span
+        style={{
+          fontSize: 12,
+          color: 'var(--dark-60)',
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {signal}
+      </span>
+      <span style={{ marginLeft: 'auto', color: 'var(--dark-40)', display: 'inline-flex' }} aria-hidden>
+        <ChevronRightSmall size={16} />
+      </span>
+    </button>
   );
 }
 
@@ -976,54 +950,17 @@ function FatigueSummaryBanner({ items }: { items: FatigueSummaryItem[] }) {
 
 function LiveCampaign({
   anomaly,
-  onBack,
   onResolveAnomaly,
 }: {
   anomaly: AnomalyState;
-  onBack: () => void;
   onResolveAnomaly: (action: AnomalyAction) => void;
 }) {
   const { openModal } = useModals();
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
-      <button
-        type="button"
-        onClick={onBack}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          background: 'transparent',
-          border: 'none',
-          color: 'var(--dark-60)',
-          fontSize: 13,
-          padding: '6px 0',
-          marginBottom: 14,
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-        }}
-      >
-        ← Campaigns
-      </button>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-        <span
-          style={{
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            background: 'var(--status-approved)',
-            boxShadow: '0 0 0 4px rgba(4,175,0,0.18)',
-            animation: 'pulse 1.6s ease-out infinite',
-          }}
-        />
-        <h2 style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>
-          Daily Wellness Bundle · Live
-        </h2>
-        <span style={{ fontSize: 12, color: 'var(--dark-60)', marginLeft: 'auto' }}>Started 2h 14m ago</span>
-      </div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 18 }}>
-        Search campaign · <strong>$40/day budget</strong> · Targeting wellness-curious adults 25–45, US
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 18 }}>
+        Search campaign · <strong>$40/day budget</strong> · Targeting wellness-curious adults 25–45, US ·
+        Started 2h 14m ago
       </div>
 
       {/* Warning banner stack — both warnings surface above the metrics. The
@@ -1074,7 +1011,7 @@ function LiveCampaign({
               padding: '12px 14px',
             }}
           >
-            <div style={{ fontSize: 11, color: 'var(--dark-60)', marginBottom: 6 }}>{k.label}</div>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)', marginBottom: 6 }}>{k.label}</div>
             <div
               style={{
                 fontSize: 20,
@@ -1086,7 +1023,7 @@ function LiveCampaign({
             >
               {k.value}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 500, color: DELTA_COLORS[k.tone] }}>{k.delta}</div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: DELTA_COLORS[k.tone] }}>{k.delta}</div>
           </div>
         ))}
       </div>
@@ -1103,7 +1040,7 @@ function LiveCampaign({
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <h3 style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>CTR — last 14 days</h3>
-          <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>vs. industry benchmark</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>vs. industry benchmark</span>
         </div>
         <svg viewBox="0 0 600 160" width="100%" height="160" preserveAspectRatio="none" style={{ display: 'block' }}>
           <defs>
@@ -1152,76 +1089,134 @@ function LiveCampaign({
         </svg>
       </div>
 
-      {/* Top keywords */}
-      <div>
-        <h3 style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', margin: '0 0 10px' }}>
-          Top performing keywords
-        </h3>
+      {/* Ad groups — the Google Ads campaign → ad group → keywords hierarchy.
+          Each row in KW_GROUPS becomes an ad group with its match type, theme,
+          and a few sample keywords. Tapping the chevron expands the ad group
+          to show its keywords; the first ad group also pulls in the live
+          metrics from BASE_KEYWORDS so the prototype shows real numbers. */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>
+            Ad groups
+          </h3>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+            {KW_GROUPS.length} ad groups · {KW_TOTAL} keywords
+          </span>
+        </div>
         <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-          {BASE_KEYWORDS.map((kw, i) => {
-            const effectiveStatus =
-              kw.name === 'wellness supplements' && anomaly.resolved
-                ? anomaly.action === 'pause'
-                  ? 'paused'
-                  : 'watching'
-                : kw.status;
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 110px 90px 90px 90px 120px',
+              gap: 12,
+              padding: '6px 16px',
+              borderBottom: '1px solid var(--dark-8)',
+              fontSize: 12,
+              color: 'var(--dark-60)',
+              fontWeight: 400,
+            }}
+          >
+            <div>Ad group</div>
+            <div>Match type</div>
+            <div style={{ textAlign: 'right' }}>Keywords</div>
+            <div style={{ textAlign: 'right' }}>Clicks</div>
+            <div style={{ textAlign: 'right' }}>Conv.</div>
+            <div>Status</div>
+          </div>
+          {KW_GROUPS.map((g, i) => {
+            // Synthetic metrics per ad group — group 0 gets the live numbers
+            // from BASE_KEYWORDS, the rest get plausible derived stats.
+            const isLive = i === 0;
+            const clicks = isLive ? BASE_KEYWORDS.reduce((n, k) => n + k.clicks, 0) : 30 + i * 18;
+            const conv = isLive ? BASE_KEYWORDS.reduce((n, k) => n + k.conv, 0) : Math.max(0, 2 - i);
             return (
               <div
-                key={kw.name}
+                key={g.theme}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 100px 100px 120px',
+                  gridTemplateColumns: '2fr 110px 90px 90px 90px 120px',
                   gap: 12,
                   padding: '12px 16px',
-                  borderBottom: i < BASE_KEYWORDS.length - 1 ? '1px solid var(--dark-8)' : 'none',
+                  borderBottom: i < KW_GROUPS.length - 1 ? '1px solid var(--dark-8)' : 'none',
                   alignItems: 'center',
                 }}
               >
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{kw.name}</span>
-                  {kw.fatigue && (
-                    <FatigueFlagPill fatigue={kw.fatigue} adName={`Keyword: "${kw.name}"`} />
-                  )}
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{g.theme}</span>
+                  <span style={{ fontSize: 12, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {g.terms.slice(0, 3).join(' · ')}{g.terms.length > 3 ? ' · …' : ''}
+                  </span>
+                </div>
+                <div>
+                  <MatchTag match={g.match} />
+                </div>
+                <span style={{ textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+                  {g.terms.length}
                 </span>
-                <span style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
-                  {kw.clicks} clicks
+                <span style={{ textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+                  {clicks}
                 </span>
-                <span style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
-                  {kw.conv} conv.
+                <span style={{ textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+                  {conv}
                 </span>
-                <KeywordStatusPill status={effectiveStatus} />
+                <div>
+                  <StatusPill tone={isLive ? 'success' : 'neutral'} size="sm">
+                    {isLive ? 'Active' : i === 1 ? 'Active' : 'Paused'}
+                  </StatusPill>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
-    </div>
-  );
-}
 
-function KeywordStatusPill({ status }: { status: Keyword['status'] }) {
-  const label =
-    status === 'ok' ? 'Healthy' : status === 'alert' ? 'CPC spike' : status === 'paused' ? 'Paused' : 'Watching';
-  const color =
-    status === 'ok'
-      ? { dot: 'var(--status-approved)', text: '#0E6B33' }
-      : status === 'alert'
-        ? { dot: 'var(--status-failed)', text: '#991B1B' }
-        : { dot: 'var(--status-review)', text: '#713F12' };
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        fontSize: 11,
-        fontWeight: 500,
-        color: color.text,
-      }}
-    >
-      <span style={{ width: 6, height: 6, borderRadius: '50%', background: color.dot }} />
-      {label}
-    </span>
+      {/* Negative keywords — second half of the keyword controls. Lists the
+          exclusion groups (Free/DIY, Competitors, Off-topic, etc.) with a
+          count + a peek at the first few terms. Mirrors how negative
+          keywords appear inside Google Ads ad groups + campaigns. */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>
+            Negative keywords
+          </h3>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+            {NEG_GROUPS.length} lists · {NEG_TOTAL} terms
+          </span>
+        </div>
+        <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+          {NEG_GROUPS.map((g, i) => (
+            <div
+              key={g.category}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 90px',
+                gap: 12,
+                padding: '12px 16px',
+                borderBottom: i < NEG_GROUPS.length - 1 ? '1px solid var(--dark-8)' : 'none',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{g.category}</span>
+                <span style={{ fontSize: 12, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {g.terms.slice(0, 4).join(' · ')}{g.terms.length > 4 ? ' · …' : ''}
+                </span>
+              </div>
+              <span style={{ textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+                {g.terms.length}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Live keyword summary — anomaly state surfaces here. */}
+      {anomaly.resolved && (
+        <div style={{ marginTop: 18, fontSize: 12, color: 'var(--dark-60)' }}>
+          "wellness supplements" → {anomaly.action === 'pause' ? 'paused' : 'watching'} after CPC review.
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1322,8 +1317,8 @@ function AnomalyResolved({ action }: { action: AnomalyAction | null }) {
         border: '1px solid rgba(4,175,0,0.32)',
         borderRadius: 12,
         padding: '13px 18px',
-        fontSize: 13,
-        fontWeight: 450,
+        fontSize: 14,
+        fontWeight: 500,
       }}
     >
       <Check2 size={18} />
@@ -1442,7 +1437,7 @@ function WizardLoading({ onDone, onSkip: _onSkip }: { onDone: () => void; onSkip
       </div>
       <p
         style={{
-          fontSize: 13,
+          fontSize: 14,
           color: 'var(--dark-60)',
           lineHeight: 1.55,
           margin: '0 0 18px',
@@ -1497,9 +1492,9 @@ function WizardLoading({ onDone, onSkip: _onSkip }: { onDone: () => void; onSkip
                   )}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 450, color: 'var(--dark-90)' }}>{task.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{task.name}</div>
                   {isDone && (
-                    <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginTop: 2 }}>{task.summary}</div>
+                    <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{task.summary}</div>
                   )}
                 </div>
               </div>
@@ -1507,7 +1502,7 @@ function WizardLoading({ onDone, onSkip: _onSkip }: { onDone: () => void; onSkip
                 <div
                   style={{
                     marginTop: 7,
-                    fontSize: 11.5,
+                    fontSize: 12,
                     color: 'var(--dark-60)',
                     display: 'flex',
                     alignItems: 'center',
@@ -1564,24 +1559,13 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <span
-          style={{
-            display: 'inline-block',
-            background: 'var(--yellow-bg, #FEF3C7)',
-            color: '#713F12',
-            fontSize: 10.5,
-            fontWeight: 500,
-            padding: '3px 8px',
-            borderRadius: 5,
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-            marginBottom: 10,
-          }}
-        >
-          Approval needed
-        </span>
-        <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5, margin: 0 }}>
-          Driving sales for <strong style={{ color: 'var(--dark-90)', fontWeight: 450 }}>Daily Wellness Bundle</strong> ·
+        <div style={{ marginBottom: 10 }}>
+          <StatusPill tone="warning" size="sm">
+            Approval needed
+          </StatusPill>
+        </div>
+        <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, margin: 0 }}>
+          Driving sales for <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>Daily Wellness Bundle</strong> ·
           Wellness-curious adults 25–45, US
         </p>
       </div>
@@ -1595,7 +1579,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
           marginBottom: 14,
         }}
       >
-        <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 14 }}>
           Ads being tested · 3 variants
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1615,7 +1599,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
                   background: 'var(--light-100)',
                   border: '1px solid var(--dark-15)',
                   color: 'var(--dark-80)',
-                  fontSize: 10.5,
+                  fontSize: 12,
                   fontWeight: 500,
                   padding: '1px 7px',
                   borderRadius: 4,
@@ -1631,7 +1615,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  fontSize: 11,
+                  fontSize: 12,
                   color: 'var(--dark-60)',
                   marginBottom: 5,
                 }}
@@ -1641,7 +1625,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
                 <span>radianthealth.co/wellness-bundle</span>
               </div>
               <div style={{ fontSize: 14, color: '#2563EB', marginBottom: 3, lineHeight: 1.35 }}>{c.head}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>{c.desc}</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{c.desc}</div>
             </div>
           ))}
         </div>
@@ -1656,7 +1640,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
           marginBottom: 14,
         }}
       >
-        <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 14 }}>
           Expected results
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1673,7 +1657,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
               >
                 {conv}
               </span>
-              <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+              <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>
                 conversions <span style={{ color: 'var(--dark-40)' }}>/ day</span>
               </span>
             </div>
@@ -1687,15 +1671,15 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
               style={{ flex: 1 }}
             />
           </div>
-          <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>
-            Backed by <strong style={{ color: 'var(--dark-90)', fontWeight: 450 }}>${budget}/day</strong> · ~
-            <strong style={{ color: 'var(--dark-90)', fontWeight: 450 }}>${cpa}</strong> per conversion ·{' '}
-            <strong style={{ color: 'var(--dark-90)', fontWeight: 450 }}>{imp}k</strong> impressions
+          <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>
+            Backed by <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>${budget}/day</strong> · ~
+            <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>${cpa}</strong> per conversion ·{' '}
+            <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{imp}k</strong> impressions
           </div>
         </div>
       </div>
 
-      <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.6 }}>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.6 }}>
         Agent also prepared:{' '}
         <PrepLink onClick={() => openModal(KeywordsPrepModal, {})}>{KW_TOTAL} keywords</PrepLink> ·{' '}
         <PrepLink onClick={() => openModal(BidPrepModal, {})}>Maximize Conversions bid</PrepLink> ·{' '}
@@ -1715,7 +1699,7 @@ function PrepLink({ onClick, children }: { onClick: () => void; children: React.
         border: 'none',
         cursor: 'pointer',
         fontFamily: 'inherit',
-        fontSize: 12.5,
+        fontSize: 12,
         color: 'var(--dark-90)',
         textDecoration: 'underline',
         textDecorationColor: 'var(--dark-15)',
@@ -1742,19 +1726,19 @@ function KeywordsPrepModal({ close }: StackModalProps) {
         compact={false}
       />
       <Modal.Content compact={false}>
-        <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5, margin: '0 0 16px' }}>
+        <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, margin: '0 0 16px' }}>
           {KW_GROUPS.length} themes — drawn from your top product, brand voice, and 12 competitor scans. Edit anything
           before launch.
         </p>
         {KW_GROUPS.map((g) => (
           <div key={g.theme} style={{ marginBottom: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{g.theme}</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{g.theme}</span>
               <MatchTag match={g.match} />
               <span
                 style={{
                   marginLeft: 'auto',
-                  fontSize: 11.5,
+                  fontSize: 12,
                   color: 'var(--dark-40)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
@@ -1823,7 +1807,7 @@ function MatchTag({ match }: { match: KwGroup['match'] }) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        fontSize: 10.5,
+        fontSize: 12,
         fontWeight: 500,
         padding: '2px 8px',
         borderRadius: 5,
@@ -1849,7 +1833,7 @@ function Chip({ term, onRemove }: { term: string; onRemove: () => void }) {
         border: '1px solid var(--dark-8)',
         borderRadius: 6,
         padding: '5px 9px',
-        fontSize: 12.5,
+        fontSize: 12,
         color: 'var(--dark-90)',
       }}
     >
@@ -1893,7 +1877,7 @@ function BidPrepModal({ close }: StackModalProps) {
         compact={false}
       />
       <Modal.Content compact={false}>
-        <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5, margin: '0 0 16px' }}>
+        <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, margin: '0 0 16px' }}>
           How Google places your bids. The agent picked the strategy with the strongest first-week ROI for your budget.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1942,7 +1926,7 @@ function BidPrepModal({ close }: StackModalProps) {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
-                          fontSize: 10.5,
+                          fontSize: 12,
                           fontWeight: 500,
                           padding: '2px 7px',
                           borderRadius: 5,
@@ -1956,7 +1940,7 @@ function BidPrepModal({ close }: StackModalProps) {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>{s.desc}</div>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{s.desc}</div>
                 </div>
               </button>
             );
@@ -1998,7 +1982,7 @@ function NegativesPrepModal({ close }: StackModalProps) {
         compact={false}
       />
       <Modal.Content compact={false}>
-        <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5, margin: '0 0 16px' }}>
+        <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, margin: '0 0 16px' }}>
           Searches we'll exclude from the campaign — to protect spend on low-intent or off-brand traffic. Add, remove,
           or edit anything.
         </p>
@@ -2014,11 +1998,11 @@ function NegativesPrepModal({ close }: StackModalProps) {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{g.category}</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{g.category}</span>
               <span
                 style={{
                   marginLeft: 'auto',
-                  fontSize: 11.5,
+                  fontSize: 12,
                   color: 'var(--dark-40)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
@@ -2105,7 +2089,36 @@ function PaidSearchRouteInner() {
     });
   };
 
-  const topbarRight = (
+  // The primary live campaign is the one drillable into the detail view.
+  // Title in the topbar reflects that campaign's name.
+  const liveCampaign = CAMPAIGNS.find((c) => c.primary) ?? CAMPAIGNS[0];
+  const isDetail = activeSubTab === 'campaigns' && view === 'live';
+
+  const detailTitle = isDetail ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <IconButton
+        variant="ghost"
+        size="sm"
+        icon={ArrowLeft}
+        aria-label="Back to campaigns"
+        onPress={() => setView('campaigns')}
+      />
+      <span aria-hidden style={{ width: 1, height: 16, background: 'var(--dark-15)' }} />
+      <Heading level={1} style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>
+        {liveCampaign.name}
+      </Heading>
+      <StatusPill tone="success" size="sm">Live</StatusPill>
+    </div>
+  ) : undefined;
+
+  const topbarRight = isDetail ? (
+    <>
+      <Button variant="secondary" size="md" frontIcon={LinkExternal} onPress={() => undefined}>
+        Open in Google Ads
+      </Button>
+      <GenerateReportButton />
+    </>
+  ) : (
     <>
       {activeSubTab === 'campaigns' && (
         <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenWizard}>
@@ -2116,7 +2129,7 @@ function PaidSearchRouteInner() {
     </>
   );
 
-  const topbarCenter = (
+  const topbarCenter = isDetail ? undefined : (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
       {(
         [
@@ -2136,7 +2149,7 @@ function PaidSearchRouteInner() {
   );
 
   return (
-    <H2Layout topbarCenter={topbarCenter} topbarRight={topbarRight}>
+    <H2Layout title={detailTitle} topbarCenter={topbarCenter} topbarRight={topbarRight}>
       {activeSubTab === 'campaigns' && (
         <>
           {view === 'empty' && <EmptyState onStart={handleOpenWizard} />}
@@ -2146,7 +2159,6 @@ function PaidSearchRouteInner() {
           {view === 'live' && (
             <LiveCampaign
               anomaly={anomaly}
-              onBack={() => setView('campaigns')}
               onResolveAnomaly={handleResolveAnomaly}
             />
           )}
@@ -2302,7 +2314,7 @@ const MARKET_INTEL_SEARCH: SearchMarketIntelCard[] = [
 function PaidSearchMarketIntelligenceView() {
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '20px 28px 60px' }}>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 32 }}>
         <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
           Successful ad creative from peer businesses, adapted for your brand. Approve to add to your library.
         </Text>
@@ -2373,7 +2385,7 @@ function SearchMarketIntelCardView({ card }: { card: SearchMarketIntelCard }) {
             borderRadius: 999,
             background: 'rgba(4, 175, 0, 0.10)',
             color: 'var(--status-approved)',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 500,
             lineHeight: 1,
             whiteSpace: 'nowrap',
@@ -2401,7 +2413,7 @@ function SearchMarketIntelCardView({ card }: { card: SearchMarketIntelCard }) {
               color: 'var(--dark-60)',
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
-              fontSize: 11,
+              fontSize: 12,
               display: 'block',
               marginBottom: 4,
             }}
@@ -2419,7 +2431,7 @@ function SearchMarketIntelCardView({ card }: { card: SearchMarketIntelCard }) {
               color: 'var(--dark-60)',
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
-              fontSize: 11,
+              fontSize: 12,
               display: 'block',
               marginBottom: 4,
             }}
@@ -2523,38 +2535,38 @@ function FatigueFlagPill({
       openModal(FatigueRefreshModal, { fatigue, adName });
     }
   };
-  const style: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 4,
-    padding: '4px 8px',
-    borderRadius: 999,
-    background: 'rgba(188, 1, 11, 0.10)',
-    color: 'var(--red-70)',
-    fontFamily: 'inherit',
-    fontSize: 11.5,
-    fontWeight: 500,
-    lineHeight: 1,
-    border: '1px solid rgba(188, 1, 11, 0.20)',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  };
-  const content = (
-    <>
-      <AlertTriangle size={12} color="var(--red-70)" />
-      Fatigue Day {fatigue.ageDays}
-    </>
-  );
+  const label = `Fatigue day ${fatigue.ageDays}`;
   if (asSpan) {
     return (
-      <span role="button" tabIndex={0} onClick={handleClick} onKeyDown={handleKeyDown} style={style}>
-        {content}
-      </span>
+      <StatusPill
+        tone="warning"
+        size="sm"
+        role="button"
+        tabIndex={0}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        style={{ cursor: 'pointer' }}
+      >
+        {label}
+      </StatusPill>
     );
   }
   return (
-    <button type="button" onClick={handleClick} style={style}>
-      {content}
+    <button
+      type="button"
+      onClick={handleClick}
+      style={{
+        display: 'inline-flex',
+        background: 'transparent',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+      }}
+    >
+      <StatusPill tone="warning" size="sm">
+        {label}
+      </StatusPill>
     </button>
   );
 }
@@ -2641,14 +2653,14 @@ function FatigueSection({ title, children }: { title: string; children: React.Re
           color: 'var(--dark-60)',
           textTransform: 'uppercase',
           letterSpacing: '0.04em',
-          fontSize: 11,
+          fontSize: 12,
           display: 'block',
           marginBottom: 6,
         }}
       >
         {title}
       </Text>
-      <p style={{ margin: 0, fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.6 }}>
         {children}
       </p>
     </section>
@@ -2664,7 +2676,7 @@ function FatigueBulletSection({ title, bullets }: { title: string; bullets: stri
           color: 'var(--dark-60)',
           textTransform: 'uppercase',
           letterSpacing: '0.04em',
-          fontSize: 11,
+          fontSize: 12,
           display: 'block',
           marginBottom: 8,
         }}
@@ -2673,7 +2685,7 @@ function FatigueBulletSection({ title, bullets }: { title: string; bullets: stri
       </Text>
       <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {bullets.map((b) => (
-          <li key={b} style={{ fontSize: 13.5, color: 'var(--dark-90)', lineHeight: 1.55 }}>
+          <li key={b} style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.55 }}>
             {b}
           </li>
         ))}
@@ -2735,7 +2747,7 @@ function SearchComparisonPanel({
               borderRadius: 999,
               background: 'rgba(4, 175, 0, 0.10)',
               color: 'var(--status-approved)',
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 500,
               lineHeight: 1,
               whiteSpace: 'nowrap',
@@ -2762,7 +2774,7 @@ function SearchComparisonPanel({
               border: '1px solid var(--dark-15)',
               background: 'var(--light-100)',
               color: 'var(--dark-80)',
-              fontSize: 10.5,
+              fontSize: 12,
               fontWeight: 500,
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
@@ -2796,7 +2808,7 @@ function SearchComparisonPanel({
             color: 'var(--dark-60)',
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
-            fontSize: 11,
+            fontSize: 12,
             display: 'block',
           }}
         >

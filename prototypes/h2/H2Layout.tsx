@@ -54,6 +54,8 @@ export interface H2LayoutProps {
   /** Optional content rendered in the topbar's center slot.
    *  Use for page-level tab strips. */
   topbarCenter?: ReactNode;
+  /** Remove the 24px content padding so the page owns the full area. */
+  fullBleed?: boolean;
 }
 
 /**
@@ -65,7 +67,7 @@ export interface H2LayoutProps {
  * Each page-specific component renders only its body content; the layout
  * handles all the chrome.
  */
-export function H2Layout({ children, title, topbarRight, topbarCenter }: H2LayoutProps) {
+export function H2Layout({ children, title, topbarRight, topbarCenter, fullBleed }: H2LayoutProps) {
   const { pathname } = useLocation();
   const derived = PAGE_TITLES[pathname] ?? 'Blaze';
   const { enabled } = useTools();
@@ -80,6 +82,7 @@ export function H2Layout({ children, title, topbarRight, topbarCenter }: H2Layou
       workspaceName="Radiant Health"
       topbarRight={topbarRight}
       topbarCenter={topbarCenter}
+      fullBleed={fullBleed}
     >
       {children}
     </PrototypeShell>

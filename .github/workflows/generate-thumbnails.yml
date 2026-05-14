@@ -1,0 +1,66 @@
+name: Generate prototype thumbnails
+
+# Refresh prototype/<slug>/thumbnail.png on every push to main so the
+# playground index reflects what each prototype actually looks like after
+# the latest merge. We commit the regenerated PNGs back to main using the
+# default GITHUB_TOKEN — that doesn't trigger nested workflows, so this
+# can't loop on itself.
+
+on:
+  push:
+    branches: [main]
+  # Manual trigger for the first run / one-off refreshes.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# A second push to main while one is mid-run would otherwise interleave
+# commits; cancel the older run instead.
+concurrency:
+  group: generate-thumbnails
+  cancel-in-progress: false
+
+jobs:
+  thumbnails:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use a token rather than the implicit one so the resulting commit
+          # is attributable to a bot identity rather than the merger.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright (Chromium only)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build playground
+        run: pnpm build:playground
+
+      - name: Generate thumbnails
+        run: pnpm thumbnails
+
+      - name: Commit updated thumbnails
+        run: |
+          git config user.name 'blaze-design-bot'
+          git config user.email 'blaze-design-bot@users.noreply.github.com'
+          git add prototypes/*/thumbnail.png
+          if git diff --cached --quiet; then
+            echo "No thumbnail changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: refresh prototype thumbnails
+
+[skip ci]"
+          git push origin HEAD:main

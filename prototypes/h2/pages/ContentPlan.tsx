@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { useToast } from '@/staging';
+import { StatusPill, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import Calendar1 from '@/icons/20/Calendar1';
 import Filter from '@/icons/20/Filter';
@@ -98,12 +99,12 @@ const CAMPAIGNS: CampaignData[] = [
   { name: 'Summer Preview', goal: 'Lead Generation', start: 'May 1', end: 'Jul 31', posts: 0, progress: 0, status: 'draft', platforms: ['ig', 'fb'] },
 ];
 
-const STATUS_META: Record<Status, { label: string; bg: string; color: string }> = {
-  scheduled: { label: 'Scheduled', bg: '#E8F5E9', color: '#2E7D32' },
-  draft: { label: 'Draft', bg: 'var(--dark-8)', color: 'var(--dark-60)' },
-  'needs-content': { label: 'Needs Content', bg: '#FFF3E0', color: '#E65100' },
-  published: { label: 'Published', bg: '#E3F2FD', color: '#1565C0' },
-  review: { label: 'In Review', bg: '#F3E5F5', color: '#6A1B9A' },
+const STATUS_META: Record<Status, { label: string; tone: StatusPillTone }> = {
+  scheduled: { label: 'Scheduled', tone: 'neutral' },
+  draft: { label: 'Draft', tone: 'neutral' },
+  'needs-content': { label: 'Needs Content', tone: 'warning' },
+  published: { label: 'Published', tone: 'success' },
+  review: { label: 'In Review', tone: 'warning' },
 };
 
 // ─── ROUTE ─────────────────────────────────────────────────────────────
@@ -276,7 +277,7 @@ function Sidebar({
             <path d="M3 4h10M3 8h7M3 12h5" stroke="var(--light-100)" strokeWidth={1.5} strokeLinecap="round" />
           </svg>
         </div>
-        <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: 0.15 }}>
+        <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: 0.15 }}>
           Blaze
         </span>
       </div>
@@ -340,7 +341,7 @@ function Sidebar({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 500,
             color: 'var(--light-100)',
             flexShrink: 0,
@@ -349,8 +350,8 @@ function Sidebar({
           BL
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-80)' }}>Blaze Official</div>
-          <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Pro Plan</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-80)' }}>Blaze Official</div>
+          <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>Pro Plan</div>
         </div>
       </div>
     </nav>
@@ -361,7 +362,7 @@ function SidebarSectionLabel({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 400,
         color: 'var(--dark-40)',
         letterSpacing: 0.5,
@@ -418,7 +419,7 @@ function SidebarItem({
           style={{
             background: 'var(--dark-90)',
             color: 'var(--light-100)',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 500,
             padding: '1px 6px',
             borderRadius: 20,
@@ -658,7 +659,7 @@ function ViewToggle<T extends string>({
               padding: '5px 10px',
               borderRadius: 6,
               cursor: 'pointer',
-              fontSize: 13,
+              fontSize: 14,
               color: active ? 'var(--dark-90)' : 'var(--dark-60)',
               fontFamily: 'inherit',
               border: 'none',
@@ -689,7 +690,7 @@ function SecondaryToolbarBtn({ children, icon }: { children: ReactNode; icon: Re
         border: '1px solid var(--dark-8)',
         background: 'var(--light-100)',
         cursor: 'pointer',
-        fontSize: 13,
+        fontSize: 14,
         color: 'var(--dark-80)',
         fontFamily: 'inherit',
       }}
@@ -720,7 +721,7 @@ function NeedsContentBanner({ onUpload }: { onUpload: () => void }) {
         <AlertTriangle />
       </span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, color: '#7A4A00' }}>3 posts need content</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: '#7A4A00' }}>3 posts need content</div>
         <div style={{ fontSize: 12, color: '#9A6200', marginTop: 2, lineHeight: 1.4 }}>
           These posts are scheduled but missing media or copy. Add content to keep your plan on track.
         </div>
@@ -752,7 +753,7 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
         style={{
           background: 'var(--dark-8)',
           color: 'var(--dark-60)',
-          fontSize: 11,
+          fontSize: 12,
           borderRadius: 20,
           padding: '1px 6px',
         }}
@@ -798,7 +799,7 @@ function PostRow({
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-80)',
             lineHeight: 1.4,
             whiteSpace: 'nowrap',
@@ -816,7 +817,7 @@ function PostRow({
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--dark-40)',
                 background: 'var(--dark-4)',
                 padding: '2px 6px',
@@ -832,26 +833,15 @@ function PostRow({
       <PlatformBadgeStack platforms={post.platforms} />
 
       <div style={{ flexShrink: 0, textAlign: 'right' }}>
-        <div style={{ fontSize: 13, color: 'var(--dark-80)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 14, color: 'var(--dark-80)', fontWeight: 500, whiteSpace: 'nowrap' }}>
           {post.date}
         </div>
         <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>{post.time}</div>
       </div>
 
-      <span
-        style={{
-          flexShrink: 0,
-          fontSize: 11,
-          fontWeight: 500,
-          padding: '3px 8px',
-          borderRadius: 20,
-          whiteSpace: 'nowrap',
-          background: meta.bg,
-          color: meta.color,
-        }}
-      >
+      <StatusPill tone={meta.tone} size="sm" style={{ flexShrink: 0 }}>
         {meta.label}
-      </span>
+      </StatusPill>
 
       <div style={{ flexShrink: 0, position: 'relative' }} onClick={(e) => e.stopPropagation()}>
         <button
@@ -944,7 +934,7 @@ function DropdownItem({
         gap: 8,
         padding: '7px 10px',
         borderRadius: 7,
-        fontSize: 13,
+        fontSize: 14,
         color: danger ? 'var(--red-90)' : 'var(--dark-80)',
         cursor: 'pointer',
       }}
@@ -1006,7 +996,7 @@ function PlatformBadgeStack({ platforms }: { platforms: PlatformId[] }) {
             alignItems: 'center',
             justifyContent: 'center',
             color: 'var(--light-100)',
-            fontSize: 9,
+            fontSize: 12,
             fontWeight: 700,
           }}
         >
@@ -1049,12 +1039,11 @@ function CalendarGrid({ onPreview }: { onPreview: (post: PostData) => void }) {
         <div
           key={d}
           style={{
-            background: 'var(--dark-2)',
-            padding: '8px 12px',
-            fontSize: 11,
-            color: 'var(--dark-40)',
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
+            background: 'var(--light-100)',
+            padding: '6px 12px',
+            fontSize: 12,
+            color: 'var(--dark-60)',
+            fontWeight: 400,
             textAlign: 'center',
           }}
         >
@@ -1114,7 +1103,7 @@ function CalendarGrid({ onPreview }: { onPreview: (post: PostData) => void }) {
                   background: 'var(--dark-4)',
                   border: '1px solid var(--dark-8)',
                   cursor: 'pointer',
-                  fontSize: 11,
+                  fontSize: 12,
                   color: 'var(--dark-80)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -1149,10 +1138,10 @@ function CampaignCard({
   campaign: CampaignData;
   onOpen: () => void;
 }) {
-  const statusMap = {
-    active: { label: 'Active', bg: '#E8F5E9', color: '#2E7D32' },
-    draft: { label: 'Draft', bg: 'var(--dark-8)', color: 'var(--dark-60)' },
-    ended: { label: 'Ended', bg: 'var(--dark-4)', color: 'var(--dark-40)' },
+  const statusMap: Record<CampaignData['status'], { label: string; tone: StatusPillTone }> = {
+    active: { label: 'Active', tone: 'success' },
+    draft: { label: 'Draft', tone: 'neutral' },
+    ended: { label: 'Ended', tone: 'neutral' },
   };
   const s = statusMap[campaign.status];
 
@@ -1179,19 +1168,9 @@ function CampaignCard({
             {campaign.start} – {campaign.end}
           </div>
         </div>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            padding: '3px 8px',
-            borderRadius: 20,
-            flexShrink: 0,
-            background: s.bg,
-            color: s.color,
-          }}
-        >
+        <StatusPill tone={s.tone} size="sm" style={{ flexShrink: 0 }}>
           {s.label}
-        </span>
+        </StatusPill>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div
@@ -1211,7 +1190,7 @@ function CampaignCard({
             }}
           />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--dark-40)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--dark-40)' }}>
           <span>{campaign.progress}% complete</span>
           <span>{campaign.posts} posts</span>
         </div>
@@ -1229,7 +1208,7 @@ function CampaignCard({
                 marginLeft: i === 0 ? 0 : -3,
                 background: PLATFORMS[p].color,
                 color: 'var(--light-100)',
-                fontSize: 8,
+                fontSize: 12,
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
@@ -1291,7 +1270,7 @@ function ContentPreviewModal({
                     borderRadius: '50%',
                     background: 'linear-gradient(135deg,#c95b8a,#a8359a)',
                     color: 'var(--light-100)',
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: 500,
                     display: 'flex',
                     alignItems: 'center',
@@ -1301,7 +1280,7 @@ function ContentPreviewModal({
                   EJ
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>Emma Johnson</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>Emma Johnson</div>
                   <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>@emmajohnson · Instagram</div>
                 </div>
               </div>
@@ -1322,7 +1301,7 @@ function ContentPreviewModal({
                   <path d="M4 22l7-7 5 5 4-4 8 8" stroke="currentColor" strokeWidth={1.3} strokeLinejoin="round" />
                 </svg>
               </div>
-              <div style={{ padding: 12, fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.5 }}>{text}</div>
+              <div style={{ padding: 12, fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.5 }}>{text}</div>
             </div>
           </div>
         )}
@@ -1514,8 +1493,8 @@ function UploadContentModal({ close, onUpload }: StackModalProps & { onUpload: (
               <AlertTriangle />
             </span>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#7A4A00' }}>3 posts are missing media</div>
-              <div style={{ fontSize: 13, color: '#9A6200', lineHeight: 1.4, marginTop: 2 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#7A4A00' }}>3 posts are missing media</div>
+              <div style={{ fontSize: 14, color: '#9A6200', lineHeight: 1.4, marginTop: 2 }}>
                 Upload images or videos for the posts listed below to complete your content plan.
               </div>
             </div>
@@ -1650,7 +1629,7 @@ function CampaignDetailsModal({
           <div>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 400,
                 color: 'var(--dark-60)',
                 letterSpacing: 0.5,
@@ -1727,7 +1706,7 @@ function ModalTabs<T extends string>({
             onClick={() => onChange(t.id)}
             style={{
               padding: '12px 16px',
-              fontSize: 13,
+              fontSize: 14,
               color: isActive ? 'var(--dark-90)' : 'var(--dark-60)',
               cursor: 'pointer',
               borderTop: 'none',
@@ -1798,7 +1777,7 @@ function PlatformChips({
               border: active ? '1px solid var(--dark-40)' : '1px solid var(--dark-8)',
               background: active ? 'var(--dark-4)' : 'transparent',
               cursor: onToggle ? 'pointer' : 'default',
-              fontSize: 13,
+              fontSize: 14,
               color: active ? 'var(--dark-90)' : 'var(--dark-80)',
             }}
           >
@@ -1817,7 +1796,7 @@ function MetricCard({ value, label }: { value: string; label: string }) {
       <div style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)' }}>{value}</div>
       <div
         style={{
-          fontSize: 11,
+          fontSize: 12,
           color: 'var(--dark-40)',
           marginTop: 2,
           textTransform: 'uppercase',
@@ -1858,7 +1837,7 @@ function AccountRow({
           borderRadius: '50%',
           background: color,
           color: 'var(--light-100)',
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 500,
           display: 'flex',
           alignItems: 'center',
@@ -1869,8 +1848,8 @@ function AccountRow({
         EJ
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{name}</div>
-        <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>{channel}</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{name}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{channel}</div>
       </div>
     </div>
   );
@@ -1925,12 +1904,12 @@ function UpcomingRow({
         </svg>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</div>
-        <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>{meta}</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{meta}</div>
       </div>
       <span
         style={{
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 500,
           padding: '3px 8px',
           borderRadius: 20,

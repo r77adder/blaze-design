@@ -11,7 +11,7 @@ import Star from '@/icons/20/Star';
 import Target2 from '@/icons/20/Target2';
 import Templates from '@/icons/20/Templates';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
-import { Card, KindBadge } from '@/staging';
+import { Card, KindBadge, StatusPill } from '@/staging';
 import type { FeedItem as FeedItemData, FeedSource } from './feed-data';
 import styles from './FeedItem.module.scss';
 
@@ -56,10 +56,6 @@ export function FeedItem({ item, onAction, onOpen }: FeedItemProps) {
   // place of the amber "Needs sign-off" so they read at a glance as
   // alerts, not approvals.
   const isFatigue = item.kind === 'action' && Boolean(item.proposedSolution);
-  // The KindBadge has its own label per kind; override 'action' so the badge
-  // matches the language used in the Home page filter chip ("Needs your
-  // sign-off"). 'insight' keeps its default label.
-  const kindLabel = item.kind === 'action' ? 'Needs sign-off' : undefined;
 
   return (
     // Prototype-level overrides on the generic <Card>: Ivan's H2 feed-item
@@ -85,33 +81,11 @@ export function FeedItem({ item, onAction, onOpen }: FeedItemProps) {
             thing the user reads on each card. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
           {isFatigue ? (
-            // Inline KindBadge-shaped span tuned to --status-failed red.
-            // Dimensions mirror src/staging/KindBadge/KindBadge.module.scss
-            // (2px 7px padding, 5px radius, 10.5px / 500, uppercase, 0.05em)
-            // so the visual rhythm matches the standard kind badges next to
-            // it. The 0.12 alpha background is the closest red analog to
-            // the existing kind tints (action 0.18, insight 0.10).
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '2px 7px',
-                borderRadius: 5,
-                fontFamily: "'Sohne', sans-serif",
-                fontSize: '10.5px',
-                fontWeight: 500,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                whiteSpace: 'nowrap',
-                userSelect: 'none',
-                background: 'rgba(188, 1, 11, 0.12)',
-                color: 'var(--status-failed)',
-              }}
-            >
-              Fatigue alert
-            </span>
+            <StatusPill tone="danger" size="sm">Fatigue alert</StatusPill>
+          ) : item.kind === 'action' ? (
+            <StatusPill tone="warning" size="sm">Needs sign-off</StatusPill>
           ) : (
-            <KindBadge kind={item.kind} label={kindLabel} iconless />
+            <KindBadge kind={item.kind} iconless />
           )}
           <span
             style={{
@@ -213,7 +187,7 @@ export function FeedItem({ item, onAction, onOpen }: FeedItemProps) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 500,
                   color: 'var(--dark-60)',
                   fontVariantNumeric: 'tabular-nums',

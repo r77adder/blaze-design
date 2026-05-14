@@ -78,7 +78,7 @@ function HomeInner() {
     >
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '8px 4px 60px' }}>
         {/* HERO */}
-        <div style={{ padding: '24px 0 20px' }}>
+        <div style={{ padding: '24px 0 32px' }}>
           <Heading
             level={2}
             style={{ lineHeight: 1.2, letterSpacing: '-0.4px', marginBottom: 6 }}

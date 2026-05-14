@@ -262,7 +262,7 @@ function Topbar() {
             border: '1px solid var(--dark-4)',
             borderRadius: 16,
             padding: '4px 10px',
-            fontSize: 13,
+            fontSize: 14,
             color: PURPLE,
             display: 'flex',
             alignItems: 'center',
@@ -281,7 +281,7 @@ function Topbar() {
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-90)',
             padding: '6px 8px',
             borderRadius: 8,
@@ -325,7 +325,7 @@ function LeftSidebar({
       <div>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             color: 'var(--dark-40)',
             letterSpacing: 0.5,
             textTransform: 'uppercase',
@@ -360,7 +360,7 @@ function SuggestionPill({ icon: Icon, label, onClick }: { icon: typeof Caption; 
         border: '1px solid var(--dark-8)',
         borderRadius: 8,
         padding: '7px 10px',
-        fontSize: 13,
+        fontSize: 14,
         color: 'var(--dark-80)',
         cursor: 'pointer',
         transition: 'background 0.15s',
@@ -414,12 +414,12 @@ function ChatInput({
             }}
           >
             <span>{ELEMENT_META[target].label}</span>
-            <span onClick={onClearTarget} style={{ cursor: 'pointer', fontSize: 11, opacity: 0.6 }}>
+            <span onClick={onClearTarget} style={{ cursor: 'pointer', fontSize: 12, opacity: 0.6 }}>
               ✕
             </span>
           </div>
         )}
-        <div style={{ fontSize: 13, color: 'var(--dark-40)', flex: 1 }}>{placeholder}</div>
+        <div style={{ fontSize: 14, color: 'var(--dark-40)', flex: 1 }}>{placeholder}</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px' }}>
         <div
@@ -427,7 +427,7 @@ function ChatInput({
             display: 'flex',
             alignItems: 'center',
             gap: 5,
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-60)',
             padding: '5px 7px',
             borderRadius: 6,
@@ -501,7 +501,7 @@ function ViewAsRail() {
         gap: 8,
       }}
     >
-      <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>View as</div>
+      <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>View as</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
         {buttons.map((b) => {
           const isActive = active === b.id;
@@ -573,15 +573,15 @@ function PostCard({
             alignItems: 'center',
             justifyContent: 'center',
             color: 'var(--light-100)',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
           }}
         >
           RH
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#101419' }}>Radiant Health</div>
-          <div style={{ fontSize: 10, color: 'var(--dark-60)' }}>Jun 26 at 3:30 · 🌐</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#101419' }}>Radiant Health</div>
+          <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Jun 26 at 3:30 · 🌐</div>
         </div>
       </div>
 
@@ -591,7 +591,7 @@ function PostCard({
         title="Click to target this element"
         style={{
           padding: '4px 14px 8px',
-          fontSize: 11,
+          fontSize: 12,
           lineHeight: 1.5,
           color: '#101419',
           position: 'relative',
@@ -606,7 +606,7 @@ function PostCard({
           <ElementBadge label={`${captionVersionCount} version${captionVersionCount > 1 ? 's' : ''}`} top={4} right={8} />
         )}
         <span>{captionText}</span>
-        <span style={{ color: 'var(--dark-60)', fontSize: 11 }}> See more</span>
+        <span style={{ color: 'var(--dark-60)', fontSize: 12 }}> See more</span>
       </div>
 
       {/* Image */}
@@ -659,7 +659,7 @@ function PostCard({
               right: 10,
               background: PURPLE,
               color: 'var(--light-100)',
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 700,
               borderRadius: 99,
               padding: '2px 8px',
@@ -684,9 +684,9 @@ function PostCard({
           justifyContent: 'space-between',
         }}
       >
-        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--dark-60)' }}>👍 Like</span>
-        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--dark-60)' }}>💬 Comment</span>
-        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--dark-60)' }}>↗ Share</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--dark-60)' }}>👍 Like</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--dark-60)' }}>💬 Comment</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--dark-60)' }}>↗ Share</span>
       </div>
     </div>
   );
@@ -701,7 +701,7 @@ function ElementBadge({ label, top, right }: { label: string; top: number; right
         right,
         background: PURPLE,
         color: 'var(--light-100)',
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: 700,
         borderRadius: 99,
         padding: '1px 6px',
@@ -767,7 +767,7 @@ function RightSidebar({
             display: 'flex',
             alignItems: 'center',
             gap: 3,
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-90)',
             padding: '4px 6px',
             borderRadius: 6,
@@ -786,7 +786,7 @@ function RightSidebar({
             display: 'flex',
             alignItems: 'center',
             gap: 3,
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-90)',
             padding: '4px 6px',
             borderRadius: 6,
@@ -811,7 +811,7 @@ function RightSidebar({
               border: '1px solid var(--dark-8)',
               borderRadius: 8,
               color: 'var(--light-100)',
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 500,
               display: 'flex',
               alignItems: 'center',
@@ -833,7 +833,7 @@ function RightSidebar({
               border: '1px solid var(--dark-8)',
               borderRadius: 8,
               color: 'var(--dark-90)',
-              fontSize: 13,
+              fontSize: 14,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -863,7 +863,7 @@ function RightSidebar({
                 borderRadius: 6,
                 border: '1px solid var(--dark-8)',
                 background: 'var(--light-100)',
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--dark-60)',
                 cursor: 'pointer',
               }}
@@ -876,12 +876,12 @@ function RightSidebar({
         {/* Change queue */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ fontSize: 13, color: 'var(--dark-80)', fontWeight: 500 }}>Change queue</div>
+            <div style={{ fontSize: 14, color: 'var(--dark-80)', fontWeight: 500 }}>Change queue</div>
             <div
               style={{
                 background: 'rgba(162,41,254,0.1)',
                 color: PURPLE,
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 700,
                 borderRadius: 99,
                 padding: '1px 7px',
@@ -897,7 +897,7 @@ function RightSidebar({
               border: '1px solid rgba(162,41,254,0.15)',
               borderRadius: 8,
               padding: '8px 10px',
-              fontSize: 11,
+              fontSize: 12,
               color: PURPLE_TEXT,
               lineHeight: 1.5,
               marginBottom: 10,
@@ -930,7 +930,7 @@ function RightSidebar({
               border: '1px solid var(--dark-8)',
               borderRadius: 8,
               padding: '7px 10px',
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-90)',
               display: 'flex',
               alignItems: 'center',
@@ -962,7 +962,7 @@ function SectionLabel({ children, style }: { children: ReactNode; style?: CSSPro
   return (
     <div
       style={{
-        fontSize: 11,
+        fontSize: 12,
         color: 'var(--dark-40)',
         letterSpacing: 0.5,
         textTransform: 'uppercase',
@@ -1015,7 +1015,7 @@ function ChannelButton({ icon: Icon, on, connect }: { icon: typeof Camera; on?: 
     >
       <Icon />
       {connect ? (
-        <div style={{ fontSize: 9, color: 'var(--dark-60)' }}>Connect</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Connect</div>
       ) : (
         <div
           style={{
@@ -1092,14 +1092,14 @@ function ChangeBlock({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Icon />
-          <span style={{ fontSize: 13, color: 'var(--dark-80)' }}>{meta.label}</span>
+          <span style={{ fontSize: 14, color: 'var(--dark-80)' }}>{meta.label}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span
             style={{
               background: count > 0 ? PURPLE : 'var(--dark-8)',
               color: count > 0 ? 'var(--light-100)' : 'var(--dark-40)',
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 700,
               borderRadius: 99,
               padding: '1px 6px',
@@ -1111,7 +1111,7 @@ function ChangeBlock({
           </span>
           <span
             style={{
-              fontSize: 10,
+              fontSize: 12,
               color: 'var(--dark-40)',
               transform: state.open ? 'rotate(90deg)' : 'rotate(0deg)',
               transition: 'transform 0.2s',
@@ -1179,7 +1179,7 @@ function ChangeBlock({
                     borderRadius: 6,
                     border: '1px solid var(--dark-8)',
                     background: 'var(--light-100)',
-                    fontSize: 11,
+                    fontSize: 12,
                     color: 'var(--dark-60)',
                     cursor: 'pointer',
                   }}
@@ -1248,7 +1248,7 @@ function QueueItem({
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             marginBottom: 2,
             color: isCurrent ? 'var(--dark-40)' : PURPLE,
             fontWeight: isCurrent ? 400 : 600,
@@ -1325,7 +1325,7 @@ function QActionBtn({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 11,
+        fontSize: 12,
         cursor: 'pointer',
         color: danger ? 'var(--red-90)' : 'var(--dark-60)',
         padding: 0,

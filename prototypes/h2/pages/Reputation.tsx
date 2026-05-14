@@ -1,8 +1,9 @@
 import { useState, type MouseEvent } from 'react';
-import { Button, Modal, ModalStack, useModals } from '@/components';
+import { Button, Heading, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { Facebook, Google, Instagram, TikTok, Twitter } from '@/icons/20';
-import { TabChip, useToast } from '@/staging';
+import { StatusPill, TabChip, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
@@ -57,6 +58,10 @@ interface AttentionItem {
   containment?: { label: string; tone: 'escalating' | 'emerging' | 'pattern' | 'isolated' };
   velocity?: string;
   aiDraft?: AiDraft;
+  /** When true, the AI has already auto-replied with high confidence; render
+   *  in the "Auto-replied" section with an Edit-reply link instead of the
+   *  approve flow. */
+  autoReplied?: boolean;
   /** Prior replies from the team or other channels. */
   history?: ResponseHistoryEntry[];
 }
@@ -142,7 +147,7 @@ function SourceLogo({ source, label }: { source: Source; label: string }) {
         borderRadius: 3,
         background: 'var(--dark-90)',
         color: 'var(--light-100)',
-        fontSize: 9,
+        fontSize: 12,
         fontWeight: 500,
         display: 'inline-flex',
         alignItems: 'center',
@@ -156,19 +161,20 @@ function SourceLogo({ source, label }: { source: Source; label: string }) {
 }
 
 
-const CONTAINMENT_STYLES: Record<NonNullable<AttentionItem['containment']>['tone'], { bg: string; color: string }> = {
-  escalating: { bg: '#FEE2E2', color: '#991B1B' },
-  emerging: { bg: '#FFE9A8', color: '#7B5B00' },
-  pattern: { bg: '#FFF1D6', color: '#854D0E' },
-  isolated: { bg: 'var(--dark-4)', color: 'var(--dark-60)' },
-};
-
 const INSIGHT_TILE_STYLES: Record<InsightItem['category'], { bg: string; color: string }> = {
   priority: { bg: '#FEE2E2', color: '#991B1B' },
   product: { bg: '#FEF3C7', color: '#854D0E' },
   content: { bg: '#DBEAFE', color: '#1E40AF' },
   opp: { bg: '#D1FAE5', color: '#065F46' },
   capacity: { bg: '#EDE9FE', color: '#5B21B6' },
+};
+
+const INSIGHT_CATEGORY_TONES: Record<InsightItem['category'], StatusPillTone> = {
+  priority: 'danger',
+  product: 'warning',
+  content: 'info',
+  opp: 'success',
+  capacity: 'accent',
 };
 
 const ATTENTION: AttentionItem[] = [
@@ -258,6 +264,48 @@ const ATTENTION: AttentionItem[] = [
     history: [
       { who: 'Theo M.', when: '6 months ago', text: 'Asked the same question on Instagram — got our standard "soon" reply.' },
     ],
+  },
+];
+
+const AUTO_REPLIED: AttentionItem[] = [
+  {
+    id: 'sasha-google-auto',
+    severity: 'watch', source: 'google', sourceLabel: 'Google Reviews',
+    customer: 'Sasha L. · Denver, CO', when: '32m ago', stars: 5,
+    title: 'Five stars, the sleep blend is a game changer',
+    body: 'Two weeks in and I\'m sleeping through the night for the first time in years. Worth every penny.',
+    fullText: 'Two weeks in and I\'m sleeping through the night for the first time in years. Worth every penny — packaging is gorgeous too, and the subscription was easy to set up. Already telling my friends.',
+    autoReplied: true,
+    aiDraft: {
+      tone: 'Grateful, warm', confidence: 96,
+      text: '"Sasha, thank you so much for sharing this — sleep is everything, and we\'re so glad the blend is working for you. Tell your friends to use code SLEEP15 for 15% off their first month!"',
+    },
+  },
+  {
+    id: 'jamal-instagram-auto',
+    severity: 'watch', source: 'instagram', sourceLabel: 'Instagram comment',
+    customer: '@jamalruns', when: '1h ago',
+    title: 'Where do you ship from?',
+    body: 'Where do you ship from? Just curious about lead times to the west coast.',
+    fullText: 'Where do you ship from? Just curious about lead times to the west coast — placing my first order this week and trying to plan around a trip.',
+    autoReplied: true,
+    aiDraft: {
+      tone: 'Friendly, factual', confidence: 93,
+      text: '"Hey Jamal! We ship out of our Columbus, OH warehouse and most west-coast orders arrive in 3-4 business days. Have a great trip!"',
+    },
+  },
+  {
+    id: 'community-reddit-auto',
+    severity: 'watch', source: 'reddit', sourceLabel: 'r/Wellness',
+    customer: 'u/clean_living_clara', when: '3h ago',
+    title: 'Is the energy gummy vegan?',
+    body: 'Looking for a vegan-friendly energy gummy — does Radiant Health work?',
+    fullText: 'Looking for a vegan-friendly energy gummy — does Radiant Health work? I switched off gelatin a year ago and most brands still hide it in the ingredient list.',
+    autoReplied: true,
+    aiDraft: {
+      tone: 'Helpful, direct', confidence: 91,
+      text: '"Yes! Our energy gummies are 100% plant-based — pectin instead of gelatin, no animal-derived ingredients. Full breakdown is on the product page under \"sourcing.\""',
+    },
   },
 ];
 
@@ -375,14 +423,13 @@ interface KpiCardProps {
   sub: string;
 }
 
-const DELTA_STYLES: Record<KpiCardProps['delta']['tone'], { bg: string; color: string }> = {
-  good: { bg: '#D2EFDB', color: '#0E6B33' },
-  bad: { bg: '#FEE4E2', color: '#B42318' },
-  warn: { bg: '#FFE9A8', color: '#7B5B00' },
+const DELTA_TONE: Record<KpiCardProps['delta']['tone'], StatusPillTone> = {
+  good: 'success',
+  bad: 'danger',
+  warn: 'warning',
 };
 
 function KpiCard({ label, value, unit, delta, sub }: KpiCardProps) {
-  const ds = DELTA_STYLES[delta.tone];
   return (
     <div
       style={{
@@ -393,7 +440,7 @@ function KpiCard({ label, value, unit, delta, sub }: KpiCardProps) {
         flex: 1,
       }}
     >
-      <div style={{ fontSize: 11.5, color: 'var(--dark-60)', marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)', marginBottom: 8 }}>{label}</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
         <span
           style={{
@@ -406,22 +453,11 @@ function KpiCard({ label, value, unit, delta, sub }: KpiCardProps) {
         >
           {value}
         </span>
-        {unit && <span style={{ fontSize: 13, color: 'var(--dark-40)' }}>{unit}</span>}
+        {unit && <span style={{ fontSize: 14, color: 'var(--dark-40)' }}>{unit}</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span
-          style={{
-            padding: '2px 6px',
-            borderRadius: 4,
-            fontSize: 11,
-            fontWeight: 500,
-            background: ds.bg,
-            color: ds.color,
-          }}
-        >
-          {delta.text}
-        </span>
-        <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>{sub}</span>
+        <StatusPill tone={DELTA_TONE[delta.tone]} size="sm">{delta.text}</StatusPill>
+        <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{sub}</span>
       </div>
     </div>
   );
@@ -462,20 +498,25 @@ function Stars({ n }: { n: number }) {
 
 interface AiDraftBlockProps {
   draft: AiDraft;
+  /** When true, render only an "Edit reply" link (no Approve button). */
+  readOnly?: boolean;
+  /** When true, render no action buttons at all (used when the card chrome
+   *  already provides Approve/Edit in the top-right). */
+  hideActions?: boolean;
   approveLabel?: string;
   onEdit: () => void;
-  onApprove: () => void;
+  onApprove?: () => void;
 }
 
-function AiDraftBlock({ draft, approveLabel = 'Approve & reply', onEdit, onApprove }: AiDraftBlockProps) {
-  const palette = draft.needsReview
-    ? { bg: '#FFF1D6', border: 'rgba(180,131,9,0.18)', headColor: '#854D0E', leadGlyph: '⊙ Needs human review' }
-    : { bg: '#F1ECFF', border: 'rgba(124,92,252,0.18)', headColor: 'var(--purple)', leadGlyph: '✦ AI draft' };
+function AiDraftBlock({ draft, readOnly, hideActions, approveLabel = 'Approve & reply', onEdit, onApprove }: AiDraftBlockProps) {
+  // Single accent palette — purple-tinted background, no side border.
+  // The legacy needs-review (yellow/warning) branch has been removed; tone
+  // signals come from the StatusPill eyebrow now.
+  const leadGlyph = draft.needsReview ? '⊙ Needs human review' : '✦ AI draft';
   return (
     <div
       style={{
-        background: palette.bg,
-        border: `1px solid ${palette.border}`,
+        background: 'rgba(124, 92, 252, 0.06)',
         borderRadius: 10,
         padding: '12px 14px',
         marginBottom: 10,
@@ -486,24 +527,50 @@ function AiDraftBlock({ draft, approveLabel = 'Approve & reply', onEdit, onAppro
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          fontSize: 11,
-          color: palette.headColor,
+          fontSize: 12,
+          color: 'var(--purple)',
           fontWeight: 500,
           marginBottom: 6,
         }}
       >
-        {palette.leadGlyph} · {draft.tone}
-        <span style={{ color: 'var(--dark-40)', fontWeight: 400, marginLeft: 'auto' }}>
-          Confidence {draft.confidence}%
-        </span>
+        {leadGlyph} · {draft.tone}
+        {!hideActions && (
+          <span style={{ color: 'var(--dark-40)', fontWeight: 400, marginLeft: 'auto' }}>
+            Confidence {draft.confidence}%
+          </span>
+        )}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--dark-90)', lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, marginBottom: hideActions ? 0 : 10 }}>
         {draft.text}
       </div>
-      <div style={{ display: 'flex', gap: 6 }}>
-        <Button variant="secondary" size="sm" onClick={onEdit}>Edit</Button>
-        <Button variant="secondary" size="sm" onClick={onApprove}>{approveLabel}</Button>
-      </div>
+      {!hideActions && (
+        readOnly ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              fontFamily: 'inherit',
+              fontSize: 12,
+              color: 'var(--purple)',
+              fontWeight: 500,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+            }}
+          >
+            Edit reply
+          </button>
+        ) : (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <Button variant="secondary" size="sm" onClick={onEdit}>Edit</Button>
+            {onApprove && (
+              <Button variant="secondary" size="sm" onClick={onApprove}>{approveLabel}</Button>
+            )}
+          </div>
+        )
+      )}
     </div>
   );
 }
@@ -516,11 +583,47 @@ interface AttentionCardProps {
 }
 
 function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: AttentionCardProps) {
-  const containmentStyle = item.containment ? CONTAINMENT_STYLES[item.containment.tone] : null;
-
-  // Inner controls (Edit / Approve buttons) need to stop propagation so clicking
-  // them doesn't also open the detail modal.
+  // Inner controls (Edit / Approve / Edit-reply buttons) need to stop
+  // propagation so clicking them doesn't also open the detail modal.
   const stop = (e: MouseEvent) => e.stopPropagation();
+
+  // Top-right action cluster — same logic as the AEO redesign. Auto-replied
+  // rows surface only an "Edit reply" link; rows with a draft surface
+  // a Confidence pill + Approve + Edit; rows without a draft fall back to
+  // "Review & reply".
+  const actions = item.autoReplied && item.aiDraft ? (
+    <div onClick={stop} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <button
+        type="button"
+        onClick={() => onEditDraft(item)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          padding: 0,
+          fontFamily: 'inherit',
+          fontSize: 12,
+          color: 'var(--purple)',
+          fontWeight: 500,
+          cursor: 'pointer',
+          textDecoration: 'underline',
+        }}
+      >
+        Edit reply
+      </button>
+    </div>
+  ) : item.aiDraft ? (
+    <div onClick={stop} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <StatusPill tone="neutral" size="sm">Confidence {item.aiDraft.confidence}%</StatusPill>
+      <Button variant="secondary" size="sm" onClick={() => onEditDraft(item)}>Edit</Button>
+      <Button variant="secondary" size="sm" onClick={() => onApproveDraft(item)}>Approve</Button>
+    </div>
+  ) : (
+    <div onClick={stop}>
+      <Button variant="secondary" size="sm" onClick={() => onOpenDetail(item)}>
+        Review &amp; reply
+      </Button>
+    </div>
+  );
 
   return (
     <div
@@ -543,78 +646,35 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: Atte
         textAlign: 'left',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 10.5,
-            fontWeight: 500,
-            color: '#B06000',
-            background: 'rgba(252,183,40,0.16)',
-            borderRadius: 4,
-            padding: '2px 6px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: '#B06000',
-            }}
-          />
-          Needs action
-        </span>
-        <SourceBadge source={item.source} label={item.sourceLabel} />
-        {item.stars !== undefined && <Stars n={item.stars} />}
-        <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.customer}</span>
-        <span style={{ fontSize: 11, color: 'var(--dark-40)', marginLeft: 'auto' }}>{item.when}</span>
+      {/* Top row: eyebrow (source + customer + date + velocity) on the left,
+       *  Confidence pill + Approve/Edit action cluster on the right. */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+          <SourceBadge source={item.source} label={item.sourceLabel} />
+          {item.stars !== undefined && <Stars n={item.stars} />}
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.customer}</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{item.when}</span>
+          {item.velocity && (
+            <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.velocity}</span>
+          )}
+        </div>
+        <div style={{ flexShrink: 0 }}>{actions}</div>
       </div>
       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.35, marginBottom: 6 }}>
         {item.title}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5, marginBottom: 12 }}>
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, marginBottom: item.aiDraft ? 12 : 0 }}>
         {item.body}
       </div>
       {item.aiDraft && (
         <div onClick={stop}>
           <AiDraftBlock
             draft={item.aiDraft}
+            hideActions
             onEdit={() => onEditDraft(item)}
-            onApprove={() => onApproveDraft(item)}
           />
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        {item.containment && containmentStyle && (
-          <span
-            style={{
-              fontSize: 11,
-              padding: '3px 8px',
-              borderRadius: 5,
-              background: containmentStyle.bg,
-              color: containmentStyle.color,
-              fontWeight: 500,
-            }}
-          >
-            {item.containment.label}
-          </span>
-        )}
-        {item.velocity && (
-          <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>{item.velocity}</span>
-        )}
-        {!item.aiDraft && (
-          <div onClick={stop} style={{ marginLeft: 'auto' }}>
-            <Button variant="secondary" size="sm" onClick={() => onOpenDetail(item)}>
-              Review &amp; reply
-            </Button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -668,39 +728,12 @@ function InsightIcon({ kind }: { kind: InsightItem['icon'] }) {
 
 function BiHeader() {
   return (
-    <div
-      style={{
-        background: 'linear-gradient(135deg, rgba(124,92,252,0.05), rgba(124,92,252,0.02))',
-        border: '1px solid rgba(124,92,252,0.18)',
-        borderRadius: 14,
-        padding: '18px 22px',
-        display: 'grid',
-        gridTemplateColumns: '46px 1fr auto',
-        gap: 16,
-        alignItems: 'center',
-        marginBottom: 12,
-      }}
-    >
-      <div
-        style={{
-          width: 46, height: 46, borderRadius: 12,
-          background: 'linear-gradient(135deg, #7C5CFC, #5B21B6)',
-          color: 'var(--light-100)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}>
-          <path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" />
-          <circle cx="12" cy="12" r="4" />
-        </svg>
-      </div>
-      <div>
-        <div style={{ fontSize: 16.5, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.1px', marginBottom: 4 }}>
-          Strategic recommendations
-        </div>
-        <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5, maxWidth: 560 }}>
+    <div style={{ marginBottom: 12 }}>
+      <Heading level={3}>Strategic recommendations</Heading>
+      <div style={{ marginTop: 4 }}>
+        <Text variant="secondary">
           The agent has analyzed all 1,248 mentions and surfaced five actions that would meaningfully shift your reputation this month.
-        </div>
+        </Text>
       </div>
     </div>
   );
@@ -731,14 +764,9 @@ function InsightRow({ item, onAction, isFirst }: { item: InsightItem; onAction: 
       </span>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6, fontSize: 12, color: 'var(--dark-60)' }}>
-          <span
-            style={{
-              fontSize: 11, fontWeight: 500, padding: '2px 9px', borderRadius: 5,
-              letterSpacing: '0.04em', background: tile.bg, color: tile.color,
-            }}
-          >
+          <StatusPill tone={INSIGHT_CATEGORY_TONES[item.category]} size="sm">
             {item.categoryLabel}
-          </span>
+          </StatusPill>
           {item.metaPills.map((pill, i) => (
             <span
               key={i}
@@ -755,10 +783,10 @@ function InsightRow({ item, onAction, isFirst }: { item: InsightItem; onAction: 
             </span>
           ))}
         </div>
-        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px', lineHeight: 1.35, marginBottom: 6 }}>
+        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px', lineHeight: 1.35, marginBottom: 6 }}>
           {item.title}
         </div>
-        <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.55 }}>
+        <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.55 }}>
           {item.body}
         </div>
       </div>
@@ -793,10 +821,16 @@ function InsightsPane({ onAction }: { onAction: (i: InsightItem) => void }) {
 
 // ─── LISTENING PANE ───────────────────────────────────────────────
 
-const SENTIMENT_STYLES: Record<MentionItem['sentiment'], { bg: string; color: string }> = {
-  positive: { bg: '#D2EFDB', color: '#0E6B33' },
-  negative: { bg: '#FEE4E2', color: '#B42318' },
-  neutral: { bg: 'var(--dark-4)', color: 'var(--dark-60)' },
+const SENTIMENT_TONES: Record<MentionItem['sentiment'], StatusPillTone> = {
+  positive: 'success',
+  negative: 'danger',
+  neutral: 'neutral',
+};
+
+const SENTIMENT_LABELS: Record<MentionItem['sentiment'], string> = {
+  positive: 'Positive',
+  negative: 'Negative',
+  neutral: 'Neutral',
 };
 
 const SENTIMENT_DOT: Record<TopicRow['sentimentTone'], string> = {
@@ -806,7 +840,6 @@ const SENTIMENT_DOT: Record<TopicRow['sentimentTone'], string> = {
 };
 
 function MentionRow({ item, isLast }: { item: MentionItem; isLast: boolean }) {
-  const s = SENTIMENT_STYLES[item.sentiment];
   return (
     <div
       style={{
@@ -817,23 +850,18 @@ function MentionRow({ item, isLast }: { item: MentionItem; isLast: boolean }) {
         gap: 6,
       }}
     >
+      {/* Eyebrow: source badge + sentiment pill on the left, timestamp on the right. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <SourceBadge source={item.source} label={item.sourceLabel} />
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--dark-40)' }}>{item.when}</span>
+        <StatusPill tone={SENTIMENT_TONES[item.sentiment]} size="sm">
+          {SENTIMENT_LABELS[item.sentiment]}
+        </StatusPill>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--dark-40)' }}>{item.when}</span>
       </div>
-      <div style={{ fontSize: 12.5, color: 'var(--dark-80)', lineHeight: 1.5 }}>{item.text}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: 'var(--dark-40)' }}>
-        <span style={{ fontSize: 12, color: 'var(--dark-90)', fontWeight: 500 }}>{item.author}</span>
-        <span
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            padding: '1px 7px', borderRadius: 4,
-            fontSize: 10.5, fontWeight: 500,
-            background: s.bg, color: s.color,
-          }}
-        >
-          {item.sentiment}
-        </span>
+      <div style={{ fontSize: 12, color: 'var(--dark-80)', lineHeight: 1.5 }}>{item.text}</div>
+      {/* Second line: muted metadata — author + reactions/reach. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--dark-40)' }}>
+        <span style={{ color: 'var(--dark-60)', fontWeight: 500 }}>{item.author}</span>
         <span>{item.meta}</span>
       </div>
     </div>
@@ -860,12 +888,11 @@ function TopicsTable() {
             <th
               key={i}
               style={{
-                fontSize: 11, color: 'var(--dark-40)',
+                fontSize: 12, color: 'var(--dark-60)',
                 textAlign: 'left',
-                padding: '10px 14px',
-                background: 'var(--dark-2)',
+                padding: '6px 14px',
                 borderBottom: '1px solid var(--dark-8)',
-                letterSpacing: '0.06em', fontWeight: 500,
+                fontWeight: 400,
                 width: i === 0 ? '34%' : undefined,
               }}
             >
@@ -886,30 +913,28 @@ function TopicsTable() {
                 : 'var(--dark-90)';
           return (
             <tr key={i}>
-              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12.5 }}>
+              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12 }}>
                 <span style={{ fontWeight: 500, color: topicColor }}>{row.topic}</span>
               </td>
-              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12.5, color: 'var(--dark-90)' }}>
+              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12, color: 'var(--dark-90)' }}>
                 {row.mentions}
               </td>
-              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12.5, color: 'var(--dark-90)' }}>
+              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12, color: 'var(--dark-90)' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: SENTIMENT_DOT[row.sentimentTone] }} />
                   {row.sentiment}%
                 </span>
               </td>
-              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12.5, color: 'var(--dark-90)' }}>
+              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12, color: 'var(--dark-90)' }}>
                 {row.velocity}
               </td>
-              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12.5, color: trendColor }}>
+              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12, color: trendColor }}>
                 {row.trend.text}
               </td>
-              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12.5 }}>
+              <td style={{ padding: '11px 14px', borderBottom: i === TOPICS.length - 1 ? 'none' : '1px solid var(--dark-4)', fontSize: 12 }}>
                 {row.badge?.kind === 'src' && <SourceBadge source={row.badge.source} label={row.badge.label} />}
                 {row.badge?.kind === 'spike' && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 7px', borderRadius: 4, background: '#FEE4E2', color: '#B42318', fontSize: 11, fontWeight: 500 }}>
-                    {row.badge.label}
-                  </span>
+                  <StatusPill tone="danger" size="sm">{row.badge.label}</StatusPill>
                 )}
               </td>
             </tr>
@@ -923,19 +948,21 @@ function TopicsTable() {
 function ListeningPane() {
   return (
     <>
+      {/* "Public mentions" title sits outside the bordered card. The "live · 5 latest"
+          micro-label is parked on the right of the H3. */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+        <Heading level={3}>Public mentions</Heading>
+        <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>live · 5 latest</span>
+      </div>
       <div
         style={{
           background: 'var(--light-100)',
           border: '1px solid var(--dark-8)',
           borderRadius: 14,
           padding: '18px 20px',
-          marginBottom: 24,
+          marginBottom: 32,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
-          <h3 style={{ fontSize: 14.5, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>Public mentions</h3>
-          <span style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>live · 5 latest</span>
-        </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {MENTIONS.map((m, i) => (
             <MentionRow key={m.id} item={m} isLast={i === MENTIONS.length - 1} />
@@ -943,8 +970,8 @@ function ListeningPane() {
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.2px', color: 'var(--dark-90)', margin: 0 }}>Trending topics</h2>
-        <span style={{ fontSize: 12.5, color: 'var(--dark-60)' }}>last 7 days · 8 themes</span>
+        <Heading level={3}>Trending topics</Heading>
+        <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>last 7 days · 8 themes</span>
       </div>
       <TopicsTable />
     </>
@@ -992,7 +1019,7 @@ function ItemDetailModal({
         >
           <SourceBadge source={item.source} label={item.sourceLabel} />
           {item.stars !== undefined && <Stars n={item.stars} />}
-          <span style={{ fontSize: 13, color: 'var(--dark-90)', fontWeight: 500 }}>
+          <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 500 }}>
             {item.customer}
           </span>
           <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>· {item.when}</span>
@@ -1019,11 +1046,9 @@ function ItemDetailModal({
           <div style={{ marginBottom: 20 }}>
             <div
               style={{
-                fontSize: 11,
-                color: 'var(--dark-40)',
+                fontSize: 12,
+                color: 'var(--dark-60)',
                 fontWeight: 500,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
                 marginBottom: 8,
               }}
             >
@@ -1045,11 +1070,9 @@ function ItemDetailModal({
           <div style={{ marginBottom: 20 }}>
             <div
               style={{
-                fontSize: 11,
-                color: 'var(--dark-40)',
+                fontSize: 12,
+                color: 'var(--dark-60)',
                 fontWeight: 500,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
                 marginBottom: 8,
               }}
             >
@@ -1068,9 +1091,9 @@ function ItemDetailModal({
                 >
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
                     <span style={{ fontSize: 12, color: 'var(--dark-90)', fontWeight: 500 }}>{h.who}</span>
-                    <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>{h.when}</span>
+                    <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{h.when}</span>
                   </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.55 }}>{h.text}</div>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.55 }}>{h.text}</div>
                 </div>
               ))}
             </div>
@@ -1081,11 +1104,9 @@ function ItemDetailModal({
         <div>
           <div
             style={{
-              fontSize: 11,
-              color: 'var(--dark-40)',
+              fontSize: 12,
+              color: 'var(--dark-60)',
               fontWeight: 500,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
               marginBottom: 8,
             }}
           >
@@ -1157,7 +1178,7 @@ function EditDraftModal({
         compact={false}
       />
       <Modal.Content compact={false}>
-        <p style={{ margin: '0 0 12px 0', fontSize: 13.5, color: 'var(--dark-60)' }}>
+        <p style={{ margin: '0 0 12px 0', fontSize: 14, color: 'var(--dark-60)' }}>
           Tweak the agent's reply before sending. Your changes don't change the agent's tone for future replies.
         </p>
         <textarea
@@ -1274,7 +1295,7 @@ function ReputationRouteInner() {
     <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
       <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
         {/* KPI strip */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
           <KpiCard label="Reputation Health" value="82" unit="/100" delta={{ tone: 'good', text: '+4' }} sub="vs last 30 days" />
           <KpiCard label="Total Mentions" value="1,248" delta={{ tone: 'good', text: '+18%' }} sub="this week" />
           <KpiCard label="Positive Sentiment" value="74%" delta={{ tone: 'good', text: '+2.1%' }} sub="of all mentions" />
@@ -1284,11 +1305,24 @@ function ReputationRouteInner() {
 
         {tab === 'reviews' && (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>Needs attention</h3>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+              <Heading level={3}>Needs attention</Heading>
               <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{reviewCount} items · sorted by impact</span>
             </div>
             {attention.map((item) => (
+              <AttentionCard
+                key={item.id}
+                item={item}
+                onEditDraft={editAttentionDraft}
+                onApproveDraft={(it) => showToast({ message: `Reply approved · sending to ${it.sourceLabel}` })}
+                onOpenDetail={openItemDetail}
+              />
+            ))}
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 32, marginBottom: 12 }}>
+              <Heading level={3}>Auto-replied</Heading>
+              <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{AUTO_REPLIED.length} items · high-confidence drafts published</span>
+            </div>
+            {AUTO_REPLIED.map((item) => (
               <AttentionCard
                 key={item.id}
                 item={item}

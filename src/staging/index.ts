@@ -51,6 +51,9 @@ export type { WorkspaceSelectorProps } from './WorkspaceSelector';
 export { TabChip } from './TabChip';
 export type { TabChipProps } from './TabChip';
 
+export { StatusPill } from './StatusPill';
+export type { StatusPillProps, StatusPillTone, StatusPillSize } from './StatusPill';
+
 export { Toaster, ToasterProvider, useToast } from './Toaster';
 export type {
   ToasterProps,

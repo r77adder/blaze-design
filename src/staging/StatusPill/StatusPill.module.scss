@@ -1,0 +1,85 @@
+/* StatusPill — H2 status indicator.
+ *
+ * Spec (per the H2 standardization pass):
+ * - Two sizes only: sm (12px Buch / 4px radius) and md (14px Buch / 6px radius).
+ * - 1px border in a slightly darker shade of the bg per tone.
+ * - No leading dot — color carries the meaning.
+ * - white-space: nowrap; text-overflow: ellipsis. Caller sets max-width.
+ * - Sentence case is the caller's responsibility (we don't transform text).
+ *
+ * Tone palette:
+ * - neutral — the default for non-important statuses ("In conversation",
+ *   "Closed"). Per-spec: dark-2 / dark-4 / dark-60.
+ * - success/warning/danger/info/accent — colored variants for statuses that
+ *   warrant attention.
+ */
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Sohne', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  flex-shrink: 0;
+  border-style: solid;
+  border-width: 1px;
+}
+
+/* Sizes */
+
+.size-sm {
+  font-size: 12px;
+  line-height: 16px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.size-md {
+  font-size: 14px;
+  line-height: 18px;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* Tones */
+
+.tone-neutral {
+  background: var(--dark-2);
+  border-color: var(--dark-4);
+  color: var(--dark-60);
+}
+
+.tone-success {
+  background: rgba(4, 175, 0, 0.10);
+  border-color: rgba(4, 175, 0, 0.20);
+  color: var(--status-approved);
+}
+
+.tone-warning {
+  background: rgba(237, 124, 44, 0.10);
+  border-color: rgba(237, 124, 44, 0.22);
+  color: var(--status-connect);
+}
+
+.tone-danger {
+  background: rgba(188, 1, 11, 0.08);
+  border-color: rgba(188, 1, 11, 0.20);
+  color: var(--red-90);
+}
+
+.tone-info {
+  background: rgba(1, 121, 207, 0.10);
+  border-color: rgba(1, 121, 207, 0.22);
+  color: var(--status-posting);
+}
+
+.tone-accent {
+  background: rgba(124, 92, 252, 0.10);
+  border-color: rgba(124, 92, 252, 0.22);
+  color: var(--purple);
+}

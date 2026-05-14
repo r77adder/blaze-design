@@ -5,19 +5,29 @@ import { Avatar, useToast } from '@/staging';
 import Voice from '@/icons/20/Voice';
 import Mail from '@/icons/20/Mail';
 import MessageChat01 from '@/icons/20/MessageChat01';
+import MessageText2 from '@/icons/20/MessageText2';
 import Templates from '@/icons/20/Templates';
 import Globe from '@/icons/20/Globe';
 import LinkExternal from '@/icons/20/LinkExternal';
+import Calendar1 from '@/icons/20/Calendar1';
+import Refresh01 from '@/icons/20/Refresh01';
+import UserProfileGroup from '@/icons/20/UserProfileGroup';
+import Trash2 from '@/icons/20/Trash2';
+import Send2 from '@/icons/16/Send2';
 import {
   CHANNEL_LABELS,
+  MEDIUM_LABELS,
   STATUS_STYLES,
   ALL_STATUSES,
+  defaultMedium,
   formatRelative,
   scoreColor,
   scoreHeadline,
+  transcriptMediums,
   type Channel,
   type Lead,
   type Message,
+  type MessageMedium,
   type Scorecard,
   type Status,
 } from './sdr-data';
@@ -39,6 +49,71 @@ export function ChannelGlyph({
   if (channel === 'missed-call') return <Voice size={size} color="var(--red-70)" />;
   if (channel === 'chat') return <MessageChat01 size={size} color={base} />;
   return <Mail size={size} color={base} />;
+}
+
+/** Per-message medium glyph. Smaller cousin of ChannelGlyph: maps the
+ *  delivery medium (sms/email/chat/call/voicemail) to its icon. */
+function MediumGlyph({
+  medium,
+  size = 14,
+  color = 'var(--dark-60)',
+}: {
+  medium: MessageMedium;
+  size?: number;
+  color?: string;
+}) {
+  if (medium === 'email') return <Mail size={size} color={color} />;
+  if (medium === 'sms') return <MessageText2 size={size} color={color} />;
+  if (medium === 'chat') return <MessageChat01 size={size} color={color} />;
+  if (medium === 'voicemail') return <Voice size={size} color="var(--red-70)" />;
+  return <Voice size={size} color={color} />;
+}
+
+/** Small inline medium badge — icon + label — used next to the role label
+ *  on each text bubble and (chip-style) in the channel-summary strip. */
+function MediumBadge({
+  medium,
+  chip = false,
+}: {
+  medium: MessageMedium;
+  chip?: boolean;
+}) {
+  if (chip) {
+    return (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '4px 10px',
+          borderRadius: 999,
+          background: 'var(--dark-4)',
+          color: 'var(--dark-90)',
+          fontSize: 12,
+          lineHeight: 1.2,
+          fontWeight: 500,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <MediumGlyph medium={medium} size={12} color="var(--dark-80)" />
+        {MEDIUM_LABELS[medium]}
+      </span>
+    );
+  }
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 12,
+        color: 'var(--dark-60)',
+      }}
+    >
+      <MediumGlyph medium={medium} size={12} color="var(--dark-60)" />
+      {MEDIUM_LABELS[medium]}
+    </span>
+  );
 }
 
 interface SdrDetailProps {
@@ -182,11 +257,25 @@ const ROLE_DOTS: Record<Message['role'], string> = {
   owner: 'var(--status-connect)',
 };
 
-function TextBubble({ msg }: { msg: Message }) {
+/** Per-role bubble tint — three flavors so the thread reads as a clear
+ *  three-way conversation:
+ *  - ai      → soft purple (accent tint, mirrors the AI-draft card)
+ *  - owner   → soft blue   (human-rep takeover)
+ *  - prospect→ neutral gray (current behavior)
+ *  - system  → not bubbled — uses SystemRow */
+const BUBBLE_BG: Record<Message['role'], string> = {
+  ai: 'rgba(124, 92, 252, 0.12)',
+  owner: 'rgba(1, 121, 207, 0.12)',
+  prospect: 'var(--dark-4)',
+  system: 'var(--dark-4)',
+};
+
+function TextBubble({ msg, leadChannel }: { msg: Message; leadChannel: Channel }) {
   const isOutbound = msg.role === 'ai' || msg.role === 'owner';
   const align: CSSProperties['justifyContent'] = isOutbound ? 'flex-end' : 'flex-start';
-  const bubbleBg = isOutbound ? 'var(--dark-90)' : 'var(--dark-4)';
-  const bubbleColor = isOutbound ? 'var(--light-100)' : 'var(--dark-90)';
+  const bubbleBg = BUBBLE_BG[msg.role];
+  const bubbleColor = 'var(--dark-90)';
+  const medium = msg.medium ?? defaultMedium(msg, leadChannel);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: align === 'flex-end' ? 'flex-end' : 'flex-start', gap: 4 }}>
       <div
@@ -194,7 +283,7 @@ function TextBubble({ msg }: { msg: Message }) {
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          fontSize: 11,
+          fontSize: 12,
           color: 'var(--dark-60)',
         }}
       >
@@ -207,6 +296,12 @@ function TextBubble({ msg }: { msg: Message }) {
           }}
         />
         <span style={{ fontWeight: 500 }}>{ROLE_LABELS[msg.role]}</span>
+        {medium && (
+          <>
+            <span aria-hidden>·</span>
+            <MediumBadge medium={medium} />
+          </>
+        )}
         <span>· {formatRelative(msg.timestamp)}</span>
       </div>
       <div
@@ -215,7 +310,7 @@ function TextBubble({ msg }: { msg: Message }) {
           color: bubbleColor,
           borderRadius: 12,
           padding: '10px 14px',
-          fontSize: 13.5,
+          fontSize: 14,
           lineHeight: 1.5,
           maxWidth: '78%',
         }}
@@ -245,7 +340,7 @@ function CallTurnBlock({ msg }: { msg: Message }) {
         <Text style={{ fontWeight: 500, color: 'var(--dark-90)' }}>
           Call transcript · {msg.call.duration}
         </Text>
-        <Text variant="secondary" style={{ marginLeft: 'auto', fontSize: 11 }}>
+        <Text variant="secondary" style={{ marginLeft: 'auto', fontSize: 12 }}>
           {formatRelative(msg.timestamp)}
         </Text>
       </div>
@@ -256,7 +351,7 @@ function CallTurnBlock({ msg }: { msg: Message }) {
             style={{
               display: 'flex',
               gap: 8,
-              fontSize: 12.5,
+              fontSize: 12,
               lineHeight: 1.5,
               color: 'var(--dark-80)',
             }}
@@ -288,7 +383,7 @@ function SystemRow({ msg }: { msg: Message }) {
         alignItems: 'center',
         gap: 8,
         padding: '4px 0',
-        fontSize: 11.5,
+        fontSize: 12,
         color: 'var(--dark-40)',
         textAlign: 'center',
       }}
@@ -312,6 +407,8 @@ interface ThreadPaneProps {
 function ThreadPane({ lead, paused, onSendOwner, onResumeAi }: ThreadPaneProps) {
   const [draft, setDraft] = useState('');
   const canSend = draft.trim().length > 0;
+  const mediums = transcriptMediums(lead.transcript, lead.channel);
+  const isMultiChannel = mediums.length > 1;
   return (
     <div
       style={{
@@ -320,30 +417,61 @@ function ThreadPane({ lead, paused, onSendOwner, onResumeAi }: ThreadPaneProps) 
         background: 'var(--light-100)',
         borderRight: '1px solid var(--dark-8)',
         minHeight: 0,
+        height: '100%',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '14px 20px',
-          borderBottom: '1px solid var(--dark-8)',
-        }}
-      >
-        <Heading level={5} style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>
-          Conversation
-        </Heading>
-        <Text variant="secondary" style={{ fontSize: 12 }}>
-          {lead.transcript.length} turns · {CHANNEL_LABELS[lead.channel]}
-        </Text>
-      </div>
+      {/* section: channel summary — replaces the old "Conversation" header.
+          Shows every medium used in this thread; flags multi-channel state. */}
+      {mediums.length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 20px',
+            borderBottom: '1px solid var(--dark-8)',
+            background: 'var(--dark-2)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Text variant="metadata" style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+            {isMultiChannel ? 'Multi-channel' : 'Channel'}
+          </Text>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {mediums.map((m) => (
+              <MediumBadge key={m} medium={m} chip />
+            ))}
+          </div>
+          {isMultiChannel && (
+            <span
+              style={{
+                marginLeft: 'auto',
+                fontSize: 12,
+                color: 'var(--dark-60)',
+              }}
+            >
+              {lead.transcript.length} turns across {mediums.length} channels
+            </span>
+          )}
+          {!isMultiChannel && (
+            <span
+              style={{
+                marginLeft: 'auto',
+                fontSize: 12,
+                color: 'var(--dark-60)',
+              }}
+            >
+              {lead.transcript.length} turns
+            </span>
+          )}
+        </div>
+      )}
 
       <div
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '16px 20px',
+          padding: '16px 20px 12px',
           display: 'flex',
           flexDirection: 'column',
           gap: 12,
@@ -352,22 +480,24 @@ function ThreadPane({ lead, paused, onSendOwner, onResumeAi }: ThreadPaneProps) 
         {lead.transcript.map((msg) => {
           if (msg.type === 'system') return <SystemRow key={msg.id} msg={msg} />;
           if (msg.type === 'call') return <CallTurnBlock key={msg.id} msg={msg} />;
-          return <TextBubble key={msg.id} msg={msg} />;
+          return <TextBubble key={msg.id} msg={msg} leadChannel={lead.channel} />;
         })}
       </div>
 
-      <div style={{ borderTop: '1px solid var(--dark-8)', padding: '12px 20px 20px' }}>
+      {/* section: composer — sticks to the bottom of the pane. Single-line
+          input. Pause banner sits directly above it when AI is paused. */}
+      <div style={{ borderTop: '1px solid var(--dark-8)', padding: '10px 16px', flexShrink: 0 }}>
         {paused && (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
+              gap: 10,
               background: 'rgba(237, 124, 44, 0.1)',
               border: '1px solid rgba(237, 124, 44, 0.25)',
-              borderRadius: 10,
-              padding: '10px 14px',
-              marginBottom: 12,
+              borderRadius: 8,
+              padding: '6px 10px',
+              marginBottom: 8,
             }}
           >
             <span
@@ -379,46 +509,76 @@ function ThreadPane({ lead, paused, onSendOwner, onResumeAi }: ThreadPaneProps) 
                 flexShrink: 0,
               }}
             />
-            <Text style={{ flex: 1, fontSize: 12.5, color: 'var(--dark-90)' }}>
-              AI paused — you are now responding. The agent will resume after you exit this thread.
+            <Text style={{ flex: 1, fontSize: 12, color: 'var(--dark-90)' }}>
+              AI paused — you are now responding.
             </Text>
             <Button variant="ghost" size="sm" onPress={onResumeAi}>
               Resume AI
             </Button>
           </div>
         )}
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-          <textarea
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--light-100)',
+            border: '1px solid var(--dark-8)',
+            borderRadius: 999,
+            padding: '4px 4px 4px 14px',
+          }}
+        >
+          <input
+            type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && canSend) {
+                e.preventDefault();
+                onSendOwner(draft.trim());
+                setDraft('');
+              }
+            }}
             placeholder="Type a message to take over the conversation…"
-            rows={2}
             style={{
               flex: 1,
               fontFamily: 'inherit',
-              fontSize: 13.5,
+              fontSize: 14,
               color: 'var(--dark-90)',
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 10,
-              padding: '10px 12px',
+              background: 'transparent',
+              border: 'none',
               outline: 'none',
-              resize: 'vertical',
-              minHeight: 60,
-              lineHeight: 1.5,
+              padding: '8px 0',
+              lineHeight: 1.4,
+              minWidth: 0,
             }}
           />
-          <Button
-            variant="primary"
-            size="md"
-            isDisabled={!canSend}
-            onPress={() => {
+          <button
+            type="button"
+            aria-label="Send"
+            disabled={!canSend}
+            onClick={() => {
               onSendOwner(draft.trim());
               setDraft('');
             }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              border: 'none',
+              background: canSend ? 'var(--dark-90)' : 'var(--dark-15)',
+              color: canSend ? 'var(--light-100)' : 'var(--dark-60)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: canSend ? 'pointer' : 'not-allowed',
+              padding: 0,
+              flexShrink: 0,
+              transition: 'background 0.12s, color 0.12s',
+            }}
           >
-            Send
-          </Button>
+            <Send2 size={16} color={canSend ? 'var(--light-100)' : 'var(--dark-60)'} />
+          </button>
         </div>
       </div>
     </div>
@@ -639,18 +799,15 @@ function Sidebar({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 20,
+        gap: 32,
         padding: 20,
         background: 'var(--light-100)',
         overflowY: 'auto',
       }}
     >
-      {/* section: lead score card */}
+      {/* section: lead score — sits inline on the sidebar, no wrapper. */}
       <div
         style={{
-          background: 'var(--dark-2)',
-          borderRadius: 12,
-          padding: '16px 20px',
           display: 'flex',
           alignItems: 'center',
           gap: 16,
@@ -660,7 +817,7 @@ function Sidebar({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <Text
             variant="metadata"
-            style={{ textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--dark-40)' }}
+            style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}
           >
             Lead score
           </Text>
@@ -676,44 +833,34 @@ function Sidebar({
         </div>
       </div>
 
-      {/* section: qualification */}
+      {/* section: qualification — eyebrow + plain BANT rows on bg. */}
       <div>
         <Text
           variant="metadata"
           style={{
             display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            color: 'var(--dark-40)',
+            fontSize: 12,
+            color: 'var(--dark-60)',
+            fontWeight: 400,
             marginBottom: 8,
           }}
         >
           Qualification
         </Text>
-        <div
-          style={{
-            background: 'var(--light-100)',
-            border: '1px solid var(--dark-8)',
-            borderRadius: 12,
-            overflow: 'hidden',
-          }}
-        >
+        <div>
           {rows.map((row, i) => (
             <BantRowView key={row.label} row={row} isLast={i === rows.length - 1} />
           ))}
         </div>
       </div>
 
-      {/* section: suggested next step (escalated only) */}
+      {/* section: suggested next step (escalated only) — inline, keeps the
+          orange left-accent but no card wrapper. */}
       {lead.status === 'escalated' && lead.suggested_next_action && (
         <div
           style={{
-            border: '1px solid var(--dark-8)',
-            borderRadius: 12,
-            background: 'var(--light-100)',
-            overflow: 'hidden',
             position: 'relative',
-            paddingLeft: 4,
+            paddingLeft: 12,
           }}
         >
           <div
@@ -722,126 +869,137 @@ function Sidebar({
               left: 0,
               top: 0,
               bottom: 0,
-              width: 4,
+              width: 3,
+              borderRadius: 2,
               background: 'var(--status-connect)',
             }}
           />
-          <div style={{ padding: 16 }}>
-            <Heading level={5} style={{ marginBottom: 6, fontSize: 13, fontWeight: 500 }}>
-              Suggested next step
-            </Heading>
-            <Text
-              style={{
-                display: 'block',
-                fontSize: 12.5,
-                color: 'var(--dark-80)',
-                lineHeight: 1.55,
-                marginBottom: 12,
-              }}
-            >
-              {lead.suggested_next_action.summary}
-            </Text>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button variant="primary" size="sm" onPress={onConfirmNextAction}>
-                Confirm
-              </Button>
-              <Button variant="secondary" size="sm" onPress={onEditNextAction}>
-                Edit
-              </Button>
-              <Button variant="ghost" size="sm" onPress={onDismissNextAction}>
-                Dismiss
-              </Button>
-            </div>
+          <Heading level={5} style={{ marginBottom: 6, fontSize: 14, fontWeight: 500 }}>
+            Suggested next step
+          </Heading>
+          <Text
+            style={{
+              display: 'block',
+              fontSize: 12,
+              color: 'var(--dark-80)',
+              lineHeight: 1.55,
+              marginBottom: 12,
+            }}
+          >
+            {lead.suggested_next_action.summary}
+          </Text>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Button variant="primary" size="sm" onPress={onConfirmNextAction}>
+              Confirm
+            </Button>
+            <Button variant="secondary" size="sm" onPress={onEditNextAction}>
+              Edit
+            </Button>
+            <Button variant="ghost" size="sm" onPress={onDismissNextAction}>
+              Dismiss
+            </Button>
           </div>
         </div>
       )}
 
-      {/* section: manual controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* section: manual controls — 2×2 grid of icon + label secondary buttons. */}
+      <div>
         <Text
           variant="metadata"
           style={{
             display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            color: 'var(--dark-40)',
-            marginBottom: 4,
+            fontSize: 12,
+            color: 'var(--dark-60)',
+            fontWeight: 400,
+            marginBottom: 8,
           }}
         >
           Manual controls
         </Text>
-        <Button variant="secondary" size="md" fullWidth onPress={onScheduleMeeting}>
-          Schedule meeting
-        </Button>
-        <div style={{ position: 'relative' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 8,
+          }}
+        >
           <Button
             variant="secondary"
             size="md"
             fullWidth
-            onPress={() => {
-              setStatusOpen((v) => !v);
-              setReassignOpen(false);
-            }}
+            frontIcon={Calendar1}
+            onPress={onScheduleMeeting}
           >
-            Change status
+            Schedule meeting
           </Button>
-          {statusOpen && (
-            <PopoverMenu onClose={() => setStatusOpen(false)}>
-              {ALL_STATUSES.map((s) => (
-                <PopoverItem
-                  key={s}
-                  onSelect={() => {
-                    setStatusOpen(false);
-                    onChangeStatus(s);
-                  }}
-                >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: STATUS_STYLES[s].fg,
-                      }}
-                    />
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="secondary"
+              size="md"
+              fullWidth
+              frontIcon={Refresh01}
+              onPress={() => {
+                setStatusOpen((v) => !v);
+                setReassignOpen(false);
+              }}
+            >
+              Change status
+            </Button>
+            {statusOpen && (
+              <PopoverMenu onClose={() => setStatusOpen(false)}>
+                {ALL_STATUSES.map((s) => (
+                  <PopoverItem
+                    key={s}
+                    onSelect={() => {
+                      setStatusOpen(false);
+                      onChangeStatus(s);
+                    }}
+                  >
                     {STATUS_STYLES[s].label}
-                  </span>
-                </PopoverItem>
-              ))}
-            </PopoverMenu>
-          )}
-        </div>
-        <div style={{ position: 'relative' }}>
+                  </PopoverItem>
+                ))}
+              </PopoverMenu>
+            )}
+          </div>
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="secondary"
+              size="md"
+              fullWidth
+              frontIcon={UserProfileGroup}
+              onPress={() => {
+                setReassignOpen((v) => !v);
+                setStatusOpen(false);
+              }}
+            >
+              Reassign
+            </Button>
+            {reassignOpen && (
+              <PopoverMenu onClose={() => setReassignOpen(false)}>
+                {FAKE_OWNERS.map((name) => (
+                  <PopoverItem
+                    key={name}
+                    onSelect={() => {
+                      setReassignOpen(false);
+                      onReassign(name);
+                    }}
+                  >
+                    {name}
+                  </PopoverItem>
+                ))}
+              </PopoverMenu>
+            )}
+          </div>
           <Button
             variant="secondary"
             size="md"
             fullWidth
-            onPress={() => {
-              setReassignOpen((v) => !v);
-              setStatusOpen(false);
-            }}
+            frontIcon={Trash2}
+            onPress={onDisqualify}
           >
-            Reassign
+            Disqualify
           </Button>
-          {reassignOpen && (
-            <PopoverMenu onClose={() => setReassignOpen(false)}>
-              {FAKE_OWNERS.map((name) => (
-                <PopoverItem
-                  key={name}
-                  onSelect={() => {
-                    setReassignOpen(false);
-                    onReassign(name);
-                  }}
-                >
-                  {name}
-                </PopoverItem>
-              ))}
-            </PopoverMenu>
-          )}
         </div>
-        <Button variant="ghost" size="md" fullWidth color="var(--red-90)" onPress={onDisqualify}>
-          Disqualify
-        </Button>
       </div>
 
       {/* section: prospect (avatar + contact + tags) */}
@@ -869,7 +1027,7 @@ function ProspectRow({
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
-        fontSize: 12.5,
+        fontSize: 12,
         color,
         flex: 1,
         minWidth: 0,
@@ -902,7 +1060,7 @@ function ProspectRow({
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            fontSize: 12.5,
+            fontSize: 12,
           }}
         >
           {children}
@@ -922,14 +1080,14 @@ function ProspectCard({ lead }: { lead: Lead }) {
   }`;
 
   return (
-    <div style={{ marginTop: 32 }}>
+    <div>
       <Text
         variant="metadata"
         style={{
           display: 'block',
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
+          fontSize: 12,
           color: 'var(--dark-60)',
+          fontWeight: 400,
           marginBottom: 8,
         }}
       >
@@ -937,15 +1095,14 @@ function ProspectCard({ lead }: { lead: Lead }) {
       </Text>
       <div
         style={{
-          background: 'var(--dark-2)',
-          borderRadius: 12,
-          padding: 16,
           display: 'flex',
           flexDirection: 'column',
           gap: 12,
         }}
       >
-        {/* identity */}
+        {/* identity — name on top, company directly beneath (so the
+            org is unambiguous), with the capture metadata below in muted
+            text. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
           <Avatar
             src={prospect.avatarUrl}
@@ -966,9 +1123,22 @@ function ProspectCard({ lead }: { lead: Lead }) {
               {prospect.name}
             </Text>
             <Text
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'var(--dark-80)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                lineHeight: 1.3,
+              }}
+            >
+              {prospect.company}
+            </Text>
+            <Text
               variant="secondary"
               style={{
-                fontSize: 11.5,
+                fontSize: 12,
                 color: 'var(--dark-60)',
                 lineHeight: 1.4,
               }}
@@ -1020,7 +1190,7 @@ function ProspectCard({ lead }: { lead: Lead }) {
                 style={{
                   background: 'var(--dark-4)',
                   color: 'var(--dark-90)',
-                  fontSize: 11.5,
+                  fontSize: 12,
                   padding: '4px 8px',
                   borderRadius: 6,
                   lineHeight: 1.2,
@@ -1052,7 +1222,7 @@ function BantRowView({ row, isLast }: { row: BantRow; isLast: boolean }) {
       <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>
         {row.label}
       </Text>
-      <Text style={{ fontSize: 12.5, color: 'var(--dark-90)', lineHeight: 1.45 }}>
+      <Text style={{ fontSize: 12, color: 'var(--dark-90)', lineHeight: 1.45 }}>
         {row.value}
       </Text>
       <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -1114,7 +1284,7 @@ function PopoverItem({
         background: 'transparent',
         textAlign: 'left',
         fontFamily: 'inherit',
-        fontSize: 13,
+        fontSize: 14,
         color: 'var(--dark-90)',
         borderRadius: 6,
         cursor: 'pointer',
@@ -1151,7 +1321,7 @@ function EditNextStepModal({
           style={{
             width: '100%',
             fontFamily: 'inherit',
-            fontSize: 13.5,
+            fontSize: 14,
             color: 'var(--dark-90)',
             background: 'var(--light-100)',
             border: '1px solid var(--dark-15)',
@@ -1295,7 +1465,7 @@ export function SdrDetail({ lead, onUpdateLead }: SdrDetailProps) {
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 380px',
-        height: 'calc(100vh - 60px)',
+        height: '100%',
         background: 'var(--light-100)',
         minHeight: 0,
       }}

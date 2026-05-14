@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { TabChip, useToast } from '@/staging';
+import { StatusPill, TabChip, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import { CrosspostWarningModal } from '../CrosspostWarningModal';
 import Plus from '@/icons/20/Plus';
 import ChevronLeft from '@/icons/24/ChevronLeft';
@@ -76,10 +77,10 @@ const PLATFORM_DOT: Record<PlatformKey, string> = {
   x: '#1F2937',
 };
 
-const STATUS_STYLES: Record<Status, { bg: string; color: string }> = {
-  scheduled: { bg: '#DCFCE7', color: '#14532D' },
-  draft: { bg: 'rgba(252,183,40,0.18)', color: '#9A6300' },
-  review: { bg: '#FEF3C7', color: '#713F12' },
+const STATUS_TONE: Record<Status, StatusPillTone> = {
+  scheduled: 'neutral',
+  draft: 'neutral',
+  review: 'warning',
 };
 
 const TYPES_BY_PLATFORM: Record<PlatformKey, string[]> = {
@@ -149,7 +150,6 @@ function formatWeekLabel(days: DayInfo[], offsetWeeks: number): string {
 
 function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
   const Icon = PLATFORM_ICONS[post.platform];
-  const statusStyle = STATUS_STYLES[post.status];
   return (
     <button
       type="button"
@@ -179,7 +179,7 @@ function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 11,
+          fontSize: 12,
           padding: post.thumb ? 0 : 10,
         }}
       >
@@ -211,7 +211,7 @@ function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
             color: '#fff',
             borderRadius: 5,
             padding: '2px 6px',
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: 500,
           }}
         >
@@ -221,7 +221,7 @@ function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
       <div style={{ padding: '9px 11px 11px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             color: 'var(--dark-60)',
             fontVariantNumeric: 'tabular-nums',
             display: 'flex',
@@ -235,7 +235,7 @@ function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
         </div>
         <div
           style={{
-            fontSize: 12.5,
+            fontSize: 12,
             fontWeight: 500,
             color: 'var(--dark-90)',
             lineHeight: 1.3,
@@ -248,28 +248,13 @@ function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
           {post.title}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              fontSize: 10,
-              fontWeight: 500,
-              padding: '2px 7px',
-              borderRadius: 5,
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              background: statusStyle.bg,
-              color: statusStyle.color,
-            }}
-          >
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
-            {post.status}
-          </span>
+          <StatusPill tone={STATUS_TONE[post.status]} size="sm">
+            {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+          </StatusPill>
           <span
             title={post.source}
             style={{
-              fontSize: 10,
+              fontSize: 12,
               color: 'var(--dark-40)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -320,7 +305,7 @@ function DayColumn({
       >
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             color: 'var(--dark-60)',
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
@@ -333,7 +318,7 @@ function DayColumn({
         <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-90)', marginTop: 2, letterSpacing: '-0.2px' }}>
           {day.date}
         </div>
-        <div style={{ fontSize: 11, color: 'var(--dark-40)', marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 2 }}>
           {posts.length} post{posts.length === 1 ? '' : 's'}
         </div>
       </div>
@@ -347,7 +332,7 @@ function DayColumn({
               padding: '28px 8px',
               textAlign: 'center',
               color: 'var(--dark-40)',
-              fontSize: 11,
+              fontSize: 12,
             }}
           >
             Nothing scheduled
@@ -408,8 +393,8 @@ function ChooserCard({
       >
         {icon}
       </span>
-      <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px' }}>{label}</span>
-      <span style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.5 }}>{description}</span>
+      <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px' }}>{label}</span>
+      <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{description}</span>
     </button>
   );
 }
@@ -431,7 +416,7 @@ function CreateChooserModal({
         compact={false}
       />
       <Modal.Content compact={false}>
-        <p style={{ margin: '0 0 16px 0', fontSize: 13.5, color: 'var(--dark-60)' }}>
+        <p style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--dark-60)' }}>
           Pick one — the agent takes it from there.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -521,7 +506,7 @@ function Pill({
         borderRadius: 99,
         padding: '6px 12px',
         fontFamily: 'inherit',
-        fontSize: 12.5,
+        fontSize: 12,
         cursor: 'pointer',
         transition: 'background 120ms ease',
       }}
@@ -556,7 +541,7 @@ function NPSection({
       <label
         style={{
           display: 'block',
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 500,
           color: 'var(--dark-60)',
           textTransform: 'uppercase',
@@ -630,7 +615,7 @@ function NewPostModal({
         compact={false}
       />
       <Modal.Content compact={false}>
-        <p style={{ margin: '0 0 16px 0', fontSize: 13.5, color: 'var(--dark-60)' }}>
+        <p style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--dark-60)' }}>
           Add a single organic social post to your calendar. The agent will draft the rest.
         </p>
       <NPSection label="Caption / title">
@@ -738,7 +723,7 @@ function NewPostModal({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 11,
+              fontSize: 12,
               fontFamily: 'inherit',
             }}
           >
@@ -773,7 +758,7 @@ function NewPostModal({
             alignItems: 'center',
             gap: 10,
             cursor: 'pointer',
-            fontSize: 13.5,
+            fontSize: 14,
             color: 'var(--dark-90)',
           }}
         >
@@ -918,7 +903,7 @@ function OrganicSocialRouteInner() {
             >
               <ChevronLeft size={16} />
             </button>
-            <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--dark-90)', minWidth: 180, textAlign: 'center' }}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', minWidth: 180, textAlign: 'center' }}>
               {weekLabel}
             </span>
             <button

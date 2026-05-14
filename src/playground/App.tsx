@@ -1,14 +1,215 @@
+import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { prototypeRoutes } from './router';
+import { prototypeRoutes, type PrototypeRoute } from './router';
 import { CommentOverlay } from '../../prototypes/_shell/CommentOverlay';
 import '../tokens/colors.css';
 import '../tokens/fonts.scss';
 import '../tokens/reset.css';
 
+const FONT_STACK = "'Sohne', sans-serif";
+
+/** Friendly relative timestamp ("3h ago", "2d ago"). Mirrors the H2 SDR
+ *  helper but lives here so the index has no dependency on prototype code. */
+function formatRelative(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return 'unknown';
+  const diff = Date.now() - then;
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return 'just now';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day}d ago`;
+  const wk = Math.floor(day / 7);
+  if (wk < 5) return `${wk}w ago`;
+  const mo = Math.floor(day / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  return `${Math.floor(day / 365)}y ago`;
+}
+
+/** Title-case a slug for display: "hello-world" → "Hello world". */
+function slugToTitle(slug: string): string {
+  if (!slug) return slug;
+  const spaced = slug.replace(/[-_]/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+const THUMB_BASE_WIDTH = 1280;
+const THUMB_BASE_HEIGHT = 800;
+
+/** Prefer the static thumbnail PNG (refreshed by the generate-thumbnails
+ *  workflow on every push to main) and fall back to a live iframe preview
+ *  when it doesn't exist yet — e.g. before the first generation, or for a
+ *  brand-new prototype in a feature branch. */
+function Thumbnail({ slug, src }: { slug: string; src: string | null }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.22);
+
+  useEffect(() => {
+    if (src) return; // only the iframe path needs scale measurement
+    const el = wrapRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.clientWidth;
+      if (w > 0) setScale(w / THUMB_BASE_WIDTH);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [src]);
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        width: '100%',
+        aspectRatio: `${THUMB_BASE_WIDTH} / ${THUMB_BASE_HEIGHT}`,
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'var(--dark-2)',
+      }}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'top left',
+            display: 'block',
+          }}
+        />
+      ) : (
+        <iframe
+          src={`${import.meta.env.BASE_URL}${slug}`}
+          title={`${slug} preview`}
+          loading="lazy"
+          tabIndex={-1}
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: THUMB_BASE_WIDTH,
+            height: THUMB_BASE_HEIGHT,
+            border: 'none',
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            pointerEvents: 'none',
+            background: 'var(--light-100)',
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function Card({ route }: { route: PrototypeRoute }) {
+  const title = route.title ?? slugToTitle(route.slug);
+  return (
+    <Link
+      to={`/${route.slug}`}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        textDecoration: 'none',
+        color: 'inherit',
+        background: 'var(--light-100)',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 12,
+        overflow: 'hidden',
+        transition: 'border-color 120ms, box-shadow 120ms, transform 120ms',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--dark-15)';
+        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.06)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--dark-8)';
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      <Thumbnail slug={route.slug} src={route.thumbnailUrl} />
+      <div
+        style={{
+          padding: '16px 18px 18px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          borderTop: '1px solid var(--dark-8)',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 500,
+            color: 'var(--dark-90)',
+            letterSpacing: '0.2px',
+          }}
+        >
+          {title}
+        </div>
+        {route.description && (
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: 'var(--dark-80)',
+            }}
+          >
+            {route.description}
+          </p>
+        )}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
+            fontSize: 12,
+            color: 'var(--dark-60)',
+            marginTop: 4,
+          }}
+        >
+          <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+            /{route.slug}
+          </span>
+          {route.lastModified && (
+            <span title={new Date(route.lastModified).toLocaleString()}>
+              Updated {formatRelative(route.lastModified)}
+            </span>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function Index() {
+  // Body background — applied only while the index is mounted so prototypes
+  // keep their own (white) surface.
+  useEffect(() => {
+    const prev = document.body.style.background;
+    document.body.style.background = '#ECEFF2';
+    return () => {
+      document.body.style.background = prev;
+    };
+  }, []);
+
   if (prototypeRoutes.length === 0) {
     return (
-      <main style={{ padding: 24, fontFamily: "'Sohne', sans-serif" }}>
+      <main style={{ padding: 24, fontFamily: FONT_STACK }}>
         <h1>No prototypes yet</h1>
         <p>
           Tell Claude: <code>/new-prototype hello-world</code>
@@ -17,15 +218,51 @@ function Index() {
     );
   }
   return (
-    <main style={{ padding: 24, fontFamily: "'Sohne', sans-serif" }}>
-      <h1>Prototypes</h1>
-      <ul>
+    <main
+      style={{
+        padding: '40px 32px 80px',
+        fontFamily: FONT_STACK,
+        minHeight: '100vh',
+        background: '#ECEFF2',
+        color: 'var(--dark-90)',
+      }}
+    >
+      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+      <header style={{ marginBottom: 28 }}>
+        <h1
+          style={{
+            fontSize: 32,
+            fontWeight: 500,
+            letterSpacing: '0.32px',
+            margin: 0,
+          }}
+        >
+          Prototypes
+        </h1>
+        <p
+          style={{
+            margin: '8px 0 0',
+            color: 'var(--dark-60)',
+            fontSize: 14,
+            lineHeight: 1.5,
+          }}
+        >
+          {prototypeRoutes.length} prototype{prototypeRoutes.length === 1 ? '' : 's'} ·
+          sorted by most recently updated
+        </p>
+      </header>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gap: 20,
+        }}
+      >
         {prototypeRoutes.map((r) => (
-          <li key={r.slug}>
-            <Link to={`/${r.slug}`}>{r.slug}</Link>
-          </li>
+          <Card key={r.slug} route={r} />
         ))}
-      </ul>
+      </div>
+      </div>
     </main>
   );
 }

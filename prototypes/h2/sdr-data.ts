@@ -10,6 +10,8 @@
  *  - prototypes/h2/SdrDetail.tsx — three-pane detail view + Calendly mock modal
  */
 
+import type { StatusPillTone } from '@/staging';
+
 export type Channel = 'form' | 'inbound-call' | 'missed-call' | 'chat' | 'cold-followup';
 
 export type Status =
@@ -22,6 +24,12 @@ export type Status =
 
 export type MessageRole = 'ai' | 'prospect' | 'system' | 'owner';
 export type MessageType = 'text' | 'call' | 'system';
+
+/** Per-message delivery channel. Distinct from the lead's source `channel`:
+ *  a lead may arrive via a missed call but the AI then follow up via SMS,
+ *  then switch to email when sharing a deck. Used to render the per-message
+ *  channel glyph + the conversation-header channel summary. */
+export type MessageMedium = 'email' | 'sms' | 'chat' | 'call' | 'voicemail';
 
 export interface CallTurn {
   speaker: string;
@@ -38,6 +46,47 @@ export interface Message {
   call?: { duration: string; turns: CallTurn[] };
   /** Human-friendly relative timestamp ("2m ago"). */
   timestamp: string;
+  /** Explicit delivery channel for this message. When omitted, the renderer
+   *  derives a sensible default from the message type + lead channel. */
+  medium?: MessageMedium;
+}
+
+export const MEDIUM_LABELS: Record<MessageMedium, string> = {
+  email: 'Email',
+  sms: 'SMS',
+  chat: 'Chat',
+  call: 'Call',
+  voicemail: 'Voicemail',
+};
+
+/** Fallback medium when a message doesn't specify one. Used by both the
+ *  thread renderer and the channel-summary strip. */
+export function defaultMedium(msg: Message, leadChannel: Channel): MessageMedium | null {
+  if (msg.type === 'system') return null;
+  if (msg.type === 'call') {
+    return leadChannel === 'missed-call' ? 'voicemail' : 'call';
+  }
+  // type === 'text' — infer from how the lead arrived.
+  if (leadChannel === 'chat') return 'chat';
+  if (leadChannel === 'form' || leadChannel === 'cold-followup') return 'email';
+  // missed-call / inbound-call default to SMS for fast follow-up.
+  return 'sms';
+}
+
+/** Unique mediums used across a transcript (system messages excluded). Used
+ *  by the conversation-header channel-summary strip. */
+export function transcriptMediums(transcript: Message[], leadChannel: Channel): MessageMedium[] {
+  const seen = new Set<MessageMedium>();
+  const order: MessageMedium[] = [];
+  for (const msg of transcript) {
+    const m = msg.medium ?? defaultMedium(msg, leadChannel);
+    if (!m) continue;
+    if (!seen.has(m)) {
+      seen.add(m);
+      order.push(m);
+    }
+  }
+  return order;
 }
 
 export interface Scorecard {
@@ -65,6 +114,9 @@ export interface Lead {
   last_activity_at: string;
   prospect: {
     name: string;
+    /** Company / org the prospect represents. Shown beneath the name in the
+     *  detail view's right-rail prospect card and feeds the inbox row. */
+    company: string;
     phone: string;
     email: string;
     source_url: string;
@@ -100,42 +152,33 @@ export const CHANNEL_LABELS: Record<Channel, string> = {
 
 export interface StatusStyle {
   label: string;
-  bg: string;
-  fg: string;
-  /** Dot color for accent in pill — falls back to fg if absent. */
-  dot?: string;
+  tone: StatusPillTone;
 }
 
 export const STATUS_STYLES: Record<Status, StatusStyle> = {
   'in-conversation': {
     label: 'In conversation',
-    bg: 'rgba(1, 121, 207, 0.12)',
-    fg: 'var(--status-posting)',
+    tone: 'neutral',
   },
   hot: {
     label: 'Hot',
-    bg: 'rgba(188, 1, 11, 0.1)',
-    fg: 'var(--red-90)',
+    tone: 'danger',
   },
   escalated: {
     label: 'Escalated',
-    bg: 'rgba(237, 124, 44, 0.14)',
-    fg: 'var(--status-connect)',
+    tone: 'warning',
   },
   booked: {
     label: 'Booked',
-    bg: 'rgba(4, 175, 0, 0.12)',
-    fg: 'var(--status-approved)',
+    tone: 'success',
   },
   disqualified: {
     label: 'Disqualified',
-    bg: 'var(--dark-4)',
-    fg: 'var(--dark-90)',
+    tone: 'neutral',
   },
   closed: {
     label: 'Closed',
-    bg: 'var(--dark-4)',
-    fg: 'var(--dark-40)',
+    tone: 'neutral',
   },
 };
 
@@ -226,6 +269,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:3',
     prospect: {
       name: 'Aria Chen',
+      company: 'Northbeam Labs',
       phone: '+1 (415) 555-0148',
       email: 'aria.chen@northbeamlabs.com',
       source_url: 'radianthealth.co/b2b/wellness-benefits?utm_campaign=mid-market',
@@ -320,6 +364,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:14',
     prospect: {
       name: 'Morgan Lee',
+      company: 'Vellum Retail',
       phone: '+1 (628) 555-0193',
       email: 'm.lee@vellumretail.com',
       source_url: 'radianthealth.co/enterprise',
@@ -432,6 +477,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:24',
     prospect: {
       name: 'Priya Rao',
+      company: 'The Long Bench',
       phone: '+1 (310) 555-0167',
       email: 'priya@thelongbench.studio',
       source_url: 'radianthealth.co/small-teams',
@@ -531,6 +577,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:45',
     prospect: {
       name: 'Casey Park',
+      company: 'Meridian Data',
       phone: '+1 (212) 555-0142',
       email: 'casey@meridiandata.io',
       source_url: 'radianthealth.co/landing/data-teams',
@@ -610,6 +657,7 @@ export const LEADS: Lead[] = [
         type: 'text',
         content: "9:30 AM ET locked in. Sending a calendar invite now from renee@radianthealth.co.",
         timestamp: 'm:119',
+        medium: 'email',
       },
       {
         id: 't7',
@@ -617,6 +665,7 @@ export const LEADS: Lead[] = [
         type: 'text',
         content: "Great. One more thing — can you send the data-teams case study before the call?",
         timestamp: 'm:60',
+        medium: 'email',
       },
       {
         id: 't8',
@@ -633,6 +682,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:75',
     prospect: {
       name: 'Jordan Fitzgerald',
+      company: 'Bracken & Co',
       phone: '+1 (917) 555-0118',
       email: 'jfitz@brackenco.com',
       source_url: 'radianthealth.co/blog/burnout-q2-report',
@@ -716,6 +766,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:30',
     prospect: {
       name: 'Sasha Bell',
+      company: 'Arbor Agency',
       phone: '+1 (646) 555-0144',
       email: 'sasha.bell@arboragency.com',
       source_url: 'radianthealth.co/teams',
@@ -758,6 +809,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:55',
     prospect: {
       name: 'Noah Okafor',
+      company: 'Helmsman Labs',
       phone: '+1 (404) 555-0181',
       email: 'noah@helmsmanlabs.com',
       source_url: 'radianthealth.co/case-studies/atlas-bio',
@@ -848,6 +900,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:120',
     prospect: {
       name: 'Emily Tran',
+      company: 'Goldfinch Architects',
       phone: '+1 (503) 555-0179',
       email: 'emily@goldfincharchitects.com',
       source_url: 'radianthealth.co/pricing',
@@ -925,6 +978,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:200',
     prospect: {
       name: 'David Wu',
+      company: 'Stagecraft Studio',
       phone: '+1 (415) 555-0192',
       email: 'd.wu@stagecraft.studio',
       source_url: 'radianthealth.co/teams',
@@ -987,6 +1041,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:300',
     prospect: {
       name: 'Talia Mendez',
+      company: 'Oakwise Health',
       phone: '+1 (212) 555-0136',
       email: 'talia@oakwise.health',
       source_url: 'radianthealth.co/partners',
@@ -1021,6 +1076,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:100',
     prospect: {
       name: 'Rohan Bhatt',
+      company: 'Waypoint Bio',
       phone: '+1 (415) 555-0118',
       email: 'rohan@waypointbio.com',
       source_url: 'radianthealth.co/teams',
@@ -1104,6 +1160,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:50',
     prospect: {
       name: 'Helena Saunders',
+      company: 'Cintra Services',
       phone: '+44 20 7946 0511',
       email: 'helena@cintraservices.uk',
       source_url: 'radianthealth.co/uk',
@@ -1146,6 +1203,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:240',
     prospect: {
       name: 'Felix Rosenthal',
+      company: 'Hammerlane Studio',
       phone: '+1 (646) 555-0102',
       email: 'felix@hammerlane.studio',
       source_url: 'radianthealth.co/studios',
@@ -1201,6 +1259,7 @@ export const LEADS: Lead[] = [
     last_activity_at: 'm:18',
     prospect: {
       name: 'Mia Andersson',
+      company: 'Brightline Fund',
       phone: '+1 (415) 555-0177',
       email: 'mia@brightline.fund',
       source_url: 'radianthealth.co/teams',

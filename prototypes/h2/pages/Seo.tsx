@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button, Text } from '@/components';
 import { ChevronDown, Plus, Trash2 } from '@/icons/20';
+import { StatusPill } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 
@@ -66,21 +68,25 @@ function TopbarCenter() {
 }
 
 function CadencePill() {
+  const [hover, setHover] = useState(false);
   return (
     <button
       type="button"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 8,
-        background: 'var(--dark-4)',
-        border: '1px solid transparent',
+        background: hover ? 'var(--dark-4)' : 'var(--light-100)',
+        border: '1px solid var(--dark-8)',
         borderRadius: 8,
         padding: '6px 12px',
         font: 'inherit',
         fontSize: 14,
         color: 'var(--dark-90)',
         cursor: 'pointer',
+        transition: 'background-color 120ms ease',
       }}
     >
       <span style={{ fontSize: 14 }}>{'📝'}</span>
@@ -114,9 +120,8 @@ function ClusterTable({
         style={{
           display: 'grid',
           gridTemplateColumns: '48px 1.4fr 2fr 88px 96px 88px 116px',
-          gap: 0,
-          padding: '12px 20px',
-          background: 'rgba(0,0,0,0.02)',
+          gap: 16,
+          padding: '6px 20px',
           borderBottom: '1px solid var(--dark-8)',
           alignItems: 'center',
         }}
@@ -147,11 +152,9 @@ function HeaderCell({ children }: { children: React.ReactNode }) {
     <Text
       variant="metadata"
       style={{
-        fontSize: 11,
-        color: 'var(--dark-40)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-        fontWeight: 500,
+        fontSize: 12,
+        color: 'var(--dark-60)',
+        fontWeight: 400,
       }}
     >
       {children}
@@ -177,7 +180,7 @@ function ClusterRow({
       style={{
         display: 'grid',
         gridTemplateColumns: '48px 1.4fr 2fr 88px 96px 88px 116px',
-        gap: 0,
+        gap: 16,
         padding: '14px 20px',
         borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
         alignItems: 'center',
@@ -199,7 +202,11 @@ function ClusterRow({
         <Text style={{ color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {row.keyword}
         </Text>
-        {row.isMain && <MainPill />}
+        {row.isMain && (
+          <span style={{ display: 'inline-flex', flexShrink: 0 }}>
+            <MainPill />
+          </span>
+        )}
       </div>
       <Text
         variant="secondary"
@@ -212,7 +219,9 @@ function ClusterRow({
       >
         {row.title}
       </Text>
-      <DifficultyPill difficulty={row.difficulty} />
+      <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
+        <DifficultyPill difficulty={row.difficulty} />
+      </div>
       <Text
         variant="metadata"
         style={{ color: 'var(--dark-80)', fontVariantNumeric: 'tabular-nums' }}
@@ -223,7 +232,7 @@ function ClusterRow({
         {row.postDate}
       </Text>
       <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-        {hovered ? <RowActions /> : <StatusPill label="Planned" />}
+        {hovered ? <RowActions /> : <StatusPill tone="neutral" size="sm">Planned</StatusPill>}
       </div>
     </div>
   );
@@ -231,66 +240,23 @@ function ClusterRow({
 
 function MainPill() {
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 8px',
-        borderRadius: 5,
-        fontSize: 11,
-        fontWeight: 500,
-        background: 'rgba(124, 92, 252, 0.10)',
-        color: 'var(--purple)',
-        flexShrink: 0,
-      }}
-    >
+    <StatusPill tone="accent" size="sm">
       Main
-    </span>
+    </StatusPill>
   );
 }
+
+const DIFFICULTY_TONES: Record<'Easy' | 'Medium' | 'Hard', StatusPillTone> = {
+  Easy: 'success',
+  Medium: 'warning',
+  Hard: 'danger',
+};
 
 function DifficultyPill({ difficulty }: { difficulty: 'Easy' | 'Medium' | 'Hard' }) {
-  const map = {
-    Easy: { bg: 'rgba(4,175,0,0.10)', fg: 'var(--status-approved)' },
-    Medium: { bg: 'rgba(237,182,44,0.15)', fg: 'var(--status-review)' },
-    Hard: { bg: 'rgba(188,1,11,0.10)', fg: 'var(--status-failed)' },
-  };
-  const m = map[difficulty];
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 8px',
-        borderRadius: 5,
-        fontSize: 11,
-        fontWeight: 500,
-        background: m.bg,
-        color: m.fg,
-        width: 'fit-content',
-      }}
-    >
+    <StatusPill tone={DIFFICULTY_TONES[difficulty]} size="sm">
       {difficulty}
-    </span>
-  );
-}
-
-function StatusPill({ label }: { label: string }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '4px 10px',
-        borderRadius: 6,
-        fontSize: 12,
-        fontWeight: 400,
-        background: 'var(--dark-4)',
-        color: 'var(--dark-90)',
-      }}
-    >
-      {label}
-    </span>
+    </StatusPill>
   );
 }
 

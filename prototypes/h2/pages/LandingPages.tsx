@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Heading, IconButton, Modal, ModalStack, Text, useModals } from '@/components';
-import { useToast } from '@/staging';
+import { Button, IconButton, Modal, ModalStack, Text, useModals } from '@/components';
+import { StatusPill, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import type { StackModalProps } from '@/components';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import Check2 from '@/icons/20/Check2';
 import Plus from '@/icons/20/Plus';
-import Send1 from '@/icons/20/Send1';
+import Send2 from '@/icons/16/Send2';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
@@ -145,14 +146,11 @@ const LOAD_LINES = [
   'Done — your page is ready.',
 ];
 
-const TABS = ['All', 'Live', 'Draft', 'Needs Review'] as const;
-type Tab = (typeof TABS)[number];
-
-const STATUS_PILL: Record<Status, { bg: string; color: string; dot: string }> = {
-  Live: { bg: 'rgba(32,161,79,0.10)', color: 'rgb(32,161,79)', dot: 'rgb(32,161,79)' },
-  Draft: { bg: 'var(--dark-4)', color: 'var(--dark-80)', dot: 'var(--dark-60)' },
-  'Needs Review': { bg: 'rgba(239,104,0,0.10)', color: 'rgb(239,104,0)', dot: 'rgb(239,104,0)' },
-  Paused: { bg: 'var(--dark-4)', color: 'var(--dark-60)', dot: 'var(--dark-40)' },
+const STATUS_TONE: Record<Status, StatusPillTone> = {
+  Live: 'success',
+  Draft: 'neutral',
+  'Needs Review': 'warning',
+  Paused: 'neutral',
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────
@@ -180,60 +178,10 @@ function thumbSvg(idx: number) {
 // ─── HUB ──────────────────────────────────────────────────────────────
 
 function HubView({ pages, onOpenPage }: { pages: Page[]; onOpenPage: (p: Page) => void }) {
-  const [activeTab, setActiveTab] = useState<Tab>('All');
-  const counts = {
-    All: pages.length,
-    Live: pages.filter((p) => p.status === 'Live').length,
-    Draft: pages.filter((p) => p.status === 'Draft').length,
-    'Needs Review': pages.filter((p) => p.status === 'Needs Review').length,
-  };
-  const filtered = activeTab === 'All' ? pages : pages.filter((p) => p.status === activeTab);
+  const filtered = pages;
 
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 18 }}>
-        <div style={{ display: 'flex', gap: 6, flex: 1 }}>
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  color: isActive ? 'var(--dark-90)' : 'var(--dark-60)',
-                  background: isActive ? 'var(--dark-8)' : 'transparent',
-                  border: 'none',
-                  fontWeight: isActive ? 500 : 400,
-                  fontFamily: 'inherit',
-                  cursor: 'pointer',
-                }}
-              >
-                {tab}
-                <span style={{ color: 'var(--dark-40)', marginLeft: 4 }}>{counts[tab]}</span>
-              </button>
-            );
-          })}
-        </div>
-        <input
-          placeholder="Search pages…"
-          style={{
-            width: 240,
-            padding: '8px 12px',
-            border: '1px solid var(--dark-8)',
-            borderRadius: 8,
-            fontFamily: 'inherit',
-            fontSize: 13,
-            background: 'var(--light-100)',
-            color: 'var(--dark-90)',
-            outline: 'none',
-          }}
-        />
-      </div>
-
       {filtered.length === 0 ? (
         <div
           style={{
@@ -249,14 +197,13 @@ function HubView({ pages, onOpenPage }: { pages: Page[]; onOpenPage: (p: Page) =
           <h3 style={{ fontSize: 17, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>
             No landing pages yet
           </h3>
-          <p style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.55, maxWidth: 360, margin: '0 auto 20px' }}>
+          <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.55, maxWidth: 360, margin: '0 auto 20px' }}>
             Create your first page from a campaign — Blaze writes it, you review, you publish.
           </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {filtered.map((p, i) => {
-            const sp = STATUS_PILL[p.status];
             return (
               <div
                 key={p.name + i}
@@ -286,64 +233,37 @@ function HubView({ pages, onOpenPage }: { pages: Page[]; onOpenPage: (p: Page) =
                   {thumbSvg(i)}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 500, fontSize: 13.5, color: 'var(--dark-90)', marginBottom: 2 }}>
+                  <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)', marginBottom: 2 }}>
                     {p.name}
                     {p.ab && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          background: 'rgba(32,161,79,0.12)',
-                          color: 'rgb(32,161,79)',
-                          borderRadius: 5,
-                          padding: '1px 7px',
-                          fontSize: 10.5,
-                          fontWeight: 500,
-                          marginLeft: 6,
-                        }}
-                      >
+                      <StatusPill tone="success" size="sm" style={{ marginLeft: 6 }}>
                         ⚡ A/B · Winner found
-                      </span>
+                      </StatusPill>
                     )}
                   </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--dark-60)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>
                     {p.source}
                     <span style={{ display: 'inline-block', width: 3, height: 3, borderRadius: '50%', background: 'var(--dark-25)', margin: '0 6px', verticalAlign: 'middle' }} />
                     {p.updated}
                   </div>
                 </div>
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    padding: '3px 9px',
-                    borderRadius: 6,
-                    fontSize: 11.5,
-                    fontWeight: 500,
-                    background: sp.bg,
-                    color: sp.color,
-                    width: 'fit-content',
-                  }}
-                >
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: sp.dot }} />
+                <StatusPill tone={STATUS_TONE[p.status]} size="sm" style={{ width: 'fit-content' }}>
                   {p.status}
-                </span>
+                </StatusPill>
                 <div style={{ fontSize: 12, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
                   {p.cvr === '—' ? (
                     <>
                       <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-40)', letterSpacing: '-0.2px' }}>—</div>
-                      <div style={{ fontSize: 10.5, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Not published</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Not published</div>
                     </>
                   ) : (
                     <>
                       <div style={{ fontSize: 18, fontWeight: 500, letterSpacing: '-0.2px' }}>{p.cvr}</div>
-                      <div style={{ fontSize: 10.5, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>CVR</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>CVR</div>
                     </>
                   )}
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--dark-60)' }}>{p.channel}</div>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{p.channel}</div>
                 <div style={{ color: 'var(--dark-40)', cursor: 'pointer', padding: '4px 8px', borderRadius: 6, textAlign: 'center' }} title="More" onClick={(e) => e.stopPropagation()}>
                   ⋯
                 </div>
@@ -387,8 +307,7 @@ function CampaignChooserModal({
           {CAMPAIGNS.map((c) => {
             const isSel = c.id === selectedId;
             const ts = typeStyle[c.typeC];
-            const statusBg = c.status === 'Active' ? 'rgba(32,161,79,0.10)' : 'var(--dark-4)';
-            const statusColor = c.status === 'Active' ? 'rgb(32,161,79)' : 'var(--dark-60)';
+            const statusTone: StatusPillTone = c.status === 'Active' ? 'success' : 'neutral';
             return (
               <div
                 key={c.id}
@@ -436,15 +355,12 @@ function CampaignChooserModal({
                   )}
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 13.5, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 3 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 3 }}>
                     <span>{c.name}</span>
-                    <span style={{ fontSize: 10.5, borderRadius: 5, padding: '1px 7px', background: ts.bg, color: ts.color }}>{c.type}</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, padding: '2px 7px', borderRadius: 5, background: statusBg, color: statusColor }}>
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusColor }} />
-                      {c.status}
-                    </span>
+                    <span style={{ fontSize: 12, borderRadius: 5, padding: '1px 7px', background: ts.bg, color: ts.color }}>{c.type}</span>
+                    <StatusPill tone={statusTone} size="sm">{c.status}</StatusPill>
                   </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--dark-60)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>
                     {c.metric}
                     <span style={{ display: 'inline-block', width: 3, height: 3, borderRadius: '50%', background: 'var(--dark-25)', margin: '0 6px', verticalAlign: 'middle' }} />
                     {c.metricSub}
@@ -452,7 +368,7 @@ function CampaignChooserModal({
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{c.headline}</div>
-                  <div style={{ color: 'var(--dark-40)', fontSize: 11 }}>{c.type}</div>
+                  <div style={{ color: 'var(--dark-40)', fontSize: 12 }}>{c.type}</div>
                 </div>
               </div>
             );
@@ -546,7 +462,7 @@ function LoadingView({ sourceName, onAdvance }: { sourceName: string; onAdvance:
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            fontSize: 11,
+            fontSize: 12,
             color: '#7C5CFC',
             background: '#F1ECFF',
             borderRadius: 5,
@@ -562,7 +478,7 @@ function LoadingView({ sourceName, onAdvance }: { sourceName: string; onAdvance:
         <div style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.2px', marginBottom: 6 }}>
           Reading your campaign…
         </div>
-        <div style={{ fontSize: 12.5, color: 'var(--dark-60)', marginBottom: 24 }}>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)', marginBottom: 24 }}>
           Source: <b style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{sourceName}</b>
         </div>
 
@@ -579,7 +495,7 @@ function LoadingView({ sourceName, onAdvance }: { sourceName: string; onAdvance:
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  fontSize: 13,
+                  fontSize: 14,
                   color,
                   opacity: shown ? 1 : 0,
                   transform: shown ? 'none' : 'translateY(4px)',
@@ -655,7 +571,7 @@ function SectionBody({ id }: { id: SectionId }) {
     <>
       <div
         style={{
-          fontSize: 10.5,
+          fontSize: 12,
           color: eyebrowColor,
           letterSpacing: '0.12em',
           fontWeight: 500,
@@ -692,7 +608,7 @@ function SectionBody({ id }: { id: SectionId }) {
         </h2>
       )}
       {c.sub && (
-        <p style={{ fontSize: 13, color: subColor, lineHeight: 1.55, marginBottom: 18, maxWidth: 540 }}>
+        <p style={{ fontSize: 14, color: subColor, lineHeight: 1.55, marginBottom: 18, maxWidth: 540 }}>
           {c.sub}
         </p>
       )}
@@ -707,7 +623,7 @@ function SectionBody({ id }: { id: SectionId }) {
                 border: isCta ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--dark-8)',
                 borderRadius: 7,
                 fontFamily: 'inherit',
-                fontSize: 13,
+                fontSize: 14,
                 background: isCta ? 'rgba(255,255,255,0.1)' : 'var(--light-100)',
                 color: isCta ? '#fff' : 'var(--dark-90)',
                 outline: 'none',
@@ -723,7 +639,7 @@ function SectionBody({ id }: { id: SectionId }) {
                 borderRadius: 7,
                 padding: '10px 16px',
                 fontFamily: 'inherit',
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: 500,
                 cursor: 'pointer',
               }}
@@ -759,7 +675,7 @@ function SectionBody({ id }: { id: SectionId }) {
               >
                 {it.icn}
               </div>
-              <h4 style={{ fontSize: 13.5, fontWeight: 500, color: '#1A1D55', marginBottom: 4 }}>{it.t}</h4>
+              <h4 style={{ fontSize: 14, fontWeight: 500, color: '#1A1D55', marginBottom: 4 }}>{it.t}</h4>
               <p style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{it.s}</p>
             </div>
           ))}
@@ -769,8 +685,8 @@ function SectionBody({ id }: { id: SectionId }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {c.quotes.map((q) => (
             <div key={q.who} style={{ padding: 14, border: '1px solid var(--dark-8)', borderRadius: 10, background: '#fafafa' }}>
-              <div style={{ fontSize: 13, color: 'var(--dark-90)', lineHeight: 1.5, marginBottom: 10 }}>{q.text}</div>
-              <div style={{ fontSize: 11.5, color: 'var(--dark-60)' }}>{q.who}</div>
+              <div style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, marginBottom: 10 }}>{q.text}</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{q.who}</div>
             </div>
           ))}
         </div>
@@ -797,6 +713,7 @@ function ChatPanel() {
   const [messages, setMessages] = useState<ChatMessage[]>(SEEDED_MESSAGES);
   const [draft, setDraft] = useState('');
   const listRef = useRef<HTMLDivElement | null>(null);
+  const canSend = draft.trim().length > 0;
 
   useEffect(() => {
     if (listRef.current) {
@@ -825,22 +742,11 @@ function ChatPanel() {
         borderLeft: '1px solid var(--dark-8)',
         display: 'flex',
         flexDirection: 'column',
+        minHeight: 0,
+        height: '100%',
         overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          padding: '16px 20px 12px',
-          borderBottom: '1px solid var(--dark-4)',
-          flexShrink: 0,
-        }}
-      >
-        <Heading level={5}>Edit with chat</Heading>
-        <div style={{ marginTop: 4 }}>
-          <Text variant="secondary">Describe what to change. The agent applies it.</Text>
-        </div>
-      </div>
-
       <div
         ref={listRef}
         style={{
@@ -867,9 +773,13 @@ function ChatPanel() {
                   maxWidth: '85%',
                   padding: '8px 12px',
                   borderRadius: 12,
-                  background: isUser ? 'var(--dark-90)' : 'var(--dark-4)',
-                  color: isUser ? 'var(--light-100)' : 'var(--dark-90)',
-                  fontSize: 13,
+                  /* Three-way coding: human user → soft blue, AI agent →
+                     soft purple. Matches SDR detail's TextBubble palette. */
+                  background: isUser
+                    ? 'rgba(1, 121, 207, 0.12)'
+                    : 'rgba(124, 92, 252, 0.12)',
+                  color: 'var(--dark-90)',
+                  fontSize: 14,
                   lineHeight: 1.45,
                   whiteSpace: 'pre-wrap',
                 }}
@@ -881,190 +791,176 @@ function ChatPanel() {
         })}
       </div>
 
-      <div
-        style={{
-          padding: 12,
-          borderTop: '1px solid var(--dark-4)',
-          flexShrink: 0,
-        }}
-      >
+      <div style={{ borderTop: '1px solid var(--dark-8)', padding: '10px 16px', flexShrink: 0 }}>
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-end',
+            alignItems: 'center',
             gap: 8,
-            border: '1px solid var(--dark-8)',
             background: 'var(--light-100)',
-            borderRadius: 12,
-            padding: 8,
+            border: '1px solid var(--dark-8)',
+            borderRadius: 999,
+            padding: '4px 4px 4px 14px',
           }}
         >
-          <textarea
+          <input
+            type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === 'Enter' && canSend) {
                 e.preventDefault();
                 send();
               }
             }}
             placeholder="Tell the agent what to change…"
-            rows={2}
             style={{
               flex: 1,
-              resize: 'none',
+              fontFamily: 'inherit',
+              fontSize: 14,
+              color: 'var(--dark-90)',
+              background: 'transparent',
               border: 'none',
               outline: 'none',
-              background: 'transparent',
-              fontFamily: 'inherit',
-              fontSize: 13,
-              lineHeight: 1.45,
-              color: 'var(--dark-90)',
-              padding: '4px 4px',
-              minHeight: 36,
+              padding: '8px 0',
+              lineHeight: 1.4,
+              minWidth: 0,
             }}
           />
-          <IconButton
-            variant="primary"
-            size="sm"
-            icon={Send1}
+          <button
+            type="button"
             aria-label="Send"
-            onPress={send}
-          />
+            disabled={!canSend}
+            onClick={send}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              border: 'none',
+              background: canSend ? 'var(--dark-90)' : 'var(--dark-15)',
+              color: canSend ? 'var(--light-100)' : 'var(--dark-60)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: canSend ? 'pointer' : 'not-allowed',
+              padding: 0,
+              flexShrink: 0,
+              transition: 'background 0.12s, color 0.12s',
+            }}
+          >
+            <Send2 size={16} color={canSend ? 'var(--light-100)' : 'var(--dark-60)'} />
+          </button>
         </div>
       </div>
     </aside>
   );
 }
 
-function EditorView({
-  pageName,
-  setPageName,
-  campaign,
-  onBack,
-  onPublish,
-}: {
-  pageName: string;
-  setPageName: (v: string) => void;
-  campaign: Campaign | null;
-  onBack: () => void;
-  onPublish: () => void;
-}) {
-  const srcLabel = campaign?.name.split('—')[0].trim() ?? 'Built from scratch';
-
-  // 2-pane layout escapes the .content padding (24px) via negative margin.
+function EditorView() {
   return (
     <div
       style={{
-        margin: -24,
-        height: 'calc(100vh - 56px - 0px + 48px)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
+        display: 'grid',
+        gridTemplateColumns: '1fr 360px',
+        height: '100%',
+        minHeight: 0,
         background: '#f0f0f0',
       }}
     >
-      {/* Editor topbar */}
+      {/* Left: canvas preview */}
       <div
         style={{
+          overflowY: 'auto',
+          padding: 24,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          gap: 12,
-          padding: '10px 16px',
-          background: 'var(--light-100)',
-          borderBottom: '1px solid var(--dark-8)',
-          flexShrink: 0,
+          background: '#f0f0f0',
         }}
       >
-        <IconButton variant="ghost" size="md" icon={ArrowLeft} aria-label="Back" onPress={onBack} />
-        <input
-          value={pageName}
-          onChange={(e) => setPageName(e.target.value)}
-          aria-label="Page name"
-          style={{
-            border: 'none',
-            background: 'transparent',
-            fontFamily: 'inherit',
-            fontSize: 14,
-            fontWeight: 500,
-            color: 'var(--dark-90)',
-            letterSpacing: '0.05px',
-            padding: '6px 8px',
-            borderRadius: 6,
-            outline: 'none',
-            minWidth: 240,
-          }}
-        />
-        <span
-          style={{
-            fontSize: 11.5,
-            color: 'var(--dark-60)',
-            background: 'rgba(0,0,0,0.02)',
-            border: '1px solid var(--dark-4)',
-            borderRadius: 6,
-            padding: '3px 9px',
-          }}
-        >
-          Built from: <b style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{srcLabel}</b>
-        </span>
-        <div style={{ flex: 1 }} />
-        <Button variant="primary" size="md" onPress={onPublish}>
-          Publish
-        </Button>
-      </div>
-
-      <div
-        style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: '1fr 360px',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Left: canvas preview */}
         <div
           style={{
-            overflowY: 'auto',
-            padding: 24,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            background: '#f0f0f0',
+            width: '100%',
+            maxWidth: 880,
+            background: 'var(--light-100)',
+            border: '1px solid var(--dark-8)',
+            borderRadius: 14,
+            overflow: 'hidden',
+            boxShadow: '0 8px 28px rgba(0,0,0,0.06)',
           }}
         >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 880,
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 14,
-              overflow: 'hidden',
-              boxShadow: '0 8px 28px rgba(0,0,0,0.06)',
-            }}
-          >
-            {SECTIONS.map((s) => {
-              const isCta = s.id === 'cta';
-              return (
-                <div
-                  key={s.id}
-                  style={{
-                    padding: '36px 40px',
-                    borderBottom: s.id === 'cta' ? 'none' : '1px solid var(--dark-4)',
-                    background: isCta ? 'linear-gradient(135deg, #1A1D55 0%, #2F3B82 100%)' : undefined,
-                    color: isCta ? '#fff' : undefined,
-                  }}
-                >
-                  <SectionBody id={s.id} />
-                </div>
-              );
-            })}
-          </div>
+          {SECTIONS.map((s) => {
+            const isCta = s.id === 'cta';
+            return (
+              <div
+                key={s.id}
+                style={{
+                  padding: '36px 40px',
+                  borderBottom: s.id === 'cta' ? 'none' : '1px solid var(--dark-4)',
+                  background: isCta ? 'linear-gradient(135deg, #1A1D55 0%, #2F3B82 100%)' : undefined,
+                  color: isCta ? '#fff' : undefined,
+                }}
+              >
+                <SectionBody id={s.id} />
+              </div>
+            );
+          })}
         </div>
-
-        {/* Right: chat panel — the only edit surface */}
-        <ChatPanel />
       </div>
+
+      {/* Right: chat panel — the only edit surface */}
+      <ChatPanel />
+    </div>
+  );
+}
+
+// ─── Detail-view title cluster (back · page name · "Built from" badge) ─
+
+function DetailTitleCluster({
+  pageName,
+  campaign,
+  onBack,
+}: {
+  pageName: string;
+  campaign: Campaign | null;
+  onBack: () => void;
+}) {
+  const srcLabel = campaign?.name.split('—')[0].trim() ?? 'Built from scratch';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+      <IconButton
+        variant="ghost"
+        size="sm"
+        icon={ArrowLeft}
+        aria-label="Back to landing pages"
+        onPress={onBack}
+      />
+      <span aria-hidden style={{ width: 1, height: 16, background: 'var(--dark-15)' }} />
+      <Text
+        variant="largeList"
+        style={{
+          color: 'var(--dark-90)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: 320,
+        }}
+      >
+        {pageName}
+      </Text>
+      <span
+        style={{
+          fontSize: 12,
+          color: 'var(--dark-60)',
+          background: 'rgba(0,0,0,0.02)',
+          border: '1px solid var(--dark-4)',
+          borderRadius: 6,
+          padding: '3px 9px',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Built from: <b style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{srcLabel}</b>
+      </span>
     </div>
   );
 }
@@ -1123,7 +1019,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
             borderRadius: 12,
             padding: '12px 16px',
             marginBottom: 24,
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-80)',
             opacity: bannerShown ? 1 : 0,
             transform: bannerShown ? 'none' : 'translateY(-4px)',
@@ -1167,7 +1063,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
               gap: 5,
               padding: '3px 9px',
               borderRadius: 6,
-              fontSize: 11.5,
+              fontSize: 12,
               fontWeight: 500,
               background: 'rgba(32,161,79,0.10)',
               color: 'rgb(32,161,79)',
@@ -1195,8 +1091,8 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, marginBottom: 18 }}>
           <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 14, padding: '18px 20px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 500, letterSpacing: '0.05px', color: 'var(--dark-90)' }}>Conversion Insights</h3>
-              <div style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>Last 14 days · simulated</div>
+              <h3 style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.05px', color: 'var(--dark-90)' }}>Conversion Insights</h3>
+              <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>Last 14 days · simulated</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 18 }}>
               {[
@@ -1205,11 +1101,11 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
                 { lbl: 'CVR', val: '4.6%', delta: '+0.3 pts' },
               ].map((k) => (
                 <div key={k.lbl}>
-                  <div style={{ fontSize: 11, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: 4 }}>
                     {k.lbl}
                   </div>
                   <div style={{ fontSize: 24, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums' }}>{k.val}</div>
-                  <div style={{ fontSize: 11.5, fontWeight: 500, color: 'rgb(32,161,79)', marginTop: 2 }}>{k.delta}</div>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: 'rgb(32,161,79)', marginTop: 2 }}>{k.delta}</div>
                 </div>
               ))}
             </div>
@@ -1220,8 +1116,8 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '0.05px' }}>AI Suggestions</span>
-              <span style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>{SUGGESTIONS.length} new</span>
+              <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '0.05px' }}>AI Suggestions</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{SUGGESTIONS.length} new</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {SUGGESTIONS.map((s) => {
@@ -1250,18 +1146,18 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0,
-                          fontSize: 11,
+                          fontSize: 12,
                         }}
                       >
                         ✦
                       </div>
-                      <div style={{ fontSize: 12.5, color: 'var(--dark-80)', lineHeight: 1.5 }}>{s.body}</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-80)', lineHeight: 1.5 }}>{s.body}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {isApplied ? (
                         <span
                           style={{
-                            fontSize: 11.5,
+                            fontSize: 12,
                             color: 'rgb(32,161,79)',
                             background: 'rgba(32,161,79,0.10)',
                             borderRadius: 5,
@@ -1287,7 +1183,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
                               borderRadius: 6,
                               padding: '5px 11px',
                               fontFamily: 'inherit',
-                              fontSize: 11.5,
+                              fontSize: 12,
                               fontWeight: 500,
                               cursor: 'pointer',
                             }}
@@ -1304,7 +1200,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
                               borderRadius: 6,
                               padding: '5px 11px',
                               fontFamily: 'inherit',
-                              fontSize: 11.5,
+                              fontSize: 12,
                               cursor: 'pointer',
                             }}
                           >
@@ -1322,7 +1218,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
           <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ fontSize: 11.5, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
               Top sources
             </div>
             {[
@@ -1339,7 +1235,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
                   justifyContent: 'space-between',
                   padding: '6px 0',
                   borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--dark-4)',
-                  fontSize: 12.5,
+                  fontSize: 12,
                   color: 'var(--dark-80)',
                 }}
               >
@@ -1349,7 +1245,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
             ))}
           </div>
           <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ fontSize: 11.5, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
               Section engagement
             </div>
             {[
@@ -1367,7 +1263,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
                   justifyContent: 'space-between',
                   padding: '6px 0',
                   borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--dark-4)',
-                  fontSize: 12.5,
+                  fontSize: 12,
                   color: 'var(--dark-80)',
                 }}
               >
@@ -1451,7 +1347,7 @@ function LandingPagesRouteInner() {
       return (
         <>
           <Button variant="secondary" size="md" frontIcon={Plus} onPress={openCampaignChooser}>
-            New Landing Page
+            New landing page
           </Button>
           <GenerateReportButton />
         </>
@@ -1465,6 +1361,13 @@ function LandingPagesRouteInner() {
           </Button>
           <GenerateReportButton />
         </>
+      );
+    }
+    if (view === 'editor') {
+      return (
+        <Button variant="primary" size="md" onPress={publish}>
+          Publish
+        </Button>
       );
     }
     if (view === 'published') {
@@ -1483,13 +1386,22 @@ function LandingPagesRouteInner() {
       );
     }
     return <GenerateReportButton />;
-  }, [view, showToast, openCampaignChooser]);
+  }, [view, showToast, openCampaignChooser, publish]);
 
   const title = useMemo(() => {
     if (view === 'loading') return 'Building your page';
-    if (view === 'published') return 'Landing Pages › CRM for small teams';
-    return 'Landing Pages';
-  }, [view]);
+    if (view === 'editor') {
+      return (
+        <DetailTitleCluster
+          pageName={pageName}
+          campaign={campaign}
+          onBack={() => setView('hub')}
+        />
+      );
+    }
+    if (view === 'published') return 'Landing pages › CRM for small teams';
+    return 'Landing pages';
+  }, [view, pageName, campaign]);
 
   if (isCold) {
     return (
@@ -1500,7 +1412,7 @@ function LandingPagesRouteInner() {
   }
 
   return (
-    <H2Layout title={title} topbarRight={topbarRight}>
+    <H2Layout title={title} topbarRight={topbarRight} fullBleed={view === 'editor'}>
       {view === 'hub' && <HubView pages={pages} onOpenPage={openPage} />}
       {view === 'loading' && (
         <LoadingView
@@ -1508,15 +1420,7 @@ function LandingPagesRouteInner() {
           onAdvance={() => setView('editor')}
         />
       )}
-      {view === 'editor' && (
-        <EditorView
-          pageName={pageName}
-          setPageName={setPageName}
-          campaign={campaign}
-          onBack={() => setView('hub')}
-          onPublish={publish}
-        />
-      )}
+      {view === 'editor' && <EditorView />}
       {view === 'published' && (
         <PublishedView pageName={pageName} onEdit={() => setView('editor')} />
       )}
