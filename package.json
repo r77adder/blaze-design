@@ -57,7 +57,6 @@
     "inspect": "node scripts/inspect.mjs",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
-    "thumbnails": "node scripts/generate-thumbnails.mjs",
     "publish:tag": "git checkout -b release && pnpm build && git add -f lib/ module/ && git commit -m \"Release $VERSION\" && git tag -m '' $VERSION && git push --tags && git checkout main && git branch -D release"
   },
   "peerDependencies": {

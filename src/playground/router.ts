@@ -6,14 +6,6 @@ const modules = import.meta.glob<{ default: ComponentType }>('/prototypes/*/inde
   eager: true,
 });
 
-/** Static thumbnail images committed to the repo (one per prototype, by the
- *  `generate-thumbnails` workflow on every push to main). When absent, the
- *  card falls back to a live iframe preview. */
-const thumbnailUrls = import.meta.glob<string>(
-  '/prototypes/*/thumbnail.png',
-  { eager: true, query: '?url', import: 'default' },
-);
-
 export interface PrototypeRoute {
   slug: string;
   Component: ComponentType;
@@ -24,8 +16,6 @@ export interface PrototypeRoute {
   title: string | null;
   /** One-sentence description from meta.json. */
   description: string | null;
-  /** Resolved URL of the static thumbnail PNG, or null when none exists. */
-  thumbnailUrl: string | null;
 }
 
 export const prototypeRoutes: PrototypeRoute[] = Object.entries(modules)
@@ -40,7 +30,6 @@ export const prototypeRoutes: PrototypeRoute[] = Object.entries(modules)
       lastModified: meta?.lastModified ?? null,
       title: meta?.title ?? null,
       description: meta?.description ?? null,
-      thumbnailUrl: thumbnailUrls[`/prototypes/${slug}/thumbnail.png`] ?? null,
     };
   })
   .filter((r): r is PrototypeRoute => r !== null)

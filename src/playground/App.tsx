@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { prototypeRoutes, type PrototypeRoute } from './router';
 import { CommentOverlay } from '../../prototypes/_shell/CommentOverlay';
@@ -36,82 +36,6 @@ function slugToTitle(slug: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-const THUMB_BASE_WIDTH = 1280;
-const THUMB_BASE_HEIGHT = 800;
-
-/** Prefer the static thumbnail PNG (refreshed by the generate-thumbnails
- *  workflow on every push to main) and fall back to a live iframe preview
- *  when it doesn't exist yet — e.g. before the first generation, or for a
- *  brand-new prototype in a feature branch. */
-function Thumbnail({ slug, src }: { slug: string; src: string | null }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.22);
-
-  useEffect(() => {
-    if (src) return; // only the iframe path needs scale measurement
-    const el = wrapRef.current;
-    if (!el) return;
-    const update = () => {
-      const w = el.clientWidth;
-      if (w > 0) setScale(w / THUMB_BASE_WIDTH);
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [src]);
-
-  return (
-    <div
-      ref={wrapRef}
-      style={{
-        width: '100%',
-        aspectRatio: `${THUMB_BASE_WIDTH} / ${THUMB_BASE_HEIGHT}`,
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'var(--dark-2)',
-      }}
-    >
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          loading="lazy"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'top left',
-            display: 'block',
-          }}
-        />
-      ) : (
-        <iframe
-          src={`${import.meta.env.BASE_URL}${slug}`}
-          title={`${slug} preview`}
-          loading="lazy"
-          tabIndex={-1}
-          aria-hidden
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: THUMB_BASE_WIDTH,
-            height: THUMB_BASE_HEIGHT,
-            border: 'none',
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-            pointerEvents: 'none',
-            background: 'var(--light-100)',
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
 function Card({ route }: { route: PrototypeRoute }) {
   const title = route.title ?? slugToTitle(route.slug);
   return (
@@ -139,14 +63,12 @@ function Card({ route }: { route: PrototypeRoute }) {
         e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
-      <Thumbnail slug={route.slug} src={route.thumbnailUrl} />
       <div
         style={{
           padding: '16px 18px 18px',
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
-          borderTop: '1px solid var(--dark-8)',
         }}
       >
         <div
