@@ -625,7 +625,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                     <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-90)' }}>{c.dates}</span>
                     <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>{c.title}</span>
                     <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-60)' }}>{c.category}</span>
-                    <span style={{ border: '1px solid var(--ios-dark-4)', borderRadius: 5, padding: '2px 8px', fontSize: 12, fontFamily: font, color: 'var(--ios-dark-60)', background: 'rgba(0,0,0,0.08)', display: 'inline-block' }}>
+                    <span style={{ border: '1px solid var(--ios-dark-4)', borderRadius: 5, padding: '2px 8px', fontSize: 12, fontFamily: font, color: 'var(--ios-dark-60)', background: 'rgba(0,0,0,0.08)', display: 'inline-block', alignSelf: 'flex-start', whiteSpace: 'nowrap' }}>
                       {c.badge}
                     </span>
                   </div>
