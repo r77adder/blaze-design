@@ -64,11 +64,43 @@ const CONFIRM_CAMPAIGNS = [
 
 type View = 'settings' | 'content' | 'still-image' | 'carousel' | 'feed-video' | 'blogs' | 'emails' | 'confirm';
 type ContentMode = 'crosspost' | 'unique';
+type ContentTypeId = 'still-image' | 'carousel' | 'feed-video' | 'blogs' | 'emails';
+
+interface ContentTypeSettings {
+  postsPerWeek: number;
+  toggles: { radiantHealth: boolean; adamNathan: boolean };
+  uniquePosts: Record<string, number>;
+  postDays: string[];
+}
 
 interface Props {
   onClose: () => void;
   onConfirm: () => void;
 }
+
+// section: day abbreviations
+
+const DAY_ABBREV: Record<string, string> = {
+  'Monday': 'M',
+  'Tuesday': 'Tu',
+  'Wednesday': 'W',
+  'Thursday': 'Th',
+  'Friday': 'F',
+  'Saturday': 'Sa',
+  'Sunday': 'Su',
+};
+
+function formatDays(postDays: string[]): string {
+  if (postDays.length === 0) return 'Any day';
+  return postDays.map(d => DAY_ABBREV[d] ?? d).join(', ');
+}
+
+const DEFAULT_CT_SETTINGS: ContentTypeSettings = {
+  postsPerWeek: 2,
+  toggles: { radiantHealth: true, adamNathan: true },
+  uniquePosts: { radiantHealth: 5, adamNathan: 5, twitter: 0, linkedin: 0, google: 0 },
+  postDays: [],
+};
 
 // section: inline SVG icons
 
@@ -190,16 +222,12 @@ function PostDayRow({ day, selected, onSelect, isLast }: { day: string; selected
 
 function AccountSection({
   mode,
-  toggles,
-  setToggles,
-  uniquePosts,
-  setUniquePosts,
+  settings,
+  onSettingsChange,
 }: {
   mode: ContentMode;
-  toggles: { radiantHealth: boolean; adamNathan: boolean };
-  setToggles: (t: { radiantHealth: boolean; adamNathan: boolean }) => void;
-  uniquePosts: Record<string, number>;
-  setUniquePosts: (p: Record<string, number>) => void;
+  settings: ContentTypeSettings;
+  onSettingsChange: (updates: Partial<ContentTypeSettings>) => void;
 }) {
   const rowStyle: React.CSSProperties = {
     display: 'flex',
@@ -217,9 +245,9 @@ function AccountSection({
         <AccountAvatar type="radiantHealth" />
         <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>Radiant Health</span>
         {mode === 'crosspost' ? (
-          <Toggle on={toggles.radiantHealth} onChange={v => setToggles({ ...toggles, radiantHealth: v })} />
+          <Toggle on={settings.toggles.radiantHealth} onChange={v => onSettingsChange({ toggles: { ...settings.toggles, radiantHealth: v } })} />
         ) : (
-          <Stepper value={uniquePosts.radiantHealth} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, radiantHealth: v })} />
+          <Stepper value={settings.uniquePosts.radiantHealth} min={0} max={14} onChange={v => onSettingsChange({ uniquePosts: { ...settings.uniquePosts, radiantHealth: v } })} />
         )}
       </div>
 
@@ -228,9 +256,9 @@ function AccountSection({
         <AccountAvatar type="adamNathan" />
         <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>Adam Nathan</span>
         {mode === 'crosspost' ? (
-          <Toggle on={toggles.adamNathan} onChange={v => setToggles({ ...toggles, adamNathan: v })} />
+          <Toggle on={settings.toggles.adamNathan} onChange={v => onSettingsChange({ toggles: { ...settings.toggles, adamNathan: v } })} />
         ) : (
-          <Stepper value={uniquePosts.adamNathan} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, adamNathan: v })} />
+          <Stepper value={settings.uniquePosts.adamNathan} min={0} max={14} onChange={v => onSettingsChange({ uniquePosts: { ...settings.uniquePosts, adamNathan: v } })} />
         )}
       </div>
 
@@ -244,7 +272,7 @@ function AccountSection({
             <IconChevronRight />
           </div>
         ) : (
-          <Stepper value={uniquePosts.twitter} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, twitter: v })} />
+          <Stepper value={settings.uniquePosts.twitter} min={0} max={14} onChange={v => onSettingsChange({ uniquePosts: { ...settings.uniquePosts, twitter: v } })} />
         )}
       </div>
 
@@ -258,7 +286,7 @@ function AccountSection({
             <IconChevronRight />
           </div>
         ) : (
-          <Stepper value={uniquePosts.linkedin} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, linkedin: v })} />
+          <Stepper value={settings.uniquePosts.linkedin} min={0} max={14} onChange={v => onSettingsChange({ uniquePosts: { ...settings.uniquePosts, linkedin: v } })} />
         )}
       </div>
 
@@ -272,7 +300,7 @@ function AccountSection({
             <IconChevronRight />
           </div>
         ) : (
-          <Stepper value={uniquePosts.google} min={0} max={14} onChange={v => setUniquePosts({ ...uniquePosts, google: v })} />
+          <Stepper value={settings.uniquePosts.google} min={0} max={14} onChange={v => onSettingsChange({ uniquePosts: { ...settings.uniquePosts, google: v } })} />
         )}
       </div>
 
@@ -290,36 +318,36 @@ function AccountSection({
 
 // section: content type sheet
 
-const CONTENT_TYPES: { view: View; title: string; iconSrc: string; subtitle: (mode: ContentMode, postsPerWeek: number, postDays: string[]) => string }[] = [
+const CONTENT_TYPES: { view: ContentTypeId; title: string; iconSrc: string; subtitle: (mode: ContentMode, s: ContentTypeSettings) => string }[] = [
   {
     view: 'still-image',
     title: 'Still image post',
     iconSrc: stillImageIcon as unknown as string,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
+    subtitle: (mode, s) => mode === 'crosspost' ? `4 accounts · ${s.postsPerWeek} posts/week · ${formatDays(s.postDays)}` : `4 accounts · Total 8 posts · ${formatDays(s.postDays)}`,
   },
   {
     view: 'carousel',
     title: 'Carousel post',
     iconSrc: carouselIcon as unknown as string,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
+    subtitle: (mode, s) => mode === 'crosspost' ? `4 accounts · ${s.postsPerWeek} posts/week · ${formatDays(s.postDays)}` : `4 accounts · Total 8 posts · ${formatDays(s.postDays)}`,
   },
   {
     view: 'feed-video',
     title: 'Feed video post',
     iconSrc: feedVideoIcon as unknown as string,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
+    subtitle: (mode, s) => mode === 'crosspost' ? `4 accounts · ${s.postsPerWeek} posts/week · ${formatDays(s.postDays)}` : `4 accounts · Total 8 posts · ${formatDays(s.postDays)}`,
   },
   {
     view: 'blogs',
     title: 'Blogs',
     iconSrc: blogsIcon as unknown as string,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
+    subtitle: (mode, s) => mode === 'crosspost' ? `4 accounts · ${s.postsPerWeek} posts/week · ${formatDays(s.postDays)}` : `4 accounts · Total 8 posts · ${formatDays(s.postDays)}`,
   },
   {
     view: 'emails',
     title: 'Emails',
     iconSrc: emailsIcon as unknown as string,
-    subtitle: (mode, ppw, pd) => mode === 'crosspost' ? `4 accounts · ${ppw} posts/week · ${pd.length === 0 ? 'Any day' : pd.join(', ')}` : `4 accounts · Total 8 posts · ${pd.length === 0 ? 'Any day' : pd.join(', ')}`,
+    subtitle: (mode, s) => mode === 'crosspost' ? `4 accounts · ${s.postsPerWeek} posts/week · ${formatDays(s.postDays)}` : `4 accounts · Total 8 posts · ${formatDays(s.postDays)}`,
   },
 ];
 
@@ -333,23 +361,24 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
   const [view, setView] = useState<View>('settings');
   const [history, setHistory] = useState<View[]>([]);
   const [mode, setMode] = useState<ContentMode>('crosspost');
-  const [postsPerWeek, setPostsPerWeek] = useState(2);
-  const [toggles, setToggles] = useState({ radiantHealth: true, adamNathan: true });
-  const [uniquePosts, setUniquePosts] = useState<Record<string, number>>({
-    radiantHealth: 5,
-    adamNathan: 5,
-    twitter: 0,
-    linkedin: 0,
-    google: 0,
+  const [contentSettings, setContentSettings] = useState<Record<ContentTypeId, ContentTypeSettings>>({
+    'still-image': { ...DEFAULT_CT_SETTINGS },
+    'carousel':    { ...DEFAULT_CT_SETTINGS },
+    'feed-video':  { ...DEFAULT_CT_SETTINGS },
+    'blogs':       { ...DEFAULT_CT_SETTINGS },
+    'emails':      { ...DEFAULT_CT_SETTINGS },
   });
-  const [postDays, setPostDays] = useState<string[]>([]);
-
-  function togglePostDay(day: string) {
-    setPostDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  }
   const [confirmedIds, setConfirmedIds] = useState<Set<number>>(new Set([1, 2, 3, 4, 5, 6]));
+
+  function updateCT(ct: ContentTypeId, updates: Partial<ContentTypeSettings>) {
+    setContentSettings(prev => ({ ...prev, [ct]: { ...prev[ct], ...updates } }));
+  }
+
+  function togglePostDay(ct: ContentTypeId, day: string) {
+    const prev = contentSettings[ct].postDays;
+    const next = prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day];
+    updateCT(ct, { postDays: next });
+  }
 
   function push(v: View) {
     setHistory(h => [...h, view]);
@@ -498,7 +527,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)', lineHeight: 1.4 }}>{type.title}</div>
                   <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginTop: 2 }}>
-                    {type.subtitle(mode, postsPerWeek, postDays)}
+                    {type.subtitle(mode, contentSettings[type.view])}
                   </div>
                 </div>
                 <IconChevronRight />
@@ -509,8 +538,8 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
       </Sheet>
 
       {/* Content type screens — still-image, carousel, feed-video, blogs, emails */}
-      {(['still-image', 'carousel', 'feed-video', 'blogs', 'emails'] as View[]).map(ct => (
-        <Sheet key={ct} visible={view === ct} title={titleForView(ct)} size="large" leftButton="back" onClose={back}>
+      {(CONTENT_TYPES.map(({ view: ct, title }) => (
+        <Sheet key={ct} visible={view === ct} title={title} size="large" leftButton="back" onClose={back}>
           <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Accounts section label */}
             <span style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', paddingLeft: 15 }}>
@@ -519,10 +548,8 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
 
             <AccountSection
               mode={mode}
-              toggles={toggles}
-              setToggles={setToggles}
-              uniquePosts={uniquePosts}
-              setUniquePosts={setUniquePosts}
+              settings={contentSettings[ct]}
+              onSettingsChange={(updates) => updateCT(ct, updates)}
             />
 
             {/* Post frequency — crosspost only */}
@@ -532,7 +559,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                 <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px', height: 51 }}>
                     <span style={{ flex: 1, fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-80)' }}>Posts per week</span>
-                    <Stepper value={postsPerWeek} min={1} max={14} onChange={setPostsPerWeek} />
+                    <Stepper value={contentSettings[ct].postsPerWeek} min={1} max={14} onChange={v => updateCT(ct, { postsPerWeek: v })} />
                   </div>
                 </div>
               </>
@@ -545,12 +572,12 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
                 <PostDayRow
                   key={day}
                   day={day}
-                  selected={day === 'Any day' ? postDays.length === 0 : postDays.includes(day)}
+                  selected={day === 'Any day' ? contentSettings[ct].postDays.length === 0 : contentSettings[ct].postDays.includes(day)}
                   onSelect={() => {
                     if (day === 'Any day') {
-                      setPostDays([]);
+                      updateCT(ct, { postDays: [] });
                     } else {
-                      togglePostDay(day);
+                      togglePostDay(ct, day);
                     }
                   }}
                   isLast={i === POST_DAYS.length - 1}
@@ -559,7 +586,7 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
             </div>
           </div>
         </Sheet>
-      ))}
+      )))}
 
       {/* Confirm */}
       <Sheet
