@@ -70,9 +70,10 @@ const CAMPAIGNS: Array<{
 
 interface Props {
   onSettingsClick?: () => void;
+  showSkeleton?: boolean;
 }
 
-export function CampaignsScreen({ onSettingsClick }: Props) {
+export function CampaignsScreen({ onSettingsClick, showSkeleton }: Props) {
   return (
     <div style={{ fontFamily: font, background: 'white', minHeight: '100%', paddingBottom: 120 }}>
 
@@ -88,6 +89,8 @@ export function CampaignsScreen({ onSettingsClick }: Props) {
 
       {/* Campaign list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: 20 }}>
+        {/* Skeleton placeholder — shown immediately after adding a strategy */}
+        {showSkeleton && <SkeletonCampaignRow />}
         {CAMPAIGNS.map((c) => (
           <CampaignListItem
             key={c.id}
@@ -103,6 +106,23 @@ export function CampaignsScreen({ onSettingsClick }: Props) {
       </div>
 
 
+    </div>
+  );
+}
+
+function SkeletonCampaignRow() {
+  return (
+    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+      {/* thumbnail placeholder */}
+      <div style={{ width: 104, height: 125, borderRadius: 16, background: 'var(--ios-dark-4)', flexShrink: 0 }} />
+      {/* text lines */}
+      <div style={{ flex: 1, paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ height: 12, width: '45%', borderRadius: 6, background: 'var(--ios-dark-4)' }} />
+        <div style={{ height: 14, width: '90%', borderRadius: 6, background: 'var(--ios-dark-4)' }} />
+        <div style={{ height: 14, width: '70%', borderRadius: 6, background: 'var(--ios-dark-4)' }} />
+        <div style={{ height: 12, width: '35%', borderRadius: 6, background: 'var(--ios-dark-4)' }} />
+        <div style={{ height: 22, width: '55%', borderRadius: 6, background: 'var(--ios-dark-4)' }} />
+      </div>
     </div>
   );
 }

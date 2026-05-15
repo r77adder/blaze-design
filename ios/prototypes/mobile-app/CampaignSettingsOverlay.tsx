@@ -62,7 +62,10 @@ const CONFIRM_CAMPAIGNS = [
 
 // section: types
 
-type View = 'settings' | 'content' | 'still-image' | 'carousel' | 'feed-video' | 'blogs' | 'emails' | 'confirm';
+type View =
+  | 'settings' | 'content' | 'still-image' | 'carousel' | 'feed-video' | 'blogs' | 'emails' | 'confirm'
+  | 'schedule' | 'review-content' | 'campaign-length'
+  | 'growth' | 'expand-playbook' | 'scaling-within';
 type ContentMode = 'crosspost' | 'unique';
 type ContentTypeId = 'still-image' | 'carousel' | 'feed-video' | 'blogs' | 'emails';
 
@@ -76,6 +79,7 @@ interface ContentTypeSettings {
 interface Props {
   onClose: () => void;
   onConfirm: () => void;
+  onSaveDefaults: () => void;
 }
 
 // section: day abbreviations
@@ -117,6 +121,85 @@ function IconCheckmark() {
     <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
       <path d="M1 4l3 3 5-6" stroke="var(--ios-light-100)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+// section: radio row (reused for schedule + growth sub-sheets)
+
+function RadioRow({ label, sublabel, selected, onSelect, isLast }: {
+  label: string;
+  sublabel?: string;
+  selected: boolean;
+  onSelect: () => void;
+  isLast: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      style={{
+        width: '100%',
+        minHeight: 56,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '14px 16px',
+        background: 'var(--ios-light-100)',
+        border: 'none',
+        borderBottom: isLast ? 'none' : '1px solid var(--ios-dark-4)',
+        cursor: 'pointer',
+        textAlign: 'left',
+        gap: 12,
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)' }}>{label}</div>
+        {sublabel && (
+          <div style={{ fontFamily: font, fontSize: 13, fontWeight: 400, color: 'var(--ios-dark-60)', marginTop: 2 }}>{sublabel}</div>
+        )}
+      </div>
+      {selected ? (
+        <div style={{ width: 20, height: 20, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <IconCheckmark />
+        </div>
+      ) : (
+        <div style={{ width: 20, height: 20, borderRadius: 99, border: '1.5px solid var(--ios-dark-40)', flexShrink: 0 }} />
+      )}
+    </button>
+  );
+}
+
+// growth badge pill — blue, used for strategy frequency options
+function GrowthBadge({ label }: { label: string }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      background: 'rgba(0,131,226,0.1)', color: '#0083e2',
+      borderRadius: 99, padding: '3px 10px',
+      fontFamily: font, fontSize: 12, fontWeight: 500,
+      whiteSpace: 'nowrap', flexShrink: 0,
+    }}>
+      {label}
+    </span>
+  );
+}
+
+// credits badge pill — blue with sparkle icon prefix
+function CreditsBadge({ label }: { label: string }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: 'rgba(0,131,226,0.1)', color: '#0083e2',
+      borderRadius: 99, padding: '3px 10px',
+      fontFamily: font, fontSize: 12, fontWeight: 500,
+      whiteSpace: 'nowrap', flexShrink: 0,
+    }}>
+      {/* sparkle / lightning icon */}
+      <svg width="10" height="12" viewBox="0 0 10 12" fill="none" aria-hidden="true">
+        <path d="M5.5 1L1 6.5h4L3.5 11 9 5.5H5L5.5 1Z" fill="#0083e2" />
+      </svg>
+      {label}
+    </span>
   );
 }
 
@@ -357,7 +440,7 @@ function titleForView(v: View): string {
 
 // section: main component
 
-export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
+export function CampaignSettingsOverlay({ onClose, onConfirm, onSaveDefaults }: Props) {
   const [view, setView] = useState<View>('settings');
   const [history, setHistory] = useState<View[]>([]);
   const [mode, setMode] = useState<ContentMode>('crosspost');
@@ -369,6 +452,12 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
     'emails':      { ...DEFAULT_CT_SETTINGS },
   });
   const [confirmedIds, setConfirmedIds] = useState<Set<number>>(new Set([1, 2, 3, 4, 5, 6]));
+
+  // section: schedule + growth state
+  const [reviewFrequency, setReviewFrequency] = useState<'Weekly' | 'Monthly' | 'Quarterly'>('Weekly');
+  const [campaignLength, setCampaignLength] = useState<'1 week' | '2 weeks' | '3 weeks' | '4 weeks'>('1 week');
+  const [strategyFrequency, setStrategyFrequency] = useState<'Aggressive' | 'Moderate' | 'Conservative' | 'Manual'>('Conservative');
+  const [scalingPace, setScalingPace] = useState<'Competitive' | 'Smart' | 'Manual'>('Competitive');
 
   function updateCT(ct: ContentTypeId, updates: Partial<ContentTypeSettings>) {
     setContentSettings(prev => ({ ...prev, [ct]: { ...prev[ct], ...updates } }));
@@ -413,13 +502,13 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
       iconSrc: calendarIcon,
       title: 'Schedule',
       description: 'Edit when campaigns and content should be generated',
-      onClick: () => {},
+      onClick: () => push('schedule'),
     },
     {
       iconSrc: growthIcon,
       title: 'Growth settings',
       description: 'Adjust how quickly your playbook expands and posting scales up',
-      onClick: () => {},
+      onClick: () => push('growth'),
     },
   ];
 
@@ -587,6 +676,297 @@ export function CampaignSettingsOverlay({ onClose, onConfirm }: Props) {
           </div>
         </Sheet>
       )))}
+
+      {/* ─── Schedule defaults ─────────────────────────── */}
+      <Sheet
+        visible={view === 'schedule'}
+        title="Schedule defaults"
+        size="large"
+        leftButton="back"
+        onClose={back}
+        primaryLabel="Save Changes"
+        onPrimary={() => { onSaveDefaults(); onClose(); }}
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Description */}
+          <p style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.5, margin: 0 }}>
+            Edit when campaigns and content should be generated
+          </p>
+
+          {/* Row 1 — Review content */}
+          <div>
+            <div style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', marginBottom: 8, paddingLeft: 4 }}>
+              How often would you like to review?
+            </div>
+            <div style={{ background: 'var(--ios-light-100)', borderRadius: 16, overflow: 'hidden' }}>
+              <button
+                type="button"
+                onClick={() => push('review-content')}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)' }}>Review content</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-60)' }}>{reviewFrequency}</span>
+                  <IconChevronRight />
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Row 2 — Campaign length */}
+          <div>
+            <div style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', marginBottom: 8, paddingLeft: 4 }}>
+              How long should campaigns run for?
+            </div>
+            <div style={{ background: 'var(--ios-light-100)', borderRadius: 16, overflow: 'hidden' }}>
+              <button
+                type="button"
+                onClick={() => push('campaign-length')}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)' }}>Campaign length</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-60)' }}>{campaignLength}</span>
+                  <IconChevronRight />
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Sheet>
+
+      {/* ─── Review content picker ─────────────────────── */}
+      <Sheet
+        visible={view === 'review-content'}
+        title="Review content"
+        size="large"
+        leftButton="back"
+        onClose={back}
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)' }}>
+          <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden' }}>
+            {(['Weekly', 'Monthly', 'Quarterly'] as const).map((opt, i, arr) => (
+              <RadioRow
+                key={opt}
+                label={opt}
+                selected={reviewFrequency === opt}
+                onSelect={() => setReviewFrequency(opt)}
+                isLast={i === arr.length - 1}
+              />
+            ))}
+          </div>
+        </div>
+      </Sheet>
+
+      {/* ─── Campaign length picker ────────────────────── */}
+      <Sheet
+        visible={view === 'campaign-length'}
+        title="Campaign length"
+        size="large"
+        leftButton="back"
+        onClose={back}
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)' }}>
+          <div style={{ background: 'var(--ios-light-100)', borderRadius: 24, overflow: 'hidden' }}>
+            {(['1 week', '2 weeks', '3 weeks', '4 weeks'] as const).map((opt, i, arr) => (
+              <RadioRow
+                key={opt}
+                label={opt}
+                selected={campaignLength === opt}
+                onSelect={() => setCampaignLength(opt)}
+                isLast={i === arr.length - 1}
+              />
+            ))}
+          </div>
+        </div>
+      </Sheet>
+
+      {/* ─── Content growth pace ──────────────────────── */}
+      <Sheet
+        visible={view === 'growth'}
+        title="Content growth pace"
+        size="large"
+        leftButton="back"
+        onClose={back}
+        primaryLabel="Save Changes"
+        onPrimary={() => { onSaveDefaults(); onClose(); }}
+        footerNote={
+          <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400 }}>
+            <span style={{ color: 'var(--ios-dark-90)', fontWeight: 500 }}>+140</span>
+            <span style={{ color: 'var(--ios-dark-60)' }}> more credits per campaign</span>
+          </span>
+        }
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Description */}
+          <p style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.5, margin: 0 }}>
+            Together, these control how often Blaze starts a new strategy — and how fast publishing ramps up within each one.
+          </p>
+
+          {/* Section 1 — strategy frequency */}
+          <div>
+            <div style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', marginBottom: 8, paddingLeft: 4 }}>
+              How often should we add a new content strategy?
+            </div>
+            <div style={{ background: 'var(--ios-light-100)', borderRadius: 16, overflow: 'hidden' }}>
+              <button
+                type="button"
+                onClick={() => push('expand-playbook')}
+                style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 12 }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', marginBottom: 4 }}>{strategyFrequency}</div>
+                  <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginBottom: 8 }}>
+                    {strategyFrequency === 'Aggressive' ? 'Add 1 strategy every 2 weeks' :
+                     strategyFrequency === 'Moderate'   ? 'Add 1 strategy every 3 weeks' :
+                     strategyFrequency === 'Manual'     ? "I'll choose when to add a new strategy" :
+                                                          'Add 1 strategy every 4 weeks'}
+                  </div>
+                  {strategyFrequency !== 'Manual' && (
+                    <GrowthBadge label={
+                      strategyFrequency === 'Aggressive' ? '~300% growth over 6 months' :
+                      strategyFrequency === 'Moderate'   ? '~200% growth over 6 months' :
+                                                           '~100% growth over 6 months'
+                    } />
+                  )}
+                </div>
+                <div style={{ paddingTop: 4, flexShrink: 0 }}><IconChevronRight /></div>
+              </button>
+            </div>
+          </div>
+
+          {/* Section 2 — scaling pace */}
+          <div>
+            <div style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', marginBottom: 8, paddingLeft: 4 }}>
+              How quickly should we increase posting once a strategy is active?
+            </div>
+            <div style={{ background: 'var(--ios-light-100)', borderRadius: 16, overflow: 'hidden' }}>
+              <button
+                type="button"
+                onClick={() => push('scaling-within')}
+                style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 12 }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', marginBottom: 4 }}>{scalingPace}</div>
+                  <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginBottom: 8 }}>
+                    {scalingPace === 'Competitive' ? 'Grow fastest. Best for brands racing to build presence. Add 2 pieces per week, every month' :
+                     scalingPace === 'Smart'       ? 'Build momentum without overwhelming your feed. Add 1 piece per week, every month' :
+                                                     "Great once you've hit your ideal cadence. Keep your current schedule"}
+                  </div>
+                  {scalingPace === 'Competitive' && <CreditsBadge label="40 additional credits per month" />}
+                  {scalingPace === 'Smart'       && <CreditsBadge label="20 additional credits per month" />}
+                </div>
+                <div style={{ paddingTop: 4, flexShrink: 0 }}><IconChevronRight /></div>
+              </button>
+            </div>
+          </div>
+
+          {/* Footer note */}
+          <p style={{ fontFamily: font, fontSize: 13, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.5, margin: 0 }}>
+            We will publish no more than 2 posts per day, with a maximum of 15 posts per week.
+          </p>
+        </div>
+      </Sheet>
+
+      {/* ─── Expand your playbook ─────────────────────── */}
+      <Sheet
+        visible={view === 'expand-playbook'}
+        title="Expand your playbook"
+        size="large"
+        leftButton="back"
+        onClose={back}
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', paddingLeft: 4, marginBottom: 4 }}>
+            How often should we add a new content strategy?
+          </div>
+          {([
+            { value: 'Aggressive'   as const, sublabel: 'Add 1 strategy every 2 weeks',         badge: '~300% growth over 6 months' },
+            { value: 'Moderate'     as const, sublabel: 'Add 1 strategy every 3 weeks',         badge: '~200% growth over 6 months' },
+            { value: 'Conservative' as const, sublabel: 'Add 1 strategy every 4 weeks',         badge: '~100% growth over 6 months' },
+            { value: 'Manual'       as const, sublabel: "I'll choose when to add a new strategy" },
+          ]).map(({ value, sublabel, badge }) => {
+            const isSelected = strategyFrequency === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setStrategyFrequency(value)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: 12, padding: '14px 16px', borderRadius: 20, cursor: 'pointer', textAlign: 'left',
+                  background: 'var(--ios-light-100)',
+                  border: isSelected ? '1.5px solid var(--ios-dark-90)' : '1.5px solid var(--ios-dark-8)',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', marginBottom: 4 }}>{value}</div>
+                  <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginBottom: badge ? 8 : 0 }}>{sublabel}</div>
+                  {badge && <GrowthBadge label={badge} />}
+                </div>
+                {isSelected ? (
+                  <div style={{ width: 20, height: 20, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <IconCheckmark />
+                  </div>
+                ) : (
+                  <div style={{ width: 20, height: 20, borderRadius: 99, border: '1.5px solid var(--ios-dark-40)', flexShrink: 0 }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </Sheet>
+
+      {/* ─── Scaling within strategy ──────────────────── */}
+      <Sheet
+        visible={view === 'scaling-within'}
+        title="Scaling within strategy"
+        size="large"
+        leftButton="back"
+        onClose={back}
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', paddingLeft: 4, marginBottom: 4 }}>
+            How often should we add a new content strategy?
+          </div>
+          {([
+            { value: 'Competitive' as const, sublabel: 'Grow fastest. Best for brands racing to build presence. Add 2 pieces per week, every month', badge: '40 additional credits per month' },
+            { value: 'Smart'       as const, sublabel: 'Build momentum without overwhelming your feed. Add 1 piece per week, every month',             badge: '20 additional credits per month' },
+            { value: 'Manual'      as const, sublabel: "Great once you've hit your ideal cadence. Keep your current schedule" },
+          ]).map(({ value, sublabel, badge }) => {
+            const isSelected = scalingPace === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setScalingPace(value)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: 12, padding: '14px 16px', borderRadius: 20, cursor: 'pointer', textAlign: 'left',
+                  background: 'var(--ios-light-100)',
+                  border: isSelected ? '1.5px solid var(--ios-dark-90)' : '1.5px solid var(--ios-dark-8)',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', marginBottom: 4 }}>{value}</div>
+                  <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, marginBottom: badge ? 8 : 0 }}>{sublabel}</div>
+                  {badge && <CreditsBadge label={badge} />}
+                </div>
+                {isSelected ? (
+                  <div style={{ width: 20, height: 20, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <IconCheckmark />
+                  </div>
+                ) : (
+                  <div style={{ width: 20, height: 20, borderRadius: 99, border: '1.5px solid var(--ios-dark-40)', flexShrink: 0 }} />
+                )}
+              </button>
+            );
+          })}
+          <p style={{ fontFamily: font, fontSize: 13, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.5, margin: 0, paddingLeft: 4 }}>
+            We will publish no more than 2 posts per day, with a maximum of 15 posts per week.
+          </p>
+        </div>
+      </Sheet>
 
       {/* Confirm */}
       <Sheet

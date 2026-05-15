@@ -27,6 +27,8 @@ export interface SheetProps {
   children?: ReactNode;
   /** Primary CTA button label at sheet bottom. */
   primaryLabel?: string;
+  /** Alternative: render arbitrary content inside the primary button (overrides primaryLabel). */
+  primaryContent?: ReactNode;
   /** Secondary CTA button label at sheet bottom. */
   secondaryLabel?: string;
   onClose?: () => void;
@@ -61,6 +63,7 @@ export function Sheet({
   visible,
   children,
   primaryLabel,
+  primaryContent,
   secondaryLabel,
   onClose,
   onPrimary,
@@ -193,7 +196,7 @@ export function Sheet({
         </div>
 
         {/* Footer actions */}
-        {(primaryLabel || secondaryLabel) && (
+        {(primaryLabel || primaryContent || secondaryLabel) && (
           <div
             style={{
               padding: '12px 20px 40px',
@@ -203,7 +206,25 @@ export function Sheet({
               flexShrink: 0,
             }}
           >
-            {primaryLabel && (
+            {primaryContent ? (
+              <button
+                type="button"
+                onClick={onPrimary}
+                style={{
+                  width: '100%',
+                  height: 52,
+                  borderRadius: 99,
+                  background: 'var(--ios-dark-90)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {primaryContent}
+              </button>
+            ) : primaryLabel ? (
               <ContentAreaButton
                 type="primary"
                 size="l"
@@ -211,7 +232,7 @@ export function Sheet({
                 fullWidth
                 onClick={onPrimary}
               />
-            )}
+            ) : null}
             {secondaryLabel && (
               <ContentAreaButton
                 type="secondary"

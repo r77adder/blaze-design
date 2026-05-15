@@ -1,3 +1,14 @@
+// section: local asset imports (ios/src/assets/)
+import _str1 from '@ios/src/assets/str_1.png';
+import _str2 from '@ios/src/assets/str_2.png';
+import _str3 from '@ios/src/assets/str_3.png';
+import _stillImage from '@ios/src/assets/still_image.png';
+import _carousel from '@ios/src/assets/carousel.png';
+import _feedVideo from '@ios/src/assets/feed_video_post.png';
+import _shortForm from '@ios/src/assets/short_form_video.png';
+import _stories from '@ios/src/assets/stories.png';
+import _newsletter from '@ios/src/assets/newsletter.png';
+
 export const ASSETS = {
   userAvatar: 'https://www.figma.com/api/mcp/asset/00470659-8379-4277-ab8b-fc90857fa1d1',
   creditsIcon: 'https://www.figma.com/api/mcp/asset/ab311af2-8e8d-429b-914e-2ee446c55c96',
@@ -58,6 +69,22 @@ export const ASSETS = {
 
   // Brand Kit screen — brand profile avatar
   brandProfileAvatar:   'https://www.figma.com/api/mcp/asset/f645ee2a-2615-478a-afe1-bfa2d933c5a0',
+
+  // Add strategies — active strategy bg (Figma 7200-276482)
+  activeStrategyBg:     'https://www.figma.com/api/mcp/asset/1ee1aa46-73b6-486c-a011-9c0928601050',
+
+  // Add strategies — strategy row thumbnails (local: ios/src/assets/)
+  stratThumbThoughtLead: _str1 as string,
+  stratThumbEducational: _str2 as string,
+  stratThumbOffer:       _str3 as string,
+
+  // Set default content — content type thumbnails (local: ios/src/assets/)
+  contentThumbStillImage: _stillImage as string,
+  contentThumbCarousel:   _carousel as string,
+  contentThumbFeedVideo:  _feedVideo as string,
+  contentThumbShortForm:  _shortForm as string,
+  contentThumbStories:    _stories as string,
+  contentThumbEmail:      _newsletter as string,
 
   // Campaigns screen — per-row thumbnails (Figma node 6957-177727)
   campThumb1: 'https://www.figma.com/api/mcp/asset/f26208ab-aea8-4109-9a2b-0df72419cdab',
