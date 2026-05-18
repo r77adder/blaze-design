@@ -1,5 +1,7 @@
-import type { ComponentType, ReactNode } from 'react';
+import { useState, type ComponentType, type ReactNode } from 'react';
 import { Button, Heading, Text } from '@/components';
+import { TabChip, useToast } from '@/staging';
+import Download from '@/icons/20/Download';
 import CustomerService from '@/icons/20/CustomerService';
 import Marker from '@/icons/20/Marker';
 import Bag04 from '@/icons/20/Bag04';
@@ -22,6 +24,7 @@ import {
   type BusinessType,
   type ToolId,
 } from '../tools-context';
+import { BusinessScorecardBody } from './BusinessScorecard';
 
 const TOOL_ICONS: Record<ToolId, ComponentType<{ size?: number; color?: string }>> = {
   'Organic Campaigns': Calendar1,
@@ -45,24 +48,58 @@ const PRESET_ICONS: Record<BusinessType, ComponentType<{ size?: number; color?: 
 // covered by the fixed Save footer. 96px = 64px footer height + 32px breathing.
 const FOOTER_RESERVE_HEIGHT = 96;
 
+type MetaStrategyTab = 'scorecard' | 'tools';
+
 export function ToolsRoute() {
+  const [tab, setTab] = useState<MetaStrategyTab>('scorecard');
+  const topbarCenter = (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <TabChip selected={tab === 'scorecard'} onSelect={() => setTab('scorecard')}>
+        Business Scorecard
+      </TabChip>
+      <TabChip selected={tab === 'tools'} onSelect={() => setTab('tools')}>
+        Blaze Products
+      </TabChip>
+    </div>
+  );
+  const topbarRight = tab === 'scorecard' ? <ExportPdfButton /> : undefined;
   return (
-    <H2Layout title="Meta Strategy">
-      <div
-        style={{
-          maxWidth: 820,
-          margin: '0 auto',
-          padding: `8px 4px ${FOOTER_RESERVE_HEIGHT}px`,
-        }}
-      >
-        <Intro />
-        <PresetRow />
-        <ToolGroup title="Awareness" tools={DEMAND_GEN_TOOLS} />
-        <ToolGroup title="Conversion" tools={CONVERSION_TOOLS} />
-        <FootnoteText />
-      </div>
-      <SaveFooter />
+    <H2Layout title="Meta Strategy" topbarCenter={topbarCenter} topbarRight={topbarRight}>
+      {tab === 'scorecard' ? <BusinessScorecardBody /> : <ToolsTabBody />}
+      {tab === 'tools' && <SaveFooter />}
     </H2Layout>
+  );
+}
+
+function ExportPdfButton() {
+  const { showToast } = useToast();
+  return (
+    <Button
+      variant="secondary"
+      size="md"
+      frontIcon={Download}
+      onPress={() => showToast({ message: 'PDF export queued — we\'ll email it to you when ready.' })}
+    >
+      Export to PDF
+    </Button>
+  );
+}
+
+function ToolsTabBody() {
+  return (
+    <div
+      style={{
+        maxWidth: 820,
+        margin: '0 auto',
+        padding: `8px 4px ${FOOTER_RESERVE_HEIGHT}px`,
+      }}
+    >
+      <Intro />
+      <PresetRow />
+      <ToolGroup title="Awareness" tools={DEMAND_GEN_TOOLS} />
+      <ToolGroup title="Conversion" tools={CONVERSION_TOOLS} />
+      <FootnoteText />
+    </div>
   );
 }
 

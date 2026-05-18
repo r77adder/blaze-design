@@ -57,7 +57,10 @@
 .tone-success {
   background: rgba(4, 175, 0, 0.10);
   border-color: rgba(4, 175, 0, 0.20);
-  color: var(--status-approved);
+  // Darker than --status-approved (#04af00) so text passes WCAG AA on the
+  // pale green tint background. The token green is fine for solid status
+  // chips but reads thin as text-on-tint.
+  color: #036b00;
 }
 
 .tone-warning {

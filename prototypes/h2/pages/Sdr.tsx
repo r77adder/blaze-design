@@ -7,6 +7,7 @@ import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { ChannelGlyph, SdrDetail } from '../SdrDetail';
+import { SdrSettingsBody } from './SdrSettings';
 import {
   ALL_CHANNELS,
   ALL_STATUSES,
@@ -82,11 +83,14 @@ export function SdrRoute() {
   );
 }
 
+type SdrTab = 'leads' | 'settings';
+
 function SdrInner() {
   const { getState } = useDevState();
   const isCold = getState('/h2/sdr') === 'cold';
   const [leads, setLeads] = useState<Lead[]>(LEADS);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
+  const [tab, setTab] = useState<SdrTab>('leads');
 
   // Filters
   const [channels, setChannels] = useState<Set<Channel>>(new Set());
@@ -136,10 +140,26 @@ function SdrInner() {
 
   const activeLead = activeLeadId ? leads.find((l) => l.id === activeLeadId) ?? null : null;
 
+  const tabStrip = (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <TabChip selected={tab === 'leads'} onSelect={() => setTab('leads')}>Leads</TabChip>
+      <TabChip selected={tab === 'settings'} onSelect={() => setTab('settings')}>Settings</TabChip>
+    </div>
+  );
+
+  // ─── Settings tab ──────────────────────────────────────────────────
+  if (tab === 'settings' && !activeLead) {
+    return (
+      <H2Layout topbarCenter={tabStrip}>
+        <SdrSettingsBody />
+      </H2Layout>
+    );
+  }
+
   // ─── Cold view ─────────────────────────────────────────────────────
   if (isCold) {
     return (
-      <H2Layout topbarRight={<GenerateReportButton />}>
+      <H2Layout topbarCenter={tabStrip} topbarRight={<GenerateReportButton />}>
         <div
           style={{
             display: 'flex',
@@ -228,6 +248,7 @@ function SdrInner() {
 
   return (
     <H2Layout
+      topbarCenter={tabStrip}
       topbarRight={
         <>
           {filtersButton}
