@@ -768,24 +768,34 @@ function ChatPanel() {
                 justifyContent: isUser ? 'flex-end' : 'flex-start',
               }}
             >
-              <div
-                style={{
-                  maxWidth: '85%',
-                  padding: '8px 12px',
-                  borderRadius: 12,
-                  /* Three-way coding: human user → soft blue, AI agent →
-                     soft purple. Matches SDR detail's TextBubble palette. */
-                  background: isUser
-                    ? 'rgba(1, 121, 207, 0.12)'
-                    : 'rgba(124, 92, 252, 0.12)',
-                  color: 'var(--dark-90)',
-                  fontSize: 14,
-                  lineHeight: 1.45,
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {m.text}
-              </div>
+              {isUser ? (
+                <div
+                  style={{
+                    maxWidth: '85%',
+                    padding: '8px 12px',
+                    borderRadius: 12,
+                    background: 'rgba(1, 121, 207, 0.12)',
+                    color: 'var(--dark-90)',
+                    fontSize: 14,
+                    lineHeight: 1.45,
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {m.text}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    maxWidth: '85%',
+                    color: 'var(--dark-90)',
+                    fontSize: 14,
+                    lineHeight: 1.45,
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {m.text}
+                </div>
+              )}
             </div>
           );
         })}

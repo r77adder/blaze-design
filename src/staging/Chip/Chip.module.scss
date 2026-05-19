@@ -5,8 +5,8 @@
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  border: 1px solid var(--dark-8);
-  background: var(--light-100);
+  border: 1px solid transparent;
+  background: var(--dark-4);
   color: var(--dark-90);
   font-family: 'Sohne', sans-serif;
   white-space: nowrap;
@@ -18,8 +18,12 @@
     box-shadow: 0 0 0 2px var(--purple);
   }
 
-  &:hover:not(.selected) {
-    border-color: var(--dark-15);
+  &:hover:not(.selected):not(:disabled) {
+    background: var(--dark-8);
+  }
+
+  &:disabled {
+    cursor: default;
   }
 }
 
@@ -67,47 +71,50 @@
   @include sm-sohne-medium;
   height: 28px;
   padding: 0 10px;
-  border-radius: 14px;
+  border-radius: 4px;
 }
 
 .size-md {
   @include sm-sohne-medium;
   height: 32px;
   padding: 0 12px;
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .size-lg {
   @include md-sohne-medium;
   height: 36px;
   padding: 0 14px;
-  border-radius: 18px;
+  border-radius: 8px;
 }
 
 .size-xl {
   @include md-sohne-medium;
   height: 40px;
   padding: 0 16px;
-  border-radius: 20px;
+  border-radius: 8px;
 }
 
 /* Variants — picked from prod's redesign-mode treatment. The selected
    modifier (.selected) below applies on top of the variant. */
 .variant-default {
-  background: var(--light-100);
-  border-color: var(--dark-8);
+  background: var(--dark-4);
+  border-color: var(--dark-4);
   color: var(--dark-90);
+  font-weight: 400;
 }
 
 .variant-add {
   background: var(--light-100);
-  border-style: dashed;
+  border-style: solid;
   border-color: var(--dark-15);
-  color: var(--dark-80);
+  color: var(--dark-90);
+  font-weight: 400;
 }
 
 .selected {
-  background: var(--dark-2);
+  background: var(--light-100);
   border-color: var(--dark-90);
   color: var(--dark-90);
+  font-weight: 500;
 }

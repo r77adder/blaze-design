@@ -136,6 +136,11 @@ interface ToolsContextValue {
   hasUnsavedChanges: boolean;
   /** Mutates the draft only — commit happens via `saveChanges()`. */
   toggle: (id: ToolId) => void;
+  /** One-shot enable: commits immediately to both draft and `enabled`.
+   *  Used by surfaces outside the Meta Strategy toggles (e.g. the Business
+   *  Scorecard "Turn on Feature" CTA) so the user doesn't have to detour
+   *  to the toggles + Save flow. */
+  enable: (id: ToolId) => void;
   /** Commits draft → enabled. Downstream consumers (sidebar filter) update. */
   saveChanges: () => void;
   /** Resets draft to current committed `enabled` set. */
@@ -166,6 +171,22 @@ export function ToolsProvider({ children }: { children: ReactNode }) {
     setPreset(null);
   }, []);
 
+  const enable = useCallback((id: ToolId) => {
+    setEnabled((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    setDraft((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    setPreset(null);
+  }, []);
+
   const saveChanges = useCallback(() => {
     setEnabled(new Set(draft));
   }, [draft]);
@@ -189,6 +210,7 @@ export function ToolsProvider({ children }: { children: ReactNode }) {
       isDraftEnabled,
       hasUnsavedChanges,
       toggle,
+      enable,
       saveChanges,
       discardChanges,
       applyPreset,
@@ -200,6 +222,7 @@ export function ToolsProvider({ children }: { children: ReactNode }) {
       isDraftEnabled,
       hasUnsavedChanges,
       toggle,
+      enable,
       saveChanges,
       discardChanges,
       applyPreset,
