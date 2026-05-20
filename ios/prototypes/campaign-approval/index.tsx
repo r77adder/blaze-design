@@ -213,7 +213,7 @@ function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
 }
 
 // ── Campaign screen ───────────────────────────────────────────────────────────
-function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => void; onReview: () => void; campaignApproved: boolean }) {
+function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => void; onReview: (index?: number) => void; campaignApproved: boolean }) {
   // Standard 52px menu row matching Figma's list row spec
   const MenuRow = ({ label, value, last = false }: { label: string; value?: string; last?: boolean }) => (
     <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 16px', borderBottom: last ? 'none' : `1px solid ${T.dark4}`, cursor:'pointer', gap:12 }}>
@@ -308,7 +308,7 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               {POSTS.map((post, i) => (
-                <div key={i} onClick={onReview} style={{ cursor:'pointer' }}>
+                <div key={i} onClick={() => onReview(i)} style={{ cursor:'pointer' }}>
                   <ContentCard
                     type={post.type}
                     date={post.date}
@@ -479,10 +479,14 @@ export default function CampaignApproval() {
   const [approveAnim, setApproveAnim] = useState<'idle' | 's1' | 's2'>('idle');
   const [cardAnim, setCardAnim] = useState<'idle' | 'exit' | 'enter'>('idle');
 
-  const openSheet = useCallback(() => {
+  const openSheet = useCallback((startIndex?: number) => {
     setPostStates(prev => {
-      const firstPending = prev.findIndex(s => s === 'pending');
-      setCur(firstPending !== -1 ? firstPending : 0);
+      if (startIndex !== undefined) {
+        setCur(startIndex);
+      } else {
+        const firstPending = prev.findIndex(s => s === 'pending');
+        setCur(firstPending !== -1 ? firstPending : 0);
+      }
       return prev;
     });
     setSheetOpen(true);
@@ -581,7 +585,7 @@ export default function CampaignApproval() {
               <HomeScreen onCampaignClick={() => setScreen('campaign')} />
             </div>
             <div style={{ width:'50%', height:'100%', overflowY:'auto', overflowX:'hidden' }}>
-              <CampaignScreen onBack={() => setScreen('home')} onReview={openSheet} campaignApproved={campaignApproved} />
+              <CampaignScreen onBack={() => setScreen('home')} onReview={(i) => openSheet(i)} campaignApproved={campaignApproved} />
             </div>
           </div>
         </div>
