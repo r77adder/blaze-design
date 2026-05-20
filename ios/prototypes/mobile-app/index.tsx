@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StatePicker, useStateContext, PhoneFrame } from '../_shell';
-import { TabBar, Sheet, Stepper } from '@ios/staging';
-import type { TabItem } from '@ios/staging';
+import { TabBar, Sheet, Stepper } from '@ios/components';
+import type { TabItem } from '@ios/components';
 import { HomeScreen } from './HomeScreen';
 import { CalendarScreen, CAL_POSTS } from './CalendarScreen';
 import { CampaignsScreen } from './CampaignsScreen';

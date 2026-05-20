@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sheet, Toggle, Stepper, SelectionPill } from '@ios/staging';
+import { Sheet, Toggle, Stepper, SelectionPill } from '@ios/components';
 import { ASSETS } from './assets';
 
 // section: icon imports

@@ -1,6 +1,6 @@
 import { ASSETS } from './assets';
-import { CampaignListItem, GlassIconButton, ToolbarHeader } from '@ios/staging';
-import type { CampaignStatusVariant } from '@ios/staging';
+import { CampaignListItem, GlassIconButton, ToolbarHeader } from '@ios/components';
+import type { CampaignStatusVariant } from '@ios/components';
 import settingsIcon from '@ios/icons/settings.svg';
 import historyIcon from '@ios/icons/history.svg';
 

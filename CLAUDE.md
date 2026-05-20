@@ -32,8 +32,8 @@ This repo is the Blaze design system + a prototype playground. Two audiences use
 - `prototypes/<slug>/` — web designer/PM playground. Open access. Routes at `/<slug>`.
 
 ### iOS (parallel)
-- `ios/components/` — **vetted iOS components.** Promotion gate: an equivalent component must exist in the iOS native app before graduating from `ios/staging/`. Aliased as `@ios/components`. Currently empty.
-- `ios/staging/` — WIP iOS-specific React components (phone-chrome patterns, native-look controls). Aliased as `@ios/staging`. NOT shipped in the web lib.
+- `ios/components/` — **iOS components.** The canonical home for all iOS UI patterns. Add new components here directly. Aliased as `@ios/components`.
+- `ios/staging/` — **deprecated shim.** Re-exports everything from `ios/components/` for backward compat. Do not add new files here; use `ios/components/` instead.
 - `ios/tokens/` — Three CSS token files loaded globally by the playground: `colors.css` (iOS semantic color system mapped to Blaze tokens), `spacing.css` (8pt grid + device dimensions), `typography.css` (Dynamic Type scale). Import via `@ios/tokens/colors.css` etc.
 - `ios/prototypes/_shell/` — `<PhoneFrame>` + `<StatusBar>`. Use these in every **iOS** prototype instead of `<PrototypeShell>`. Re-exports `StatePicker` and `useStateContext` from the web shell.
 - `ios/prototypes/<slug>/` — iOS designer/PM playground. Open access. Routes at `/ios/<slug>`.
@@ -48,7 +48,7 @@ This repo is the Blaze design system + a prototype playground. Two audiences use
 | User asks | Do this |
 |---|---|
 | "Make a new prototype X" | `pnpm plop prototype --name X`, ensure `pnpm dev` is running, open browser to `http://localhost:5173/X` |
-| "Make a new iOS prototype X" | Create `ios/prototypes/X/index.tsx` manually (no plop template yet). Wrap in `<StatePicker>` + `<PhoneFrame>` from `'../_shell'`. Open `http://localhost:5173/ios/X`. |
+| "Make a new iOS prototype X" | Create `ios/prototypes/X/index.tsx` manually (no plop template yet). Wrap in `<StatePicker>` + `<PhoneFrame>` from `'../_shell'`. Import components from `@ios/components`. Open `http://localhost:5173/ios/X`. |
 | "Add a new component X" | `pnpm plop component --name X`. The plop prompt asks vetted vs staging — pick **staging** unless prod's `apps/blaze/src/blaze-ui/X/` already exists. Then follow `.claude/skills/writing-a-component.md`. |
 | "Promote staging component X to vetted" (eng) | Follow `.claude/skills/promoting-staging-component.md`. Hard gate: prod must already have `apps/blaze/src/blaze-ui/X/`. |
 | "Add icon X size N" (eng) | `pnpm plop icon --name X --size N`, paste SVG paths into the new file |

@@ -1,4 +1,4 @@
-import { MenuItem, ToolbarHeader, ToolbarButton } from '@ios/staging';
+import { MenuItem, ToolbarHeader, ToolbarButton } from '@ios/components';
 import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import folderIcon from '@ios/icons/folder.svg';

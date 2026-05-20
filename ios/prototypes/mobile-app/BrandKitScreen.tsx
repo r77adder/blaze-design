@@ -1,5 +1,5 @@
 import { ASSETS } from './assets';
-import { ToolbarHeader, ToolbarButton } from '@ios/staging';
+import { ToolbarHeader, ToolbarButton } from '@ios/components';
 import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
 
 const font = 'var(--ios-font)';

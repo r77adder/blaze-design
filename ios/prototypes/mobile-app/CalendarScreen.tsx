@@ -1,5 +1,5 @@
 import { ASSETS } from './assets';
-import { ContentStatusPill } from '@ios/staging';
+import { ContentStatusPill } from '@ios/components';
 import type { PostData } from './ContentPreviewSheet';
 import chevronDownIcon from '@ios/icons/chevron-down.svg';
 import doubleChevronIcon from '@ios/icons/double-chevron-vertical.svg';

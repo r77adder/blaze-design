@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ASSETS } from './assets';
-import { CampaignListItem, ContentAreaButton, SidebarDrawer, ToolbarHeader, GlassIconButton, ToolbarButton } from '@ios/staging';
-import type { WorkspaceItem } from '@ios/staging';
+import { CampaignListItem, ContentAreaButton, SidebarDrawer, ToolbarHeader, GlassIconButton, ToolbarButton } from '@ios/components';
+import type { WorkspaceItem } from '@ios/components';
 import approvalsIcon from '@ios/icons/approvals.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
