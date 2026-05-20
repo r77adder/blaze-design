@@ -57,3 +57,6 @@ export type { CampaignListItemProps, CampaignStatusVariant } from './CampaignLis
 
 export { Stepper } from './Stepper';
 export type { StepperProps } from './Stepper';
+
+export { ContentCard } from './ContentCard';
+export type { ContentCardProps, ContentCardType, ContentCardStatus } from './ContentCard';
