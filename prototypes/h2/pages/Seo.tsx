@@ -5,6 +5,8 @@ import { StatusPill } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
+import { useDevState } from '../dev-state-context';
+import { SeoColdView } from './ColdViews';
 
 /**
  * /h2/seo — SEO Plan view. Focused on blog publishing + topic clusters.
@@ -40,6 +42,8 @@ const ROWS: ClusterRow[] = [
 
 export function SeoRoute() {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const devState = useDevState().getState('/h2/seo');
+  if (devState === 'cold') return <H2Layout title="SEO"><SeoColdView /></H2Layout>;
 
   return (
     <H2Layout

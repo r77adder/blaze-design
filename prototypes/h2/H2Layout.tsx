@@ -1,10 +1,17 @@
 import { useMemo, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { H2_SECTIONS, PrototypeShell, type SidebarSection } from '../_shell';
-import { ALL_TOOLS, useTools, type ToolId } from './tools-context';
+import { ALL_TOOLS, TOOL_LABEL, useTools, type ToolId } from './tools-context';
 
 const FILTERED_SECTION_LABELS = new Set(['Awareness', 'Conversion']);
-const TOOL_LABELS = new Set<string>(ALL_TOOLS);
+
+// Reverse lookup: sidebar item label → ToolId. The sidebar renders the
+// user-facing label (e.g. "AI Receptionist") but the enable/disable state
+// is keyed by ToolId (e.g. "SDR"), so the filter has to translate. Built
+// from TOOL_LABEL so both directions stay in sync automatically.
+const LABEL_TO_TOOL_ID: Record<string, ToolId> = Object.fromEntries(
+  ALL_TOOLS.map((id) => [TOOL_LABEL[id], id]),
+) as Record<string, ToolId>;
 
 const PAGE_TITLES: Record<string, string> = {
   '/h2': 'Home',
@@ -15,7 +22,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/h2/paid-social': 'Paid Social',
   '/h2/paid-search': 'Paid Search',
   '/h2/landing-pages': 'Landing Pages',
-  '/h2/sdr': 'SDR',
+  '/h2/sdr': 'AI Receptionist',
   '/h2/reputation': 'Reputation',
   '/h2/content-plan': 'Content Plan',
   '/h2/campaigns': 'Campaigns',
@@ -34,8 +41,9 @@ function filterSectionsForEnabledTools(
     .map((section) => {
       if (!section.label || !FILTERED_SECTION_LABELS.has(section.label)) return section;
       const items = section.items.filter((item) => {
-        if (!TOOL_LABELS.has(item.label)) return true;
-        return enabled.has(item.label as ToolId);
+        const toolId = LABEL_TO_TOOL_ID[item.label];
+        if (!toolId) return true;
+        return enabled.has(toolId);
       });
       return { ...section, items };
     })

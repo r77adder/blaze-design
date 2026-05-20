@@ -1058,7 +1058,7 @@ export const LEADS: Lead[] = [
     calendly_event_id: 'cal_9aa1',
     suggested_next_action: null,
     scorecard: {
-      reasoning: 'Won — moved to onboarding. Closed in the SDR view.',
+      reasoning: 'Won — moved to onboarding. Closed in the AI Receptionist view.',
     },
     transcript: [
       {

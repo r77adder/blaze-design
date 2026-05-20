@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DEV_STATE_PATHS, useDevState, type DevState } from './dev-state-context';
+import { useOnboarding } from './onboarding/onboarding-context';
 
 /**
  * Floating dev-only panel pinned to a corner of every H2 page. Designer can
@@ -37,7 +38,9 @@ function clamp(value: number, min: number, max: number) {
 
 export function DevStatePanel() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { getState, setState } = useDevState();
+  const { active: onboardingActive, open: openOnboarding, reset: resetOnboarding } = useOnboarding();
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -54,7 +57,10 @@ export function DevStatePanel() {
     }
   }, [position]);
 
-  if (!DEV_STATE_PATHS.has(pathname)) return null;
+  // Render on every H2 route — even routes without per-path cold/steady — so
+  // the global Onboarding toggle is always reachable.
+  if (!pathname.startsWith('/h2')) return null;
+  const hasPathState = DEV_STATE_PATHS.has(pathname);
 
   const current = getState(pathname);
 
@@ -109,15 +115,16 @@ export function DevStatePanel() {
         zIndex: 50,
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 2,
         background: 'var(--dark-90)',
         border: '1px dashed var(--brand)',
-        borderRadius: 8,
-        padding: 4,
+        borderRadius: 6,
+        padding: '3px 4px',
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.20)',
         userSelect: 'none',
         touchAction: 'none',
+        maxWidth: 222,
       }}
     >
       <div
@@ -131,31 +138,85 @@ export function DevStatePanel() {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: 14,
-          height: 22,
+          width: 10,
+          height: 18,
           cursor: 'grab',
           color: 'var(--light-60)',
-          fontSize: 12,
+          fontSize: 10,
           lineHeight: 1,
           letterSpacing: '-1px',
+          flexShrink: 0,
         }}
         aria-label="Drag DEV panel"
       >
         ⋮⋮
       </div>
+      {hasPathState && (
+        <>
+          <DevStateButton
+            label="cold"
+            text="Cold"
+            selected={current === 'cold'}
+            onClick={() => setState(pathname, 'cold')}
+          />
+          <DevStateButton
+            label="steady"
+            text="Steady"
+            selected={current === 'steady'}
+            onClick={() => setState(pathname, 'steady')}
+          />
+          <Divider />
+        </>
+      )}
       <DevStateButton
         label="cold"
-        text="Cold state"
-        selected={current === 'cold'}
-        onClick={() => setState(pathname, 'cold')}
+        text="Onboarding"
+        selected={onboardingActive}
+        onClick={() => {
+          navigate('/h2');
+          openOnboarding({ reset: true });
+        }}
       />
-      <DevStateButton
-        label="steady"
-        text="Steady state"
-        selected={current === 'steady'}
-        onClick={() => setState(pathname, 'steady')}
-      />
+      <button
+        type="button"
+        onClick={() => {
+          resetOnboarding();
+          navigate('/h2');
+        }}
+        title="Hard reset (clears persisted state)"
+        style={{
+          appearance: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          fontSize: 11,
+          lineHeight: 1,
+          padding: '3px 5px',
+          borderRadius: 3,
+          background: 'transparent',
+          color: 'var(--light-60)',
+          flexShrink: 0,
+        }}
+      >
+        ↺
+      </button>
     </div>
+  );
+}
+
+function Divider() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: 'inline-block',
+        width: 1,
+        height: 12,
+        background: 'rgba(255,255,255,0.16)',
+        margin: '0 1px',
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
@@ -181,13 +242,16 @@ function DevStateButton({
         border: 'none',
         cursor: 'pointer',
         fontFamily: 'inherit',
-        fontSize: 12,
-        padding: '4px 8px',
-        borderRadius: 4,
+        fontSize: 10.5,
+        lineHeight: 1,
+        padding: '3px 6px',
+        borderRadius: 3,
         background: selected ? 'var(--brand)' : 'transparent',
         color: selected ? 'var(--dark-90)' : 'var(--light-60)',
         fontWeight: selected ? 600 : 400,
         letterSpacing: '0.02em',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
       }}
     >
       {text}

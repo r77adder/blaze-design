@@ -103,7 +103,7 @@ export const FEED_ITEMS: FeedItem[] = [
   {
     id: 'em-1',
     source: 'email',
-    sourceLabel: 'SDR',
+    sourceLabel: 'AI Receptionist',
     href: 'email&sms.html',
     kind: 'action',
     title: '3 agent proposals waiting on Welcome Stack',

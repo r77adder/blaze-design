@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Button, Heading, IconButton, ModalStack, Text } from '@/components';
+import { Button, IconButton, ModalStack, Text } from '@/components';
 import { Avatar, StatusPill, TabChip } from '@/staging';
 import Filter from '@/icons/20/Filter';
 import ArrowLeft from '@/icons/20/ArrowLeft';
@@ -7,6 +7,7 @@ import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { ChannelGlyph, SdrDetail } from '../SdrDetail';
+import { SdrColdView } from './ColdViews';
 import { SdrSettingsBody } from './SdrSettings';
 import {
   ALL_CHANNELS,
@@ -157,31 +158,13 @@ function SdrInner() {
   }
 
   // ─── Cold view ─────────────────────────────────────────────────────
+  // Renders the AI Receptionist setup CTA + 2-step modal. After "Finish setup"
+  // the modal flips this route's dev state to `steady`, which re-renders the
+  // populated inbox below.
   if (isCold) {
     return (
       <H2Layout topbarCenter={tabStrip} topbarRight={<GenerateReportButton />}>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            padding: '80px 24px',
-            minHeight: 360,
-            maxWidth: 480,
-            margin: '0 auto',
-          }}
-        >
-          <Heading level={3} style={{ marginBottom: 8 }}>
-            No leads yet
-          </Heading>
-          <Text variant="secondary" style={{ display: 'block', lineHeight: 1.55, maxWidth: 400 }}>
-            Once you connect your channels — forms, inbound calls, chat widget —
-            leads will appear here. The AI will respond in &lt;60s, qualify, and
-            route to the right next step.
-          </Text>
-        </div>
+        <SdrColdView />
       </H2Layout>
     );
   }

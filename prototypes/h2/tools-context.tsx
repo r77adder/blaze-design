@@ -55,8 +55,20 @@ export const TOOL_DESCRIPTIONS: Record<ToolId, string> = {
   'Paid Social': 'Run and optimize paid campaigns across Meta, TikTok, and LinkedIn.',
   'Paid Search': 'Manage Google Ads keywords, bids, and conversion tracking.',
   'Landing Pages': 'Spin up high-converting pages tied to your campaigns.',
-  SDR: 'Combined outreach pipeline — email, SMS, and CRM in one workflow, orchestrated by an AI SDR agent.',
+  SDR: 'Combined outreach pipeline — email, SMS, and CRM in one workflow, orchestrated by an AI Receptionist agent.',
   Reputation: 'Monitor and respond to reviews across Google, Yelp, and more.',
+};
+
+export const TOOL_LABEL: Record<ToolId, string> = {
+  'Organic Campaigns': 'Organic Campaigns',
+  SEO: 'SEO',
+  AEO: 'AEO',
+  'UGC Content': 'UGC Content',
+  'Paid Social': 'Paid Social',
+  'Paid Search': 'Paid Search',
+  'Landing Pages': 'Landing Pages',
+  SDR: 'AI Receptionist',
+  Reputation: 'Reputation',
 };
 
 export const BUSINESS_TYPES: { id: BusinessType; label: string; description: string }[] = [

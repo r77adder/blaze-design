@@ -6,10 +6,29 @@ import { FeedItem } from '../FeedItem';
 import { FeedItemModal } from '../FeedItemModal';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { H2Layout } from '../H2Layout';
+import { useDevState } from '../dev-state-context';
+import { useOnboarding } from '../onboarding/onboarding-context';
+import { HomeColdView } from './HomeColdView';
 
 type FilterKey = 'all' | 'action' | 'insight';
 
 export function Home() {
+  const { getState } = useDevState();
+  const { profile } = useOnboarding();
+
+  // Cold state on home is the post-onboarding "connect your platforms" checklist.
+  // We default it to 'cold' after the user finishes onboarding via a useEffect
+  // hook on the H2 root, so the dev panel toggle stays authoritative thereafter.
+  const showCold = getState('/h2') === 'cold';
+
+  if (showCold) {
+    return (
+      <ModalStack>
+        <HomeColdView businessName={profile.name} />
+      </ModalStack>
+    );
+  }
+
   return (
     <ModalStack>
       <HomeInner />

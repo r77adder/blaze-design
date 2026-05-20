@@ -107,9 +107,9 @@ export function SdrSettingsBody() {
 function Intro() {
   return (
     <div>
-      <Heading level={2} style={{ marginBottom: 8 }}>SDR settings</Heading>
+      <Heading level={2} style={{ marginBottom: 8 }}>AI Receptionist settings</Heading>
       <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', maxWidth: 720, lineHeight: 1.5 }}>
-        Tune how the AI SDR represents your business, what conversations it can drive, and what it's wired to.
+        Tune how the AI Receptionist represents your business, what conversations it can drive, and what it's wired to.
       </Text>
     </div>
   );
