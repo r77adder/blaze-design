@@ -80,18 +80,6 @@ const T = {
   glassBlur:'blur(20px) saturate(140%)',
 };
 
-// ── Reusable SVGs ─────────────────────────────────────────────────────────────
-const SbarIcons = ({ white }: { white?: boolean }) => {
-  const c1 = white ? 'white' : 'rgba(0,0,0,0.85)';
-  const c2 = white ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-      <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="0.5" fill={c1}/><rect x="4.5" y="2" width="3" height="10" rx="0.5" fill={c1}/><rect x="9" y="0" width="3" height="12" rx="0.5" fill={c1}/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill={c2}/></svg>
-      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.5C10.8 2.5 13.3 3.7 15 5.7L16 4.5C13.9 2.1 11.1.5 8 .5 4.9.5 2.1 2.1 0 4.5L1 5.7C2.7 3.7 5.2 2.5 8 2.5Z" fill={c1}/><path d="M8 6.5C9.7 6.5 11.2 7.2 12.3 8.4L13.3 7.2C11.9 5.7 10.1 4.8 8 4.8c-2.1 0-3.9.9-5.3 2.4L3.7 8.4C4.8 7.2 6.3 6.5 8 6.5Z" fill={c1}/><circle cx="8" cy="11" r="1.5" fill={c1}/></svg>
-      <svg width="25" height="12" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke={c2} fill="none"/><rect x="2" y="2" width="16" height="8" rx="2" fill={c1}/><path d="M23 4.5V7.5C23.8 7.2 24.5 6.4 24.5 6 24.5 5.6 23.8 4.8 23 4.5Z" fill={white ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'}/></svg>
-    </div>
-  );
-};
 
 const ChevRight = ({ color = T.dark25 }: { color?: string }) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10 8L14 12L10 16" stroke={color} strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -341,11 +329,6 @@ const TAB_ITEMS: TabItem[] = [
 function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', background:T.bgGray, height:'100%' }}>
-      {/* Status bar */}
-      <div style={{ height:59, display:'flex', alignItems:'flex-end', padding:'0 24px 10px', justifyContent:'space-between', background:'#fff', flexShrink:0 }}>
-        <span style={{ fontSize:15, fontWeight:600, letterSpacing:'-0.3px', fontFamily:T.font, color:T.dark90 }}>9:41</span>
-        <SbarIcons />
-      </div>
       {/* Header */}
       <div style={{ background:'#fff', padding:'10px 20px 14px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:`1px solid ${T.dark4}`, flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -437,11 +420,6 @@ function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
 function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => void; onReview: () => void; campaignApproved: boolean }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', background:T.bgGray, height:'100%', position:'relative' }}>
-      {/* White status bar overlay on hero */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, zIndex:10, height:59, display:'flex', alignItems:'flex-end', padding:'0 24px 10px', justifyContent:'space-between', pointerEvents:'none' }}>
-        <span style={{ fontSize:15, fontWeight:600, color:'#fff', letterSpacing:'-0.3px', fontFamily:T.font }}>9:41</span>
-        <SbarIcons white />
-      </div>
       <div style={{ flex:1, overflowY:'auto', paddingBottom:165 }}>
         {/* Hero */}
         <div style={{ position:'relative', height:280, overflow:'hidden', flexShrink:0 }}>
