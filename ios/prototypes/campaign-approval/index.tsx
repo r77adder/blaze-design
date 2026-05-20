@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { PhoneFrame } from '../_shell';
-import { TabBar } from '@ios/components';
+import { TabBar, GlassIconButton } from '@ios/components';
 import type { TabItem } from '@ios/components';
 import homeIcon from '@ios/icons/home-04.svg';
 import homeFilledIcon from '@ios/icons/home-filled.svg';
@@ -8,6 +8,7 @@ import calendarIcon from '@ios/icons/calendar-01.svg';
 import layersIcon from '@ios/icons/layers-05.svg';
 import brandKitIcon from '@ios/icons/brandkit_filled.svg';
 import moreIcon from '@ios/icons/more-dots.svg';
+import chevLeftIcon from '@ios/icons/chevron-left.svg';
 
 // ── Image assets ──────────────────────────────────────────────────────────────
 const AV  = 'https://www.figma.com/api/mcp/asset/3b201747-2fda-47ad-ad32-bd538537b43e';
@@ -446,8 +447,12 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
         <div style={{ position:'relative', height:280, overflow:'hidden', flexShrink:0 }}>
           <img src={HERO} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', background:'#2d4a2a' }} />
           <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,rgba(0,0,0,0.06) 0%,rgba(0,0,0,0.62) 100%)' }} />
-          <button onClick={onBack} style={{ position:'absolute', top:64, left:16, width:44, height:44, borderRadius:99, background:'rgba(255,255,255,0.6)', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)', border:'none', boxShadow:'0 0 32px rgba(0,0,0,0.08)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:T.dark90, fontSize:20, paddingRight:2 }}>‹</button>
-          <button style={{ position:'absolute', top:64, right:16, width:44, height:44, borderRadius:99, background:'rgba(255,255,255,0.6)', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)', border:'none', boxShadow:'0 0 32px rgba(0,0,0,0.08)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:14, fontWeight:700, letterSpacing:'1px', color:T.dark90 }}>···</button>
+          <div style={{ position:'absolute', top:64, left:16 }}>
+            <GlassIconButton icon={chevLeftIcon as unknown as string} label="Back" onClick={onBack} />
+          </div>
+          <div style={{ position:'absolute', top:64, right:16 }}>
+            <GlassIconButton icon={moreIcon as unknown as string} label="More" />
+          </div>
           <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'0 16px 18px' }}>
             <div style={{ display:'flex', gap:6, marginBottom:10, flexWrap:'wrap' }}>
               <div style={{ background:'rgba(0,0,0,0.4)', backdropFilter:'blur(8px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:99, padding:'5px 12px', fontSize:12, fontWeight:500, color:'#fff', fontFamily:T.font }}>🛍️ Offer &amp; Promotion</div>
@@ -749,7 +754,7 @@ export default function CampaignApproval() {
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', width:'100vw', height:'100vh', background:'linear-gradient(145deg, rgba(0,0,0,0.04) 0%, rgba(124,92,252,0.05) 100%)' }}>
       <PhoneFrame
-        footer={<TabBar tabs={TAB_ITEMS} activeTab={activeTab} onTabChange={() => {}} />}
+        footer={screen === 'home' ? <TabBar tabs={TAB_ITEMS} activeTab={activeTab} onTabChange={() => {}} /> : undefined}
         overlay={
           <>
             <ReviewSheet
