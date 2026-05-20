@@ -378,29 +378,6 @@ export function ContentPreviewFooter({
         paddingBottom: 8,
       }}>
 
-        {/* Content type */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-          <span style={{
-            fontFamily: FONT, fontSize: 10, fontWeight: 500,
-            color: DARK_60, lineHeight: 1.4, letterSpacing: '0.1px',
-            textAlign: 'center', whiteSpace: 'nowrap',
-          }}>
-            Content type
-          </span>
-          <div style={{
-            height: 28, paddingInline: 6, borderRadius: 99,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{
-              fontFamily: FONT, fontSize: 14, fontWeight: 400,
-              color: DARK_90, lineHeight: 1.39, letterSpacing: '0.14px',
-              whiteSpace: 'nowrap',
-            }}>
-              {contentType}
-            </span>
-          </div>
-        </div>
-
         {/* Posting on / Posted on */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
           <span style={{

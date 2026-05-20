@@ -9,6 +9,8 @@ import layersIcon from '@ios/icons/layers-05.svg';
 import atomIcon from '@ios/icons/atom.svg';
 import moreIcon from '@ios/icons/more-dots.svg';
 import chevLeftIcon from '@ios/icons/chevron-left.svg';
+import approvalsIcon from '@ios/icons/approvals.svg';
+import creditsIcon from '@ios/icons/credits.svg';
 
 // ── Image assets ──────────────────────────────────────────────────────────────
 const CK        = 'https://www.figma.com/api/mcp/asset/bf418beb-b21e-408f-b5ee-f167032c8b7a';
@@ -205,12 +207,7 @@ function HomeScreen({ onCampaignClick, postStates, onReviewPost }: {
               <span style={{ fontSize:18, fontWeight:400, color:T.dark90, fontFamily:T.font }}>Radiant Health</span>
             </div>
           }
-          rightButtons={
-            <div style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.6)', backdropFilter:T.glassBlur, WebkitBackdropFilter:T.glassBlur, borderRadius:99, padding:'6px 12px 6px 10px', boxShadow:'0 0 32px rgba(0,0,0,0.08)', cursor:'pointer' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.4 9.2H22L16 13.5L18.4 20.7L12 16.4L5.6 20.7L8 13.5L2 9.2H9.6L12 2Z" stroke={T.dark60} strokeWidth="1.15" strokeLinejoin="round"/></svg>
-              <span style={{ fontSize:14, fontWeight:400, color:T.dark90, fontFamily:T.font }}>96</span>
-            </div>
-          }
+          rightButtons={<ToolbarButton variant="credits" credits={96} />}
         />
       </div>
 
@@ -415,7 +412,7 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
       <div style={{ position:'absolute', bottom:0, left:0, right:0, zIndex:10, background:'linear-gradient(to bottom, rgba(254,254,254,0) 0%, rgba(254,254,254,0.96) 35%)', padding:'20px 20px 36px', display:'flex', flexDirection:'column', gap:10 }}>
         <button onClick={campaignApproved ? undefined : () => onReview()} style={{ width:'100%', background:T.dark90, color:'#fff', border:'none', borderRadius:99, height:52, fontSize:16, fontWeight:400, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
           {!campaignApproved && (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M7.5 12.8235C8.82559 13.9216 11.0568 15.9412 12.0541 17.5C13.2396 15.2059 16.3757 9.29412 20 7" stroke="white" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round"/><path d="M21.526 4.12303C21.8808 3.1004 20.8996 2.11927 19.877 2.47406L3.27112 8.23529C2.13351 8.62997 2.10232 10.2275 3.22366 10.6662L9.96238 13.3031C10.2989 13.4348 10.5652 13.7011 10.6969 14.0377L13.3338 20.7764C13.7726 21.8977 15.3701 21.8665 15.7648 20.7289L21.526 4.12303Z" stroke="white" strokeWidth="1.15" strokeLinecap="round"/></svg>
+            <img src={approvalsIcon as unknown as string} alt="" style={{ width:20, height:20, filter:'brightness(0) invert(1)' }} />
           )}
           {campaignApproved ? 'Add Posts' : 'Review Posts'}
         </button>
@@ -423,7 +420,7 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
           <button style={{ width:'100%', background:T.bgLight, color:T.dark90, border:`1px solid ${T.dark8}`, borderRadius:99, height:52, fontSize:16, fontWeight:400, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
             Regenerate All
             <span style={{ display:'inline-flex', alignItems:'center', gap:3 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L13.9 7.9H20L14.9 11.5L16.8 17.4L12 13.8L7.2 17.4L9.1 11.5L4 7.9H10.1L12 2Z" stroke={T.dark60} strokeWidth="1.3" strokeLinejoin="round"/></svg>
+              <img src={creditsIcon as unknown as string} alt="" style={{ width:16, height:16, opacity:0.6 }} />
               <span style={{ color:T.dark60, fontSize:16 }}>125</span>
             </span>
           </button>
@@ -471,19 +468,21 @@ function ReviewSheet({
           <div style={{ width:44, display:'flex', alignItems:'center', justifyContent:'flex-start', flexShrink:0 }}>
             <ToolbarButton variant="back" aria-label="Close" onClick={onClose} />
           </div>
-          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', minWidth:0 }}>
-            <div style={{ fontSize:18, fontWeight:400, lineHeight:1.4, color:T.dark90, fontFamily:T.font, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:200 }}>Kona Coffee for the holi…</div>
-            <div style={{ fontSize:12, color:T.dark40, marginTop:2, fontFamily:T.font }}>{reviewed} of {TOTAL} reviewed</div>
+          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', minWidth:0 }}>
+            <div style={{ fontSize:18, fontWeight:400, lineHeight:1.4, color:T.dark90, fontFamily:T.font, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:200 }}>{TYPE_LABELS[post.type]}</div>
           </div>
           <div style={{ width:44, display:'flex', alignItems:'center', justifyContent:'flex-end', flexShrink:0 }}>
             <ContentPill variant={contentPillVariant} />
           </div>
         </div>
-        {/* Progress bar */}
-        <div style={{ padding:'0 70px 10px', display:'flex', gap:4, flexShrink:0 }}>
-          {postStates.map((s, i) => (
-            <div key={i} style={{ flex:1, height:3, borderRadius:99, background: s==='approved' ? T.green : s==='rejected' ? T.red : i===cur ? T.dark40 : T.dark8, transition:'background 0.25s' }} />
-          ))}
+        {/* Progress dots + "N of M reviewed" */}
+        <div style={{ padding:'0 0 10px', display:'flex', gap:8, alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+            {postStates.map((s, i) => (
+              <div key={i} style={{ width:6, height:6, borderRadius:99, flexShrink:0, background: s==='approved' ? T.green : s==='rejected' ? T.red : i===cur ? T.dark25 : T.dark8, boxShadow: i===cur ? `0 0 0 2px rgba(255,255,255,0.9), 0 0 0 3.5px ${T.dark25}` : 'none', transition:'background 0.25s, box-shadow 0.25s' }} />
+            ))}
+          </div>
+          <span style={{ fontSize:12, color:T.dark40, fontFamily:T.font, whiteSpace:'nowrap' }}>{reviewed} of {TOTAL} reviewed</span>
         </div>
         {/* Card — animated wrapper clips to sheet bounds */}
         <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'4px 16px 0', overflow:'hidden' }}>
