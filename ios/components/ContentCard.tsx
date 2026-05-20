@@ -3,24 +3,31 @@
  *
  * Figma: EYf7EUoL3nmIKfMsOcHaG5, node 5514-93803
  *
- * Structure
- *   Header:  type icon (20 px) · type label (14/400) · date (14/400, right-align)
- *   Media:   varies by type (image, portrait, email body, blog body)
- *   Caption: 14/400, 2-line clamp, px-8 pb-8
+ * Structure (still · carousel · feed-video)
+ *   Header  → type icon (20px) · label (14/400) · date (14/400, right)
+ *   Caption → 2-line clamp, 40px tall, px-8 pb-8  ← ABOVE image
+ *   Media   → fills remaining height (still/carousel: flex-1 in a 540px card)
+ *   Status pill:    absolute bottom-19 left-19 inside media
+ *   Duration badge: absolute bottom-19 right-19 (feed-video · short)
+ *   Approve anim:   full-inset green overlay + growing checkmark
  *
- * Overlays (inside media, position absolute):
- *   Status pill:    bottom-19 left-19
- *   Duration badge: bottom-19 right-19  (feed-video · short only)
- *   Approve anim:   full inset, green-tinted + growing checkmark
+ * Structure (story · short)
+ *   Header  → same
+ *   Media   → aspect-ratio fill, no caption
+ *
+ * Structure (email · blog)
+ *   Header  → same
+ *   Body    → inline text content
  */
 
-import stillIcon    from '../icons/lighter_weight/Property 1=still image.svg';
-import storiesIcon  from '../icons/lighter_weight/Property 1=stories.svg';
-import carouselIcon from '../icons/lighter_weight/Property 1=carousel.svg';
+import React from 'react';
+import stillIcon     from '../icons/lighter_weight/Property 1=still image.svg';
+import storiesIcon   from '../icons/lighter_weight/Property 1=stories.svg';
+import carouselIcon  from '../icons/lighter_weight/Property 1=carousel.svg';
 import feedVideoIcon from '../icons/lighter_weight/Property 1=feed video posts.svg';
-import shortIcon    from '../icons/lighter_weight/Property 1=short form video.svg';
-import emailIcon    from '../icons/lighter_weight/Property 1=emails.svg';
-import blogIcon     from '../icons/lighter_weight/Property 1=blogs.svg';
+import shortIcon     from '../icons/lighter_weight/Property 1=short form video.svg';
+import emailIcon     from '../icons/lighter_weight/Property 1=emails.svg';
+import blogIcon      from '../icons/lighter_weight/Property 1=blogs.svg';
 
 export type ContentCardType   = 'still' | 'story' | 'carousel' | 'feed-video' | 'short' | 'email' | 'blog';
 export type ContentCardStatus = 'pending' | 'approved' | 'rejected';
@@ -28,7 +35,7 @@ export type ContentCardStatus = 'pending' | 'approved' | 'rejected';
 export interface ContentCardProps {
   type: ContentCardType;
   date: string;
-  /** Optional caption text rendered below the media (2-line clamp). */
+  /** Caption rendered ABOVE the media for still/carousel/feed-video (2-line clamp). */
   caption?: string;
   status?: ContentCardStatus;
   /** Main media image URL (still, carousel, feed-video). */
@@ -55,26 +62,28 @@ export interface ContentCardProps {
   checkmarkImg?: string;
 }
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// ─── type metadata ─────────────────────────────────────────────────────────────
 
 const TYPE_META: Record<ContentCardType, { label: string; icon: string }> = {
-  still:       { label: 'Still image',       icon: stillIcon      as unknown as string },
-  story:       { label: 'Story',             icon: storiesIcon    as unknown as string },
-  carousel:    { label: 'Carousel',          icon: carouselIcon   as unknown as string },
-  'feed-video':{ label: 'Feed video post',   icon: feedVideoIcon  as unknown as string },
-  short:       { label: 'Short form video',  icon: shortIcon      as unknown as string },
-  email:       { label: 'Email',             icon: emailIcon      as unknown as string },
-  blog:        { label: 'Blog',              icon: blogIcon       as unknown as string },
+  still:        { label: 'Still image',      icon: stillIcon      as unknown as string },
+  story:        { label: 'Story',            icon: storiesIcon    as unknown as string },
+  carousel:     { label: 'Carousel',         icon: carouselIcon   as unknown as string },
+  'feed-video': { label: 'Feed video post',  icon: feedVideoIcon  as unknown as string },
+  short:        { label: 'Short form video', icon: shortIcon      as unknown as string },
+  email:        { label: 'Email',            icon: emailIcon      as unknown as string },
+  blog:         { label: 'Blog',             icon: blogIcon       as unknown as string },
 };
 
 const STATUS_STYLE: Record<ContentCardStatus, React.CSSProperties> = {
-  pending:  { background: 'var(--ios-warning-30)',  color: 'var(--ios-warning-text)', border: '1px solid var(--ios-warning-30)' },
-  approved: { background: 'var(--ios-green-10)',    color: 'var(--ios-green)',         border: '1px solid var(--ios-green-10)' },
-  rejected: { background: 'var(--ios-dark-8)',      color: 'var(--ios-dark-60)',       border: '1px solid var(--ios-dark-4)' },
+  pending:  { background: 'rgba(255,174,0,0.3)',   color: '#3f2b00',              border: '1px solid rgba(255,174,0,0.3)' },
+  approved: { background: 'var(--ios-green-10)',   color: 'var(--ios-green)',     border: '1px solid var(--ios-green-10)' },
+  rejected: { background: 'var(--ios-dark-8)',     color: 'var(--ios-dark-60)',   border: '1px solid var(--ios-dark-4)' },
 };
 const STATUS_LABEL: Record<ContentCardStatus, string> = {
   pending: 'Review', approved: 'Approved', rejected: 'Draft',
 };
+
+// ─── inner pieces ──────────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status: ContentCardStatus }) {
   return (
@@ -125,6 +134,28 @@ function ApproveOverlay({ anim, checkmarkImg }: { anim: 'idle' | 's1' | 's2'; ch
   );
 }
 
+// Caption strip — sits between header and image for still/carousel/feed-video
+function Caption({ text }: { text: string }) {
+  return (
+    <div style={{ padding: '0 8px 8px', background: '#fff', flexShrink: 0 }}>
+      <p style={{
+        margin: 0,
+        fontSize: 14, fontWeight: 400, lineHeight: 1.4,
+        color: 'var(--ios-dark-90)',
+        fontFamily: 'var(--ios-font)',
+        height: 40,               // 2 lines × (14px × 1.4) ≈ 39.2 px
+        overflow: 'hidden',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical' as const,
+      }}>
+        {text}{' '}
+        <span style={{ color: 'var(--ios-dark-40)' }}>...more</span>
+      </p>
+    </div>
+  );
+}
+
 // ─── media sections ────────────────────────────────────────────────────────────
 
 function StillMedia({ img, status, approveAnim, checkmarkImg }: {
@@ -132,8 +163,9 @@ function StillMedia({ img, status, approveAnim, checkmarkImg }: {
   approveAnim: 'idle' | 's1' | 's2'; checkmarkImg?: string;
 }) {
   return (
-    <div style={{ position: 'relative', width: '100%', background: '#c8c0b4' }}>
-      {img && <img src={img} alt="" style={{ width: '100%', height: 460, objectFit: 'cover', display: 'block' }} />}
+    // flex-1 fills remaining height inside the 540px card
+    <div style={{ flex: 1, minHeight: 0, position: 'relative', background: '#c8c0b4', overflow: 'hidden' }}>
+      {img && <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
       <StatusPill status={status} />
       <ApproveOverlay anim={approveAnim} checkmarkImg={checkmarkImg} />
     </div>
@@ -149,9 +181,8 @@ function StoryMedia({ sticker1, sticker2, status, approveAnim, checkmarkImg }: {
       position: 'relative', width: '100%',
       aspectRatio: '249 / 441',
       background: 'linear-gradient(160deg, #1a5fbf 0%, #328cf3 40%, #4aa8e8 100%)',
-      overflow: 'hidden',
+      overflow: 'hidden', flexShrink: 0,
     }}>
-      {/* gradient overlay */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 35%, rgba(0,0,0,0.35) 100%)' }} />
       {/* story progress bars */}
       <div style={{ position: 'absolute', top: 10, left: 8, right: 8, display: 'flex', gap: 3, zIndex: 2 }}>
@@ -161,7 +192,7 @@ function StoryMedia({ sticker1, sticker2, status, approveAnim, checkmarkImg }: {
           </div>
         ))}
       </div>
-      {/* sticker text */}
+      {/* stickers */}
       {(sticker1 || sticker2) && (
         <div style={{ position: 'absolute', top: '52%', left: '50%', transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', gap: 4, zIndex: 2 }}>
           {sticker1 && (
@@ -187,16 +218,13 @@ function CarouselMedia({ img, slides = 2, status, approveAnim, checkmarkImg }: {
   approveAnim: 'idle' | 's1' | 's2'; checkmarkImg?: string;
 }) {
   return (
-    <div style={{ position: 'relative', width: '100%', background: '#c8c0b4' }}>
-      {img && <img src={img} alt="" style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} />}
-      {/* slide counter */}
-      <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.7)', borderRadius: 12, padding: '2px 8px', fontSize: 12, color: '#fff', fontFamily: 'var(--ios-font)' }}>
-        1/{slides}
-      </div>
+    // flex-1 fills remaining height inside the 540px card
+    <div style={{ flex: 1, minHeight: 0, position: 'relative', background: '#c8c0b4', overflow: 'hidden' }}>
+      {img && <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
       {/* dot indicators */}
-      <div style={{ position: 'absolute', bottom: 19, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4, alignItems: 'center' }}>
+      <div style={{ position: 'absolute', bottom: 25, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, alignItems: 'center' }}>
         {Array.from({ length: slides }, (_, i) => (
-          <div key={i} style={{ width: i === 0 ? 8 : 6, height: i === 0 ? 8 : 6, borderRadius: 99, background: i === 0 ? '#fff' : 'rgba(255,255,255,0.5)' }} />
+          <div key={i} style={{ width: 8, height: 8, borderRadius: 99, background: i === 0 ? '#fff' : 'rgba(255,255,255,0.4)' }} />
         ))}
       </div>
       <StatusPill status={status} />
@@ -205,13 +233,13 @@ function CarouselMedia({ img, slides = 2, status, approveAnim, checkmarkImg }: {
   );
 }
 
-function FeedVideoMedia({ img, duration = '0:30', status, approveAnim, checkmarkImg }: {
+function FeedVideoMedia({ img, duration = '0:15', status, approveAnim, checkmarkImg }: {
   img?: string; duration?: string; status: ContentCardStatus;
   approveAnim: 'idle' | 's1' | 's2'; checkmarkImg?: string;
 }) {
   return (
-    <div style={{ position: 'relative', width: '100%', background: '#0c0f11', overflow: 'hidden' }}>
-      {img && <img src={img} alt="" style={{ width: '100%', aspectRatio: '764 / 1018', objectFit: 'cover', display: 'block', maxHeight: 460 }} />}
+    <div style={{ position: 'relative', width: '100%', aspectRatio: '764 / 1018', background: '#0c0f11', overflow: 'hidden', flexShrink: 0 }}>
+      {img && <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
       {/* play button */}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 2 }}>
         <div style={{ width: 48, height: 48, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 16px rgba(0,0,0,0.4)' }}>
@@ -232,12 +260,8 @@ function ShortMedia({ status, approveAnim, checkmarkImg, duration = '0:15' }: {
   approveAnim: 'idle' | 's1' | 's2'; checkmarkImg?: string;
 }) {
   return (
-    <div style={{
-      position: 'relative', width: '100%', aspectRatio: '249 / 441',
-      background: '#0c0f11', overflow: 'hidden',
-    }}>
+    <div style={{ position: 'relative', width: '100%', aspectRatio: '249 / 441', background: '#0c0f11', overflow: 'hidden', flexShrink: 0 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(12,15,17,0.3) 0%, rgba(12,15,17,0.1) 40%, rgba(12,15,17,0.6) 100%)' }} />
-      {/* "Shorts" label */}
       <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 2 }}>
         <span style={{ color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: 'var(--ios-font)', textShadow: '0 0 4px rgba(0,0,0,0.5)' }}>Shorts</span>
       </div>
@@ -289,7 +313,7 @@ function BlogMedia({ title, coverImg, date, approveAnim, checkmarkImg }: {
           <div style={{ fontSize: 14, color: 'var(--ios-dark-60)', marginBottom: 10, fontFamily: 'var(--ios-font)' }}>{date}</div>
         )}
         <p style={{ margin: 0, fontSize: 16, color: '#2b2f38', lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden', fontFamily: 'var(--ios-font)' }}>
-          In recent years, remote work has become increasingly popular, and with the advancements in artificial intelligence, it has the potential to become even more efficient and transformative for businesses.
+          In recent years, remote work has become increasingly popular, and with the advancements in artificial intelligence, it has the potential to become even more efficient and transformative.
         </p>
       </div>
       <ApproveOverlay anim={approveAnim} checkmarkImg={checkmarkImg} />
@@ -299,7 +323,10 @@ function BlogMedia({ title, coverImg, date, approveAnim, checkmarkImg }: {
 
 // ─── main export ───────────────────────────────────────────────────────────────
 
-import React from 'react';
+// Types where caption sits above the image (and card is 540px tall)
+const CAPTION_ABOVE: ContentCardType[] = ['still', 'carousel', 'feed-video'];
+// Types where card height is fixed at 540px (media fills flex-1)
+const FIXED_HEIGHT: ContentCardType[] = ['still', 'carousel'];
 
 export function ContentCard({
   type,
@@ -319,10 +346,14 @@ export function ContentCard({
   checkmarkImg,
 }: ContentCardProps) {
   const { label: typeLabel, icon: typeIcon } = TYPE_META[type];
+  const isFixed = FIXED_HEIGHT.includes(type);
 
   return (
     <div style={{
       width: '100%',
+      ...(isFixed ? { height: 540 } : {}),
+      display: 'flex',
+      flexDirection: 'column',
       background: '#fff',
       border: '1px solid var(--ios-dark-4)',
       borderRadius: 24,
@@ -339,6 +370,9 @@ export function ContentCard({
           {date}
         </span>
       </div>
+
+      {/* Caption — ABOVE image for still / carousel / feed-video */}
+      {caption && CAPTION_ABOVE.includes(type) && <Caption text={caption} />}
 
       {/* Media */}
       {type === 'still' && (
@@ -361,25 +395,6 @@ export function ContentCard({
       )}
       {type === 'blog' && (
         <BlogMedia title={title} coverImg={coverImg} date={date} approveAnim={approveAnim} checkmarkImg={checkmarkImg} />
-      )}
-
-      {/* Caption */}
-      {caption && type !== 'email' && type !== 'blog' && (
-        <div style={{
-          padding: '8px 8px 8px',
-          fontSize: 14,
-          fontWeight: 400,
-          color: 'var(--ios-dark-90)',
-          lineHeight: 1.5,
-          fontFamily: 'var(--ios-font)',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical' as const,
-          overflow: 'hidden',
-        }}>
-          {caption}{' '}
-          <span style={{ color: 'var(--ios-dark-40)' }}>...more</span>
-        </div>
       )}
     </div>
   );

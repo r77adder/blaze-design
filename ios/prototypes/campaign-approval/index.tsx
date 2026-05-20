@@ -188,13 +188,23 @@ function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
 
 // ── Campaign screen ───────────────────────────────────────────────────────────
 function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => void; onReview: () => void; campaignApproved: boolean }) {
+  // Standard 52px menu row matching Figma's list row spec
+  const MenuRow = ({ label, value, last = false }: { label: string; value?: string; last?: boolean }) => (
+    <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 16px', borderBottom: last ? 'none' : `1px solid ${T.dark4}`, cursor:'pointer', gap:12 }}>
+      <span style={{ flex:1, fontSize:16, fontWeight:400, color:T.dark80, fontFamily:T.font, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{label}</span>
+      {value && <span style={{ fontSize:14, color:T.dark60, fontFamily:T.font, flexShrink:0, textAlign:'right', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{value}</span>}
+      <ChevRight />
+    </div>
+  );
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', background:T.bgGray, height:'100%', position:'relative' }}>
-      <div style={{ flex:1, overflowY:'auto', paddingBottom:165 }}>
+    <div style={{ display:'flex', flexDirection:'column', background:'rgba(0,0,0,0.02)', backdropFilter:'blur(20px) saturate(140%)', WebkitBackdropFilter:'blur(20px) saturate(140%)', height:'100%', position:'relative' }}>
+      <div style={{ flex:1, overflowY:'auto', paddingBottom:180 }}>
+
         {/* Hero */}
         <div style={{ position:'relative', height:280, overflow:'hidden', flexShrink:0 }}>
-          <img src={HERO} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', background:'#2d4a2a' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,rgba(0,0,0,0.06) 0%,rgba(0,0,0,0.62) 100%)' }} />
+          <img src={HERO} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)' }} />
           <div style={{ position:'absolute', top:64, left:16 }}>
             <GlassIconButton icon={chevLeftIcon as unknown as string} label="Back" onClick={onBack} />
           </div>
@@ -203,79 +213,125 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
           </div>
           <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'0 16px 18px' }}>
             <div style={{ display:'flex', gap:6, marginBottom:10, flexWrap:'wrap' }}>
-              <div style={{ background:'rgba(0,0,0,0.4)', backdropFilter:'blur(8px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:99, padding:'5px 12px', fontSize:12, fontWeight:500, color:'#fff', fontFamily:T.font }}>🛍️ Offer &amp; Promotion</div>
+              {/* Strategy/category pill */}
+              <div style={{ background:T.dark60, borderRadius:4.69, padding:'3px 4px', fontSize:12, fontWeight:400, color:'#fff', fontFamily:T.font, display:'flex', alignItems:'center', gap:3 }}>
+                <span style={{ fontSize:14, lineHeight:1.64 }}>🛍️</span>
+                <span>Offer &amp; Promotion</span>
+              </div>
+              {/* Status pill */}
               {campaignApproved ? (
-                <div style={{ background:'rgba(32,161,79,0.17)', border:'1px solid rgba(32,161,79,0.1)', borderRadius:4.69, padding:'5px 12px', fontSize:12, fontWeight:500, color:T.green, fontFamily:T.font }}>Approved</div>
+                <div style={{ background:'rgba(32,161,79,0.17)', border:'1px solid rgba(32,161,79,0.1)', borderRadius:4.69, padding:'3px 8px', fontSize:12, fontWeight:400, color:T.green, fontFamily:T.font }}>Approved</div>
               ) : (
-                <div style={{ background:'rgba(205,155,15,0.88)', border:'1px solid rgba(255,200,50,0.2)', borderRadius:99, padding:'5px 12px', fontSize:12, fontWeight:500, color:'#fff', fontFamily:T.font }}>12 posts to Review</div>
+                <div style={{ border:`1px solid ${T.dark8}`, borderRadius:4.69, padding:'3px 8px', fontSize:12, fontWeight:400, color:'#3f2b00', fontFamily:T.font, background:'rgba(255,200,0,1)' }}>4 accounts to connect</div>
               )}
             </div>
-            <h2 style={{ fontSize:26, fontWeight:400, color:'#fff', lineHeight:1.2, fontFamily:T.font }}>Kona Coffee for the holidays</h2>
+            <h2 style={{ margin:0, fontSize:26, fontWeight:400, color:'#fff', lineHeight:1.1, fontFamily:T.font, textShadow:'0px 1px 7px rgba(0,0,0,0.45)' }}>Kona Coffee for the holidays for the holidays</h2>
           </div>
         </div>
 
-        {/* Campaign details */}
-        <div style={{ padding:'20px 16px 10px', fontSize:18, fontWeight:400, color:T.dark90, fontFamily:T.font }}>Campaign details</div>
-        <div style={{ background:'#fff', border:`1px solid ${T.dark8}`, borderRadius:16, margin:'0 16px', overflow:'hidden' }}>
-          {[['Theme',''], ['Call-to-action','Eat more BBQ'], ['Target link','www.konacoffee.com'], ['Audience','Financial Advisors, Consulta...'], ['Context','']].map(([lbl, val], i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderBottom: i < 4 ? `1px solid ${T.dark4}` : 'none', gap:12, cursor:'pointer' }}>
-              <span style={{ fontSize:15, color:T.dark90, flexShrink:0, fontFamily:T.font }}>{lbl}</span>
-              {val ? <span style={{ fontSize:14, color:T.dark40, display:'flex', alignItems:'center', gap:5, fontFamily:T.font }}>{val} <ChevRight /></span> : <ChevRight />}
-            </div>
-          ))}
-        </div>
+        {/* ── content sections (p-20 container mirrors Figma) ── */}
+        <div style={{ display:'flex', flexDirection:'column', gap:20, padding:20 }}>
 
-        {/* Schedule & accounts */}
-        <div style={{ padding:'20px 16px 10px', fontSize:18, fontWeight:400, color:T.dark90, fontFamily:T.font }}>Schedule &amp; accounts</div>
-        <div style={{ background:'#fff', border:`1px solid ${T.dark8}`, borderRadius:16, margin:'0 16px', overflow:'hidden' }}>
-          {[['Schedule','Sept 28 – Oct 18'], ['Accounts','Adam Nathan + 3'], ['Content','2 stills, 2 carousels, 2 videos...']].map(([lbl, val], i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderBottom: i < 2 ? `1px solid ${T.dark4}` : 'none', gap:12, cursor:'pointer' }}>
-              <span style={{ fontSize:15, color:T.dark90, flexShrink:0, fontFamily:T.font }}>{lbl}</span>
-              <span style={{ fontSize:14, color:T.dark40, display:'flex', alignItems:'center', gap:5, fontFamily:T.font }}>{val} <ChevRight /></span>
+          {/* Campaign details */}
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ paddingLeft:16 }}>
+              <span style={{ fontSize:16, fontWeight:500, color:T.dark90, fontFamily:T.font }}>Campaign details</span>
             </div>
-          ))}
-        </div>
+            <div style={{ background:'#fff', border:`1px solid ${T.dark4}`, borderRadius:24, overflow:'hidden' }}>
+              {/* Theme — label row */}
+              <div style={{ height:52, display:'flex', alignItems:'center', padding:'0 16px', borderBottom:`1px solid ${T.dark4}`, cursor:'pointer' }}>
+                <span style={{ flex:1, fontSize:16, fontWeight:400, color:T.dark80, fontFamily:T.font }}>Theme</span>
+                <ChevRight />
+              </div>
+              {/* Theme — expanded text */}
+              <div style={{ padding:'12px 16px 14px', borderBottom:`1px solid ${T.dark4}` }}>
+                <p style={{ margin:0, fontSize:16, fontWeight:400, color:T.dark90, fontFamily:T.font, lineHeight:1.5, display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
+                  Introduce the unique warmth and authentic hospitality of Casa di Manolo emphasizing the 'home away from home' feeling in Tuscany's serene countryside long theme will be truncated.
+                </p>
+              </div>
+              <MenuRow label="Call-to-action" value="Eat more BBQ" />
+              <MenuRow label="Target link" value="www.konacoffee.com" />
+              <MenuRow label="Audience" value="Financial Advisors, Consultants..." />
+              {/* Context row — thumbnails + counter */}
+              <div style={{ height:56, display:'flex', alignItems:'center', padding:'0 16px', cursor:'pointer', gap:12 }}>
+                <span style={{ fontSize:16, fontWeight:400, color:T.dark90, fontFamily:T.font, flexShrink:0 }}>Context</span>
+                <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'flex-end', gap:5 }}>
+                  {[IMG1, IMG2, IMG3].map((src, i) => (
+                    <div key={i} style={{ width:28, height:28, borderRadius:5, overflow:'hidden', flexShrink:0, border:`1px solid ${T.dark4}` }}>
+                      <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                    </div>
+                  ))}
+                  <span style={{ fontSize:14, fontWeight:400, color:T.dark90, fontFamily:T.font, whiteSpace:'nowrap' }}>+12</span>
+                  <ChevRight />
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {/* Post list */}
-        <div style={{ padding:'20px 16px 10px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <span style={{ fontSize:18, fontWeight:400, color:T.dark90, fontFamily:T.font }}>Review {TOTAL} posts</span>
-          <span style={{ fontSize:14, fontWeight:500, color:T.dark40, fontFamily:T.font }}>+ Add New</span>
-        </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'0 16px' }}>
-          {POSTS.map((post, i) => (
-            <div key={i} onClick={onReview} style={{ cursor:'pointer' }}>
-              <ContentCard
-                type={post.type}
-                date={post.date}
-                caption={post.caption}
-                status="pending"
-                img={post.img}
-                slides={post.slides}
-                sticker1={post.sticker1}
-                sticker2={post.sticker2}
-                subject={post.subject}
-                title={post.title}
-                heroImg={IMG_EMAIL}
-                coverImg={IMG_BLOG}
-              />
+          {/* Schedule & accounts */}
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ paddingLeft:16 }}>
+              <span style={{ fontSize:16, fontWeight:500, color:T.dark90, fontFamily:T.font }}>Schedule &amp; accounts</span>
             </div>
-          ))}
-        </div>
-        <div style={{ height:20 }} />
+            <div style={{ background:'#fff', border:`1px solid ${T.dark4}`, borderRadius:24, overflow:'hidden' }}>
+              <MenuRow label="Schedule" value="Sept 28 – Oct 18" />
+              <MenuRow label="Accounts" value="Adam Nathan + 3" />
+              <MenuRow label="Content" value="2 stills, 2 carousels, 2 videos..." last />
+            </div>
+          </div>
+
+          {/* Post list */}
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ paddingLeft:16, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <span style={{ fontSize:16, fontWeight:500, color:T.dark90, fontFamily:T.font }}>Review {TOTAL} posts</span>
+              <button onClick={onReview} style={{ display:'flex', alignItems:'center', gap:4, height:32, borderRadius:99, border:'none', background:'transparent', padding:'0 6px', cursor:'pointer', fontSize:14, fontWeight:500, color:T.dark90, fontFamily:T.font }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={T.dark90} strokeWidth="1.8" strokeLinecap="round"/></svg>
+                Add New
+              </button>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {POSTS.map((post, i) => (
+                <div key={i} onClick={onReview} style={{ cursor:'pointer' }}>
+                  <ContentCard
+                    type={post.type}
+                    date={post.date}
+                    caption={post.caption}
+                    status="pending"
+                    img={post.img}
+                    slides={post.slides}
+                    sticker1={post.sticker1}
+                    sticker2={post.sticker2}
+                    subject={post.subject}
+                    title={post.title}
+                    heroImg={IMG_EMAIL}
+                    coverImg={IMG_BLOG}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>{/* end content sections */}
       </div>
 
-      {/* Sticky footer */}
-      <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'#fff', padding:'12px 16px 30px' }}>
-        <button onClick={campaignApproved ? undefined : onReview} style={{ width:'100%', background:T.dark90, color:'#fff', border:'none', borderRadius:99, height:52, fontSize:16, fontWeight:500, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginBottom:10 }}>
-          {!campaignApproved && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="white" strokeWidth="1.5"/><path d="M5.5 9L8 11.5L12.5 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      {/* Sticky footer — gradient fade to white */}
+      <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'linear-gradient(to bottom, rgba(254,254,254,0) 0%, rgba(254,254,254,0.96) 35%)', padding:'20px 20px 36px', display:'flex', flexDirection:'column', gap:10 }}>
+        <button onClick={campaignApproved ? undefined : onReview} style={{ width:'100%', background:T.dark90, color:'#fff', border:'none', borderRadius:99, height:52, fontSize:16, fontWeight:400, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          {!campaignApproved && (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M7.5 12.8235C8.82559 13.9216 11.0568 15.9412 12.0541 17.5C13.2396 15.2059 16.3757 9.29412 20 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21.526 4.12303C21.8808 3.1004 20.8996 2.11927 19.877 2.47406L3.27112 8.23529C2.13351 8.62997 2.10232 10.2275 3.22366 10.6662L9.96238 13.3031C10.2989 13.4348 10.5652 13.7011 10.6969 14.0377L13.3338 20.7764C13.7726 21.8977 15.3701 21.8665 15.7648 20.7289L21.526 4.12303Z" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          )}
           {campaignApproved ? 'Add Posts' : 'Review Posts'}
         </button>
         {!campaignApproved && (
-          <button style={{ width:'100%', background:T.bgLight, color:T.dark90, border:`1px solid ${T.dark8}`, borderRadius:99, height:52, fontSize:16, fontWeight:500, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:9 }}>
-            Regenerate All ✦ 125
+          <button style={{ width:'100%', background:T.bgLight, color:T.dark90, border:`1px solid ${T.dark8}`, borderRadius:99, height:52, fontSize:16, fontWeight:400, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+            Regenerate All
+            <span style={{ display:'inline-flex', alignItems:'center', gap:3 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L13.9 7.9H20L14.9 11.5L16.8 17.4L12 13.8L7.2 17.4L9.1 11.5L4 7.9H10.1L12 2Z" stroke={T.dark60} strokeWidth="1.3" strokeLinejoin="round"/></svg>
+              <span style={{ color:T.dark60, fontSize:16 }}>125</span>
+            </span>
           </button>
         )}
-        <p style={{ textAlign:'center', fontSize:12, color:T.dark40, fontFamily:T.font }}>
+        <p style={{ margin:0, textAlign:'center', fontSize:14, color:T.dark60, fontFamily:T.font, letterSpacing:'-0.28px' }}>
           {campaignApproved ? 'All posts are approved and scheduled! Add more content anytime.' : 'Approve by Mar 26 to publish on time.'}
         </p>
       </div>
