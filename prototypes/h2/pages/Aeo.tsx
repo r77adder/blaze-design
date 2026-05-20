@@ -14,6 +14,8 @@ import { StatusPill, TabChip, useToast } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
+import { useDevState } from '../dev-state-context';
+import { AeoColdView } from './ColdViews';
 import { MapRankingBody } from './MapRankingBody';
 
 /**
@@ -276,6 +278,8 @@ export function AeoRoute() {
 
 function AeoInner() {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('overview');
+  const devState = useDevState().getState('/h2/aeo');
+  if (devState === 'cold') return <H2Layout title="AEO"><AeoColdView /></H2Layout>;
 
   const topbarCenter = (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

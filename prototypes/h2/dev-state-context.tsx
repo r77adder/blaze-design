@@ -54,6 +54,7 @@ export function useDevState(): DevStateContextValue {
  * excluded — they don't have a cold view by design.
  */
 export const DEV_STATE_PATHS = new Set<string>([
+  '/h2',
   '/h2/organic-social',
   '/h2/seo',
   '/h2/aeo',
@@ -63,4 +64,5 @@ export const DEV_STATE_PATHS = new Set<string>([
   '/h2/landing-pages',
   '/h2/sdr',
   '/h2/reputation',
+  '/h2/brand-kit',
 ]);

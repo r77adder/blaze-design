@@ -65,9 +65,9 @@ const SOURCE_CONTEXT: Record<FeedSource, { why: string; steps: string[] }> = {
   email: {
     why: 'Multi-step lifecycle programs need fresh copy each cycle to keep engagement. The agent regenerates variants and waits for your approval before pushing live.',
     steps: [
-      'Review each proposed step\'s copy in the SDR outreach editor',
+      'Review each proposed step\'s copy in the AI Receptionist outreach editor',
       'Approve to push live in the next send window',
-      'Or open SDR to edit any step manually',
+      'Or open AI Receptionist to edit any step manually',
     ],
   },
   campaigns: {

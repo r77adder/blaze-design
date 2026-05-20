@@ -20,6 +20,7 @@ import {
   CONVERSION_TOOLS,
   DEMAND_GEN_TOOLS,
   TOOL_DESCRIPTIONS,
+  TOOL_LABEL,
   useTools,
   type BusinessType,
   type ToolId,
@@ -241,7 +242,7 @@ function ToolRow({ id, showTopBorder }: { id: ToolId; showTopBorder: boolean }) 
             marginBottom: 4,
           }}
         >
-          {id}
+          {TOOL_LABEL[id]}
         </Text>
         <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
           {TOOL_DESCRIPTIONS[id]}

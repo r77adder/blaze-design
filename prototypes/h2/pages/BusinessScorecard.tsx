@@ -36,7 +36,7 @@ import {
   type Platform,
   type WebsiteCheck,
 } from '../business-scorecard-data';
-import { useTools, type ToolId } from '../tools-context';
+import { TOOL_LABEL, useTools, type ToolId } from '../tools-context';
 
 // ── Score helpers ───────────────────────────────────────────────────────────
 
@@ -160,8 +160,11 @@ function HeroCard() {
 }
 
 /** Larger ring used in the hero. Renders the score number and a compact
- *  delta label stacked inside the ring. */
-function HeroScoreRing({ value, delta }: { value: number; delta: number }) {
+ *  delta label stacked inside the ring. Exported so the onboarding promo
+ *  step can render the same ring inside its consolidated hero. When
+ *  `promotional` is true, the delta is suppressed (no historical baseline
+ *  exists on first-ever scorecard view). */
+export function HeroScoreRing({ value, delta, promotional }: { value: number; delta: number; promotional?: boolean }) {
   const size = 168;
   const strokeWidth = 10;
   const radius = (size - strokeWidth) / 2;
@@ -201,18 +204,20 @@ function HeroScoreRing({ value, delta }: { value: number; delta: number }) {
         <span style={{ fontSize: 52, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1, letterSpacing: '-0.5px' }}>
           {Math.round(animated)}
         </span>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 2,
-            fontSize: 13,
-            fontWeight: 500,
-            color: positive ? '#036b00' : 'var(--red-90)',
-          }}
-        >
-          {positive ? '↑' : '↓'} {positive ? '+' : ''}{delta}
-        </span>
+        {!promotional && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 2,
+              fontSize: 13,
+              fontWeight: 500,
+              color: positive ? '#036b00' : 'var(--red-90)',
+            }}
+          >
+            {positive ? '↑' : '↓'} {positive ? '+' : ''}{delta}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -233,10 +238,27 @@ interface SectionCardProps {
    *  reads "Open {name}" and navigates to `ctaTo`; when disabled, it reads
    *  "Turn on {name}" and flips the tool on in place. */
   toolId: ToolId;
+  /** When true, suppress the section CTA — used by the onboarding promo
+   *  view where the bottom-of-page CTA owns the next action. */
+  promotional?: boolean;
+  /** Promo-only: one-sentence "Blaze will…" follow-up appended to `sub`
+   *  when rendered in promotional mode. Ignored otherwise. */
+  promoBlazeAction?: string;
   children: ReactNode;
 }
 
-function SectionCard({ name, score, delta, headline, sub, ctaTo, toolId, children }: SectionCardProps) {
+function SectionCard({
+  name,
+  score,
+  delta,
+  headline,
+  sub,
+  ctaTo,
+  toolId,
+  promotional,
+  promoBlazeAction,
+  children,
+}: SectionCardProps) {
   const navigate = useNavigate();
   const { isEnabled, enable } = useTools();
   const enabledTool = isEnabled(toolId);
@@ -246,20 +268,50 @@ function SectionCard({ name, score, delta, headline, sub, ctaTo, toolId, childre
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flexWrap: 'wrap' }}>
           <ScoreRing value={score} size={48} />
           <Heading level={3} style={{ margin: 0 }}>{name}</Heading>
-          <DeltaPill value={delta} />
+          {!promotional && <DeltaPill value={delta} />}
         </div>
-        <div style={{ flexShrink: 0 }}>
-          {enabledTool ? (
-            <Button variant="secondary" size="md" onPress={() => navigate(ctaTo)} endIcon={ArrowRight}>
-              Open {toolId}
-            </Button>
-          ) : (
-            <Button variant="secondary" size="md" onPress={() => enable(toolId)}>
-              Turn on {toolId}
-            </Button>
-          )}
-        </div>
+        {!promotional && (
+          <div style={{ flexShrink: 0 }}>
+            {enabledTool ? (
+              <Button variant="secondary" size="md" onPress={() => navigate(ctaTo)} endIcon={ArrowRight}>
+                Open {TOOL_LABEL[toolId]}
+              </Button>
+            ) : (
+              <Button variant="secondary" size="md" onPress={() => enable(toolId)}>
+                Turn on {TOOL_LABEL[toolId]}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
+      {promotional && (
+        <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Text
+            variant="primary"
+            style={{
+              display: 'block',
+              color: 'var(--dark-90)',
+              fontSize: 18,
+              fontWeight: 500,
+              lineHeight: 1.35,
+            }}
+          >
+            {headline}
+          </Text>
+          <Text
+            variant="primary"
+            style={{
+              display: 'block',
+              color: 'var(--dark-90)',
+              fontSize: 15,
+              lineHeight: 1.5,
+            }}
+          >
+            {sub}
+            {promoBlazeAction ? ` ${promoBlazeAction}` : ''}
+          </Text>
+        </div>
+      )}
       <div
         style={{
           background: 'var(--light-100)',
@@ -268,10 +320,12 @@ function SectionCard({ name, score, delta, headline, sub, ctaTo, toolId, childre
           padding: 24,
         }}
       >
-        <div style={{ marginBottom: 16 }}>
-          <Heading level={5} style={{ marginBottom: 4 }}>{headline}</Heading>
-          <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>{sub}</Text>
-        </div>
+        {!promotional && (
+          <div style={{ marginBottom: 16 }}>
+            <Heading level={5} style={{ marginBottom: 4 }}>{headline}</Heading>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>{sub}</Text>
+          </div>
+        )}
         {children}
       </div>
     </section>
@@ -344,7 +398,7 @@ const PLATFORM_LABEL: Record<Platform, string> = {
 
 // ── Section 1: Social Media Presence ───────────────────────────────────────
 
-function SocialMediaSection() {
+function SocialMediaSection({ promotional }: { promotional?: boolean }) {
   const meta = SECTION_META.social;
   const [platform, setPlatform] = useState<Platform>('instagram');
   const metrics = PLATFORM_METRICS[platform];
@@ -354,10 +408,12 @@ function SocialMediaSection() {
       name="Social Media Presence"
       score={meta.score}
       delta={meta.delta}
-      headline="You're missing platforms where your competitors are already active"
+      headline="You're missing platforms where your competitors are already active."
       sub="See how your social presence stacks up against local competitors."
       ctaTo="/h2/organic-social"
       toolId="Organic Campaigns"
+      promotional={promotional}
+      promoBlazeAction="Blaze auto-publishes to every channel from a single 30-day calendar."
     >
       <SocialCoverageMatrix />
 
@@ -384,6 +440,7 @@ function SocialMediaSection() {
           delta={metrics.selfDeltas.postsPerWeek}
           format={(v) => String(v)}
           showBars
+          promotional={promotional}
         />
         <SubCard
           title="Followers"
@@ -393,6 +450,7 @@ function SocialMediaSection() {
           delta={metrics.selfDeltas.followersK}
           format={(v) => `${v}k`}
           deltaFormat={(v) => `${v >= 0 ? '+' : ''}${v}k`}
+          promotional={promotional}
         />
         <SubCard
           title="Engagement"
@@ -402,6 +460,7 @@ function SocialMediaSection() {
           delta={metrics.selfDeltas.engagementPct}
           format={(v) => `${v.toFixed(2)}%`}
           deltaFormat={(v) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`}
+          promotional={promotional}
         />
         <SubCard
           title="Impressions"
@@ -411,6 +470,7 @@ function SocialMediaSection() {
           delta={metrics.selfDeltas.impressionsK}
           format={(v) => (v > 0 ? `${v}k` : '0')}
           deltaFormat={(v) => `${v >= 0 ? '+' : ''}${v}k`}
+          promotional={promotional}
         />
       </div>
     </SectionCard>
@@ -557,9 +617,12 @@ interface SubCardProps {
   /** Formatter for the delta pill. Defaults to "+N"/"N" plain number. */
   deltaFormat?: (v: number) => string;
   showBars?: boolean;
+  /** When true (promotional/onboarding view), suppress the "since Blaze"
+   *  delta pill — there's no historical baseline on the first scorecard. */
+  promotional?: boolean;
 }
 
-function SubCard({ title, sub, values, average, delta, format, deltaFormat, showBars }: SubCardProps) {
+function SubCard({ title, sub, values, average, delta, format, deltaFormat, showBars, promotional }: SubCardProps) {
   const max = Math.max(...values, average, 1);
   const positive = delta >= 0;
   const deltaLabel = deltaFormat
@@ -582,7 +645,7 @@ function SubCard({ title, sub, values, average, delta, format, deltaFormat, show
           <Heading level={5} style={{ marginBottom: 4 }}>{title}</Heading>
           <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>{sub}</Text>
         </div>
-        {delta !== 0 && (
+        {!promotional && delta !== 0 && (
           <StatusPill tone={positive ? 'success' : 'danger'} size="sm">
             {positive ? '↑' : '↓'} {deltaLabel}
           </StatusPill>
@@ -690,7 +753,7 @@ function SubCardRow({
 
 // ── Section 2: Paid Social ─────────────────────────────────────────────────
 
-function PaidSocialSection() {
+function PaidSocialSection({ promotional }: { promotional?: boolean }) {
   const meta = SECTION_META.paidSocial;
   return (
     <SectionCard
@@ -701,6 +764,8 @@ function PaidSocialSection() {
       sub="Active ad counts per platform, last 30 days."
       ctaTo="/h2/paid-social"
       toolId="Paid Social"
+      promotional={promotional}
+      promoBlazeAction="Blaze launches your first 3 campaigns in a week and tunes bids daily."
     >
       <Matrix
         columns={SOCIAL_PLATFORMS.map((p) => ({ key: p, label: PLATFORM_LABEL[p], Icon: PLATFORM_ICONS[p] }))}
@@ -747,7 +812,7 @@ function AdCountCell({ value, self }: { value: number | null; self?: boolean }) 
 
 // ── Section 3: Paid Search ─────────────────────────────────────────────────
 
-function PaidSearchSection() {
+function PaidSearchSection({ promotional }: { promotional?: boolean }) {
   const meta = SECTION_META.paidSearch;
   const nonSelf = COMPETITORS.filter((c) => !c.self);
   const avg = Math.round(nonSelf.reduce((sum, c) => sum + PAID_SEARCH_ADS[c.id], 0) / nonSelf.length);
@@ -761,6 +826,8 @@ function PaidSearchSection() {
       sub="Active Google Ads campaigns per competitor."
       ctaTo="/h2/paid-search"
       toolId="Paid Search"
+      promotional={promotional}
+      promoBlazeAction="Blaze expands to 10+ targeted keywords with daily bid management."
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '6px 8px', gap: 12 }}>
@@ -796,7 +863,7 @@ function PaidSearchSection() {
 
 // ── Section 4: SEO ─────────────────────────────────────────────────────────
 
-function SeoSection() {
+function SeoSection({ promotional }: { promotional?: boolean }) {
   const meta = SECTION_META.seo;
   const { showToast } = useToast();
   return (
@@ -808,6 +875,8 @@ function SeoSection() {
       sub="Each row shows a real search term your customers use and whether your business appears in the results."
       ctaTo="/h2/seo"
       toolId="SEO"
+      promotional={promotional}
+      promoBlazeAction="Blaze publishes 4 topic-cluster posts a month to lift the queries you're missing."
     >
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 8px 12px' }}>
@@ -884,7 +953,7 @@ function RankBadge({ rank }: { rank: number | null }) {
 
 // ── Section 5: AEO ─────────────────────────────────────────────────────────
 
-function AeoSection() {
+function AeoSection({ promotional }: { promotional?: boolean }) {
   const meta = SECTION_META.aeo;
   return (
     <SectionCard
@@ -895,6 +964,8 @@ function AeoSection() {
       sub="Each row is a real prompt customers use. We check whether your brand is mentioned in the answer."
       ctaTo="/h2/aeo"
       toolId="AEO"
+      promotional={promotional}
+      promoBlazeAction="Blaze submits structured citations to every major LLM so you become the answer."
     >
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 8px 12px' }}>
@@ -946,7 +1017,7 @@ function MentionBadge({ mentioned }: { mentioned: boolean }) {
 
 // ── Section 6: Website Experience ──────────────────────────────────────────
 
-function WebsiteSection() {
+function WebsiteSection({ promotional }: { promotional?: boolean }) {
   const meta = SECTION_META.website;
   return (
     <SectionCard
@@ -957,6 +1028,8 @@ function WebsiteSection() {
       sub="Content and appearance checks against best practices for local wellness sites."
       ctaTo="/h2/landing-pages"
       toolId="Landing Pages"
+      promotional={promotional}
+      promoBlazeAction="Blaze ships a high-converting landing page per campaign, A/B tested against the original."
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <WebsiteChecklist title="Content" items={WEBSITE_CONTENT} />
@@ -1045,7 +1118,7 @@ function WebsiteCheckIcon({ ok }: { ok: boolean }) {
 
 // ── Section 7: Reputation ──────────────────────────────────────────────────
 
-function ReputationSection() {
+function ReputationSection({ promotional }: { promotional?: boolean }) {
   const meta = SECTION_META.reputation;
   const nonSelf = REPUTATION.filter((r) => !COMPETITORS.find((c) => c.id === r.competitor)?.self);
   const avg = {
@@ -1063,6 +1136,8 @@ function ReputationSection() {
       sub="Aggregate review data across Google and Yelp, last 30 days."
       ctaTo="/h2/reputation"
       toolId="Reputation"
+      promotional={promotional}
+      promoBlazeAction="Blaze drips review requests to happy customers and drafts every reply within an hour."
     >
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '4px 8px 12px', gap: 16 }}>
@@ -1250,27 +1325,37 @@ function MatrixAvgRowView({ cells, columnWidth }: { cells: ReactNode[]; columnWi
 
 // ── Page body ──────────────────────────────────────────────────────────────
 
-export function BusinessScorecardBody() {
+export interface BusinessScorecardBodyProps {
+  /** When true, this body is being rendered inside the onboarding promo
+   *  flow. Suppresses the standalone <HeroCard> (the onboarding shell owns
+   *  the hero) and the per-section CTAs (the onboarding shell owns the
+   *  next action via its sticky footer). Default: false. */
+  promotional?: boolean;
+}
+
+export function BusinessScorecardBody({ promotional = false }: BusinessScorecardBodyProps = {}) {
   return (
     <div
       style={{
         maxWidth: 920,
         margin: '0 auto',
-        // Horizontal padding (24px) acts as a viewport buffer so that on
-        // narrower screens we consume the padding before the content has
-        // to compress. Vertical padding stays tight at the top because
-        // H2Layout already provides chrome.
-        padding: '8px 24px 60px',
+        // Horizontal padding (24px) matches the onboarding promo hero's
+        // horizontal padding so the inner content of both sections sits
+        // at the same left/right edge. Top padding is bumped to 40px in
+        // promotional mode to create breathing room between the hero
+        // banner and this section; non-promotional (the /h2/tools page)
+        // keeps the tighter 8px since H2Layout already provides chrome.
+        padding: promotional ? '40px 24px 60px' : '8px 24px 60px',
       }}
     >
-      <HeroCard />
-      <SocialMediaSection />
-      <ReputationSection />
-      <PaidSocialSection />
-      <PaidSearchSection />
-      <SeoSection />
-      <AeoSection />
-      <WebsiteSection />
+      {!promotional && <HeroCard />}
+      <SocialMediaSection promotional={promotional} />
+      <ReputationSection promotional={promotional} />
+      <PaidSocialSection promotional={promotional} />
+      <PaidSearchSection promotional={promotional} />
+      <SeoSection promotional={promotional} />
+      <AeoSection promotional={promotional} />
+      <WebsiteSection promotional={promotional} />
     </div>
   );
 }

@@ -151,7 +151,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Landing Pages', icon: Templates, href: '/h2/landing-pages' },
-      { label: 'SDR', icon: UserProfileGroup, href: '/h2/sdr' },
+      { label: 'AI Receptionist', icon: UserProfileGroup, href: '/h2/sdr' },
       { label: 'Reputation', icon: Star, href: '/h2/reputation' },
     ],
   },
@@ -161,7 +161,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     items: [
       { label: 'Meta Strategy', icon: Wrench, href: '/h2/tools' },
       { label: 'Content Settings', icon: AudioSettings, href: '/h2/content-settings' },
-      { label: 'Brand Kit', icon: Brand },
+      { label: 'Brand Kit', icon: Brand, href: '/h2/brand-kit' },
       { label: 'Integrations', icon: Lightning, trail: '3/10' },
     ],
   },
