@@ -104,8 +104,93 @@ const TAB_ITEMS: TabItem[] = [
   { id:'more',      label:'More',      icon: moreIcon     as unknown as string },
 ];
 
+// ── Upcoming post card (no type/date/platform labels) ────────────────────────
+function UpcomingPostCard({ post, status, onClick }: { post: Post; status: PostStatus; onClick: () => void }) {
+  const pill = (() => {
+    const cfg = status === 'approved'
+      ? { bg:'rgba(32,161,79,0.17)',  border:'rgba(32,161,79,0.1)',  color:'#20a14f', label:'Approved' }
+      : status === 'rejected'
+      ? { bg:'rgba(0,0,0,0.08)',      border:'rgba(0,0,0,0.04)',     color:T.dark60,  label:'Draft' }
+      : { bg:'rgba(255,174,0,0.3)',   border:'rgba(255,174,0,0.5)',  color:'#3f2b00', label:'Review' };
+    return (
+      <div style={{
+        backgroundImage: `linear-gradient(${cfg.bg},${cfg.bg}), linear-gradient(#fff,#fff)`,
+        border: `1px solid ${cfg.border}`,
+        borderRadius: 4.69, padding:'2px 7px 1px',
+        fontSize:12, fontWeight:400, color:cfg.color,
+        fontFamily:T.font, whiteSpace:'nowrap', letterSpacing:'0.12px',
+      }}>{cfg.label}</div>
+    );
+  })();
+
+  const SERIF = "Georgia, 'Times New Roman', serif";
+  const base: React.CSSProperties = { minWidth:150, width:150, borderRadius:12, overflow:'hidden', flexShrink:0, cursor:'pointer', boxShadow:'0 2px 10px rgba(0,0,0,0.07)', border:`1px solid ${T.dark4}` };
+
+  // ── Email ──
+  if (post.type === 'email') {
+    return (
+      <div onClick={onClick} style={{ ...base, background:'#fff', display:'flex', flexDirection:'column' }}>
+        <div style={{ padding:'12px 12px 0' }}>
+          <div style={{ fontFamily:SERIF, fontSize:15, fontWeight:400, color:T.dark90, lineHeight:1.25, marginBottom:10, display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
+            {post.subject}
+          </div>
+        </div>
+        {post.img && <img src={post.img} alt="" style={{ width:'100%', height:80, objectFit:'cover', display:'block' }} />}
+        <div style={{ padding:'10px 12px 12px' }}>{pill}</div>
+      </div>
+    );
+  }
+
+  // ── Blog ──
+  if (post.type === 'blog') {
+    return (
+      <div onClick={onClick} style={{ ...base, background:'#fff' }}>
+        {post.img && <img src={post.img} alt="" style={{ width:'100%', height:90, objectFit:'cover', display:'block' }} />}
+        <div style={{ padding:'10px 12px 12px' }}>
+          <div style={{ fontFamily:SERIF, fontSize:13, fontWeight:400, color:T.dark90, lineHeight:1.3, marginBottom:8, display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
+            {post.title}
+          </div>
+          {pill}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Portrait types (story, short) ──
+  const isPortrait = post.type === 'story' || post.type === 'short';
+  const isShort    = post.type === 'short';
+
+  return (
+    <div onClick={onClick} style={{ ...base, background:'#c8c0b4', aspectRatio: isPortrait ? '2/3' : '1/1', position:'relative' }}>
+      {/* Background */}
+      {post.img
+        ? <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+        : <div style={{ position:'absolute', inset:0, background:'linear-gradient(160deg,#1a5fbf 0%,#328cf3 40%,#4aa8e8 100%)' }} />
+      }
+      {/* Gradient overlay for short */}
+      {isShort && <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,rgba(0,0,0,0.28) 0%,transparent 40%,rgba(0,0,0,0.5) 100%)' }} />}
+      {/* Shorts label */}
+      {isShort && <span style={{ position:'absolute', top:10, left:10, color:'#fff', fontSize:12, fontWeight:700, fontFamily:T.font, zIndex:2 }}>Shorts</span>}
+      {/* Play icon for short/feed-video */}
+      {(isShort || post.type === 'feed-video') && (
+        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2, pointerEvents:'none' }}>
+          <div style={{ width:36, height:36, borderRadius:99, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="11" height="13" viewBox="0 0 16 18" fill="none"><path d="M2 2L14 9L2 16V2Z" fill="white"/></svg>
+          </div>
+        </div>
+      )}
+      {/* Status pill */}
+      <div style={{ position:'absolute', bottom:10, left:10, zIndex:3 }}>{pill}</div>
+    </div>
+  );
+}
+
 // ── Home screen ───────────────────────────────────────────────────────────────
-function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
+function HomeScreen({ onCampaignClick, postStates, onReviewPost }: {
+  onCampaignClick: () => void;
+  postStates: PostStatus[];
+  onReviewPost: (index: number) => void;
+}) {
   return (
     <div style={{ display:'flex', flexDirection:'column', background:'#ffffff', height:'100%' }}>
       {/* ToolbarHeader — screen variant with avatar title + credits right */}
@@ -129,7 +214,7 @@ function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
         />
       </div>
 
-      {/* Scrollable content — white bg, Figma pt-20 px-20 pb-10 gap-30 */}
+      {/* Scrollable content */}
       <div style={{ flex:1, overflowY:'auto', paddingBottom:136, background:'#ffffff' }}>
         <div style={{ display:'flex', flexDirection:'column', gap:30, padding:'20px 20px 10px' }}>
 
@@ -188,22 +273,17 @@ function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={T.dark90} strokeWidth="1.15" strokeLinecap="round"/></svg>
               </div>
             </div>
-            <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:4, marginLeft:-20, paddingLeft:20, marginRight:-20, paddingRight:20 }}>
-              {[
-                { img:IMG5, tag:'Instagram', tagColor:T.dark90, title:'Holiday Gift Guide', date:'Tomorrow · 9:00 AM' },
-                { img:IMG1, tag:'Facebook',  tagColor:'#1877f2', title:'Spring Sale Promo', date:'May 20 · 11:00 AM' },
-                { img:IMG4, tag:'Instagram', tagColor:T.dark90, title:'Wellness Tips', date:'May 22 · 10:00 AM' },
-              ].map((card, i) => (
-                <div key={i} style={{ minWidth:150, width:150, borderRadius:8, overflow:'hidden', border:`0.896px solid ${T.dark4}`, background:'#fff', flexShrink:0, boxShadow:'0 2px 6px rgba(0,0,0,0.04)' }}>
-                  <img src={card.img} alt="" style={{ width:'100%', height:130, objectFit:'cover', display:'block' }} />
-                  <div style={{ padding:'10px 12px 12px' }}>
-                    <div style={{ fontSize:10, fontWeight:500, color:card.tagColor, marginBottom:3, fontFamily:T.font }}>● {card.tag}</div>
-                    <div style={{ fontSize:13, fontWeight:500, color:T.dark90, marginBottom:2, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', fontFamily:T.font }}>{card.title}</div>
-                    <div style={{ fontSize:11, color:T.dark40, fontFamily:T.font }}>{card.date}</div>
-                  </div>
-                </div>
+            {/* Card scroll — bleed edge-to-edge */}
+            <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:4, marginLeft:-20, paddingLeft:20, marginRight:-20, paddingRight:20 }}>
+              {POSTS.map((post, i) => (
+                <UpcomingPostCard key={i} post={post} status={postStates[i]} onClick={() => onReviewPost(i)} />
               ))}
             </div>
+            {/* See All Content */}
+            <button onClick={onCampaignClick} style={{ width:'100%', background:'#fff', border:`1px solid ${T.dark8}`, borderRadius:99, height:52, fontSize:16, fontWeight:400, color:T.dark90, fontFamily:T.font, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+              See All Content
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke={T.dark90} strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
           </div>
 
         </div>{/* end content sections */}
@@ -301,7 +381,7 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
             <div style={{ paddingLeft:16, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
               <span style={{ fontSize:16, fontWeight:500, color:T.dark90, fontFamily:T.font }}>Review {TOTAL} posts</span>
-              <button onClick={onReview} style={{ display:'flex', alignItems:'center', gap:4, height:32, borderRadius:99, border:'none', background:'transparent', padding:'0 6px', cursor:'pointer', fontSize:14, fontWeight:500, color:T.dark90, fontFamily:T.font }}>
+              <button onClick={() => onReview()} style={{ display:'flex', alignItems:'center', gap:4, height:32, borderRadius:99, border:'none', background:'transparent', padding:'0 6px', cursor:'pointer', fontSize:14, fontWeight:500, color:T.dark90, fontFamily:T.font }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={T.dark90} strokeWidth="1.8" strokeLinecap="round"/></svg>
                 Add New
               </button>
@@ -333,7 +413,7 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
 
       {/* Sticky footer — gradient fade to white, zIndex above scrollable content */}
       <div style={{ position:'absolute', bottom:0, left:0, right:0, zIndex:10, background:'linear-gradient(to bottom, rgba(254,254,254,0) 0%, rgba(254,254,254,0.96) 35%)', padding:'20px 20px 36px', display:'flex', flexDirection:'column', gap:10 }}>
-        <button onClick={campaignApproved ? undefined : onReview} style={{ width:'100%', background:T.dark90, color:'#fff', border:'none', borderRadius:99, height:52, fontSize:16, fontWeight:400, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+        <button onClick={campaignApproved ? undefined : () => onReview()} style={{ width:'100%', background:T.dark90, color:'#fff', border:'none', borderRadius:99, height:52, fontSize:16, fontWeight:400, cursor:'pointer', fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
           {!campaignApproved && (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M7.5 12.8235C8.82559 13.9216 11.0568 15.9412 12.0541 17.5C13.2396 15.2059 16.3757 9.29412 20 7" stroke="white" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round"/><path d="M21.526 4.12303C21.8808 3.1004 20.8996 2.11927 19.877 2.47406L3.27112 8.23529C2.13351 8.62997 2.10232 10.2275 3.22366 10.6662L9.96238 13.3031C10.2989 13.4348 10.5652 13.7011 10.6969 14.0377L13.3338 20.7764C13.7726 21.8977 15.3701 21.8665 15.7648 20.7289L21.526 4.12303Z" stroke="white" strokeWidth="1.15" strokeLinecap="round"/></svg>
           )}
@@ -591,7 +671,7 @@ export default function CampaignApproval() {
         <div style={{ position:'absolute', inset:0, overflow:'hidden' }}>
           <div style={{ display:'flex', width:'200%', height:'100%', transform: screen === 'campaign' ? 'translateX(-50%)' : 'translateX(0)', transition:'transform 0.38s cubic-bezier(0.4,0,0.2,1)' }}>
             <div style={{ width:'50%', height:'100%', overflowY:'auto', overflowX:'hidden' }}>
-              <HomeScreen onCampaignClick={() => setScreen('campaign')} />
+              <HomeScreen onCampaignClick={() => setScreen('campaign')} postStates={postStates} onReviewPost={(i) => { setScreen('campaign'); setTimeout(() => openSheet(i), 400); }} />
             </div>
             <div style={{ width:'50%', height:'100%', overflowY:'auto', overflowX:'hidden' }}>
               <CampaignScreen onBack={() => setScreen('home')} onReview={(i) => openSheet(i)} campaignApproved={campaignApproved} />
