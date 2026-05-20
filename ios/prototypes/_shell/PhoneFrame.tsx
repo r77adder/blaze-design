@@ -15,6 +15,14 @@ export interface PhoneFrameProps {
    * (above footer/tab bar). Use for modals, sheets, drawers.
    */
   overlay?: ReactNode;
+  /**
+   * When true, the status bar floats absolutely over the content so hero
+   * images can extend edge-to-edge from the very top of the frame.
+   * Default: false (status bar is in the normal flex flow, pushing content down).
+   */
+  overlayStatusBar?: boolean;
+  /** Status bar icon/text colour. Only used when overlayStatusBar is true. */
+  statusBarTheme?: 'dark' | 'white';
 }
 
 /**
@@ -28,7 +36,7 @@ export interface PhoneFrameProps {
  *     <div style={{ height: 100 }} />  // spacer so content clears the tab bar
  *   </PhoneFrame>
  */
-export function PhoneFrame({ children, footer, overlay }: PhoneFrameProps) {
+export function PhoneFrame({ children, footer, overlay, overlayStatusBar = false, statusBarTheme = 'dark' }: PhoneFrameProps) {
   return (
     <div style={{
       width: 402,
@@ -42,10 +50,20 @@ export function PhoneFrame({ children, footer, overlay }: PhoneFrameProps) {
       display: 'flex',
       flexDirection: 'column',
     }}>
-      <StatusBar theme="dark" />
+      {/* Normal flow: status bar pushes content down */}
+      {!overlayStatusBar && <StatusBar theme={statusBarTheme} />}
+
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
         {children}
       </div>
+
+      {/* Overlay flow: status bar floats above content via absolute positioning */}
+      {overlayStatusBar && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, pointerEvents: 'none' }}>
+          <StatusBar theme={statusBarTheme} />
+        </div>
+      )}
+
       {footer}
       {overlay}
     </div>

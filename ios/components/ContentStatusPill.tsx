@@ -80,13 +80,17 @@ export function ContentStatusPill({ variant, label }: ContentStatusPillProps) {
   const showError = variant === 'partial-posted';
   const showUpload = variant === 'needs-context';
 
+  // Opaque: white base + tint overlay via layered backgroundImage so pills
+  // stay readable on any surface (dark hero, gray sheet, etc.)
+  const backgroundImage = `linear-gradient(${bg}, ${bg}), linear-gradient(#fff, #fff)`;
+
   return (
     <div
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 4,
-        background: bg,
+        backgroundImage,
         borderRadius: 4.69,
         padding: '2px 4px',
         flexShrink: 0,

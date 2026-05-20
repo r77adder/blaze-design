@@ -11,6 +11,8 @@ Available components:
 - Toast, FooterCTA — feedback & actions
 - GlassIconButton, MenuItem, ContentAreaButton — buttons
 - CampaignListItem, ContentStatusPill, ContentCard — list items & cards
+- PostPreviewCard — Instagram-style social preview card (used in review/approval flow)
+- CampaignPill, ContentPill — status pills for campaigns and individual content
 
 ## Icons
-Icons are in `ios/icons/`. Use existing SVGs only.
+Icons are in `ios/icons/`. Use existing SVGs only. The full set (~515 icons) was generated from `src/icons/` — filenames are kebab-case (e.g. `brand.svg`, `home-04.svg`, `calendar-1.svg`). 24px sources are preferred; falls back to 20px, then 16px.
