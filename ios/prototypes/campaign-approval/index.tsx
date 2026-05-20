@@ -626,12 +626,20 @@ export default function CampaignApproval() {
   }, [cur, advanceToNext]);
 
   const handleDontPost = useCallback(() => {
+    let updatedStates: PostStatus[] = [];
     setPostStates(prev => {
-      const next = [...prev];
-      next[cur] = 'rejected';
-      setTimeout(() => advanceToNext(next, cur), 600);
-      return next;
+      updatedStates = [...prev];
+      updatedStates[cur] = 'rejected';
+      return updatedStates;
     });
+
+    // Same slide-out sequence as approve (no checkmark, just the card transition)
+    setTimeout(() => setCardAnim('exit'), 60);
+    setTimeout(() => {
+      setCardAnim('enter');
+      advanceToNext(updatedStates, cur);
+    }, 60 + 380);
+    setTimeout(() => setCardAnim('idle'), 60 + 380 + 40);
   }, [cur, advanceToNext]);
 
   const handleRemoveApproval = useCallback(() => {
