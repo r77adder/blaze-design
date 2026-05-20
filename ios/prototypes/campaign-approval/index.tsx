@@ -409,12 +409,21 @@ function ReviewSheet({
         <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'4px 16px 0', overflow:'hidden' }}>
           <div style={{ width:'100%', display:'flex', justifyContent:'center', transform: cardTransform, opacity: cardOpacity, transition: cardTransition }}>
             <PostPreviewCard
+              type={post.type}
               img={post.img}
               caption={post.caption}
               username="radiant_health"
               avatar={AVATAR}
               status={status}
               approveAnim={approveAnim}
+              slides={post.slides}
+              sticker1={post.sticker1}
+              sticker2={post.sticker2}
+              subject={post.subject}
+              title={post.title}
+              heroImg={IMG_EMAIL}
+              coverImg={IMG_BLOG}
+              date={post.date}
             />
           </div>
         </div>
