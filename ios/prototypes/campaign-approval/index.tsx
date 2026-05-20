@@ -1,5 +1,13 @@
 import { useState, useCallback } from 'react';
 import { PhoneFrame } from '../_shell';
+import { TabBar } from '@ios/components';
+import type { TabItem } from '@ios/components';
+import homeIcon from '@ios/icons/home-04.svg';
+import homeFilledIcon from '@ios/icons/home-filled.svg';
+import calendarIcon from '@ios/icons/calendar-01.svg';
+import layersIcon from '@ios/icons/layers-05.svg';
+import brandKitIcon from '@ios/icons/brandkit_filled.svg';
+import moreIcon from '@ios/icons/more-dots.svg';
 
 // ── Image assets ──────────────────────────────────────────────────────────────
 const AV  = 'https://www.figma.com/api/mcp/asset/3b201747-2fda-47ad-ad32-bd538537b43e';
@@ -319,28 +327,14 @@ function PostCard({ post, anim }: { post: Post; anim: 'idle' | 's1' | 's2' }) {
   );
 }
 
-// ── Tab bar ───────────────────────────────────────────────────────────────────
-function TabBar({ activeTab }: { activeTab: number }) {
-  const tabs = [
-    { label:'Home', icon: <svg viewBox="0 0 22 22" fill="none" width="24" height="24"><path d="M3 10L11 3L19 10V19H14V14H8V19H3V10Z" fill={activeTab===0?'rgba(0,0,0,0.85)':'rgba(0,0,0,0.4)'} stroke={activeTab===0?'rgba(0,0,0,0.85)':'rgba(0,0,0,0.4)'} strokeWidth="0.3" strokeLinejoin="round"/></svg> },
-    { label:'Calendar', icon: <svg viewBox="0 0 22 22" fill="none" width="24" height="24"><rect x="3" y="4" width="16" height="14" rx="2.5" stroke="rgba(0,0,0,0.4)" strokeWidth="1.6"/><path d="M3 8.5h16" stroke="rgba(0,0,0,0.4)" strokeWidth="1.6" strokeLinecap="round"/><path d="M8 2v4M14 2v4" stroke="rgba(0,0,0,0.4)" strokeWidth="1.6" strokeLinecap="round"/></svg> },
-    { label:'Campaigns', icon: <svg viewBox="0 0 22 22" fill="none" width="24" height="24"><rect x="3" y="14" width="16" height="4" rx="1.5" stroke="rgba(0,0,0,0.4)" strokeWidth="1.5"/><rect x="3" y="8" width="16" height="4" rx="1.5" stroke="rgba(0,0,0,0.4)" strokeWidth="1.5"/><rect x="3" y="4" width="16" height="3" rx="1.5" stroke="rgba(0,0,0,0.4)" strokeWidth="1.5"/></svg> },
-    { label:'Brand Kit', icon: <svg viewBox="0 0 22 22" fill="none" width="24" height="24"><path d="M5 5L17 17M17 5L5 17" stroke="rgba(0,0,0,0.4)" strokeWidth="1.8" strokeLinecap="round"/><circle cx="11" cy="11" r="7.5" stroke="rgba(0,0,0,0.4)" strokeWidth="1.5"/></svg> },
-    { label:'More', icon: <svg viewBox="0 0 22 22" fill="none" width="24" height="24"><circle cx="5.5" cy="11" r="1.8" fill="rgba(0,0,0,0.4)"/><circle cx="11" cy="11" r="1.8" fill="rgba(0,0,0,0.4)"/><circle cx="16.5" cy="11" r="1.8" fill="rgba(0,0,0,0.4)"/></svg> },
-  ];
-  return (
-    <div style={{ position:'absolute', bottom:0, left:0, right:0, height:126, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'0 14px 12px', paddingTop:51, background:'linear-gradient(to bottom,rgba(247,247,247,0),rgba(247,247,247,1) 60%)', zIndex:100 }}>
-      <div style={{ display:'flex', alignItems:'center', background:'rgba(255,255,255,0.6)', backdropFilter:T.glassBlur, WebkitBackdropFilter:T.glassBlur, borderRadius:99, padding:4, boxShadow:`0 0 32px rgba(0,0,0,0.08), inset 0 0 0 0.5px ${T.dark8}` }}>
-        {tabs.map((tab, i) => (
-          <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:1, height:55, padding:'6px 8px 7px', borderRadius:99, cursor:'pointer', background: activeTab===i ? T.dark4 : 'transparent' }}>
-            {tab.icon}
-            <span style={{ fontSize:10, fontWeight:500, color: activeTab===i ? T.dark90 : T.dark40, fontFamily:T.font, lineHeight:1 }}>{tab.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// ── Tab bar config ────────────────────────────────────────────────────────────
+const TAB_ITEMS: TabItem[] = [
+  { id:'home',      label:'Home',      icon: homeIcon      as unknown as string, iconActive: homeFilledIcon as unknown as string },
+  { id:'calendar',  label:'Calendar',  icon: calendarIcon  as unknown as string },
+  { id:'campaigns', label:'Campaigns', icon: layersIcon     as unknown as string },
+  { id:'brand-kit', label:'Brand Kit', icon: brandKitIcon  as unknown as string },
+  { id:'more',      label:'More',      icon: moreIcon      as unknown as string },
+];
 
 // ── Home screen ───────────────────────────────────────────────────────────────
 function HomeScreen({ onCampaignClick }: { onCampaignClick: () => void }) {
@@ -750,12 +744,12 @@ export default function CampaignApproval() {
     }, 280);
   }, [cur]);
 
-  const tabIndex = screen === 'home' ? 0 : 2;
+  const activeTab = screen === 'home' ? 'home' : 'campaigns';
 
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', width:'100vw', height:'100vh', background:'linear-gradient(145deg, rgba(0,0,0,0.04) 0%, rgba(124,92,252,0.05) 100%)' }}>
       <PhoneFrame
-        footer={<TabBar activeTab={tabIndex} />}
+        footer={<TabBar tabs={TAB_ITEMS} activeTab={activeTab} onTabChange={() => {}} />}
         overlay={
           <>
             <ReviewSheet
