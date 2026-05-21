@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { Toaster, ToasterProvider } from '@/staging';
 import { H2Layout } from './H2Layout';
+import ScorecardPrototype from '../scorecard/index';
 import { Home } from './pages/Home';
 import { OrganicSocialRoute } from './pages/OrganicSocial';
 import { CampaignsRoute } from './pages/Campaigns';
@@ -105,6 +106,7 @@ function H2RoutedShell() {
       <Route path="/sdr" element={<SdrRoute />} />
       <Route path="/tools" element={<ToolsRoute />} />
       <Route path="/brand-kit" element={<BrandKitFlow />} />
+      <Route path="/scorecard/*" element={<ScorecardPrototype />} />
     </Routes>
   );
 }
