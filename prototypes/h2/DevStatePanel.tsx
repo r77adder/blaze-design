@@ -40,7 +40,7 @@ export function DevStatePanel() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { getState, setState } = useDevState();
-  const { active: onboardingActive, open: openOnboarding, reset: resetOnboarding } = useOnboarding();
+  const { active: onboardingActive, open: openOnboarding } = useOnboarding();
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -177,29 +177,6 @@ export function DevStatePanel() {
           openOnboarding({ reset: true });
         }}
       />
-      <button
-        type="button"
-        onClick={() => {
-          resetOnboarding();
-          navigate('/h2');
-        }}
-        title="Hard reset (clears persisted state)"
-        style={{
-          appearance: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          fontSize: 11,
-          lineHeight: 1,
-          padding: '3px 5px',
-          borderRadius: 3,
-          background: 'transparent',
-          color: 'var(--light-60)',
-          flexShrink: 0,
-        }}
-      >
-        ↺
-      </button>
     </div>
   );
 }

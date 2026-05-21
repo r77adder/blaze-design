@@ -6,13 +6,12 @@ import CustomerService from '@/icons/20/CustomerService';
 import Marker from '@/icons/20/Marker';
 import Bag04 from '@/icons/20/Bag04';
 import Calendar1 from '@/icons/20/Calendar1';
-import FileSearch1 from '@/icons/20/FileSearch1';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
 import Cursor04 from '@/icons/20/Cursor04';
 import Templates from '@/icons/20/Templates';
 import Star from '@/icons/20/Star';
-import Stars from '@/icons/20/Stars';
 import Google from '@/icons/20/Google';
+import Globe from '@/icons/20/Globe';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
 import { H2Layout } from '../H2Layout';
 import {
@@ -29,8 +28,7 @@ import { BusinessScorecardBody } from './BusinessScorecard';
 
 const TOOL_ICONS: Record<ToolId, ComponentType<{ size?: number; color?: string }>> = {
   'Organic Campaigns': Calendar1,
-  SEO: FileSearch1,
-  AEO: Stars,
+  'SEO/AEO': Globe,
   'UGC Content': UserProfileCircle,
   'Paid Social': Cursor04,
   'Paid Search': Google,

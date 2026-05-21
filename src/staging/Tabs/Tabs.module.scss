@@ -1,0 +1,46 @@
+// Tabs — underline-style tab strip.
+//
+// Visual: horizontal row of unstyled buttons sharing a `borderBottom`.
+// Active tab paints a 2px `var(--purple)` accent bar at the bottom and
+// dark-90 text; inactive tabs use dark-60. Mirrors the sidebar tab
+// pattern in `prototypes/h2/pages/SeoAeo.tsx` ViewPostModal at L679.
+
+.root {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-bottom: 1px solid var(--dark-8);
+  font-family: 'Sohne', sans-serif;
+}
+
+.tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px; // overlap the root's 1px border so the 2px accent sits flush
+  padding: 10px 14px;
+  font-family: 'Sohne', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--dark-60);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    color: var(--dark-90);
+  }
+
+  &:focus-visible {
+    outline: none;
+    color: var(--dark-90);
+    box-shadow: inset 0 0 0 2px var(--purple);
+    border-radius: 4px 4px 0 0;
+  }
+}
+
+.tab.selected {
+  color: var(--dark-90);
+  border-bottom-color: var(--purple);
+  font-weight: 500;
+}

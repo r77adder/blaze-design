@@ -17,13 +17,9 @@ export const GAP_AND_FIX: Record<ToolId, GapAndFix> = {
     gap: 'You post 1x / week. Competitors average 4x / week and are on 2 more platforms than you.',
     fix: 'Auto-generate a 30-day calendar from your brand profile and schedule across IG, TikTok, LinkedIn, Facebook, X, and YouTube.',
   },
-  SEO: {
-    gap: 'You rank on the front page for 1 of 6 customer searches. Competitors rank for 4 on average.',
-    fix: 'Publish 4 topic-cluster blog posts per month targeting the searches you\'re missing — written by AI, edited by humans.',
-  },
-  AEO: {
-    gap: 'ChatGPT, Perplexity, and Gemini never mention you when your customers ask.',
-    fix: 'Structured citations and answer-engine optimization across all major LLMs. Be the cited authority, not the also-ran.',
+  'SEO/AEO': {
+    gap: 'You rank on the front page for 1 of 6 customer searches. ChatGPT, Perplexity, and Gemini never mention you when your customers ask.',
+    fix: 'Publish 4 topic-cluster blog posts per month targeting the searches you\'re missing, plus structured citations across all major LLMs so you become the cited authority.',
   },
   'UGC Content': {
     gap: 'You have zero creator-style content. Modern campaigns convert 3× better with UGC than studio assets.',

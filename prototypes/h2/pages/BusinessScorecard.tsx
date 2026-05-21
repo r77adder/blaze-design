@@ -151,8 +151,8 @@ function HeroCard() {
             lineHeight: 1.55,
           }}
         >
-          Reputation and SEO are your strongest plays. Paid social and AEO have the most ground left to make
-          up — focus the next 30 days on closing those gaps.
+          Reputation is your strongest play. SEO/AEO visibility and paid social have the most ground left to
+          make up — focus the next 30 days on closing those gaps.
         </Text>
       </div>
     </div>
@@ -873,8 +873,8 @@ function SeoSection({ promotional }: { promotional?: boolean }) {
       delta={meta.delta}
       headline="Here's where you rank when customers search for you on Google."
       sub="Each row shows a real search term your customers use and whether your business appears in the results."
-      ctaTo="/h2/seo"
-      toolId="SEO"
+      ctaTo="/h2/seo-aeo"
+      toolId="SEO/AEO"
       promotional={promotional}
       promoBlazeAction="Blaze publishes 4 topic-cluster posts a month to lift the queries you're missing."
     >
@@ -962,8 +962,8 @@ function AeoSection({ promotional }: { promotional?: boolean }) {
       delta={meta.delta}
       headline="Here's how often customers hear about you when they ask an AI."
       sub="Each row is a real prompt customers use. We check whether your brand is mentioned in the answer."
-      ctaTo="/h2/aeo"
-      toolId="AEO"
+      ctaTo="/h2/seo-aeo"
+      toolId="SEO/AEO"
       promotional={promotional}
       promoBlazeAction="Blaze submits structured citations to every major LLM so you become the answer."
     >

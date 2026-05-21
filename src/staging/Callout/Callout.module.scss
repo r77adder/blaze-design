@@ -1,0 +1,121 @@
+// Callout — inline info / warning / danger / success / neutral panel.
+//
+// Visual: 1px tinted border, matching tinted background, 8px radius,
+// optional leading icon and bold title. Body text uses the panel tone's
+// foreground color. Mirrors the hand-rolled callout patterns in
+// `prototypes/h2/pages/SeoAeo.tsx` (info bulb at L545, discrepancy
+// cards at L526, setup banner at L785).
+
+.root {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-family: 'Sohne', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  align-items: flex-start;
+}
+
+.iconSlot {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 1px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.text {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+// ─── Tones ─────────────────────────────────────────────────────────────
+
+.tone-neutral {
+  background: var(--dark-4);
+  border-color: var(--dark-8);
+  color: var(--dark-80);
+
+  .title {
+    color: var(--dark-90);
+  }
+
+  .iconSlot {
+    color: var(--dark-60);
+  }
+}
+
+.tone-info {
+  background: rgba(124, 92, 252, 0.06); // var(--purple) at 6%
+  border-color: rgba(124, 92, 252, 0.2);
+  color: var(--dark-80);
+
+  .title {
+    color: var(--dark-90);
+  }
+
+  .iconSlot {
+    color: var(--purple);
+  }
+}
+
+.tone-success {
+  background: rgba(4, 175, 0, 0.06); // var(--green-50) at 6%
+  border-color: rgba(4, 175, 0, 0.2);
+  color: var(--dark-80);
+
+  .title {
+    color: var(--green-70);
+  }
+
+  .iconSlot {
+    color: var(--green-50);
+  }
+}
+
+.tone-warning {
+  background: rgba(245, 176, 0, 0.08); // var(--strong-50) at 8%
+  border-color: rgba(245, 176, 0, 0.3);
+  color: var(--dark-80);
+
+  // No `--strong-70` token exists; the deeper amber is hand-darkened
+  // here so the title meets contrast on the tinted background. If a
+  // future token covers it, swap directly.
+  .title {
+    color: #92400e;
+  }
+
+  .iconSlot {
+    color: var(--strong-50);
+  }
+}
+
+.tone-danger {
+  background: rgba(188, 1, 11, 0.05); // var(--red-70) at 5%
+  border-color: rgba(188, 1, 11, 0.2);
+  color: var(--dark-80);
+
+  .title {
+    color: var(--red-90);
+  }
+
+  .iconSlot {
+    color: var(--red-70);
+  }
+}

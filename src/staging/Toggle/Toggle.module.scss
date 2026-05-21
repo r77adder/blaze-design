@@ -1,0 +1,121 @@
+// Toggle — switch primitive shared across H2 prototypes.
+//
+// Visual: 32×18 track, 14px circular thumb, 1.5px outline that picks up
+// the tone color when the toggle is on. Mirrors the hand-rolled pattern
+// in `prototypes/h2/pages/SeoAeo.tsx` (AutoPublishToggle, ToggleRow).
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--dark-15);
+  background: var(--light-100);
+  cursor: pointer;
+  font-family: 'Sohne', sans-serif;
+  transition: border-color 150ms ease, background-color 150ms ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+}
+
+.bareRoot {
+  // Variant used inline inside another row (no chrome — just the switch).
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--purple);
+    border-radius: 9px;
+  }
+}
+
+.track {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--dark-15);
+  transition: background-color 150ms ease;
+  flex-shrink: 0;
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--light-100);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  transition: left 150ms ease;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dark-60);
+  transition: color 150ms ease;
+}
+
+// ─── On state ──────────────────────────────────────────────────────────
+
+.root.on {
+  background: rgba(124, 92, 252, 0.06); // var(--purple) at 6%
+  border-color: var(--purple);
+
+  .track {
+    background: var(--purple);
+  }
+
+  .thumb {
+    left: 16px;
+  }
+
+  .label {
+    color: var(--purple);
+  }
+}
+
+.bareRoot.on {
+  .track {
+    background: var(--dark-90);
+  }
+
+  .thumb {
+    left: 16px;
+  }
+}
+
+// ─── Tone: success ─────────────────────────────────────────────────────
+
+.tone-success.on {
+  background: rgba(4, 175, 0, 0.06); // var(--green-50) at 6%
+  border-color: var(--green-50);
+
+  .track {
+    background: var(--green-50);
+  }
+
+  .label {
+    color: var(--green-50);
+  }
+}
+
+.bareRoot.tone-success.on {
+  background: transparent;
+  border: none;
+
+  .track {
+    background: var(--green-50);
+  }
+}

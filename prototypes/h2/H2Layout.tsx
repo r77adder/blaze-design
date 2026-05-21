@@ -16,8 +16,8 @@ const LABEL_TO_TOOL_ID: Record<string, ToolId> = Object.fromEntries(
 const PAGE_TITLES: Record<string, string> = {
   '/h2': 'Home',
   '/h2/organic-social': 'Organic Campaigns',
-  '/h2/seo': 'SEO',
-  '/h2/aeo': 'AEO',
+  '/h2/ranking': 'Ranking',
+  '/h2/seo-aeo': 'SEO/AEO',
   '/h2/influencer-content': 'UGC Content',
   '/h2/paid-social': 'Paid Social',
   '/h2/paid-search': 'Paid Search',

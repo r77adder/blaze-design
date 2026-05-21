@@ -39,21 +39,13 @@ export const TOOL_PRICING: Record<ToolId, ToolPricing> = {
       'We auto-generate a 30-day content calendar from your brand profile, schedule it across every channel, and tune cadence weekly based on what lands.',
     monthlyBase: 899,
   },
-  SEO: {
-    toolId: 'SEO',
+  'SEO/AEO': {
+    toolId: 'SEO/AEO',
     label: 'SEO & AEO',
     blurb: 'Rank on Google and get cited by ChatGPT, Perplexity, and other answer engines.',
     benefit:
       'Topic-cluster blogs targeting the queries we found you ranking #4+ on, plus structured data so AI assistants quote you when customers ask.',
     monthlyBase: 899,
-  },
-  AEO: {
-    toolId: 'AEO',
-    label: 'AEO',
-    blurb: 'Be the answer in ChatGPT, Perplexity, Gemini, and Claude.',
-    benefit:
-      'We feed answer engines structured citations of your brand so customer prompts return you, not your competitors.',
-    monthlyBase: 0, // rolled into SEO line in the proposal; kept here for shape
   },
   'UGC Content': {
     toolId: 'UGC Content',
@@ -176,7 +168,7 @@ export const PRICING_LINES: PricingLine[] = [
     key: 'seo',
     label: 'SEO, AEO & Reputation Management',
     blurb: 'Rank on Google, get cited by AI assistants, manage your reviews.',
-    tools: ['SEO', 'AEO', 'Reputation'],
+    tools: ['SEO/AEO', 'Reputation'],
     monthlyBase: 899,
   },
   {

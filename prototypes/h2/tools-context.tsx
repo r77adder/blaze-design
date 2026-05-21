@@ -23,8 +23,7 @@ import {
 
 export type ToolId =
   | 'Organic Campaigns'
-  | 'SEO'
-  | 'AEO'
+  | 'SEO/AEO'
   | 'UGC Content'
   | 'Paid Social'
   | 'Paid Search'
@@ -36,8 +35,7 @@ export type BusinessType = 'services' | 'local' | 'products';
 
 export const DEMAND_GEN_TOOLS: ToolId[] = [
   'Organic Campaigns',
-  'SEO',
-  'AEO',
+  'SEO/AEO',
   'UGC Content',
   'Paid Social',
   'Paid Search',
@@ -49,8 +47,7 @@ export const ALL_TOOLS: ToolId[] = [...DEMAND_GEN_TOOLS, ...CONVERSION_TOOLS];
 
 export const TOOL_DESCRIPTIONS: Record<ToolId, string> = {
   'Organic Campaigns': 'Schedule and publish to Instagram, TikTok, LinkedIn, and more.',
-  SEO: 'Rank on Google with topic-cluster blog content.',
-  AEO: 'Get cited by ChatGPT, Perplexity, and other answer engines. Includes local Map Ranking for Google Business listings.',
+  'SEO/AEO': 'Rank on Google with topic-cluster blog content AND get cited by ChatGPT, Perplexity, and other answer engines. Includes local Map Ranking for Google Business listings.',
   'UGC Content': 'Generate AI avatar videos and creator-style ad content.',
   'Paid Social': 'Run and optimize paid campaigns across Meta, TikTok, and LinkedIn.',
   'Paid Search': 'Manage Google Ads keywords, bids, and conversion tracking.',
@@ -61,8 +58,7 @@ export const TOOL_DESCRIPTIONS: Record<ToolId, string> = {
 
 export const TOOL_LABEL: Record<ToolId, string> = {
   'Organic Campaigns': 'Organic Campaigns',
-  SEO: 'SEO',
-  AEO: 'AEO',
+  'SEO/AEO': 'SEO/AEO',
   'UGC Content': 'UGC Content',
   'Paid Social': 'Paid Social',
   'Paid Search': 'Paid Search',
@@ -96,8 +92,7 @@ export const BUSINESS_TYPES: { id: BusinessType; label: string; description: str
 export const PRESETS: Record<BusinessType, ToolId[]> = {
   services: [
     'Organic Campaigns',
-    'SEO',
-    'AEO',
+    'SEO/AEO',
     'UGC Content',
     'Paid Search',
     'Landing Pages',
@@ -106,7 +101,7 @@ export const PRESETS: Record<BusinessType, ToolId[]> = {
   ],
   local: [
     'Organic Campaigns',
-    'AEO',
+    'SEO/AEO',
     'UGC Content',
     'Paid Social',
     'Landing Pages',
@@ -115,8 +110,7 @@ export const PRESETS: Record<BusinessType, ToolId[]> = {
   ],
   products: [
     'Organic Campaigns',
-    'SEO',
-    'AEO',
+    'SEO/AEO',
     'UGC Content',
     'Paid Social',
     'Paid Search',

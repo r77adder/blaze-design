@@ -35,7 +35,7 @@ import type { Icon } from '@/components';
  *                month-at-a-glance.
  *
  * The host passes its own `pathname` so the dev-state context can key the
- * cold/steady toggle to the parent page (e.g. `/h2/aeo`) rather than the
+ * cold/steady toggle to the parent page (e.g. `/h2/seo-aeo`) rather than the
  * removed `/h2/map-ranking`.
  *
  * On mount: if localStorage[STORAGE_KEY] is set, jumps straight to 'home'.
