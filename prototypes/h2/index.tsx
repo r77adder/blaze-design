@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import { ModalStack } from '@/components';
 import { Toaster, ToasterProvider } from '@/staging';
 import { H2Layout } from './H2Layout';
 import ScorecardPrototype from '../scorecard/index';
@@ -17,8 +18,9 @@ import { MultiChangeRoute } from './pages/MultiChange';
 import { PaidSearchRoute } from './pages/PaidSearch';
 import { PaidSocialRoute as PaidSocialPageRoute } from './pages/PaidSocial';
 import { ReputationRoute } from './pages/Reputation';
-import { SeoRoute } from './pages/Seo';
-import { AeoRoute } from './pages/Aeo';
+import { RankingRoute } from './pages/Ranking';
+import { SeoAeoRoute } from './pages/SeoAeo';
+import { Placeholder } from './pages/Placeholder';
 import { DevStateProvider, useDevState } from './dev-state-context';
 import { DevStatePanel } from './DevStatePanel';
 import { PaidAdsColdView } from './pages/ColdViews';
@@ -52,11 +54,13 @@ export default function H2() {
       <OnboardingProvider>
         <BrandKitProvider>
           <ToasterProvider>
-            <DevStateProvider>
-              <H2RoutedShell />
-              <DevStatePanel />
-            </DevStateProvider>
-            <Toaster />
+            <ModalStack>
+              <DevStateProvider>
+                <H2RoutedShell />
+                <DevStatePanel />
+              </DevStateProvider>
+              <Toaster />
+            </ModalStack>
           </ToasterProvider>
         </BrandKitProvider>
       </OnboardingProvider>
@@ -92,8 +96,8 @@ function H2RoutedShell() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/organic-social" element={<OrganicSocialRoute />} />
-      <Route path="/seo" element={<SeoRoute />} />
-      <Route path="/aeo" element={<AeoRoute />} />
+      <Route path="/ranking" element={<RankingRoute />} />
+      <Route path="/seo-aeo" element={<SeoAeoRoute />} />
       <Route path="/influencer-content" element={<InfluencerContentRoute />} />
       <Route path="/paid-social" element={<PaidSocialRoute />} />
       <Route path="/paid-search" element={<PaidSearchRoute />} />

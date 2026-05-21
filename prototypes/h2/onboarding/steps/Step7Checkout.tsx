@@ -26,8 +26,8 @@ type CheckoutPhase = 'form' | 'processing' | 'success';
 const COLD_ON_FINISH = [
   '/h2',
   '/h2/organic-social',
-  '/h2/seo',
-  '/h2/aeo',
+  '/h2/seo-aeo',
+  '/h2/ranking',
   '/h2/influencer-content',
   '/h2/paid-social',
   '/h2/paid-search',

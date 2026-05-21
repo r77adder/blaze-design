@@ -2,8 +2,7 @@ import { type ComponentType } from 'react';
 import { Button, Heading, Text } from '@/components';
 import ArrowRight from '@/icons/20/ArrowRight';
 import Calendar1 from '@/icons/20/Calendar1';
-import FileSearch1 from '@/icons/20/FileSearch1';
-import Stars from '@/icons/20/Stars';
+import Globe from '@/icons/20/Globe';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
 import Cursor04 from '@/icons/20/Cursor04';
 import Google from '@/icons/20/Google';
@@ -17,8 +16,7 @@ import { GAP_AND_FIX } from '../gap-and-fix-data';
 
 const TOOL_ICONS: Record<ToolId, ComponentType<{ size?: number; color?: string }>> = {
   'Organic Campaigns': Calendar1,
-  SEO: FileSearch1,
-  AEO: Stars,
+  'SEO/AEO': Globe,
   'UGC Content': UserProfileCircle,
   'Paid Social': Cursor04,
   'Paid Search': Google,

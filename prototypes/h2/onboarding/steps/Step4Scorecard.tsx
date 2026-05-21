@@ -57,7 +57,7 @@ export function Step4Scorecard() {
                 lineHeight: 1.55,
               }}
             >
-              Reputation and SEO are your strongest plays. Paid social and AEO are wide open — Blaze closes both inside 90 days.
+              Reputation is your strongest play. SEO/AEO visibility and paid social are wide open — Blaze closes both inside 90 days.
             </Text>
           </div>
 

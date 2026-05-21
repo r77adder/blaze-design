@@ -62,3 +62,12 @@ export type {
   ActiveToast,
   ToastContextValue,
 } from './Toaster';
+
+export { Toggle } from './Toggle';
+export type { ToggleProps, ToggleTone, ToggleSize } from './Toggle';
+
+export { Callout } from './Callout';
+export type { CalloutProps, CalloutTone } from './Callout';
+
+export { Tabs } from './Tabs';
+export type { TabsRootProps, TabsTabProps, TabsVariant } from './Tabs';
