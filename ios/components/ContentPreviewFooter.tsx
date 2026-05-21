@@ -50,9 +50,8 @@ export interface ContentPreviewFooterProps {
 }
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const FONT    = "'Sohne', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif";
+const FONT    = 'var(--ios-font)';
 const DARK_4  = 'rgba(0,0,0,0.04)';
-const DARK_8  = 'rgba(0,0,0,0.08)';
 const DARK_60 = 'rgba(0,0,0,0.6)';
 const DARK_80 = 'rgba(0,0,0,0.8)';
 const DARK_90 = 'rgba(0,0,0,0.9)';
@@ -63,8 +62,8 @@ const YELLOW  = '#ffc800';
 // ── Glass pill shared style ───────────────────────────────────────────────────
 const GLASS: React.CSSProperties = {
   background: 'rgba(255,255,255,0.6)',
-  backdropFilter: 'blur(4px)',
-  WebkitBackdropFilter: 'blur(4px)',
+  backdropFilter: 'var(--ios-glass-blur)',
+  WebkitBackdropFilter: 'var(--ios-glass-blur)',
   boxShadow: '0px 0px 32px 0px rgba(0,0,0,0.08)',
   borderRadius: 99,
   overflow: 'hidden',
@@ -295,10 +294,12 @@ export function ContentPreviewFooter({
   // ── Middle pill buttons ───────────────────────────────────────────────────
   const renderMiddleButtons = () => {
     if (isPosted) {
+      const postColor = variant === 'posted-failed' ? DARK_80 : DARK_90;
       return (
         <PillButton
-          icon={<IconSend color={DARK_90} />}
+          icon={<IconSend color={postColor} />}
           label="Post"
+          labelColor={postColor}
           onClick={onPrimaryAction}
           highlightBg={primaryHighlight}
           badge={primaryBadge}
@@ -312,13 +313,11 @@ export function ContentPreviewFooter({
           <PillButton
             icon={<IconXCircle color={RED} />}
             label="Don't Post"
-            labelColor={RED}
             onClick={onSecondaryAction}
           />
           <PillButton
             icon={<IconApprovals color={GREEN} />}
             label="Approve"
-            labelColor={GREEN}
             onClick={onPrimaryAction}
           />
           <PillButton
@@ -343,7 +342,7 @@ export function ContentPreviewFooter({
 
     // approved-* variants
     const primaryLabel = variant === 'approved-0-connected' ? 'Connect' : 'Post';
-    const primaryColor = variant === 'approved-0-connected' ? DARK_80 : DARK_90;
+    const primaryColor = variant === 'approved-alert' ? DARK_80 : DARK_90;
 
     return (
       <>
