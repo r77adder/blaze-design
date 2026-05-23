@@ -130,7 +130,7 @@ const DEFAULT_DATA: FirstCampaignData = {
       topic: 'Brewing temperature matters',
       contentType: 'still',
       referenceImage:
-        'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=320&q=80',
+        'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=320&q=80',
     },
     {
       id: 'seed-2',
@@ -138,7 +138,7 @@ const DEFAULT_DATA: FirstCampaignData = {
       topic: 'Why we roast in small batches',
       contentType: 'carousel',
       referenceImage:
-        'https://images.unsplash.com/photo-1488741222121-fc9efa90f25f?w=320&q=80',
+        'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=320&q=80',
     },
     {
       id: 'seed-3',
@@ -146,7 +146,7 @@ const DEFAULT_DATA: FirstCampaignData = {
       topic: 'Meet our newest single-origin',
       contentType: 'video',
       referenceImage:
-        'https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=320&q=80',
+        'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=320&q=80',
     },
     {
       id: 'seed-4',
@@ -154,7 +154,7 @@ const DEFAULT_DATA: FirstCampaignData = {
       topic: 'From bean to brew in 60 seconds',
       contentType: 'short-video',
       referenceImage:
-        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=320&q=80',
+        'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=320&q=80',
     },
   ],
 };

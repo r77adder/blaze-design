@@ -769,7 +769,7 @@ interface SidebarProps {
   onReassign: (name: string) => void;
 }
 
-const FAKE_OWNERS = ['Renée Park', 'Jordan Fitzpatrick', 'Devi Chowdhury'];
+const FAKE_OWNERS = ['Matthew Tims', 'John Bunnell', 'Marci Everett'];
 
 function Sidebar({
   lead,

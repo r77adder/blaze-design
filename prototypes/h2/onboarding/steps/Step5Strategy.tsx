@@ -35,7 +35,7 @@ export function Step5Strategy() {
         level={1}
         style={{ fontSize: 32, letterSpacing: '-0.4px', lineHeight: 1.2, marginBottom: 8 }}
       >
-        Here's how Blaze fixes the gaps
+        Here's the path back to a healthy score.
       </Heading>
       <Text
         variant="primary"

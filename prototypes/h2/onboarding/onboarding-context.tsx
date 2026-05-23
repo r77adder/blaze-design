@@ -49,24 +49,24 @@ export interface BusinessProfile {
 }
 
 const DEFAULT_PROFILE: BusinessProfile = {
-  name: 'Shereen Hoban Coaching',
+  name: 'CertaPro Painters of Austin',
   type: 'services',
   elevatorPitch:
-    'Shereen Hoban is a woman veteran-owned graphic design agency that transcends traditional design services by combining military precision with creative storytelling. Operating at the intersection of strategic marketing design and specialized product development, SHD serves as both a creative partner and a mission-driven advocate for underserved communities.',
-  audienceAgeMin: 18,
-  audienceAgeMax: 100,
+    'CertaPro Painters of Austin is a locally-owned residential and commercial painting contractor serving the greater Austin metro for over a decade. Backed by the national CertaPro network and led by owner John Bunnell, the team pairs trained crews and a job-site certified process with concierge service — color consultation, prep, paint, cleanup — so homeowners and property managers get a finish they can show off and a project that wraps on schedule.',
+  audienceAgeMin: 35,
+  audienceAgeMax: 65,
   audienceGender: 'All Genders',
-  audienceLocations: ['United States'],
-  contentAge: '18-24',
+  audienceLocations: ['Austin, TX metro'],
+  contentAge: '35-44',
   contentGender: 'All Genders',
   contentEthnicity: 'Multicultural/Diverse Group',
   primaryLanguage: 'English (US)',
   positioningPrimary:
-    '"The veteran designer who understands your mission" — leveraging unique military background to connect with purpose-driven organizations',
+    '"Your Local Painters" — a national-quality painting brand with deep Austin neighborhood expertise',
   positioningSecondary:
-    '"Your strategic design partner from concept to completion" — emphasizing comprehensive, end-to-end service capability',
+    '"We make the process easy and convenient" — color consultation, scheduling, prep, paint, cleanup handled end-to-end',
   positioningTertiary:
-    '"Empowering communities through purposeful design" — highlighting social impact focus',
+    '"Residential + commercial under one crew" — homeowners, HOAs, healthcare, restaurants, and offices served by the same trained team',
 };
 
 interface OnboardingState {

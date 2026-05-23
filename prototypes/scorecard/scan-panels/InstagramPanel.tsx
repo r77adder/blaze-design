@@ -1,21 +1,21 @@
 // Instagram phone-frame mockup. Used for the "Reviewing social media
 // presence" scan step. Avatar header + follower stats + story highlights +
-// 3-column post grid (Unsplash placeholders). The grid posts fade in
-// sequentially so the panel feels alive while the scanner "scrolls".
+// 3-column post grid (real CertaPro Austin project photos). The grid posts
+// fade in sequentially so the panel feels alive while the scanner "scrolls".
 
 const POSTS = [
-  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=200&q=75',
-  'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=200&q=75',
-  'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=200&q=75',
-  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&q=75',
-  'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=200&q=75',
-  'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=200&q=75',
-  'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=200&q=75&fit=crop&crop=top',
-  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=200&q=75&fit=crop&crop=bottom',
-  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&q=75&fit=crop&crop=top',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/cabinet-staining.jpg',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2022/03/white-painted-brick-home-686x353.jpg',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/color_consultation_certapro_preview-686x353.jpg',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/siding-painting.jpg',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2025/01/After-4-rotated.jpeg',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/deck-staining-1.jpg',
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/power-washing-2.jpg',
 ];
 
-const HIGHLIGHTS = ['The Crew', 'Repairs', 'Specials', 'Tips', 'BTS'];
+const HIGHLIGHTS = ['Cabinets', 'Exteriors', 'Crew', 'Specials', 'Before/After'];
 
 export function InstagramPanel() {
   return (
@@ -80,7 +80,7 @@ export function InstagramPanel() {
             }}
           >
             <span style={{ fontSize: 16, color: 'var(--dark-90)' }}>‹</span>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>brightdayhvac</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>certapro_austin</span>
           </div>
 
           {/* profile header */}
@@ -121,7 +121,7 @@ export function InstagramPanel() {
                       fontWeight: 700,
                     }}
                   >
-                    BD
+                    CP
                   </div>
                 </div>
               </div>
@@ -129,9 +129,9 @@ export function InstagramPanel() {
               {/* stats */}
               <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
                 {[
-                  { n: '47', l: 'posts' },
-                  { n: '892', l: 'followers' },
-                  { n: '214', l: 'following' },
+                  { n: '124', l: 'posts' },
+                  { n: '1,840', l: 'followers' },
+                  { n: '286', l: 'following' },
                 ].map((s) => (
                   <div key={s.l}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{s.n}</div>
@@ -141,11 +141,11 @@ export function InstagramPanel() {
               </div>
             </div>
 
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--dark-90)' }}>Bright Day HVAC</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--dark-90)' }}>CertaPro Painters of Austin</div>
             <div style={{ fontSize: 10, color: 'var(--dark-60)', lineHeight: 1.4 }}>
-              Local AC + heating · Austin, TX 🌞
+              Austin&rsquo;s painters · Residential + Commercial 🎨
               <br />
-              Same-day repair · brightdayhvac.com
+              Free estimates · 187 ★ · certapro.com/austin
             </div>
           </div>
 
@@ -167,7 +167,7 @@ export function InstagramPanel() {
                     color: 'var(--dark-60)',
                   }}
                 >
-                  {['🔧', '❄', '🎉', '💡', '👷'][i]}
+                  {['🪵', '🏠', '👷', '🎉', '🎨'][i]}
                 </div>
                 <div style={{ fontSize: 9, color: 'var(--dark-60)', marginTop: 2 }}>{h}</div>
               </div>

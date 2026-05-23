@@ -81,20 +81,20 @@ const MATRIX: Record<BaseUnit, Record<Channel, MatrixCell>> = {
 };
 
 const FEED: ActivityItem[] = [
-  { id: 'f1',  type: 'blog',   label: 'Blog Post',    title: 'The 5 Executive Coaching Certifications That Still Matter',        channel: 'SEO',        date: 'May 14', status: 'Published', statusTone: 'success' },
-  { id: 'f2',  type: 'review', label: 'Review Reply', title: 'Replied to Sarah M. — ★★★★★ "Changed how I approach everything"', channel: 'Reputation', date: 'May 14', status: 'Replied',   statusTone: 'success' },
-  { id: 'f3',  type: 'faq',    label: 'FAQ Section',  title: 'FAQ added to "Executive Coaching vs Mentoring" post (6 Qs)',       channel: 'AEO',        date: 'May 13', status: 'Published', statusTone: 'success' },
-  { id: 'f4',  type: 'review', label: 'Review Reply', title: 'Replied to Marcus D. — ★★★★★ "Best investment I\'ve made"',       channel: 'Reputation', date: 'May 13', status: 'Replied',   statusTone: 'success' },
-  { id: 'f5',  type: 'gbp',    label: 'GBP Post',     title: 'Google Business Profile — "Spring Wellness Week" post',           channel: 'Map',        date: 'May 12', status: 'Live',      statusTone: 'success' },
-  { id: 'f6',  type: 'blog',   label: 'Blog Post',    title: 'What Is a Performance Coach? (And Why You Might Need One)',       channel: 'SEO',        date: 'May 10', status: 'Published', statusTone: 'success' },
-  { id: 'f7',  type: 'faq',    label: 'FAQ Section',  title: 'FAQ added to "Performance Coaching for Startups" (4 Qs)',         channel: 'AEO',        date: 'May 10', status: 'Published', statusTone: 'success' },
-  { id: 'f8',  type: 'review', label: 'Review Reply', title: 'Replied to James T. — ★★★★☆ "Great sessions, worth every cent"', channel: 'Reputation', date: 'May 9',  status: 'Replied',   statusTone: 'success' },
-  { id: 'f9',  type: 'gbp',    label: 'GBP Post',     title: 'Google Business Profile — "Meet Your Coach: Dr. Anaya Patel"',    channel: 'Map',        date: 'May 7',  status: 'Live',      statusTone: 'success' },
-  { id: 'f10', type: 'blog',   label: 'Blog Post',    title: 'How Performance Coaching Helps Startup Founders Scale Faster',    channel: 'SEO',        date: 'May 5',  status: 'Published', statusTone: 'success' },
-  { id: 'f11', type: 'review', label: 'Review Reply', title: 'Replied to Elena R. — ★★★★★ "Transformed my leadership style"',  channel: 'Reputation', date: 'May 4',  status: 'Replied',   statusTone: 'success' },
-  { id: 'f12', type: 'faq',    label: 'FAQ Section',  title: 'FAQ added to "Complete Guide to Performance Coaching" (8 Qs)',    channel: 'AEO',        date: 'May 3',  status: 'Published', statusTone: 'success' },
-  { id: 'f13', type: 'gbp',    label: 'GBP Post',     title: 'Google Business Profile — "Client Success Story: 6 Months In"',  channel: 'Map',        date: 'May 1',  status: 'Live',      statusTone: 'success' },
-  { id: 'f14', type: 'blog',   label: 'Blog Post',    title: '7 Things to Look For When Hiring a Performance Coach',            channel: 'SEO',        date: 'Apr 30', status: 'Published', statusTone: 'success' },
+  { id: 'f1',  type: 'blog',   label: 'Blog post',    title: 'The 7 best painters in Austin for 2026',                                    channel: 'SEO',        date: 'May 14', status: 'Published', statusTone: 'success' },
+  { id: 'f2',  type: 'review', label: 'Review reply', title: 'Replied to Sarah M. — ★★★★★ "Crew showed up on time and cleaned up perfectly"', channel: 'Reputation', date: 'May 14', status: 'Replied',   statusTone: 'success' },
+  { id: 'f3',  type: 'faq',    label: 'FAQ section',  title: 'FAQ added to "Cabinet painting cost guide" post (6 Qs)',                    channel: 'AEO',        date: 'May 13', status: 'Published', statusTone: 'success' },
+  { id: 'f4',  type: 'review', label: 'Review reply', title: 'Replied to Marcus D. — ★★★★★ "Painted our exterior in 4 days, on budget"', channel: 'Reputation', date: 'May 13', status: 'Replied',   statusTone: 'success' },
+  { id: 'f5',  type: 'gbp',    label: 'GBP post',     title: 'Google Business Profile — "Exterior colors for Texas heat" post',          channel: 'Map',        date: 'May 12', status: 'Live',      statusTone: 'success' },
+  { id: 'f6',  type: 'blog',   label: 'Blog post',    title: 'How to pick interior paint colors for an Austin home',                      channel: 'SEO',        date: 'May 10', status: 'Published', statusTone: 'success' },
+  { id: 'f7',  type: 'faq',    label: 'FAQ section',  title: 'FAQ added to "Exterior painting in Texas heat" (4 Qs)',                     channel: 'AEO',        date: 'May 10', status: 'Published', statusTone: 'success' },
+  { id: 'f8',  type: 'review', label: 'Review reply', title: 'Replied to James T. — ★★★★☆ "Color consultation was the difference"',     channel: 'Reputation', date: 'May 9',  status: 'Replied',   statusTone: 'success' },
+  { id: 'f9',  type: 'gbp',    label: 'GBP post',     title: 'Google Business Profile — "Meet Matthew — VP of Residential Services"',    channel: 'Map',        date: 'May 7',  status: 'Live',      statusTone: 'success' },
+  { id: 'f10', type: 'blog',   label: 'Blog post',    title: 'Cabinet refinishing vs replacement — what it actually costs in Austin',     channel: 'SEO',        date: 'May 5',  status: 'Published', statusTone: 'success' },
+  { id: 'f11', type: 'review', label: 'Review reply', title: 'Replied to Elena R. — ★★★★★ "Cabinets look factory-fresh"',                channel: 'Reputation', date: 'May 4',  status: 'Replied',   statusTone: 'success' },
+  { id: 'f12', type: 'faq',    label: 'FAQ section',  title: 'FAQ added to "Complete guide to HOA repaint projects" (8 Qs)',              channel: 'AEO',        date: 'May 3',  status: 'Published', statusTone: 'success' },
+  { id: 'f13', type: 'gbp',    label: 'GBP post',     title: 'Google Business Profile — "HOA project — 14 buildings in Round Rock"',     channel: 'Map',        date: 'May 1',  status: 'Live',      statusTone: 'success' },
+  { id: 'f14', type: 'blog',   label: 'Blog post',    title: '7 things to look for when hiring an Austin painter',                        channel: 'SEO',        date: 'Apr 30', status: 'Published', statusTone: 'success' },
 ];
 
 // Channel color-coding: text + tinted background. All values resolve to

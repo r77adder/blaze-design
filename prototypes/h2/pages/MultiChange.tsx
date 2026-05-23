@@ -58,13 +58,13 @@ const PURPLE_TEXT = '#7b1fbe';
 const GREEN = '#20a14f';
 
 const SEED_CAPTION_VERSIONS = [
-  'Discover the joyful playtime moments at Houston Boxer Rescue where each wag of a tail brings hope and happiness. These resilient boxers showcase their playful nature…',
-  'These resilient dogs remind us that joy lives in small moments…',
-  'Every tail wag tells a story of hope. Meet our rescued boxers.',
+  'Discover the difference real prep makes. At CertaPro Painters of Austin, every exterior repaint starts with a power wash, scrape, and primer pass — that is why our finishes outlast the Texas sun…',
+  'Real prep is what separates a five-year paint job from a one-year one. Here is how we do it…',
+  'Every Austin paint job starts with prep. That is the difference.',
 ];
 
 const SEED_IMAGE_VERSIONS = [
-  'Breathe deeply, savor every moment (dark serif overlay)',
+  'Your local painters. Built for Texas heat. (warm serif overlay)',
   'Brighter tone, lighter background, minimal text',
 ];
 
@@ -255,7 +255,7 @@ function Topbar() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--dark-80)' }}>
-        <span>Our BBQ Journey: From Humble Beginnings to Culinary Innovation</span>
+        <span>Our exterior playbook: Why prep makes Austin paint jobs last</span>
         <div
           style={{
             background: 'rgba(162,41,254,0.08)',
@@ -577,10 +577,10 @@ function PostCard({
             fontWeight: 600,
           }}
         >
-          RH
+          CP
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#101419' }}>Radiant Health</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#101419' }}>CertaPro Painters of Austin</div>
           <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Jun 26 at 3:30 · 🌐</div>
         </div>
       </div>
@@ -624,7 +624,7 @@ function PostCard({
             position: 'absolute',
             inset: 0,
             background:
-              "url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600') center/cover",
+              "url('https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600') center/cover",
             opacity: 0.55,
           }}
         />
@@ -648,8 +648,8 @@ function PostCard({
             outline: imageTargeted ? '1.5px solid rgba(162,41,254,0.5)' : undefined,
           }}
         >
-          Breathe deeply,<br />
-          savor every moment
+          Your local painters.<br />
+          Built for Texas heat.
         </div>
         {imageVersionCount > 0 && (
           <div

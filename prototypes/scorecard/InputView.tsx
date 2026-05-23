@@ -76,26 +76,26 @@ export function InputView({ onRun }: InputViewProps) {
         padding: 28,
       }}>
         <Field label="Your website" hint="(required)">
-          <Input defaultValue="https://brightdayhvac.com" />
+          <Input defaultValue="https://certapro.com/austin/" />
         </Field>
 
         <Field label="Google Business Profile" hint="(business name + city works)">
-          <Input defaultValue="Bright Day HVAC — Austin, TX" />
+          <Input defaultValue="CertaPro Painters of Austin — Austin, TX" />
         </Field>
 
         <Field label="Social handles" hint="(any platforms you use)">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-            <Input placeholder="Instagram" defaultValue="@brightdayhvac" />
-            <Input placeholder="Facebook" defaultValue="BrightDayHVAC" />
+            <Input placeholder="Instagram" defaultValue="@certapro_austin" />
+            <Input placeholder="Facebook" defaultValue="CertaProPaintersAustin" />
             <Input placeholder="TikTok" />
-            <Input placeholder="LinkedIn" defaultValue="bright-day-hvac" />
+            <Input placeholder="LinkedIn" defaultValue="certapro-austin" />
           </div>
         </Field>
 
         <Field label="Review profiles" hint="(URLs or platform names)">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Input placeholder="Google reviews URL" defaultValue="auto-detect from GBP" />
-            <Input placeholder="Yelp / Angi / vertical-specific" defaultValue="Yelp, Angi" />
+            <Input placeholder="Yelp / BBB / vertical-specific" defaultValue="Yelp, BBB" />
           </div>
         </Field>
 

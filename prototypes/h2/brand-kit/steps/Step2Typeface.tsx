@@ -288,7 +288,7 @@ function InstagramPreview({ typeface }: { typeface: TypefaceOption }) {
           width: '100%',
           aspectRatio: '1 / 1',
           backgroundImage:
-            "url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=720&q=85')",
+            "url('https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=720&q=85')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

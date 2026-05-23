@@ -1,10 +1,11 @@
 /**
  * Static data for the Business Scorecard tab on /h2/tools.
  *
- * The workspace is "Radiant Health" (wellness), so competitors are
- * wellness/health brands rather than the BBQ shops in the source mockup.
- * Scores are tuned so Radiant Health is behind on paid/social and ahead
- * on reputation/website — leaves room for the page to feel like a story.
+ * The workspace is "CertaPro Painters of Austin" (residential + commercial
+ * painting contractor), so competitors are real Austin-area painters rather
+ * than the BBQ shops in the source mockup. Scores are tuned so CertaPro is
+ * behind on paid/social and ahead on reputation/website — leaves room for
+ * the page to feel like a story.
  */
 
 export type CompetitorId = 'radiant' | 'pure' | 'calm' | 'wellspring' | 'vital';
@@ -20,12 +21,15 @@ export interface Competitor {
   self?: boolean;
 }
 
+// NOTE: IDs are kept as the original keys ('pure', 'calm', 'wellspring',
+// 'vital', 'radiant') so the rest of the file's records keep typing — the
+// labels are what matter to the UI.
 export const COMPETITORS: Competitor[] = [
-  { id: 'pure', name: 'Pure Vitality Co.', initial: 'P', color: '#7c5cfc' },
-  { id: 'calm', name: 'Calm + Co', initial: 'C', color: '#0179cf' },
-  { id: 'wellspring', name: 'Wellspring Health', initial: 'W', color: '#04af00' },
-  { id: 'vital', name: 'Vital Bloom', initial: 'V', color: '#e65cac' },
-  { id: 'radiant', name: 'Radiant Health', initial: 'R', color: '#fcb728', self: true },
+  { id: 'pure', name: 'Five Star Painting of South Austin', initial: 'F', color: '#7c5cfc' },
+  { id: 'calm', name: 'Paper Moon Painting', initial: 'P', color: '#0179cf' },
+  { id: 'wellspring', name: 'WOW 1 DAY PAINTING Austin', initial: 'W', color: '#04af00' },
+  { id: 'vital', name: 'Austin Custom Painting', initial: 'A', color: '#e65cac' },
+  { id: 'radiant', name: 'CertaPro Painters of Austin', initial: 'C', color: '#fcb728', self: true },
 ];
 
 export type Platform = 'instagram' | 'facebook' | 'linkedin' | 'tiktok' | 'x' | 'youtube';
@@ -52,11 +56,11 @@ export const SECTION_META = {
 
 /** Map of which platforms each competitor is active on. */
 export const SOCIAL_PRESENCE: Record<CompetitorId, Record<Platform, boolean>> = {
-  pure:       { instagram: true,  facebook: true,  linkedin: true,  tiktok: false, x: true,  youtube: true  },
-  calm:       { instagram: true,  facebook: true,  linkedin: false, tiktok: true,  x: true,  youtube: true  },
-  wellspring: { instagram: true,  facebook: true,  linkedin: true,  tiktok: true,  x: true,  youtube: true  },
-  vital:      { instagram: true,  facebook: true,  linkedin: true,  tiktok: true,  x: true,  youtube: true  },
-  radiant:    { instagram: true,  facebook: true,  linkedin: false, tiktok: false, x: false, youtube: false },
+  pure:       { instagram: true,  facebook: true,  linkedin: true,  tiktok: true,  x: false, youtube: true  },
+  calm:       { instagram: true,  facebook: true,  linkedin: false, tiktok: false, x: false, youtube: false },
+  wellspring: { instagram: true,  facebook: true,  linkedin: false, tiktok: true,  x: false, youtube: true  },
+  vital:      { instagram: true,  facebook: true,  linkedin: true,  tiktok: false, x: false, youtube: false },
+  radiant:    { instagram: true,  facebook: true,  linkedin: true,  tiktok: false, x: false, youtube: false },
 };
 
 export interface PlatformMetrics {
@@ -73,7 +77,7 @@ export interface PlatformMetrics {
     engagementPct: number;
     impressionsK: number;
   };
-  /** Deltas for the workspace (Radiant Health) on this platform, since starting Blaze. */
+  /** Deltas for the workspace (CertaPro Austin) on this platform, since starting Blaze. */
   selfDeltas: {
     postsPerWeek: number;
     followersK: number;
@@ -84,57 +88,57 @@ export interface PlatformMetrics {
 
 export const PLATFORM_METRICS: Record<Platform, PlatformMetrics> = {
   instagram: {
-    headline: "Your Instagram presence has room to grow — here's where to focus.",
-    postsPerWeek:  [5, 3, 2, 1, 0],
-    followersK:    [334, 125, 43, 36, 32],
-    engagementPct: [1.25, 0.07, 0.03, 0.01, 0.0],
-    impressionsK:  [180, 95, 28, 12, 0],
-    averages: { postsPerWeek: 3, followersK: 135, engagementPct: 0.34, impressionsK: 79 },
-    selfDeltas: { postsPerWeek: 0, followersK: 4, engagementPct: 0.0, impressionsK: 0 },
+    headline: "Your Instagram presence has room to grow — homeowners shop before-and-afters here.",
+    postsPerWeek:  [4, 2, 5, 2, 1],
+    followersK:    [12.4, 6.8, 18.2, 4.1, 2.6],
+    engagementPct: [1.42, 0.88, 2.15, 0.62, 0.34],
+    impressionsK:  [38, 22, 64, 14, 6],
+    averages: { postsPerWeek: 3, followersK: 8.8, engagementPct: 1.08, impressionsK: 29 },
+    selfDeltas: { postsPerWeek: 1, followersK: 0.4, engagementPct: 0.08, impressionsK: 2 },
   },
   facebook: {
-    headline: "Facebook is a missed channel for you — competitors are still posting consistently.",
-    postsPerWeek:  [3, 4, 2, 2, 1],
-    followersK:    [212, 156, 88, 64, 41],
-    engagementPct: [0.62, 0.41, 0.18, 0.12, 0.04],
-    impressionsK:  [120, 88, 36, 22, 8],
-    averages: { postsPerWeek: 3, followersK: 130, engagementPct: 0.33, impressionsK: 67 },
-    selfDeltas: { postsPerWeek: 1, followersK: 3, engagementPct: 0.02, impressionsK: 5 },
+    headline: "Facebook is still where Austin neighborhood groups vet contractors — competitors are ahead.",
+    postsPerWeek:  [3, 4, 2, 2, 2],
+    followersK:    [9.6, 14.2, 7.1, 3.8, 5.4],
+    engagementPct: [0.74, 0.92, 0.41, 0.28, 0.36],
+    impressionsK:  [22, 31, 16, 9, 12],
+    averages: { postsPerWeek: 3, followersK: 8.0, engagementPct: 0.54, impressionsK: 18 },
+    selfDeltas: { postsPerWeek: 1, followersK: 0.3, engagementPct: 0.06, impressionsK: 3 },
   },
   linkedin: {
-    headline: "You're not on LinkedIn yet — wellness B2B audiences live here.",
-    postsPerWeek:  [2, 0, 3, 1, 0],
-    followersK:    [18, 0, 24, 8, 0],
-    engagementPct: [1.8, 0, 2.1, 0.9, 0],
-    impressionsK:  [12, 0, 18, 6, 0],
-    averages: { postsPerWeek: 2, followersK: 13, engagementPct: 1.2, impressionsK: 9 },
-    selfDeltas: { postsPerWeek: 0, followersK: 0, engagementPct: 0, impressionsK: 0 },
+    headline: "LinkedIn matters for HOA boards and facilities directors — your presence is light.",
+    postsPerWeek:  [1, 0, 0, 2, 1],
+    followersK:    [1.2, 0, 0, 2.4, 0.9],
+    engagementPct: [0.9, 0, 0, 1.4, 0.5],
+    impressionsK:  [3, 0, 0, 8, 2],
+    averages: { postsPerWeek: 1, followersK: 0.9, engagementPct: 0.56, impressionsK: 3 },
+    selfDeltas: { postsPerWeek: 0, followersK: 0.1, engagementPct: 0, impressionsK: 0 },
   },
   tiktok: {
-    headline: "TikTok is where wellness content is winning — and you're not there.",
-    postsPerWeek:  [0, 4, 5, 3, 0],
-    followersK:    [0, 84, 142, 56, 0],
-    engagementPct: [0, 3.4, 4.1, 2.8, 0],
-    impressionsK:  [0, 240, 380, 165, 0],
-    averages: { postsPerWeek: 3, followersK: 71, engagementPct: 2.6, impressionsK: 196 },
+    headline: "Time-lapse paint videos crush on TikTok — and you're not posting yet.",
+    postsPerWeek:  [3, 0, 6, 0, 0],
+    followersK:    [8.4, 0, 24.1, 0, 0],
+    engagementPct: [3.1, 0, 4.6, 0, 0],
+    impressionsK:  [62, 0, 140, 0, 0],
+    averages: { postsPerWeek: 2, followersK: 6.5, engagementPct: 1.54, impressionsK: 40 },
     selfDeltas: { postsPerWeek: 0, followersK: 0, engagementPct: 0, impressionsK: 0 },
   },
   x: {
-    headline: "X is low-volume for wellness — most of your competitors here barely post.",
-    postsPerWeek:  [2, 3, 1, 2, 0],
-    followersK:    [16, 22, 8, 12, 0],
-    engagementPct: [0.4, 0.6, 0.2, 0.3, 0],
-    impressionsK:  [8, 12, 4, 6, 0],
-    averages: { postsPerWeek: 2, followersK: 15, engagementPct: 0.38, impressionsK: 8 },
+    headline: "X is low-volume for painting contractors — neither you nor competitors are posting.",
+    postsPerWeek:  [0, 0, 0, 0, 0],
+    followersK:    [0.3, 0, 0, 0, 0],
+    engagementPct: [0.1, 0, 0, 0, 0],
+    impressionsK:  [0, 0, 0, 0, 0],
+    averages: { postsPerWeek: 0, followersK: 0.06, engagementPct: 0.02, impressionsK: 0 },
     selfDeltas: { postsPerWeek: 0, followersK: 0, engagementPct: 0, impressionsK: 0 },
   },
   youtube: {
-    headline: "YouTube long-form is helping competitors dominate search and AEO.",
-    postsPerWeek:  [1, 1, 2, 1, 0],
-    followersK:    [48, 32, 64, 28, 0],
-    engagementPct: [2.1, 1.4, 2.8, 1.6, 0],
-    impressionsK:  [56, 38, 84, 32, 0],
-    averages: { postsPerWeek: 1, followersK: 43, engagementPct: 1.98, impressionsK: 53 },
+    headline: "YouTube how-to videos help competitors win 'how much does it cost to paint' queries.",
+    postsPerWeek:  [1, 0, 2, 0, 0],
+    followersK:    [3.4, 0, 6.8, 0, 0],
+    engagementPct: [2.4, 0, 3.1, 0, 0],
+    impressionsK:  [14, 0, 28, 0, 0],
+    averages: { postsPerWeek: 1, followersK: 2.0, engagementPct: 1.1, impressionsK: 8 },
     selfDeltas: { postsPerWeek: 0, followersK: 0, engagementPct: 0, impressionsK: 0 },
   },
 };
@@ -144,10 +148,10 @@ export const PLATFORM_METRICS: Record<Platform, PlatformMetrics> = {
 /** Ad counts per platform per competitor. null = not running on that
  *  platform (rendered as "—"). */
 export const PAID_SOCIAL_ADS: Record<CompetitorId, Record<Platform, number | null>> = {
-  pure:       { instagram: 24, facebook: 18, linkedin: 1,    tiktok: null, x: null, youtube: 5    },
-  calm:       { instagram: 12, facebook: 12, linkedin: null, tiktok: 8,    x: null, youtube: null },
-  wellspring: { instagram: 8,  facebook: 7,  linkedin: null, tiktok: 3,    x: null, youtube: 2    },
-  vital:      { instagram: 18, facebook: 14, linkedin: null, tiktok: 6,    x: null, youtube: null },
+  pure:       { instagram: 16, facebook: 14, linkedin: null, tiktok: 4,    x: null, youtube: 2    },
+  calm:       { instagram: 6,  facebook: 8,  linkedin: null, tiktok: null, x: null, youtube: null },
+  wellspring: { instagram: 22, facebook: 18, linkedin: null, tiktok: 9,    x: null, youtube: 3    },
+  vital:      { instagram: 5,  facebook: 7,  linkedin: 1,    tiktok: null, x: null, youtube: null },
   radiant:    { instagram: null, facebook: null, linkedin: null, tiktok: null, x: null, youtube: null },
 };
 
@@ -155,11 +159,11 @@ export const PAID_SOCIAL_ADS: Record<CompetitorId, Record<Platform, number | nul
 
 /** Active Google Ads per competitor. */
 export const PAID_SEARCH_ADS: Record<CompetitorId, number> = {
-  pure: 14,
-  calm: 9,
-  wellspring: 6,
-  vital: 11,
-  radiant: 2,
+  pure: 12,
+  calm: 4,
+  wellspring: 18,
+  vital: 6,
+  radiant: 3,
 };
 
 // ── Section 4: Google Visibility (SEO) ─────────────────────────────────────
@@ -174,11 +178,12 @@ export interface SeoQuery {
 }
 
 export const SEO_QUERIES: SeoQuery[] = [
-  { query: 'Best wellness clinic in Austin', topName: 'Pure Vitality Co.', organic: 2, map: 3 },
-  { query: 'Top-rated wellness center near me', topName: 'Wellspring Health', organic: null, map: 4 },
-  { query: 'Holistic health retreats in Texas', topName: 'Vital Bloom', organic: null, map: null },
-  { query: 'Affordable wellness coach Austin', topName: 'Calm + Co', organic: 5, map: 2 },
-  { query: 'Wellness center with sauna', topName: 'Pure Vitality Co.', organic: 7, map: 1 },
+  { query: 'painters Austin',              topName: 'WOW 1 DAY PAINTING Austin',         organic: 4,    map: 2 },
+  { query: 'house painters Austin TX',      topName: 'Five Star Painting of South Austin', organic: 3,    map: 3 },
+  { query: 'commercial painters Austin',    topName: 'CertaPro Painters of Austin',       organic: 2,    map: 1 },
+  { query: 'interior painting Austin',      topName: 'Paper Moon Painting',               organic: null, map: 4 },
+  { query: 'cabinet painting Austin',       topName: 'Five Star Painting of South Austin', organic: 5,    map: null },
+  { query: 'HOA painters Austin',           topName: 'CertaPro Painters of Austin',       organic: 1,    map: 2 },
 ];
 
 // ── Section 5: AEO (LLM visibility) ────────────────────────────────────────
@@ -188,7 +193,7 @@ export const ASSISTANTS: AssistantName[] = ['ChatGPT', 'Perplexity', 'Gemini'];
 
 export interface AeoPrompt {
   prompt: string;
-  /** Whether Radiant Health was mentioned in each LLM's answer. */
+  /** Whether CertaPro Austin was mentioned in each LLM's answer. */
   mentioned: Record<AssistantName, boolean>;
   /** Brand the assistant most often cites first for this prompt. */
   topMention: string;
@@ -196,29 +201,29 @@ export interface AeoPrompt {
 
 export const AEO_PROMPTS: AeoPrompt[] = [
   {
-    prompt: 'Where should I go for a wellness retreat in Austin?',
+    prompt: 'Who are the best house painters in Austin?',
     mentioned: { ChatGPT: true, Perplexity: false, Gemini: true },
-    topMention: 'Pure Vitality Co.',
+    topMention: 'Five Star Painting of South Austin',
   },
   {
-    prompt: 'Best holistic health centers in Texas',
+    prompt: 'Recommend a commercial painting contractor in Austin, TX',
+    mentioned: { ChatGPT: true, Perplexity: true, Gemini: true },
+    topMention: 'CertaPro Painters of Austin',
+  },
+  {
+    prompt: 'Where can I get my kitchen cabinets repainted near Austin?',
     mentioned: { ChatGPT: false, Perplexity: false, Gemini: true },
-    topMention: 'Wellspring Health',
+    topMention: 'Paper Moon Painting',
   },
   {
-    prompt: 'Recommend a wellness coach for stress',
-    mentioned: { ChatGPT: true, Perplexity: true, Gemini: false },
-    topMention: 'Calm + Co',
-  },
-  {
-    prompt: 'Where can I find IV therapy in Austin?',
-    mentioned: { ChatGPT: false, Perplexity: false, Gemini: false },
-    topMention: 'Vital Bloom',
-  },
-  {
-    prompt: 'What is the highest-rated wellness clinic near me?',
+    prompt: 'Painters for an HOA project in Round Rock',
     mentioned: { ChatGPT: true, Perplexity: false, Gemini: false },
-    topMention: 'Pure Vitality Co.',
+    topMention: 'CertaPro Painters of Austin',
+  },
+  {
+    prompt: 'Fastest exterior painters in the Austin area',
+    mentioned: { ChatGPT: false, Perplexity: false, Gemini: false },
+    topMention: 'WOW 1 DAY PAINTING Austin',
   },
 ];
 
@@ -232,18 +237,18 @@ export interface WebsiteCheck {
 }
 
 export const WEBSITE_CONTENT: WebsiteCheck[] = [
-  { id: 'booking',  label: 'On-site booking',           ok: false, description: 'Keep booking on your site to capture more revenue and avoid drop-off to third-party schedulers.' },
-  { id: 'cta',      label: 'Effective CTA above fold',  ok: true,  description: 'Your hero CTA is visible and action-oriented.' },
-  { id: 'text',     label: 'Sufficient text content',   ok: true,  description: 'Long-form content helps SEO and answers customer questions.' },
-  { id: 'phone',    label: 'Visible phone number',      ok: false, description: 'A visible phone number gives customers one more easy way to reach you.' },
-  { id: 'favicon',  label: 'Favicon',                   ok: true,  description: 'Your site has a recognizable browser-tab icon.' },
+  { id: 'booking',  label: 'On-site estimate request',  ok: true,  description: 'Estimate-request form is reachable from the hero and the footer — keeps leads on your domain.' },
+  { id: 'cta',      label: 'Effective CTA above fold',  ok: true,  description: 'Your hero CTA ("Get a free estimate") is visible and action-oriented.' },
+  { id: 'text',     label: 'Sufficient text content',   ok: false, description: 'Service pages average 280 words — aim for 600+ to help SEO and answer customer questions.' },
+  { id: 'phone',    label: 'Visible phone number',      ok: true,  description: '(512) 323-9502 is sticky in the header on every page.' },
+  { id: 'favicon',  label: 'Favicon',                   ok: true,  description: 'Your CertaPro favicon shows up cleanly in browser tabs.' },
 ];
 
 export const WEBSITE_APPEARANCE: WebsiteCheck[] = [
-  { id: 'mobile',   label: 'Mobile-friendly',           ok: true,  description: 'Your site renders well on phones and tablets.' },
-  { id: 'speed',    label: 'Fast load time',            ok: false, description: 'First contentful paint is 4.1s — aim for under 2.5s.' },
-  { id: 'imagery',  label: 'High-quality imagery',      ok: true,  description: 'Photos are sharp and on-brand.' },
-  { id: 'brand',    label: 'Consistent brand colors',   ok: true,  description: 'Your brand palette is applied across pages.' },
+  { id: 'mobile',   label: 'Mobile-friendly',           ok: true,  description: 'Your site renders well on phones and tablets — most estimate requests come from mobile.' },
+  { id: 'speed',    label: 'Fast load time',            ok: false, description: 'First contentful paint is 3.8s — aim for under 2.5s. Hero photos are the main culprit.' },
+  { id: 'imagery',  label: 'High-quality imagery',      ok: true,  description: 'Project photos are sharp, color-accurate, and on-brand.' },
+  { id: 'brand',    label: 'Consistent brand colors',   ok: true,  description: 'CertaPro red + yellow palette applied across pages.' },
 ];
 
 // ── Section 7: Reputation ──────────────────────────────────────────────────
@@ -258,9 +263,9 @@ export interface ReputationRow {
 }
 
 export const REPUTATION: ReputationRow[] = [
-  { competitor: 'pure',       rating: 4.6, reviews: 1842, responseRatePct: 78, recent: 64 },
-  { competitor: 'calm',       rating: 4.4, reviews: 1240, responseRatePct: 62, recent: 41 },
-  { competitor: 'wellspring', rating: 4.2, reviews:  892, responseRatePct: 55, recent: 28 },
-  { competitor: 'vital',      rating: 4.5, reviews:  712, responseRatePct: 70, recent: 33 },
-  { competitor: 'radiant',    rating: 4.7, reviews: 1218, responseRatePct: 96, recent: 58 },
+  { competitor: 'pure',       rating: 4.8, reviews: 612, responseRatePct: 82, recent: 18 },
+  { competitor: 'calm',       rating: 4.7, reviews: 488, responseRatePct: 64, recent: 11 },
+  { competitor: 'wellspring', rating: 4.9, reviews: 924, responseRatePct: 91, recent: 34 },
+  { competitor: 'vital',      rating: 4.4, reviews: 142, responseRatePct: 38, recent:  4 },
+  { competitor: 'radiant',    rating: 4.9, reviews: 786, responseRatePct: 97, recent: 22 },
 ];

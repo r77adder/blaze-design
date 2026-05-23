@@ -50,14 +50,14 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { query: 'HVAC repair Austin',         topName: 'Austin Air Pros',         maps: { label: '#4',         variant: 'warn' }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
-  { query: 'AC installation Austin',     topName: 'Reliable Comfort HVAC',   maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
-  { query: 'emergency HVAC near me',     topName: 'Hill Country HVAC',       maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
-  { query: 'furnace repair Austin',      topName: 'Lone Star Heating & Air', maps: { label: '#7',         variant: 'warn' }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
-  { query: 'AC tune-up Austin',          topName: 'Austin Air Pros',         maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
-  { query: 'bright day hvac (branded)',  topName: 'Bright Day HVAC',         maps: { label: '#1',         variant: 'good' }, organic: { label: '#2',         variant: 'warn' }, ads: { label: 'Competitor ad', variant: 'bad'     } },
-  { query: 'duct cleaning Austin',       topName: 'Austin Air Pros',         maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
-  { query: 'ductless mini split Austin', topName: 'Reliable Comfort HVAC',   maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
+  { query: 'painters Austin',            topName: 'Five Star Painting of South Austin', maps: { label: '#4',         variant: 'warn' }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
+  { query: 'house painters Austin TX',   topName: 'Paper Moon Painting',                maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
+  { query: 'interior painting Austin',   topName: 'WOW 1 DAY PAINTING Austin',          maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
+  { query: 'cabinet painting Austin',    topName: 'Austin Custom Painting',             maps: { label: '#7',         variant: 'warn' }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
+  { query: 'exterior painting Austin',   topName: 'Five Star Painting of South Austin', maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
+  { query: 'certapro austin (branded)',  topName: 'CertaPro Painters of Austin',        maps: { label: '#1',         variant: 'good' }, organic: { label: '#1',         variant: 'good' }, ads: { label: 'Competitor ad', variant: 'bad'     } },
+  { query: 'commercial painters Austin', topName: 'Paper Moon Painting',                maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
+  { query: 'HOA painters Austin',        topName: 'College Pro Painters',               maps: { label: 'Not Ranked', variant: 'bad'  }, organic: { label: 'Not Ranked', variant: 'bad' }, ads: { label: 'No ads',        variant: 'neutral' } },
 ];
 
 export function SearchResults() {

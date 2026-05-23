@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Heading, Text } from '@/components';
 import { useToast } from '@/staging';
 import Calendar1 from '@/icons/20/Calendar1';
-import FileSearch1 from '@/icons/20/FileSearch1';
-import Stars from '@/icons/20/Stars';
+import Globe from '@/icons/20/Globe';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
 import Cursor04 from '@/icons/20/Cursor04';
 import Google from '@/icons/20/Google';
@@ -33,8 +32,7 @@ import { TOOL_DESCRIPTIONS, TOOL_LABEL, type ToolId } from '../tools-context';
 
 const TOOL_ICONS: Record<ToolId, ComponentType<{ size?: number; color?: string }>> = {
   'Organic Campaigns': Calendar1,
-  SEO: FileSearch1,
-  AEO: Stars,
+  'SEO/AEO': Globe,
   'UGC Content': UserProfileCircle,
   'Paid Social': Cursor04,
   'Paid Search': Google,
@@ -48,8 +46,7 @@ const TOOL_ICONS: Record<ToolId, ComponentType<{ size?: number; color?: string }
 // TOOL_DESCRIPTIONS if a tool is missing here.
 const TURN_ON_COPY: Record<ToolId, string> = {
   'Organic Campaigns': 'Your first 30-day content calendar generates overnight.',
-  SEO: 'We pick your topic clusters and draft your first three blog posts.',
-  AEO: 'We start optimizing for ChatGPT, Perplexity, and your Google Business listing.',
+  'SEO/AEO': 'Topic clusters drafted for Google AND structured citations for ChatGPT, Perplexity, and your Google Business listing.',
   'UGC Content': 'Your first AI avatar video renders within the hour.',
   'Paid Social': 'Meta, TikTok, and LinkedIn ad accounts get a recommended starter campaign.',
   'Paid Search': 'Google Ads keywords, bids, and conversion tracking get auto-configured.',
@@ -62,8 +59,7 @@ const TURN_ON_COPY: Record<ToolId, string> = {
 // the work for you" energy.
 const TURNED_ON_TOAST: Record<ToolId, string> = {
   'Organic Campaigns': 'Organic Campaigns is on — your first calendar generates overnight.',
-  SEO: 'SEO is on — topic clusters and drafts are queued.',
-  AEO: 'AEO is on — answer engines and Google Business are now in scope.',
+  'SEO/AEO': 'SEO/AEO is on — topic clusters queued and answer engines now in scope.',
   'UGC Content': 'UGC Content is on — your first avatar video is rendering.',
   'Paid Social': 'Paid Social is on — starter campaigns drafted for review.',
   'Paid Search': 'Paid Search is on — keywords and tracking are wired up.',
@@ -80,7 +76,14 @@ export function HomeColdView({ businessName }: { businessName?: string }) {
   const navigate = useNavigate();
   const [active, setActive] = useState<Set<ToolId>>(() => new Set());
 
-  const firstName = businessName ? businessName.split(' ')[0] : '';
+  // Owner-first welcome ("Welcome to Blaze, John.") feels warmer than the
+  // raw business name. Falls back to the first token of `businessName` if
+  // it doesn't match our known workspace.
+  const firstName = businessName?.toLowerCase().includes('certapro')
+    ? 'John'
+    : businessName
+      ? businessName.split(' ')[0]
+      : '';
   // Total includes Brand Kit + every feature the user opted into.
   const total = selectedTools.length + 1;
   const liveCount = active.size + (brandKitDone ? 1 : 0);

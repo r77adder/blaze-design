@@ -1,95 +1,35 @@
-import { Button, Heading, Text } from '@/components';
+import { useState } from 'react';
+import { Button, Text } from '@/components';
 import ArrowRight from '@/icons/20/ArrowRight';
-import { BusinessScorecardBody, HeroScoreRing } from '../../pages/BusinessScorecard';
-import { OVERALL_DELTA, OVERALL_SCORE } from '../../business-scorecard-data';
+import { ScanView } from '../../../scorecard/ScanView';
+import { ResultsView } from '../../../scorecard/ResultsView';
 import { useOnboarding } from '../onboarding-context';
 
 /**
- * Step 4 — promotional Business Scorecard. Reuses the existing
- * <BusinessScorecardBody> in `promotional` mode: it skips its own HeroCard
- * (we render a consolidated hero here) and suppresses per-section CTAs
- * (the sticky footer below owns the next action).
+ * Step 4 — Business Scorecard. Two phases:
+ *   1. `scan` — animated `<ScanView>` lifted from /scorecard
+ *   2. `results` — `<ResultsView>` lifted from /scorecard, with every CTA
+ *      (sidebar, recommendation card, sticky footer) routed to `next()`,
+ *      which advances to Step 5 (Fixes & Gaps).
+ * Only the results phase shows the sticky footer.
  */
 export function Step4Scorecard() {
-  const { profile, next, back } = useOnboarding();
-  return (
-    <div style={{ minHeight: 'calc(100vh - 3px)', paddingBottom: 100 }}>
-      {/* Unified promo hero: chip + headline + score ring + climb message,
-          all sitting on one gradient surface. */}
-      <div
-        style={{
-          background:
-            'linear-gradient(135deg, rgba(124, 92, 252, 0.08) 0%, rgba(252, 183, 40, 0.08) 100%)',
-          borderBottom: '1px solid var(--dark-8)',
-          padding: '48px 0 40px',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 920,
-            margin: '0 auto',
-            padding: '0 24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 48,
-            flexWrap: 'wrap',
-          }}
-        >
-          {/* Left: copy column */}
-          <div style={{ flex: '1 1 460px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Heading
-              level={1}
-              style={{
-                fontSize: 36,
-                letterSpacing: '-0.5px',
-                lineHeight: 1.15,
-                margin: 0,
-              }}
-            >
-              Here's where {profile.name} stands today.
-            </Heading>
-            <Text
-              variant="primary"
-              style={{
-                display: 'block',
-                fontSize: 17,
-                color: 'var(--dark-90)',
-                lineHeight: 1.55,
-              }}
-            >
-              Reputation is your strongest play. SEO/AEO visibility and paid social are wide open — Blaze closes both inside 90 days.
-            </Text>
-          </div>
+  const { next, back } = useOnboarding();
+  const [phase, setPhase] = useState<'scan' | 'results'>('scan');
 
-          {/* Right: score ring */}
-          <div
-            style={{
-              flex: '0 0 auto',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <Text
-              variant="metadata"
-              style={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--dark-60)',
-                letterSpacing: '0.2px',
-              }}
-            >
-              Business Score
-            </Text>
-            <HeroScoreRing value={OVERALL_SCORE} delta={OVERALL_DELTA} promotional />
-          </div>
-        </div>
+  if (phase === 'scan') {
+    return (
+      <div style={{ minHeight: 'calc(100vh - 3px)' }}>
+        <ScanView onComplete={() => setPhase('results')} />
       </div>
+    );
+  }
 
-      <BusinessScorecardBody promotional />
+  return (
+    <div>
+      <ResultsView onEditInputs={back} />
 
-      {/* Sticky footer CTA */}
+      {/* Sticky footer CTA — kept from the previous Step 4. */}
       <div
         style={{
           position: 'fixed',

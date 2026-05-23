@@ -42,8 +42,8 @@ interface SourceRow {
 const ROWS: SourceRow[] = [
   {
     id: '1',
-    icon: { kind: 'avatar', src: 'https://i.pravatar.cc/80?img=12', fallback: 'AN', channel: Facebook },
-    name: 'Adam Nathan',
+    icon: { kind: 'avatar', src: 'https://i.pravatar.cc/80?img=12', fallback: 'JB', channel: Facebook },
+    name: 'John Bunnell',
     type: 'Social account',
     lastScanned: 'Nov 24 2025',
     added: 'Nov 24 2025',
@@ -51,8 +51,8 @@ const ROWS: SourceRow[] = [
   {
     id: '2',
     icon: { kind: 'logo' },
-    name: 'Home - Radiant Health',
-    url: 'https://getradiant.org/',
+    name: 'Home - CertaPro Painters of Austin',
+    url: 'https://certapro.com/austin/',
     type: 'Webpage',
     lastScanned: 'Nov 19, 2025',
     added: 'Nov 19, 2025',
@@ -60,8 +60,8 @@ const ROWS: SourceRow[] = [
   {
     id: '3',
     icon: { kind: 'logo' },
-    name: 'About - Radiant Health',
-    url: 'https://getradiant.org/ab...',
+    name: 'About - CertaPro Painters of Austin',
+    url: 'https://certapro.com/austin/abo...',
     type: 'Webpage',
     lastScanned: 'Nov 14, 2025',
     added: 'Sep 26, 2025',
@@ -69,8 +69,8 @@ const ROWS: SourceRow[] = [
   {
     id: '4',
     icon: { kind: 'logo' },
-    name: 'Individualized Care - Radiant Health',
-    url: 'https://getradiant.org/individ...',
+    name: 'Interior painting - CertaPro Austin',
+    url: 'https://certapro.com/austin/inte...',
     type: 'Webpage',
     lastScanned: 'Nov 14, 2025',
     added: 'Sep 22, 2025',
@@ -78,7 +78,7 @@ const ROWS: SourceRow[] = [
   {
     id: '5',
     icon: { kind: 'doc' },
-    name: 'File name goes here long file name would look like this and truncate...',
+    name: 'Color of the year — exterior trends in Texas heat (blog draft)',
     typeDropdown: 'Blog',
     lastScanned: 'Sep 18, 2025',
     added: 'Sep 18, 2025',
@@ -86,7 +86,7 @@ const ROWS: SourceRow[] = [
   {
     id: '6',
     icon: { kind: 'pdf' },
-    name: 'Radiant Health Brochure',
+    name: 'CertaPro Austin Services Brochure',
     typeDropdown: 'Other',
     lastScanned: 'Sep 18, 2025',
     added: 'Sep 17, 2025',
@@ -102,7 +102,7 @@ const ROWS: SourceRow[] = [
   {
     id: '8',
     icon: { kind: 'md' },
-    name: 'File name goes here',
+    name: 'Crew spotlight — Matthew on prep + paint quality',
     typeDropdown: 'Blog',
     lastScanned: 'Aug 14, 2025',
     added: 'Aug 14, 2025',

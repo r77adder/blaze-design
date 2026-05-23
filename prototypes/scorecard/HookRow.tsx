@@ -3,11 +3,11 @@ import { Card } from '@/staging';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 
 const COMPETITORS = [
-  { rank: 1, name: 'Austin Air Pros',         place: '1st' },
-  { rank: 2, name: 'Reliable Comfort HVAC',   place: '2nd' },
-  { rank: 3, name: 'Lone Star Heating & Air', place: '3rd' },
-  { rank: 4, name: 'Hill Country HVAC',       place: '4th' },
-  { rank: 7, name: 'Bright Day HVAC',         place: 'YOU', isYou: true },
+  { rank: 1, name: 'Five Star Painting of South Austin', place: '1st' },
+  { rank: 2, name: 'Paper Moon Painting',                place: '2nd' },
+  { rank: 3, name: 'WOW 1 DAY PAINTING Austin',          place: '3rd' },
+  { rank: 4, name: 'College Pro Painters',               place: '4th' },
+  { rank: 7, name: 'CertaPro Painters of Austin',        place: 'You', isYou: true },
 ];
 
 function ordinalColor(rank: number): string {
@@ -57,7 +57,7 @@ function CompetitorRow({ rank, name, place, isYou }: CompetitorRowProps) {
       <Text
         variant="metadata"
         color={isYou ? 'var(--red-70)' : ordinalColor(rank)}
-        style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}
+        style={{ fontWeight: 700 }}
       >
         {place}
       </Text>
@@ -79,8 +79,8 @@ export function HookRow() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[
-            'A competitor is bidding on "bright day hvac" — they\'re stealing customers searching your name.',
-            'You haven\'t posted on Instagram in 38 days. Customers in your area are choosing whoever shows up.',
+            'A competitor is bidding on "certapro austin" — they\'re stealing customers searching your name.',
+            'You haven\'t posted on Instagram in 41 days. Homeowners in Round Rock and Cedar Park are choosing whoever shows up.',
             'You reply to fewer than 1 in 5 reviews. Owner replies lift conversion ~11%.',
           ].map((text, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>

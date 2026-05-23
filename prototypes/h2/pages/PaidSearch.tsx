@@ -39,12 +39,12 @@ import { useDevState } from '../dev-state-context';
 // ─── DATA ────────────────────────────────────────────────────────────
 
 const KPIS = [
-  { label: 'Impressions', value: '8,432', delta: '↑ 12%', tone: 'up' as const },
-  { label: 'Clicks', value: '187', delta: '↑ 8%', tone: 'up' as const },
-  { label: 'CTR', value: '2.22%', delta: '↑ 0.4 pt', tone: 'up' as const },
-  { label: 'Conversions', value: '6', delta: '↑ 2', tone: 'up' as const },
-  { label: 'Spend', value: '$32.40', delta: '81% of daily', tone: 'flat' as const },
-  { label: 'CPA', value: '$5.40', delta: 'on target', tone: 'up' as const },
+  { label: 'Impressions', value: '6,210', delta: '↑ 11%', tone: 'up' as const },
+  { label: 'Clicks', value: '142', delta: '↑ 9%', tone: 'up' as const },
+  { label: 'CTR', value: '2.29%', delta: '↑ 0.3 pt', tone: 'up' as const },
+  { label: 'Estimate requests', value: '8', delta: '↑ 3', tone: 'up' as const },
+  { label: 'Spend', value: '$58.20', delta: '78% of daily', tone: 'flat' as const },
+  { label: 'Cost per lead', value: '$7.28', delta: 'on target', tone: 'up' as const },
 ];
 
 interface FatigueFlag {
@@ -60,57 +60,57 @@ interface FatigueFlag {
 // experience the home-feed item triggers via FeedItemModal.
 const CAMPAIGN_FATIGUE: FatigueFlag = {
   ageDays: 21,
-  signal: 'CTR -32% past 7d',
+  signal: 'CTR -28% past 7d',
   reason:
-    "Asset combo 'RSA Variant A' has dropped 32% CTR over the past 7 days while impressions held steady. Headline 1 has run unchanged for 21 days.",
+    "Asset combo 'RSA Variant A' has dropped 28% CTR over the past 7 days while impressions held steady. Headline 1 has run unchanged for 21 days.",
   competitors:
-    'Two competitors rotated to question-led headlines this week ("Tired by 3pm?" pattern) and lifted CTR ~30%. NorthSun Wellness added a free-shipping callout extension.',
+    'Five Star Painting of South Austin rotated to question-led headlines this week ("Tired of peeling paint?" pattern) and lifted CTR ~24%. Paper Moon Painting added a free color consultation callout extension.',
   proposals: [
     'Rotate Headline 1 to a question-led variant',
-    'Add a new "free shipping" callout extension',
-    'Pin a freshness signal — "Updated for May" — in description 2',
+    'Add a new "free color consultation" callout extension',
+    'Pin a freshness signal — "Booking May exteriors now" — in description 2',
   ],
 };
 
 const LOCAL_AUSTIN_FATIGUE: FatigueFlag = {
   ageDays: 18,
-  signal: 'CTR -24% past 7d',
+  signal: 'CTR -22% past 7d',
   reason:
-    "Asset combo 'Local — Austin Outdoors' has dropped 24% CTR over the past 7 days. The Austin-skyline hero image has been live for 18 days and is losing freshness.",
+    "Asset combo 'Local — Cedar Park & Round Rock' has dropped 22% CTR over the past 7 days. The Austin-skyline hero image has been live for 18 days and is losing freshness.",
   competitors:
-    'Two regional competitors rotated to user-shot lifestyle photos in the past week and lifted CTR ~18% on local geo terms.',
+    'Two local competitors rotated to before/after exterior photos this week and lifted CTR ~16% on local geo terms.',
   proposals: [
-    'Swap hero image to user-shot lifestyle photo (Austin trail)',
-    'Add a "Austin pickup available" callout extension',
-    'Rotate Headline 2 to lead with a local landmark',
+    'Swap hero image to a Cedar Park exterior before/after',
+    'Add a "Serving Cedar Park & Round Rock" callout extension',
+    'Rotate Headline 2 to lead with a neighborhood landmark',
   ],
 };
 
 const REPURCHASE_FATIGUE: FatigueFlag = {
   ageDays: 24,
-  signal: 'CTR -29% past 7d',
+  signal: 'CTR -26% past 7d',
   reason:
-    "Asset combo 'Refill — 2nd order discount' has dropped 29% CTR over the past 7 days. The 'Welcome back' headline has been unchanged for 24 days.",
+    "Asset combo 'Past-customer repaint' has dropped 26% CTR over the past 7 days. The 'Welcome back' headline has been unchanged for 24 days.",
   competitors:
-    'Two competitors launched loyalty-framed refill campaigns this month, leading with a subscription discount instead of a one-time refill offer.',
+    'Two competitors launched loyalty-framed repaint campaigns this month, leading with a "10% off for return customers" hook instead of a generic re-engagement.',
   proposals: [
-    'Rotate to a loyalty-framed headline — "Your routine, restocked"',
-    'Test a subscription-framed CTA over the one-time refill CTA',
-    'Add a "Free express shipping on refills" callout',
+    'Rotate to a loyalty-framed headline — "Time for a touch-up?"',
+    'Test a "10% off return customers" CTA over the generic CTA',
+    'Add a "Free in-home estimate" callout',
   ],
 };
 
 const KEYWORD_FATIGUE: FatigueFlag = {
   ageDays: 28,
-  signal: 'CPC +42% past 7d',
+  signal: 'CPC +38% past 7d',
   reason:
-    'CPC climbed 42% as 3 new competitors entered the auction. Quality Score holding at 8, but bid pressure is winning.',
+    'CPC climbed 38% as 3 new competitors entered the auction. Quality Score holding at 8, but bid pressure is winning.',
   competitors:
-    'NorthSun Wellness and Helia Botanicals both launched campaigns targeting this exact match in the past 10 days.',
+    'Five Star Painting of South Austin and WOW 1 DAY PAINTING Austin both launched campaigns targeting this exact match in the past 10 days.',
   proposals: [
     'Switch from broad to phrase match to reduce auction overlap',
     'Add 4 negative keywords competitors are bidding on',
-    'Test a lower max-CPC of $1.40 with Maximize Conversions',
+    'Test a lower max-CPC of $3.80 with Maximize Conversions',
   ],
 };
 
@@ -163,15 +163,15 @@ interface Campaign {
 
 const CAMPAIGNS: Campaign[] = [
   {
-    id: 'daily-wellness',
-    name: 'Daily Wellness Bundle',
-    channel: 'Search · $40/day · Started 2h 14m ago',
-    budget: 40,
-    spend: 32.4,
-    impressions: 8432,
-    clicks: 187,
-    conversions: 6,
-    cpa: 5.4,
+    id: 'exterior-painting-austin',
+    name: 'Exterior painting — Austin metro',
+    channel: 'Search · $80/day · Started 2h 14m ago',
+    budget: 80,
+    spend: 58.2,
+    impressions: 6210,
+    clicks: 142,
+    conversions: 8,
+    cpa: 7.28,
     status: 'live',
     campaignType: 'Search',
     bidStrategy: 'Maximize conversions',
@@ -181,60 +181,60 @@ const CAMPAIGNS: Campaign[] = [
     primary: true,
   },
   {
-    id: 'branded-radiant',
-    name: 'Branded — Radiant Health',
-    channel: 'Search · $25/day · Running 6 weeks',
-    budget: 25,
-    spend: 21.3,
-    impressions: 4210,
-    clicks: 312,
-    conversions: 18,
-    cpa: 1.18,
+    id: 'branded-certapro',
+    name: 'Branded — CertaPro Austin',
+    channel: 'Search · $40/day · Running 6 weeks',
+    budget: 40,
+    spend: 32.8,
+    impressions: 3120,
+    clicks: 246,
+    conversions: 32,
+    cpa: 1.03,
     status: 'on-track',
     campaignType: 'Search',
     bidStrategy: 'Target CPA',
     startedLabel: 'Running 6 weeks',
   },
   {
-    id: 'wellness-supplements',
-    name: 'Wellness terms — supplements',
-    channel: 'Search · $30/day · Testing 4 days',
-    budget: 30,
-    spend: 24.85,
-    impressions: 6120,
-    clicks: 142,
-    conversions: 3,
-    cpa: 8.28,
+    id: 'interior-painters',
+    name: 'Interior painters near me',
+    channel: 'Search · $60/day · Testing 4 days',
+    budget: 60,
+    spend: 48.6,
+    impressions: 4820,
+    clicks: 118,
+    conversions: 5,
+    cpa: 9.72,
     status: 'testing',
     campaignType: 'Search',
     bidStrategy: 'Maximize clicks',
     startedLabel: 'Testing 4 days',
   },
   {
-    id: 'best-of-adaptogens',
-    name: 'Best-of comparison — adaptogens',
-    channel: 'Search · $35/day · Running 3 weeks',
-    budget: 35,
-    spend: 33.6,
-    impressions: 7820,
-    clicks: 268,
-    conversions: 22,
-    cpa: 1.53,
+    id: 'cabinet-refinishing',
+    name: 'Cabinet refinishing Austin',
+    channel: 'Search · $50/day · Running 3 weeks',
+    budget: 50,
+    spend: 46.4,
+    impressions: 5680,
+    clicks: 184,
+    conversions: 24,
+    cpa: 1.93,
     status: 'winner',
     campaignType: 'Performance Max',
     bidStrategy: 'Target ROAS',
     startedLabel: 'Running 3 weeks',
   },
   {
-    id: 'local-austin',
-    name: 'Local searches — Austin',
-    channel: 'Search · $20/day · Running 18 days',
-    budget: 20,
-    spend: 19.4,
-    impressions: 2950,
-    clicks: 96,
-    conversions: 4,
-    cpa: 4.85,
+    id: 'local-cedar-park',
+    name: 'Local — Cedar Park & Round Rock',
+    channel: 'Search · $30/day · Running 18 days',
+    budget: 30,
+    spend: 28.9,
+    impressions: 2410,
+    clicks: 78,
+    conversions: 6,
+    cpa: 4.82,
     status: 'spending-fast',
     campaignType: 'Search',
     bidStrategy: 'Maximize conversions',
@@ -242,10 +242,10 @@ const CAMPAIGNS: Campaign[] = [
     fatigue: LOCAL_AUSTIN_FATIGUE,
   },
   {
-    id: 'refill-repurchase',
-    name: 'Refill / repurchase',
-    channel: 'Search · $15/day · Paused 2 days ago',
-    budget: 15,
+    id: 'repaint-past-customers',
+    name: 'Repaint — past customers',
+    channel: 'Search · $20/day · Paused 2 days ago',
+    budget: 20,
     spend: 0,
     impressions: 0,
     clicks: 0,
@@ -258,15 +258,15 @@ const CAMPAIGNS: Campaign[] = [
     fatigue: REPURCHASE_FATIGUE,
   },
   {
-    id: 'discovery-natural-energy',
-    name: "Discovery: 'natural energy'",
-    channel: 'Search · $50/day · Running 9 days',
-    budget: 50,
-    spend: 58.2,
-    impressions: 12340,
-    clicks: 410,
-    conversions: 9,
-    cpa: 6.47,
+    id: 'commercial-hoa',
+    name: 'Commercial & HOA painters',
+    channel: 'Search · $90/day · Running 9 days',
+    budget: 90,
+    spend: 104.8,
+    impressions: 9420,
+    clicks: 312,
+    conversions: 11,
+    cpa: 9.53,
     status: 'over-budget',
     campaignType: 'Search',
     bidStrategy: 'Maximize conversions',
@@ -283,22 +283,22 @@ interface Keyword {
 }
 
 const BASE_KEYWORDS: Keyword[] = [
-  { name: 'daily wellness routine', clicks: 62, conv: 3, status: 'ok' },
-  { name: 'best adaptogens', clicks: 48, conv: 2, status: 'ok', fatigue: KEYWORD_FATIGUE },
-  { name: 'ashwagandha benefits', clicks: 31, conv: 1, status: 'ok' },
-  { name: 'wellness supplements', clicks: 23, conv: 0, status: 'alert' },
-  { name: 'stress supplements', clicks: 14, conv: 0, status: 'ok' },
+  { name: 'painters austin', clicks: 62, conv: 4, status: 'ok' },
+  { name: 'exterior painting austin', clicks: 48, conv: 3, status: 'ok', fatigue: KEYWORD_FATIGUE },
+  { name: 'house painters austin', clicks: 31, conv: 2, status: 'ok' },
+  { name: 'interior painters near me', clicks: 23, conv: 0, status: 'alert' },
+  { name: 'cabinet painting austin', clicks: 14, conv: 1, status: 'ok' },
 ];
 
 const LOADING_TASKS = [
   {
     name: 'Pull context',
-    subActions: ['Reading Brand Kit', 'Reviewing top product', 'Scanning recent campaigns'],
-    summary: 'Brand Kit · Daily Wellness Bundle · 4 campaigns reviewed',
+    subActions: ['Reading Brand Kit', 'Reviewing service mix', 'Scanning recent campaigns'],
+    summary: 'Brand Kit · Exterior painting · 4 campaigns reviewed',
   },
   {
     name: 'Research keywords',
-    subActions: ['Searching 12 competitors', 'Analyzing search trends', 'Clustering 47 keywords'],
+    subActions: ['Searching 12 local competitors', 'Analyzing search trends', 'Clustering 47 keywords'],
     summary: '47 high-intent keywords across 3 themes',
   },
   {
@@ -313,23 +313,23 @@ const LOADING_TASKS = [
   },
   {
     name: 'Build negative keywords',
-    subActions: ['Identifying low-intent terms', 'Filtering off-brand searches', 'Building exclusion list'],
+    subActions: ['Identifying low-intent terms', 'Filtering DIY searches', 'Building exclusion list'],
     summary: '47 negatives across 5 categories',
   },
 ];
 
 const COPY_DATA = [
   {
-    head: 'Daily Wellness Bundle — Built by Naturopaths',
-    desc: '5-supplement routine for energy, focus, and stress. Free shipping. 30-day guarantee. Save 20% on your first order.',
+    head: 'CertaPro Painters of Austin — Your Local Painters',
+    desc: 'Interior, exterior, and cabinet painting across Austin metro. Free in-home estimate. 2-year warranty. 187 5-star Google reviews.',
   },
   {
-    head: 'Stress Less, Live More — Clinically-Studied Adaptogens',
-    desc: 'Naturopath-formulated stack with real ingredients and real results. 4.8★ from 12,000+ reviews. Try risk-free for 30 days.',
+    head: 'Done in 4 Days. Painted to Last. — CertaPro Austin',
+    desc: 'Locally owned, professionally certified. Serving Austin, Cedar Park, Round Rock, and Lakeway. $0/month financing on projects $2,500+.',
   },
   {
-    head: 'Energy. Focus. Calm. One Daily Bundle, Built for You',
-    desc: "No guesswork, no fluff — just the 5 supplements you actually need. Made in the USA, third-party tested. 20% off + free shipping.",
+    head: 'Trusted Austin Painters — 187 5-Star Reviews',
+    desc: 'Residential and commercial painting from the team Austin homeowners trust. Free color consultation with every estimate.',
   },
 ];
 
@@ -344,65 +344,65 @@ const KW_GROUPS: KwGroup[] = [
     theme: 'Brand & Generic',
     match: 'phrase',
     terms: [
-      'daily wellness bundle',
-      'wellness supplement bundle',
-      'daily multivitamin bundle',
-      'adaptogen bundle',
-      'supplement stack for energy',
-      'daily wellness routine',
-      'supplements for adults',
-      'daily wellness kit',
-      'wellness subscription box',
-      'health supplement starter',
-      'clean wellness routine',
-      'simple supplement stack',
+      'painters austin',
+      'austin painters',
+      'house painters austin',
+      'painting contractor austin',
+      'local painters austin',
+      'austin painting company',
+      'professional painters austin',
+      'austin tx painters',
+      'certified painters austin',
+      'best painters austin',
+      'painting services austin',
+      'austin home painters',
     ],
   },
   {
     theme: 'High-intent buyers',
     match: 'exact',
     terms: [
-      'best wellness supplements',
-      'clinically tested adaptogens',
-      'third-party tested supplements',
-      'clean supplement brand',
-      'naturopath designed supplements',
-      'wellness bundle subscription',
-      'daily supplement for energy and focus',
-      'adaptogen routine for stress',
-      'all-in-one supplement bundle',
-      'best adaptogen stack',
-      'best daily multivitamin',
-      'daily energy supplement',
-      'wellness bundle review',
-      'adaptogen subscription',
-      'clean supplements no fillers',
-      'supplement bundle 30 day',
-      'doctor formulated supplements',
-      'wellness kit for women',
+      'exterior painting austin',
+      'interior painters near me',
+      'cabinet painting austin',
+      'cabinet refinishing austin',
+      'house painting cost austin',
+      'painting estimate austin',
+      'free painting estimate austin',
+      'color consultation austin',
+      'deck staining austin',
+      'fence staining austin',
+      'stucco repair austin',
+      'drywall repair austin',
+      'power washing austin',
+      'cedar park painters',
+      'round rock painters',
+      'lakeway painters',
+      'westlake painters',
+      'best painters austin tx',
     ],
   },
   {
     theme: 'Discovery',
     match: 'broad',
     terms: [
-      'energy and focus supplement',
-      'natural stress relief',
-      'clean wellness products',
-      'adaptogen blend',
-      'morning supplement routine',
-      'wellness routine for adults',
-      'clean energy supplement',
-      'adaptogen for focus',
-      'clean multivitamin',
-      'supplements for working professionals',
-      'everyday wellness',
-      'clean stack supplements',
-      'naturopath approved',
-      'third party tested wellness',
-      'clean ingredient supplements',
-      'daily clean energy',
-      'supplements for stress and focus',
+      'how much does it cost to paint a house',
+      'paint colors for texas heat',
+      'cabinet refinishing cost',
+      'when to repaint exterior',
+      'best exterior paint austin',
+      'interior painting timeline',
+      'whole house painting',
+      'commercial painters austin',
+      'hoa painters',
+      'office painting austin',
+      'restaurant painting austin',
+      'painting near me',
+      'house painters near me',
+      'austin painting reviews',
+      'austin painter recommendations',
+      'how long does exterior paint last',
+      'painting contractor near me',
     ],
   },
 ];
@@ -443,75 +443,73 @@ const BID_STRATEGIES: BidStrategy[] = [
 
 const NEG_GROUPS = [
   {
-    category: 'Free / DIY',
+    category: 'DIY / how-to',
     terms: [
-      'free vitamins',
-      'homemade supplements',
-      'diy adaptogen',
-      'recipe',
-      'make your own multivitamin',
-      'free wellness sample',
-      'free supplement trial',
-      'wellness coupon',
-      'discount code',
+      'diy painting',
+      'how to paint a wall',
+      'paint your own',
+      'paint tutorial',
+      'youtube painting',
+      'free paint',
+      'painting tips reddit',
+      'painting for beginners',
+      'cheap paint',
     ],
   },
   {
     category: 'Competitors',
     terms: [
-      'athletic greens',
-      'ag1',
-      'ritual',
-      'olly',
-      'seed',
-      'one a day',
-      'centrum',
-      'garden of life',
-      'onnit',
-      'huel',
-      'nutricost',
-      'nature made',
-      'now foods',
-      'swanson',
+      'five star painting',
+      'paper moon painting',
+      'wow 1 day painting',
+      'college pro painters',
+      'austin custom painting',
+      'sherwin williams contractors',
+      'home depot painters',
+      'lowes painting service',
+      'angi painters',
+      'thumbtack painters',
+      'handy painters',
+      'taskrabbit painter',
     ],
   },
   {
     category: 'Off-topic',
     terms: [
-      'horse vitamins',
-      'dog supplements',
-      'pet wellness',
-      'horse adaptogen',
-      'cat multivitamin',
-      'baby vitamins',
-      'infant supplement',
-      'toddler vitamins',
-      'livestock supplement',
-      'equine',
+      'art classes',
+      'face painting',
+      'auto body paint',
+      'car painting',
+      'nail painting',
+      'paint store',
+      'paint by numbers',
+      'oil painting class',
+      'watercolor',
+      'paintball',
     ],
   },
   {
-    category: 'Health conditions / claims',
+    category: 'Job seekers',
     terms: [
-      'cure',
-      'treatment',
-      'medical',
-      'prescription',
-      'medication',
-      'disease',
-      'therapy',
-      'clinical trial',
+      'painter jobs',
+      'painter hiring',
+      'painter salary',
+      'painter apprenticeship',
+      'painting career',
+      'become a painter',
+      'painter resume',
+      'painter union',
     ],
   },
   {
     category: 'Out-of-region',
     terms: [
-      'supplements canada',
-      'wellness uk',
-      'vitamins europe',
-      'supplements australia',
-      'adaptogen india',
-      'wellness asia',
+      'painters dallas',
+      'painters houston',
+      'painters san antonio',
+      'painters fort worth',
+      'painters el paso',
+      'painters california',
     ],
   },
 ];
@@ -575,7 +573,7 @@ function EmptyState({ onStart }: { onStart: () => void }) {
           maxWidth: 520,
         }}
       >
-        The agent pulls your brand context, researches keywords, drafts ad copy, picks a bid
+        The agent pulls your brand context, researches local painting keywords, drafts ad copy, picks a bid
         strategy, and prepares negative keywords — all before you approve.
       </p>
       <Button variant="primary" size="lg" frontIcon={Plus} onPress={onStart}>
@@ -959,7 +957,7 @@ function LiveCampaign({
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
       <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 18 }}>
-        Search campaign · <strong>$40/day budget</strong> · Targeting wellness-curious adults 25–45, US ·
+        Search campaign · <strong>$80/day budget</strong> · Targeting homeowners 35–65 in Austin metro ·
         Started 2h 14m ago
       </div>
 
@@ -973,7 +971,7 @@ function LiveCampaign({
           <WarningBanner
             tone="cpc"
             title="CPC spike detected"
-            body={'CPC up 38% in the last 4 hours on "wellness supplements". The agent suggests pausing the keyword or lowering max bid.'}
+            body={'CPC up 38% in the last 4 hours on "interior painters near me". The agent suggests pausing the keyword or lowering max bid.'}
             actionLabel="Review bid"
             onAction={() => openModal(BidReviewModal, { onResolve: onResolveAnomaly })}
           />
@@ -981,12 +979,12 @@ function LiveCampaign({
         <WarningBanner
           tone="fatigue"
           title="Creative Fatigue detected"
-          body={"Asset combo 'RSA Variant A' has dropped 32% CTR over the past 7 days. A refresh proposal is ready."}
+          body={"Asset combo 'RSA Variant A' has dropped 28% CTR over the past 7 days. A refresh proposal is ready."}
           actionLabel="Review refresh"
           onAction={() =>
             openModal(FatigueRefreshModal, {
               fatigue: CAMPAIGN_FATIGUE,
-              adName: 'Daily Wellness Bundle — RSA · Variant A',
+              adName: 'Exterior painting — Austin metro · RSA · Variant A',
             })
           }
         />
@@ -1213,7 +1211,7 @@ function LiveCampaign({
       {/* Live keyword summary — anomaly state surfaces here. */}
       {anomaly.resolved && (
         <div style={{ marginTop: 18, fontSize: 12, color: 'var(--dark-60)' }}>
-          "wellness supplements" → {anomaly.action === 'pause' ? 'paused' : 'watching'} after CPC review.
+          "interior painters near me" → {anomaly.action === 'pause' ? 'paused' : 'watching'} after CPC review.
         </div>
       )}
     </div>
@@ -1234,7 +1232,7 @@ function BidReviewModal({ close, onResolve }: StackModalProps & BidReviewModalPr
   return (
     <Modal.Root size="md" aria-labelledby="paid-search-bid-review-title">
       <Modal.Header
-        title='CPC spike — "wellness supplements"'
+        title='CPC spike — "interior painters near me"'
         id="paid-search-bid-review-title"
         onClose={close}
         compact={false}
@@ -1262,20 +1260,20 @@ function BidReviewModal({ close, onResolve }: StackModalProps & BidReviewModalPr
               CPC up 38% in 4h
             </Text>
             <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
-              $0.92 → $1.27 — likely a competitor's auction-time bid bump
+              $3.10 → $4.28 — likely a competitor's auction-time bid bump
             </Text>
           </div>
         </div>
 
         <FatigueSection title="Why we flagged this">
-          {`Cost-per-click on "wellness supplements" jumped 38% in the last 4 hours while Quality Score held at 8. Three new competitors entered the auction this week.`}
+          {`Cost-per-click on "interior painters near me" jumped 38% in the last 4 hours while Quality Score held at 8. Three new competitors entered the auction this week.`}
         </FatigueSection>
 
         <FatigueBulletSection
           title="Proposed actions"
           bullets={[
             'Pause the keyword until competitor bid pressure normalizes',
-            'Lower max-CPC to $1.40 — saves ~$8/day at current pace',
+            'Lower max-CPC to $3.80 — saves ~$22/day at current pace',
             'Continue monitoring — agent re-alerts if CPC stays elevated 4+ hours',
           ]}
         />
@@ -1291,7 +1289,7 @@ function BidReviewModal({ close, onResolve }: StackModalProps & BidReviewModalPr
             Pause keyword
           </Modal.FooterButton>
           <Modal.FooterButton variant="primary" onPress={() => handle('lower')}>
-            Lower max bid to $1.40
+            Lower max bid to $3.80
           </Modal.FooterButton>
         </Modal.FooterContent>
       </Modal.Footer>
@@ -1302,9 +1300,9 @@ function BidReviewModal({ close, onResolve }: StackModalProps & BidReviewModalPr
 function AnomalyResolved({ action }: { action: AnomalyAction | null }) {
   const msg =
     action === 'pause'
-      ? 'Paused "wellness supplements" — agent will alert if recovery looks viable.'
+      ? 'Paused "interior painters near me" — agent will alert if recovery looks viable.'
       : action === 'lower'
-        ? 'Lowered max bid to $1.40 — saving ~$8/day at current pace.'
+        ? 'Lowered max bid to $3.80 — saving ~$22/day at current pace.'
         : 'Continuing to monitor — agent will re-alert if CPC stays elevated for 4+ hours.';
   return (
     <div
@@ -1565,8 +1563,8 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
           </StatusPill>
         </div>
         <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, margin: 0 }}>
-          Driving sales for <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>Daily Wellness Bundle</strong> ·
-          Wellness-curious adults 25–45, US
+          Driving estimate requests for <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>Exterior painting — Austin metro</strong> ·
+          Homeowners 35–65, Austin metro
         </p>
       </div>
 
@@ -1622,7 +1620,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
               >
                 <span style={{ color: 'var(--dark-90)', fontWeight: 500 }}>Sponsored</span>
                 <span>·</span>
-                <span>radianthealth.co/wellness-bundle</span>
+                <span>certapro.com/austin</span>
               </div>
               <div style={{ fontSize: 14, color: '#2563EB', marginBottom: 3, lineHeight: 1.35 }}>{c.head}</div>
               <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{c.desc}</div>
@@ -1658,7 +1656,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
                 {conv}
               </span>
               <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>
-                conversions <span style={{ color: 'var(--dark-40)' }}>/ day</span>
+                estimate requests <span style={{ color: 'var(--dark-40)' }}>/ day</span>
               </span>
             </div>
             <input
@@ -1673,7 +1671,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
           </div>
           <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>
             Backed by <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>${budget}/day</strong> · ~
-            <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>${cpa}</strong> per conversion ·{' '}
+            <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>${cpa}</strong> per estimate request ·{' '}
             <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{imp}k</strong> impressions
           </div>
         </div>
@@ -1727,7 +1725,7 @@ function KeywordsPrepModal({ close }: StackModalProps) {
       />
       <Modal.Content compact={false}>
         <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, margin: '0 0 16px' }}>
-          {KW_GROUPS.length} themes — drawn from your top product, brand voice, and 12 competitor scans. Edit anything
+          {KW_GROUPS.length} themes — drawn from your service mix, brand voice, and 12 Austin painting competitor scans. Edit anything
           before launch.
         </p>
         {KW_GROUPS.map((g) => (
@@ -2071,7 +2069,7 @@ function PaidSearchRouteInner() {
   const handleOpenWizard = () => {
     openModal(WizardModal, {
       onComplete: () => {
-        showToast({ message: 'Campaign launched · Daily Wellness Bundle is now live' });
+        showToast({ message: 'Campaign launched · Exterior painting — Austin metro is now live' });
         setView('campaigns');
       },
     });
@@ -2199,115 +2197,115 @@ interface SearchMarketIntelCard {
   adaptedSummary: string;
 }
 
-// Unsplash photo IDs picked for product close-ups / staged supplement scenes.
+// Unsplash photo IDs picked for residential / exterior painting scenes.
 const MARKET_INTEL_SEARCH: SearchMarketIntelCard[] = [
   {
     id: 'mi-q-1',
-    peer: 'NorthSun Wellness',
-    peerDomain: 'northsunwellness.com',
+    peer: 'Five Star Painting of South Austin',
+    peerDomain: 'fivestarpainting.com/austin',
     metric: '3.2x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
-    observedHeadline: '5-Supplement Stack | Backed by Naturopaths',
+    observedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
+    observedHeadline: 'Austin Exterior Painters | 2-Year Warranty',
     observedDesc:
-      'Built by clinicians. Free shipping. 30-day money-back guarantee.',
-    observed: 'Lead with naturopath credibility in headline + free shipping in description.',
-    observedSummary: 'Naturopath credibility + free shipping hook.',
-    adaptedHeadline: 'Daily Wellness Bundle — Naturopath-Built Stack',
+      'Licensed, insured, locally owned. Free in-home estimate. 2-year written warranty.',
+    observed: 'Lead with warranty credibility in headline + free estimate in description.',
+    observedSummary: 'Warranty credibility + free estimate hook.',
+    adaptedHeadline: 'CertaPro Painters of Austin — 2-Year Warranty',
     adaptedDesc:
-      '5 supplements for energy, focus, and stress. Free shipping. 30-day guarantee.',
-    adapted: 'Same credibility hook, swapped to your bundle name + your guarantee.',
-    adaptedSummary: 'Credibility hook · your bundle name + guarantee.',
+      'Locally owned, professionally certified. Free in-home estimate. 187 5-star reviews.',
+    adapted: 'Same warranty hook, swapped to your name + your review count.',
+    adaptedSummary: 'Warranty hook · your brand + 187 5-star reviews.',
   },
   {
     id: 'mi-q-2',
-    peer: 'Helia Botanicals',
-    peerDomain: 'helia.co',
+    peer: 'Paper Moon Painting',
+    peerDomain: 'papermoonpainting.com',
     metric: 'CTR 4.8%',
-    observedImage: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1559757175-7cb056fba93d?w=600&q=80',
-    observedHeadline: 'Tired by 3pm? Try Our Adaptogen Stack',
+    observedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=80',
+    observedHeadline: 'Tired of Peeling Paint? We Can Fix That.',
     observedDesc:
-      "Real ingredients, real results. 4.7★ from 8,000+ reviewers. Save 20% on your first order.",
-    observed: 'Question-led headline targeting a specific pain point.',
+      "Austin homes get hammered by Texas sun. We use premium UV-stable paint. 4.9★ from 240+ reviews.",
+    observed: 'Question-led headline targeting a specific exterior pain point.',
     observedSummary: 'Question-led pain-point hook.',
-    adaptedHeadline: 'Tired by 3pm? Daily Wellness Bundle Helps',
+    adaptedHeadline: 'Peeling Paint? CertaPro Austin Can Help',
     adaptedDesc:
-      "Naturopath-formulated. 4.8★ from 12,000+ reviews. 20% off your first order.",
-    adapted: 'Same question-led hook, our review count, our discount.',
-    adaptedSummary: 'Same question hook · our 4.8★ social proof.',
+      "Texas-rated exterior paint, applied by certified crews. 4.7★ from 187 Google reviews.",
+    adapted: 'Same question-led hook, our review count, our certification.',
+    adaptedSummary: 'Same question hook · our 4.7★ social proof.',
   },
   {
     id: 'mi-q-3',
-    peer: 'Quiet Mind Co.',
-    peerDomain: 'quietmind.com',
+    peer: 'WOW 1 DAY PAINTING Austin',
+    peerDomain: 'wow1day.com/austin',
     metric: '2.4x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80',
-    observedHeadline: 'The Stress Stack — Ashwagandha + Magnesium',
+    observedImage: 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+    observedHeadline: 'Interior Painted in 1 Day — Furniture Back That Night',
     observedDesc:
-      'Two clinically-studied ingredients in one daily routine. Save 15% with code CALM.',
-    observed: 'Ingredient-led headline calls out two hero actives.',
-    observedSummary: 'Ingredient-led · two hero actives.',
-    adaptedHeadline: 'Stress Stack — Ashwagandha + Magnesium Daily',
+      'No 4-day disruption. Our crew sizes up to finish in a single day. Same-week scheduling.',
+    observed: 'Speed-led headline calls out the disruption objection directly.',
+    observedSummary: 'Speed-led · disruption objection.',
+    adaptedHeadline: 'Interior Painting — Done in 4 Days, Painted to Last',
     adaptedDesc:
-      "Both clinical doses in your Daily Wellness Bundle. Save 20% — code RADIANT.",
-    adapted: 'Lean into our existing ingredient credibility + our promo code.',
-    adaptedSummary: 'Our ingredient credibility + RADIANT promo.',
+      "Our crews are sized for your project. Same-week scheduling. 187 5-star reviews.",
+    adapted: 'Counter the speed hook with our quality + scheduling promise.',
+    adaptedSummary: 'Our quality + scheduling promise.',
   },
   {
     id: 'mi-q-4',
-    peer: 'Verdant Daily',
-    peerDomain: 'verdantdaily.co',
+    peer: 'College Pro Painters',
+    peerDomain: 'collegepro.com',
     metric: 'CTR 5.6%',
-    observedImage: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1564594985645-4427056e22e2?w=600&q=80',
-    observedHeadline: 'Skip the Pharmacy. 5-Supplement Wellness Routine.',
+    observedImage: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    observedHeadline: 'Skip the Handyman. Hire a Real Painting Crew.',
     observedDesc:
-      'Curated daily routine for adults 25–45. Third-party tested. Made in the USA.',
-    observed: 'Anti-pharmacy framing with concrete demographic targeting.',
-    observedSummary: 'Anti-pharmacy framing · 25–45 demo.',
-    adaptedHeadline: 'Skip the Pharmacy — Try the Daily Wellness Bundle',
+      'Professional crews, prepped surfaces, premium paint. Serving Austin homeowners since 1971.',
+    observed: 'Anti-handyman framing with concrete pro-crew positioning.',
+    observedSummary: 'Anti-handyman framing · pro-crew positioning.',
+    adaptedHeadline: 'Skip the Handyman — Hire CertaPro Austin',
     adaptedDesc:
-      'Naturopath-curated for adults 25–45. Third-party tested. Made in the USA.',
-    adapted: 'Mirror the anti-pharmacy hook, retain your existing demographic.',
-    adaptedSummary: 'Anti-pharmacy hook · our existing demo.',
+      'Certified crews, professional prep, premium paint. Serving Austin metro homeowners.',
+    adapted: 'Mirror the anti-handyman hook with our certification language.',
+    adaptedSummary: 'Anti-handyman hook · our certification.',
   },
   {
     id: 'mi-q-5',
-    peer: 'Aster & Oak',
-    peerDomain: 'asterandoak.com',
+    peer: 'Austin Custom Painting',
+    peerDomain: 'austincustompainting.com',
     metric: '2.9x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&q=80',
-    observedHeadline: 'Just Started? Our 30-Day Wellness Routine',
+    observedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=600&q=80',
+    observedHeadline: 'First Time Painting Your Home? Free Color Consult.',
     observedDesc:
-      'Built for first-time supplement buyers. 4.8★ rated. Risk-free, cancel anytime.',
-    observed: 'Beginner-targeted framing — explicit "just started" hook.',
-    observedSummary: 'Beginner-targeted · "just started" hook.',
-    adaptedHeadline: 'New to Supplements? Try Our 30-Day Bundle',
+      'Built for first-time homeowners. Free color consultation included. 5-star rated.',
+    observed: 'First-time-buyer framing — explicit "first time" hook.',
+    observedSummary: 'First-time framing · free color consult.',
+    adaptedHeadline: 'New to Painting? Free Color Consultation Included',
     adaptedDesc:
-      'Naturopath-formulated for first-time buyers. 4.8★ rated. 30-day money-back.',
-    adapted: 'Beginner hook applied to your existing 30-day guarantee.',
-    adaptedSummary: 'Beginner hook · our 30-day guarantee.',
+      'CertaPro consultants help first-time homeowners pick the right color. 187 5-star reviews.',
+    adapted: 'First-time hook applied with our existing free color consult.',
+    adaptedSummary: 'First-time hook · our free consult.',
   },
   {
     id: 'mi-q-6',
-    peer: 'Ground State Labs',
-    peerDomain: 'groundstate.io',
+    peer: 'Sherwin-Williams Pro Painters',
+    peerDomain: 'sherwin-williams.com/pro',
     metric: 'CTR 4.1%',
-    observedImage: 'https://images.unsplash.com/photo-1542736667-069246bdbc6d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&q=80',
-    observedHeadline: 'The Cleanest Supplement Stack You Can Buy',
+    observedImage: 'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    observedHeadline: 'The Most Trusted Painting Brand in America',
     observedDesc:
-      'Zero fillers, zero artificial colors. Third-party tested. NSF certified.',
-    observed: 'Purity-led headline with specific NSF certification cue.',
-    observedSummary: 'Purity hook · NSF certification cue.',
-    adaptedHeadline: 'Clean Supplements — Zero Fillers, Naturopath Built',
+      'Premium paint, certified contractors, lifetime warranty. Sherwin-Williams approved.',
+    observed: 'Trust-led headline with specific brand-certification cue.',
+    observedSummary: 'Trust hook · brand certification cue.',
+    adaptedHeadline: 'Trusted Austin Painters — Sherwin-Williams Approved',
     adaptedDesc:
-      'No artificial colors, no fillers. Third-party tested. 12,000+ reviewers.',
-    adapted: 'Purity hook with our existing review-volume social proof.',
-    adaptedSummary: 'Purity hook · our 12k+ reviews social proof.',
+      'Premium Sherwin-Williams paint, certified CertaPro crews. 2-year written warranty.',
+    adapted: 'Trust hook with our existing Sherwin-Williams partnership.',
+    adaptedSummary: 'Trust hook · our SW partnership.',
   },
 ];
 
@@ -2436,7 +2434,7 @@ function SearchMarketIntelCardView({ card }: { card: SearchMarketIntelCard }) {
               marginBottom: 4,
             }}
           >
-            Adapted for Radiant Health
+            Adapted for CertaPro Austin
           </Text>
           <Text variant="smallList" style={{ color: 'var(--dark-90)' }}>
             {card.adaptedSummary}
@@ -2484,9 +2482,9 @@ function SearchMarketIntelComparisonModal({
             body={card.observed}
           />
           <SearchComparisonPanel
-            heading="Proposed for Radiant Health"
+            heading="Proposed for CertaPro Austin"
             image={card.adaptedImage}
-            domain="radianthealth.com"
+            domain="certapro.com/austin"
             adHeadline={card.adaptedHeadline}
             adDesc={card.adaptedDesc}
             label="Adapted"

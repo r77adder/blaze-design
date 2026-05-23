@@ -1,31 +1,31 @@
 // Google SERP-style search results panel. Used for the "Examining keywords"
 // and "Auditing Google ranking" scan steps. Search bar at top + ad row +
-// organic results below. The customer's listing is highlighted; competitor
-// ads sit above it.
+// organic results below. The customer's listing is highlighted; a competitor
+// ad sits above it.
 
 const ORGANIC = [
   {
-    domain: 'austinairpros.com',
-    title: 'Austin Air Pros — #1 HVAC Repair in Austin, TX',
-    snippet: 'Same-day AC repair, installation & maintenance. 4.8★ across 1,200+ reviews. Family-owned since 1998.',
+    domain: 'fivestarpainting.com/south-austin',
+    title: 'Five Star Painting of South Austin — #1 Painters in Austin, TX',
+    snippet: 'Interior & exterior painting for Austin homes. 4.8★ across 1,400+ reviews. Free color consultations.',
     rank: 1,
   },
   {
-    domain: 'reliablecomforthvac.com',
-    title: 'Reliable Comfort HVAC | Austin Heating & Cooling',
-    snippet: 'Licensed Texas HVAC contractors serving Austin and surrounding areas. Free estimates on installation.',
+    domain: 'papermoonpainting.com',
+    title: 'Paper Moon Painting | Austin Interior & Exterior Painters',
+    snippet: 'Licensed Texas painting contractors serving Austin and the Hill Country. Free estimates on every project.',
     rank: 2,
   },
   {
-    domain: 'lonestarheatingair.com',
-    title: 'Lone Star Heating & Air Conditioning — Austin',
-    snippet: '24/7 emergency HVAC service in Greater Austin. Trusted by 650+ homeowners and businesses.',
+    domain: 'wow1day.com/austin',
+    title: 'WOW 1 DAY PAINTING Austin — Painted in a Single Day',
+    snippet: 'Professional painting crews finish most homes in one day. Trusted by 800+ Austin homeowners.',
     rank: 3,
   },
   {
-    domain: 'brightdayhvac.com',
-    title: 'Bright Day HVAC · Austin HVAC Repair & Installation',
-    snippet: 'Reliable HVAC service since 2008. Schedule a free consultation today.',
+    domain: 'certapro.com/austin',
+    title: 'CertaPro Painters of Austin · Residential & Commercial Painters',
+    snippet: 'Your local painters since 1992. Schedule a free estimate or color consultation today.',
     rank: 4,
     isYou: true,
   },
@@ -58,7 +58,7 @@ export function SerpPanel() {
         }}
       >
         <span style={{ color: 'var(--dark-40)', fontSize: 14 }}>🔍</span>
-        <span style={{ flex: 1, fontSize: 13, color: 'var(--dark-90)' }}>HVAC repair Austin</span>
+        <span style={{ flex: 1, fontSize: 13, color: 'var(--dark-90)' }}>painters Austin</span>
         <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>Google</span>
       </div>
 
@@ -87,13 +87,13 @@ export function SerpPanel() {
           >
             Sponsored
           </span>
-          <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>reliablecomforthvac.com</span>
+          <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>fivestarpainting.com/south-austin</span>
         </div>
         <div style={{ fontSize: 13, color: 'var(--purple)', fontWeight: 500, marginBottom: 2 }}>
-          Reliable Comfort — Bright Day HVAC alternative
+          Five Star Painting — CertaPro Austin alternative
         </div>
         <div style={{ fontSize: 11, color: 'var(--dark-60)', lineHeight: 1.4 }}>
-          Looking for HVAC repair in Austin? Get a free estimate from Reliable Comfort instead.
+          Looking for painters in Austin? Get a free estimate from Five Star Painting instead.
         </div>
       </div>
 

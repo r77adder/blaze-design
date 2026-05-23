@@ -31,11 +31,15 @@ interface MediaItem {
   hasMenu?: boolean;
 }
 
+// Real CertaPro Austin project photos pulled from certapro.com/austin —
+// these are the assets the Brand Kit imported from the website. Each item
+// keeps a title that hints at what's in the photo so the Library reads as
+// an actual asset catalog rather than a stock grid.
 const ITEMS: MediaItem[] = [
   {
     id: '1',
-    src: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=400&h=400&fit=crop',
-    title: '260127 assigned seating chart',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
+    title: 'Lakeway exterior repaint · after',
     kind: 'image',
     date: 'Image · Jan 28, 2026',
     editable: true,
@@ -43,31 +47,31 @@ const ITEMS: MediaItem[] = [
   },
   {
     id: '2',
-    src: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=400&h=400&fit=crop',
-    title: 'Untitled image',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/cabinet-staining.jpg',
+    title: 'Cabinet refinish · Tarrytown kitchen',
     kind: 'image',
     date: 'Image · Jan 28, 2026',
     hasMenu: true,
   },
   {
     id: '3',
-    src: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400&h=400&fit=crop',
-    title: 'Untitled image',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2022/03/white-painted-brick-home-686x353.jpg',
+    title: 'White brick exterior · Westlake',
     kind: 'image',
     date: 'Image · Jan 27, 2026',
     used: true,
   },
   {
     id: '4',
-    src: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop',
-    title: 'Untitled image',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg',
+    title: 'Interior refresh · Round Rock home',
     kind: 'image',
     date: 'Image · Jan 26, 2026',
   },
   {
     id: '5',
-    src: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=400&h=400&fit=crop',
-    title: 'Untitled video',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/power-washing-2.jpg',
+    title: 'Power wash time-lapse',
     kind: 'video',
     date: 'Video · Jan 22, 2026',
     duration: '0:15',
@@ -75,23 +79,23 @@ const ITEMS: MediaItem[] = [
   },
   {
     id: '6',
-    src: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=400&fit=crop',
-    title: 'Untitled image',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/color_consultation_certapro_preview-686x353.jpg',
+    title: 'Color consultation swatches',
     kind: 'image',
     date: 'Image · Jan 20, 2026',
   },
   {
     id: '7',
-    src: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=400&h=400&fit=crop',
-    title: 'Untitled image',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2025/01/After-4-rotated.jpeg',
+    title: 'Retail center exterior · commercial',
     kind: 'image',
     date: 'Image · Jan 18, 2026',
     hasMenu: true,
   },
   {
     id: '8',
-    src: 'https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=400&h=400&fit=crop',
-    title: 'Untitled video',
+    src: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/deck-staining-1.jpg',
+    title: 'Deck staining · Cedar Park',
     kind: 'video',
     date: 'Video · Jan 17, 2026',
     duration: '0:15',

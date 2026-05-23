@@ -37,9 +37,9 @@ export const STYLES: StyleOption[] = [
     description: 'Intimate portrait isolation with extreme bokeh and soft, flattering light.',
     recommended: true,
     pills: { lighting: 'Hard directional', color: 'Punchy neutral', contrast: 'High' },
-    thumbnail: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop',
+    thumbnail: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg',
     previewImage:
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=85',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
     afterFilter: 'saturate(1.15) contrast(1.1) brightness(1.05)',
   },
   {
@@ -49,9 +49,9 @@ export const STYLES: StyleOption[] = [
       'Cinematic lifestyle where hard shadows simplify the frame and bold colors command attention.',
     recommended: true,
     pills: { lighting: 'Selective moody', color: 'Dark atmospheric', contrast: 'Medium-high' },
-    thumbnail: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&h=200&fit=crop',
+    thumbnail: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2025/01/After-4-rotated.jpeg',
     previewImage:
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=85',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
     afterFilter: 'saturate(1.25) contrast(1.3) brightness(0.92)',
   },
   {
@@ -61,9 +61,9 @@ export const STYLES: StyleOption[] = [
       'Dreamy golden filter over bright photography — cream highlights, lifted shadows, nostalgic warmth.',
     recommended: true,
     pills: { lighting: 'Bright backlit', color: 'Golden wash', contrast: 'Very low' },
-    thumbnail: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=200&h=200&fit=crop',
+    thumbnail: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2022/03/white-painted-brick-home-686x353.jpg',
     previewImage:
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=85',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
     afterFilter: 'sepia(0.18) saturate(1.1) brightness(1.08) contrast(0.95)',
   },
   {
@@ -73,9 +73,9 @@ export const STYLES: StyleOption[] = [
       'Editorial high-contrast look with crushed blacks and clean whites — print-magazine energy.',
     recommended: false,
     pills: { lighting: 'Hard directional', color: 'Muted neutral', contrast: 'Very high' },
-    thumbnail: 'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=200&h=200&fit=crop',
+    thumbnail: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/cabinet-staining.jpg',
     previewImage:
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=85',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
     afterFilter: 'contrast(1.45) saturate(0.9) brightness(0.96)',
   },
   {
@@ -85,9 +85,9 @@ export const STYLES: StyleOption[] = [
       'Airy, washed pastels with gentle highlights — soft and approachable for wellness audiences.',
     recommended: false,
     pills: { lighting: 'Diffused soft', color: 'Pastel wash', contrast: 'Low' },
-    thumbnail: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=200&h=200&fit=crop',
+    thumbnail: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/color_consultation_certapro_preview-686x353.jpg',
     previewImage:
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=85',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
     afterFilter: 'saturate(0.85) brightness(1.12) contrast(0.92) hue-rotate(-4deg)',
   },
   {
@@ -97,9 +97,9 @@ export const STYLES: StyleOption[] = [
       'Refined black-and-white look with subtle grain — gravitas and timelessness in one frame.',
     recommended: false,
     pills: { lighting: 'Hard directional', color: 'Monochrome', contrast: 'Medium' },
-    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=200&h=200&fit=crop',
+    thumbnail: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/siding-painting.jpg',
     previewImage:
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=85',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
     afterFilter: 'grayscale(1) contrast(1.15) brightness(1)',
   },
 ];

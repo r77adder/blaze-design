@@ -43,34 +43,34 @@ interface Campaign {
   isNew?: boolean;
 }
 
-const PHOTO_A = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop';
-const PHOTO_B = 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=200&h=200&fit=crop';
-const PHOTO_C = 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=200&h=200&fit=crop';
-const PHOTO_D = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=200&fit=crop';
+const PHOTO_A = 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&h=200&fit=crop';
+const PHOTO_B = 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop';
+const PHOTO_C = 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&h=200&fit=crop';
+const PHOTO_D = 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=200&h=200&fit=crop';
 
 const HERO_IMG: Record<string, string> = {
-  fj: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&h=600&fit=crop',
-  vpl: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=1600&h=600&fit=crop',
-  ss: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1600&h=600&fit=crop',
-  tt1: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&h=600&fit=crop',
-  ss1: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=1600&h=600&fit=crop',
-  ss2: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=1600&h=600&fit=crop',
-  pu: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1600&h=600&fit=crop',
-  tt2: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1600&h=600&fit=crop',
+  fj: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=1600&h=600&fit=crop',
+  vpl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&h=600&fit=crop',
+  ss: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=1600&h=600&fit=crop',
+  tt1: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=1600&h=600&fit=crop',
+  ss1: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&h=600&fit=crop',
+  ss2: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&h=600&fit=crop',
+  pu: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=1600&h=600&fit=crop',
+  tt2: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=1600&h=600&fit=crop',
 };
 
 const SEED_CAMPAIGNS: Campaign[] = [
-  { id: 'fj', name: 'Founder Journey Q1', type: 'Lifestyle Content', thumb: PHOTO_C, start: '2026-02-08', end: '2026-03-31', status: 'posting', statusLabel: 'Posting', sections: ['organic', 'influencer', 'landing', 'aeo'] },
-  { id: 'vpl', name: 'Valentine Product Launch', type: 'Lifestyle Content', thumb: PHOTO_B, start: '2026-02-12', end: '2026-02-21', status: 'approved', statusLabel: 'Approved', sections: ['organic', 'meta', 'landing', 'email'] },
-  { id: 'ss', name: 'Success Stories Q1', type: 'Lifestyle Content', thumb: PHOTO_D, start: '2026-02-14', end: '2026-03-28', status: 'approved', statusLabel: 'Approved', sections: ['organic', 'influencer', 'aeo'] },
-  { id: 'tt1', name: 'Tips & Tricks March', type: 'Lifestyle Content', thumb: PHOTO_A, start: '2026-02-17', end: '2026-03-24', status: 'review', statusLabel: '15 posts to review', sections: ['organic', 'aeo'] },
-  { id: 'ss1', name: 'Spring Sale 2026', type: 'Lifestyle Content', thumb: PHOTO_B, start: '2026-02-25', end: '2026-03-14', status: 'review', statusLabel: '2 posts to review', sections: ['organic', 'meta', 'search', 'landing'] },
-  { id: 'ss2', name: 'Spring Sale — Wave 2', type: 'Lifestyle Content', thumb: PHOTO_C, start: '2026-03-01', end: '2026-03-28', status: 'generating', statusLabel: 'Generating in 3 days', sections: ['organic', 'meta', 'search'] },
-  { id: 'pu', name: 'Product Updates Q1', type: 'Lifestyle Content', thumb: PHOTO_D, start: '2026-03-03', end: '2026-04-14', status: 'generating', statusLabel: 'Generating in 10 days', sections: ['organic', 'landing', 'aeo'] },
-  { id: 'tt2', name: 'Tips & Tricks April', type: 'Lifestyle Content', thumb: PHOTO_A, start: '2026-03-03', end: '2026-04-04', status: 'generating', statusLabel: 'Generating on Apr 30', sections: ['organic', 'influencer'] },
-  { id: 'pe', name: 'Easter Brunch Series', type: 'Seasonal · proposed', thumb: PHOTO_B, start: '2026-03-30', end: '2026-04-12', status: 'proposed', statusLabel: 'Proposed — review to accept', proposed: true, sections: ['organic', 'meta'] },
-  { id: 'pmd', name: "Mother's Day Gift Guide", type: 'Seasonal · proposed', thumb: PHOTO_D, start: '2026-04-20', end: '2026-04-30', status: 'proposed', statusLabel: 'Proposed — review to accept', proposed: true, sections: ['organic', 'meta', 'email'] },
-  { id: 'psl', name: 'Summer Pre-Launch Tease', type: 'Awareness · proposed', thumb: PHOTO_C, start: '2026-04-15', end: '2026-04-30', status: 'proposed', statusLabel: 'Proposed — review to accept', proposed: true, sections: ['organic', 'aeo', 'landing'] },
+  { id: 'fj', name: 'Owner Story — John Bunnell', type: 'Lifestyle Content', thumb: PHOTO_C, start: '2026-02-08', end: '2026-03-31', status: 'posting', statusLabel: 'Posting', sections: ['organic', 'influencer', 'landing', 'aeo'] },
+  { id: 'vpl', name: 'Cabinet Refresh — Spring Launch', type: 'Lifestyle Content', thumb: PHOTO_B, start: '2026-02-12', end: '2026-02-21', status: 'approved', statusLabel: 'Approved', sections: ['organic', 'meta', 'landing', 'email'] },
+  { id: 'ss', name: 'Customer Stories — Q1 Repaints', type: 'Lifestyle Content', thumb: PHOTO_D, start: '2026-02-14', end: '2026-03-28', status: 'approved', statusLabel: 'Approved', sections: ['organic', 'influencer', 'aeo'] },
+  { id: 'tt1', name: 'Color Tips — March', type: 'Lifestyle Content', thumb: PHOTO_A, start: '2026-02-17', end: '2026-03-24', status: 'review', statusLabel: '15 posts to review', sections: ['organic', 'aeo'] },
+  { id: 'ss1', name: 'Spring Exterior Push 2026', type: 'Lifestyle Content', thumb: PHOTO_B, start: '2026-02-25', end: '2026-03-14', status: 'review', statusLabel: '2 posts to review', sections: ['organic', 'meta', 'search', 'landing'] },
+  { id: 'ss2', name: 'Spring Exterior — Wave 2', type: 'Lifestyle Content', thumb: PHOTO_C, start: '2026-03-01', end: '2026-03-28', status: 'generating', statusLabel: 'Generating in 3 days', sections: ['organic', 'meta', 'search'] },
+  { id: 'pu', name: 'New Service — Stucco Repair', type: 'Lifestyle Content', thumb: PHOTO_D, start: '2026-03-03', end: '2026-04-14', status: 'generating', statusLabel: 'Generating in 10 days', sections: ['organic', 'landing', 'aeo'] },
+  { id: 'tt2', name: 'Color Tips — April', type: 'Lifestyle Content', thumb: PHOTO_A, start: '2026-03-03', end: '2026-04-04', status: 'generating', statusLabel: 'Generating on Apr 30', sections: ['organic', 'influencer'] },
+  { id: 'pe', name: 'Pre-Summer Exterior Series', type: 'Seasonal · proposed', thumb: PHOTO_B, start: '2026-03-30', end: '2026-04-12', status: 'proposed', statusLabel: 'Proposed — review to accept', proposed: true, sections: ['organic', 'meta'] },
+  { id: 'pmd', name: "Mother's Day Kitchen Refresh", type: 'Seasonal · proposed', thumb: PHOTO_D, start: '2026-04-20', end: '2026-04-30', status: 'proposed', statusLabel: 'Proposed — review to accept', proposed: true, sections: ['organic', 'meta', 'email'] },
+  { id: 'psl', name: 'HOA Repaint Lead-Gen Tease', type: 'Awareness · proposed', thumb: PHOTO_C, start: '2026-04-15', end: '2026-04-30', status: 'proposed', statusLabel: 'Proposed — review to accept', proposed: true, sections: ['organic', 'aeo', 'landing'] },
 ];
 
 interface SectionMeta {
@@ -138,8 +138,8 @@ const SECTION_META: Record<SectionId, SectionMeta> = {
   },
   landing: {
     title: 'Landing Page',
-    desc: 'Hero, 3 feature sections, signup form',
-    chips: ['radianthealth.com/spring'],
+    desc: 'Hero, 3 feature sections, estimate request form',
+    chips: ['certapro.com/austin/spring'],
     pill: 'Approved',
     pillKind: 'ok',
     icon: (
@@ -776,7 +776,7 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
               <path d="M12 2 4 6v6c0 4.5 3.4 7.7 8 9 4.6-1.3 8-4.5 8-9V6l-8-4z" />
             </svg>
           }>
-            Radiant Health <span style={{ color: 'var(--dark-40)' }}>· from Brand Kit</span>
+            CertaPro Painters of Austin <span style={{ color: 'var(--dark-40)' }}>· from Brand Kit</span>
           </DetailRow>
           <DetailRow label="Audience" icon={
             <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
@@ -784,7 +784,7 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
               <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
             </svg>
           }>
-            Wellness-curious adults 25–45 · US
+            Homeowners 35–65 · Austin metro
           </DetailRow>
           <DetailRow label="Theme" icon={
             <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
@@ -1071,7 +1071,7 @@ const STRATEGIES: Strategy[] = [
       </svg>
     ),
     elements: ['organic', 'influencer', 'email'],
-    themePrefix: 'A 4-week lifestyle push showing how Radiant fits into the morning routines, weekend rituals, and calm-evening moments of your audience.',
+    themePrefix: 'A 4-week lifestyle push showing how CertaPro Austin fits into the moments homeowners care about — fresh exteriors before summer, kitchen refreshes ahead of guests, finished interiors before listing.',
     durationDays: 28,
   },
   {
@@ -1128,7 +1128,7 @@ const STRATEGIES: Strategy[] = [
       </svg>
     ),
     elements: ['organic', 'influencer', 'email', 'meta', 'search', 'landing'],
-    context: { q: 'Which product are you launching?', placeholder: 'e.g., Daily Wellness Bundle V2', suggestions: ['Daily Wellness Bundle V2', 'Sleep Stack', 'Calm Bundle', 'Energy + Focus Stack'] },
+    context: { q: 'Which service are you launching?', placeholder: 'e.g., Cabinet refinishing — Austin', suggestions: ['Cabinet refinishing — Austin', 'Stucco repair service', 'Deck & fence staining', 'Power washing add-on'] },
     themePrefix: 'A coordinated launch sequence — teaser → reveal → social proof → close — across organic, paid, influencer, and CRM. Anchored on',
     durationDays: 21,
   },
@@ -1143,7 +1143,7 @@ const STRATEGIES: Strategy[] = [
       </svg>
     ),
     elements: ['organic', 'influencer', 'meta'],
-    context: { q: 'Which product do you want to showcase?', placeholder: 'e.g., The Sleep Stack', suggestions: ['The Sleep Stack', 'Daily Wellness Bundle', 'Calm Drops', 'Energy Stack'] },
+    context: { q: 'Which service do you want to showcase?', placeholder: 'e.g., Exterior painting', suggestions: ['Exterior painting', 'Cabinet refinishing', 'Interior painting', 'HOA & commercial painting'] },
     themePrefix: 'A 3-week showcase pushing fresh angles, formats, and creator perspectives on',
     durationDays: 21,
   },
@@ -1160,7 +1160,7 @@ const STRATEGIES: Strategy[] = [
       </svg>
     ),
     elements: ['organic', 'meta', 'email'],
-    context: { q: 'Which customer story should we anchor on?', placeholder: 'e.g., Sarah K. — "Cleared my morning fog in 3 days"', suggestions: ['Sarah K. — morning fog', 'Marcus R. — energy crash', 'Priya N. — clean ingredients', 'Elena T. — sleep reset'] },
+    context: { q: 'Which customer story should we anchor on?', placeholder: 'e.g., The Patel family — Westlake exterior repaint', suggestions: ['Patel family — Westlake exterior', 'Lopez family — Cedar Park cabinets', 'Oakridge HOA — 14-building repaint', 'Maria T. — Round Rock interior'] },
     themePrefix: 'A 2-week testimonial-led push — turning the story into organic shorts, retargeted Meta ads, a CRM nurture, and review-platform amplification. Anchored on',
     durationDays: 14,
   },
@@ -1175,7 +1175,7 @@ const STRATEGIES: Strategy[] = [
       </svg>
     ),
     elements: ['organic', 'meta', 'email', 'influencer'],
-    context: { q: "What trend or seasonal moment are we tying into?", placeholder: 'e.g., New Year reset, Earth Day, Spring Equinox', suggestions: ['New Year reset', 'Earth Day', 'Spring Equinox', "Mother's Day", 'Wellness Week', 'Back to school'] },
+    context: { q: "What trend or seasonal moment are we tying into?", placeholder: 'e.g., Spring exterior season, Pre-listing repaint, ACL house-prep', suggestions: ['Spring exterior season', 'Pre-listing repaint push', 'ACL house-prep', 'Holiday hosting refresh', 'Back-to-school interior', "Mother's Day kitchen refresh"] },
     themePrefix: 'A timely 2-week push designed to land in-feed during the moment — paid Meta + organic + creator amplification + CRM follow-up. Tied to',
     durationDays: 14,
   },
@@ -1720,8 +1720,11 @@ function CampaignsRouteInner() {
   const topbarCenter =
     view.kind === 'gantt' ? (
       <div style={{ display: 'inline-flex', gap: 6 }}>
-        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social')}>Calendar</TabChip>
         <TabChip selected onSelect={() => {}}>Campaigns</TabChip>
+        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social')}>Calendar</TabChip>
+        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social?tab=approvals')}>Approvals</TabChip>
+        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social?tab=insights')}>Insights</TabChip>
+        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social?tab=recents')}>Recents</TabChip>
       </div>
     ) : undefined;
 
