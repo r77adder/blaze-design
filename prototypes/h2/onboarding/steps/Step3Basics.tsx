@@ -147,12 +147,16 @@ export function Step3Basics() {
         <Text variant="primary" style={{ color: 'var(--dark-90)', lineHeight: 1.55, fontSize: 14 }}>
           <span dangerouslySetInnerHTML={{
             __html: profile.elevatorPitch.replace(
-              'woman veteran-owned graphic design agency',
-              '<strong style="color: var(--dark-90); font-weight: 500;">woman veteran-owned graphic design agency</strong>',
+              'locally-owned residential and commercial painting contractor',
+              '<strong style="color: var(--dark-90); font-weight: 500;">locally-owned residential and commercial painting contractor</strong>',
             ),
           }} />
         </Text>
       </div>
+
+      {/* Profiles — pulled from scorecard input. Lets the scan analyze
+          presence + reputation beyond just the website. */}
+      <ProfilesFieldset />
 
       {/* Logo */}
       <div style={{ marginBottom: 24 }}>
@@ -199,12 +203,13 @@ export function Step3Basics() {
             alignItems: 'center',
             justifyContent: 'center',
             fontFamily: '"Times New Roman", Georgia, serif',
-            fontSize: 24,
-            letterSpacing: '0.18em',
+            fontSize: 26,
+            letterSpacing: '0.06em',
             color: 'var(--dark-90)',
+            fontWeight: 600,
           }}
         >
-          SHEREEN HOBAN
+          CertaPro
         </div>
       </div>
 
@@ -345,10 +350,82 @@ export function Step3Basics() {
           Back
         </button>
         <Button variant="primary" size="lg" onPress={next}>
-          Set My Content Strategy
+          Generate My Business Score Card
         </Button>
       </div>
     </div>
+  );
+}
+
+function ProfilesFieldset() {
+  // Field set lifted from the scorecard /scorecard InputView so the scan
+  // has the same profile surface area to analyze (GBP, social, reviews).
+  // Uncontrolled inputs — prototype-grade; values aren't persisted.
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <ProfileField label="Google Business Profile" hint="(business name + city works)">
+        <ProfileInput defaultValue="CertaPro Painters of Austin — Austin, TX" />
+      </ProfileField>
+
+      <ProfileField label="Social handles" hint="(any platforms you use)">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <ProfileInput placeholder="Instagram" defaultValue="@certapro_austin" />
+          <ProfileInput placeholder="Facebook" defaultValue="CertaProAustin" />
+          <ProfileInput placeholder="TikTok" />
+          <ProfileInput placeholder="LinkedIn" defaultValue="certapro-painters-austin" />
+        </div>
+      </ProfileField>
+
+      <ProfileField label="Review profiles" hint="(URLs or platform names)">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <ProfileInput placeholder="Google reviews URL" defaultValue="auto-detect from GBP" />
+          <ProfileInput placeholder="Yelp / Angi / vertical-specific" defaultValue="Yelp, Angi, HomeAdvisor" />
+        </div>
+      </ProfileField>
+    </div>
+  );
+}
+
+function ProfileField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 8, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <Text
+          variant="smallList"
+          style={{ color: 'var(--dark-90)', fontWeight: 500 }}
+        >
+          {label}
+        </Text>
+        {hint && (
+          <Text variant="metadata" style={{ color: 'var(--dark-40)', fontSize: 12 }}>
+            {hint}
+          </Text>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ProfileInput({ placeholder, defaultValue, type = 'text' }: { placeholder?: string; defaultValue?: string; type?: string }) {
+  return (
+    <input
+      type={type}
+      defaultValue={defaultValue}
+      placeholder={placeholder}
+      style={{
+        width: '100%',
+        padding: '12px 14px',
+        fontSize: 14,
+        fontFamily: 'inherit',
+        background: 'var(--light-100)',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 10,
+        color: 'var(--dark-90)',
+        outline: 'none',
+        boxSizing: 'border-box',
+      }}
+    />
   );
 }
 

@@ -6,11 +6,11 @@ import Upload from '@/icons/20/Upload';
 const PEOPLE_AVATARS = [
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80',
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80',
-  'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&q=80',
+  'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=120&q=80',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80',
+  'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=120&q=80',
   'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&q=80',
-  'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=120&q=80',
+  'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=120&q=80',
 ];
 
 /** Step 6 — Source materials. Two-card grid. */

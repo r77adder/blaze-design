@@ -213,7 +213,7 @@ function VisualStyleCard() {
           }}
         >
           <img
-            src="https://images.unsplash.com/photo-1488161628813-04466f872be2?w=800&q=80"
+            src="https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=800&q=80"
             alt=""
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />

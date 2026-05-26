@@ -11,7 +11,7 @@ import Star from '@/icons/20/Star';
 import Target2 from '@/icons/20/Target2';
 import Templates from '@/icons/20/Templates';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
-import { Card, KindBadge, StatusPill } from '@/staging';
+import { Card, StatusPill } from '@/staging';
 import type { FeedItem as FeedItemData, FeedSource } from './feed-data';
 import styles from './FeedItem.module.scss';
 
@@ -85,7 +85,7 @@ export function FeedItem({ item, onAction, onOpen }: FeedItemProps) {
           ) : item.kind === 'action' ? (
             <StatusPill tone="warning" size="sm">Needs sign-off</StatusPill>
           ) : (
-            <KindBadge kind={item.kind} iconless />
+            <StatusPill tone="info" size="sm">Insight</StatusPill>
           )}
           <span
             style={{

@@ -29,8 +29,11 @@ const STEPS: Step[] = [
   { label: 'Auditing Google ranking',        panel: 'serp' },
 ];
 
-const PER_STEP_MS = 2500;
-const FINAL_PAUSE_MS = 600;
+// Snappier timing — full scan now ~8s instead of ~21s. Long enough that the
+// timeline reads as "the system is working," short enough that designers /
+// PMs clicking through onboarding aren't trapped staring at a spinner.
+const PER_STEP_MS = 900;
+const FINAL_PAUSE_MS = 400;
 
 // ─────────────────────────────────────────────────────────────────────────
 // Hooks
@@ -123,9 +126,9 @@ function TimelineRow({
             style={{
               flex: 1,
               width: 1,
-              minHeight: 12,
+              minHeight: 16,
               background: state === 'done' ? 'var(--status-approved)' : 'var(--dark-8)',
-              marginTop: 4,
+              marginTop: 0,
               transition: 'background 200ms ease',
             }}
           />
@@ -216,6 +219,7 @@ export function ScanView({ onComplete }: ScanViewProps = {}) {
   const activePanel = STEPS[currentStep]?.panel ?? 'website';
 
   return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     <div
       data-scan-grid
       style={{
@@ -223,9 +227,10 @@ export function ScanView({ onComplete }: ScanViewProps = {}) {
         margin: '0 auto',
         padding: '48px 24px',
         display: 'grid',
-        gridTemplateColumns: 'minmax(360px, 1fr) 1.4fr',
+        gridTemplateColumns: 'minmax(340px, 0.9fr) 1.6fr',
         gap: 48,
-        alignItems: 'start',
+        alignItems: 'center',
+        width: '100%',
       }}
     >
       <style>{`
@@ -252,7 +257,7 @@ export function ScanView({ onComplete }: ScanViewProps = {}) {
       {/* LEFT COLUMN — title + timeline */}
         <div>
           <Heading level={2} style={{ marginBottom: 28, lineHeight: 1.2 }}>
-            Analyzing Bright Day HVAC&rsquo;s business across all sources…
+            Analyzing CertaPro Austin&rsquo;s business across all sources…
           </Heading>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -272,9 +277,46 @@ export function ScanView({ onComplete }: ScanViewProps = {}) {
         </div>
 
       {/* RIGHT COLUMN — visual panel */}
-      <div data-scan-panel-wrap style={{ position: 'sticky', top: 24, height: 540 }}>
+      <div data-scan-panel-wrap style={{ position: 'sticky', top: 24, height: 640 }}>
         <PanelStack active={activePanel} />
       </div>
     </div>
+    {onComplete && <SkipScanButton onSkip={onComplete} />}
+    </div>
+  );
+}
+
+/** Prototype-only affordance — lets a designer / PM clicking through the
+ *  onboarding (or the standalone /scorecard prototype) jump straight to the
+ *  results without waiting for the full timeline to play out. Styled as a
+ *  dashed-border dev shortcut so it doesn't read as a real product CTA. */
+function SkipScanButton({ onSkip }: { onSkip: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSkip}
+      style={{
+        position: 'fixed',
+        bottom: 16,
+        right: 16,
+        zIndex: 50,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '6px 12px',
+        background: 'var(--dark-90)',
+        border: '1px dashed var(--brand)',
+        borderRadius: 999,
+        cursor: 'pointer',
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        fontSize: 11,
+        fontWeight: 500,
+        color: 'var(--light-60)',
+        letterSpacing: '0.02em',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.20)',
+      }}
+    >
+      Skip scan →
+    </button>
   );
 }

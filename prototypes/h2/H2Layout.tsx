@@ -87,7 +87,7 @@ export function H2Layout({ children, title, topbarRight, topbarCenter, fullBleed
     <PrototypeShell
       title={title ?? derived}
       sidebarSections={sections}
-      workspaceName="Radiant Health"
+      workspaceName="CertaPro Austin"
       topbarRight={topbarRight}
       topbarCenter={topbarCenter}
       fullBleed={fullBleed}

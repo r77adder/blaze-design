@@ -78,25 +78,25 @@ const PLATFORMS: Record<PlatformId, { color: string; label: string }> = {
 };
 
 const POSTS: PostData[] = [
-  { id: 1, text: '🚀 Exciting things are happening at Blaze! We\'re launching new features this week.', platforms: ['ig', 'fb'], date: 'Apr 12', time: '9:00 AM', status: 'scheduled', campaign: 'Spring Launch 2025', day: 12 },
-  { id: 2, text: 'Behind the scenes: how our team builds content that converts 📸', platforms: ['fb', 'li'], date: 'Apr 12', time: '2:00 PM', status: 'draft', campaign: 'Spring Launch 2025', day: 12 },
-  { id: 3, text: '5 tips for growing your social media audience organically in 2025', platforms: ['li'], date: 'Apr 14', time: '10:00 AM', status: 'scheduled', campaign: '', day: 14 },
-  { id: 4, text: '', platforms: ['ig', 'fb', 'x'], date: 'Apr 15', time: '11:00 AM', status: 'needs-content', campaign: 'Product Awareness Q2', day: 15 },
-  { id: 5, text: 'Customer spotlight: How @brandname grew 40% using Blaze 🔥', platforms: ['ig', 'x'], date: 'Apr 16', time: '9:00 AM', status: 'review', campaign: 'Customer Stories', day: 16 },
+  { id: 1, text: '🎨 Spring exterior season is here. Booking April + May painters now — free in-home estimate.', platforms: ['ig', 'fb'], date: 'Apr 12', time: '9:00 AM', status: 'scheduled', campaign: 'Spring Exterior Push 2026', day: 12 },
+  { id: 2, text: 'Behind the scenes: how our Westlake crew preps for a 4-day exterior 📸', platforms: ['fb', 'li'], date: 'Apr 12', time: '2:00 PM', status: 'draft', campaign: 'Spring Exterior Push 2026', day: 12 },
+  { id: 3, text: '5 paint colors that hold up best to Texas heat — 2026 guide', platforms: ['li'], date: 'Apr 14', time: '10:00 AM', status: 'scheduled', campaign: '', day: 14 },
+  { id: 4, text: '', platforms: ['ig', 'fb', 'x'], date: 'Apr 15', time: '11:00 AM', status: 'needs-content', campaign: 'Cabinet Refresh Q2', day: 15 },
+  { id: 5, text: 'Customer spotlight: the Patel family — Westlake exterior, painted in 4 days 🔥', platforms: ['ig', 'x'], date: 'Apr 16', time: '9:00 AM', status: 'review', campaign: 'Customer Stories', day: 16 },
   { id: 6, text: '', platforms: ['ig'], date: 'Apr 18', time: '3:00 PM', status: 'needs-content', campaign: '', day: 18 },
-  { id: 7, text: 'New product feature drop — thread 🧵 coming Monday. Don\'t miss it.', platforms: ['x', 'li'], date: 'Apr 19', time: '10:00 AM', status: 'scheduled', campaign: 'Spring Launch 2025', day: 19 },
-  { id: 8, text: '', platforms: ['fb', 'li'], date: 'Apr 21', time: '1:00 PM', status: 'needs-content', campaign: 'Product Awareness Q2', day: 21 },
-  { id: 9, text: 'Happy Monday! Here\'s your weekly dose of marketing inspiration ✨', platforms: ['ig', 'fb'], date: 'Apr 22', time: '8:00 AM', status: 'scheduled', campaign: '', day: 22 },
-  { id: 10, text: 'Q2 strategy recap: what worked, what we\'re changing, and what\'s next.', platforms: ['li'], date: 'Apr 25', time: '11:00 AM', status: 'draft', campaign: '', day: 25 },
+  { id: 7, text: 'Cabinet refinishing case study coming Monday — full kitchen, 3 days, $4,800. Don\'t miss it.', platforms: ['x', 'li'], date: 'Apr 19', time: '10:00 AM', status: 'scheduled', campaign: 'Spring Exterior Push 2026', day: 19 },
+  { id: 8, text: '', platforms: ['fb', 'li'], date: 'Apr 21', time: '1:00 PM', status: 'needs-content', campaign: 'Cabinet Refresh Q2', day: 21 },
+  { id: 9, text: 'Happy Monday Austin! Here\'s your weekly color tip from CertaPro ✨', platforms: ['ig', 'fb'], date: 'Apr 22', time: '8:00 AM', status: 'scheduled', campaign: '', day: 22 },
+  { id: 10, text: 'Q1 recap: 47 exterior repaints across Austin, Cedar Park, and Round Rock.', platforms: ['li'], date: 'Apr 25', time: '11:00 AM', status: 'draft', campaign: '', day: 25 },
 ];
 
 const CAMPAIGNS: CampaignData[] = [
-  { name: 'Spring Launch 2025', goal: 'Product Launch', start: 'Apr 1', end: 'Apr 30', posts: 24, progress: 62, status: 'active', platforms: ['ig', 'fb', 'li'] },
-  { name: 'Product Awareness Q2', goal: 'Brand Awareness', start: 'Apr 1', end: 'Jun 30', posts: 40, progress: 18, status: 'active', platforms: ['ig', 'fb', 'x', 'li'] },
+  { name: 'Spring Exterior Push 2026', goal: 'Lead Generation', start: 'Apr 1', end: 'Apr 30', posts: 24, progress: 62, status: 'active', platforms: ['ig', 'fb', 'li'] },
+  { name: 'Cabinet Refresh Q2', goal: 'Brand Awareness', start: 'Apr 1', end: 'Jun 30', posts: 40, progress: 18, status: 'active', platforms: ['ig', 'fb', 'x', 'li'] },
   { name: 'Customer Stories', goal: 'Engagement', start: 'Mar 15', end: 'May 15', posts: 12, progress: 41, status: 'active', platforms: ['ig', 'li'] },
-  { name: 'Q1 Wrap-up', goal: 'Brand Awareness', start: 'Jan 1', end: 'Mar 31', posts: 36, progress: 100, status: 'ended', platforms: ['ig', 'fb', 'li', 'x'] },
-  { name: 'Holiday Campaign', goal: 'Engagement', start: 'Dec 1', end: 'Dec 31', posts: 18, progress: 100, status: 'ended', platforms: ['ig', 'fb'] },
-  { name: 'Summer Preview', goal: 'Lead Generation', start: 'May 1', end: 'Jul 31', posts: 0, progress: 0, status: 'draft', platforms: ['ig', 'fb'] },
+  { name: 'Q1 Wrap-up — 47 repaints', goal: 'Brand Awareness', start: 'Jan 1', end: 'Mar 31', posts: 36, progress: 100, status: 'ended', platforms: ['ig', 'fb', 'li', 'x'] },
+  { name: 'Holiday Hosting Refresh', goal: 'Engagement', start: 'Dec 1', end: 'Dec 31', posts: 18, progress: 100, status: 'ended', platforms: ['ig', 'fb'] },
+  { name: 'Summer HOA Lead-Gen', goal: 'Lead Generation', start: 'May 1', end: 'Jul 31', posts: 0, progress: 0, status: 'draft', platforms: ['ig', 'fb'] },
 ];
 
 const STATUS_META: Record<Status, { label: string; tone: StatusPillTone }> = {
@@ -347,10 +347,10 @@ function Sidebar({
             flexShrink: 0,
           }}
         >
-          BL
+          CP
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-80)' }}>Blaze Official</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-80)' }}>CertaPro Austin</div>
           <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>Pro Plan</div>
         </div>
       </div>
@@ -467,7 +467,7 @@ function ContentPlanView({
         }
         right={
           <>
-            <SecondaryToolbarBtn icon={<Calendar1 />}>Apr 1 – Apr 30, 2025</SecondaryToolbarBtn>
+            <SecondaryToolbarBtn icon={<Calendar1 />}>Apr 1 – Apr 30, 2026</SecondaryToolbarBtn>
             <SecondaryToolbarBtn icon={<Filter />}>Filter</SecondaryToolbarBtn>
             <Button variant="primary" size="md" frontIcon={Plus} onPress={onCreate}>
               Create
@@ -522,7 +522,7 @@ function CalendarView({
                 <path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-            <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>April 2025</span>
+            <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>April 2026</span>
             <button type="button" style={navBtnStyle} aria-label="Next month">
               <svg viewBox="0 0 14 14" fill="none" width={14} height={14}>
                 <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
@@ -1234,7 +1234,7 @@ function ContentPreviewModal({
   const [tab, setTab] = useState<'preview' | 'edit' | 'analytics'>('preview');
   const text =
     post?.text ||
-    "🚀 Exciting things are happening at Blaze! We're thrilled to announce our new content features that will transform how you manage your social media presence. Stay tuned for more updates! #Blaze #ContentCreation #SocialMedia";
+    "🎨 Booking April + May exterior painters now. CertaPro Painters of Austin — locally owned, professionally certified. Free in-home estimate. 2-year warranty. Call (512) 323-9502 or request online. #CertaProAustin #AustinPainters #ExteriorPainting";
 
   return (
     <Modal.Root size="lg" aria-labelledby="cp-preview-title">
@@ -1277,11 +1277,11 @@ function ContentPreviewModal({
                     justifyContent: 'center',
                   }}
                 >
-                  EJ
+                  CP
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>Emma Johnson</div>
-                  <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>@emmajohnson · Instagram</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>CertaPro Austin</div>
+                  <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>@certaproaustin · Instagram</div>
                 </div>
               </div>
               <div
@@ -1316,7 +1316,7 @@ function ContentPreviewModal({
             </FormGroup>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <FormGroup label="Date">
-                <input type="date" defaultValue="2025-04-12" style={inputStyle} />
+                <input type="date" defaultValue="2026-04-12" style={inputStyle} />
               </FormGroup>
               <FormGroup label="Time">
                 <input type="time" defaultValue="09:00" style={inputStyle} />
@@ -1402,7 +1402,7 @@ function CreateContentModal({
           </FormGroup>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <FormGroup label="Date">
-              <input type="date" defaultValue="2025-04-15" style={inputStyle} />
+              <input type="date" defaultValue="2026-04-15" style={inputStyle} />
             </FormGroup>
             <FormGroup label="Time">
               <input type="time" defaultValue="09:00" style={inputStyle} />
@@ -1411,8 +1411,8 @@ function CreateContentModal({
           <FormGroup label="Campaign (optional)">
             <select style={inputStyle} defaultValue="">
               <option value="">No campaign</option>
-              <option>Spring Launch 2025</option>
-              <option>Product Awareness Q2</option>
+              <option>Spring Exterior Push 2026</option>
+              <option>Cabinet Refresh Q2</option>
               <option>Customer Stories</option>
             </select>
           </FormGroup>
@@ -1442,7 +1442,7 @@ function RescheduleModal({ close, onConfirm }: StackModalProps & { onConfirm: ()
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <FormGroup label="New Date">
-              <input type="date" defaultValue="2025-04-18" style={inputStyle} />
+              <input type="date" defaultValue="2026-04-18" style={inputStyle} />
             </FormGroup>
             <FormGroup label="New Time">
               <input type="time" defaultValue="10:00" style={inputStyle} />
@@ -1450,8 +1450,8 @@ function RescheduleModal({ close, onConfirm }: StackModalProps & { onConfirm: ()
           </div>
           <FormGroup label="Affected Accounts">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <AccountRow color="linear-gradient(135deg,#c95b8a,#a8359a)" name="Emma Johnson" channel="Instagram · @emmajohnson" />
-              <AccountRow color="linear-gradient(135deg,#7BAEE8,#5A8FD4)" name="Emma Johnson" channel="Facebook · Emma Johnson" />
+              <AccountRow color="linear-gradient(135deg,#c95b8a,#a8359a)" name="CertaPro Austin" channel="Instagram · @certaproaustin" />
+              <AccountRow color="linear-gradient(135deg,#7BAEE8,#5A8FD4)" name="CertaPro Austin" channel="Facebook · CertaPro Painters of Austin" />
             </div>
           </FormGroup>
         </div>
@@ -1556,27 +1556,27 @@ function CreateCampaignModal({
           <FormGroup label="Campaign Name">
             <input
               type="text"
-              placeholder="e.g. Spring Launch 2025"
+              placeholder="e.g. Spring Exterior Push 2026"
               value={name}
               onChange={(e) => setName(e.target.value)}
               style={inputStyle}
             />
           </FormGroup>
           <FormGroup label="Goal">
-            <select style={inputStyle} defaultValue="Brand Awareness">
-              <option>Brand Awareness</option>
+            <select style={inputStyle} defaultValue="Lead Generation">
               <option>Lead Generation</option>
+              <option>Brand Awareness</option>
               <option>Engagement</option>
-              <option>Product Launch</option>
+              <option>Service Launch</option>
               <option>Community Growth</option>
             </select>
           </FormGroup>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <FormGroup label="Start Date">
-              <input type="date" defaultValue="2025-04-01" style={inputStyle} />
+              <input type="date" defaultValue="2026-04-01" style={inputStyle} />
             </FormGroup>
             <FormGroup label="End Date">
-              <input type="date" defaultValue="2025-04-30" style={inputStyle} />
+              <input type="date" defaultValue="2026-04-30" style={inputStyle} />
             </FormGroup>
           </div>
           <FormGroup label="Channels">
@@ -1641,16 +1641,16 @@ function CampaignDetailsModal({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <UpcomingRow
-                title="Product spotlight — Instagram"
-                meta="Apr 12, 2025 · 9:00 AM"
+                title="Westlake exterior reveal — Instagram"
+                meta="Apr 12, 2026 · 9:00 AM"
                 statusLabel="Scheduled"
                 statusBg="#E8F5E9"
                 statusColor="#2E7D32"
                 onClick={onPreview}
               />
               <UpcomingRow
-                title="Behind the scenes — Facebook"
-                meta="Apr 14, 2025 · 2:00 PM"
+                title="Crew BTS, Cedar Park job — Facebook"
+                meta="Apr 14, 2026 · 2:00 PM"
                 statusLabel="Draft"
                 statusBg="var(--dark-8)"
                 statusColor="var(--dark-60)"
@@ -1845,7 +1845,7 @@ function AccountRow({
           flexShrink: 0,
         }}
       >
-        EJ
+        CP
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{name}</div>

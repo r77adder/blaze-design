@@ -67,27 +67,27 @@ const CONTENT_TYPE_ORDER: FirstCampaignContentType[] = [
 const AI_POOL: Array<{ topic: string; image: string; contentType: FirstCampaignContentType }> = [
   {
     topic: 'Brewing temperature matters',
-    image: 'https://images.unsplash.com/photo-1442550528053-c431ecb55509?w=320&q=80',
+    image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=320&q=80',
     contentType: 'still',
   },
   {
     topic: 'Why we roast in small batches',
-    image: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=320&q=80',
+    image: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=320&q=80',
     contentType: 'carousel',
   },
   {
     topic: 'Meet our newest single-origin',
-    image: 'https://images.unsplash.com/photo-1503481766315-7a586b20f66d?w=320&q=80',
+    image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=320&q=80',
     contentType: 'video',
   },
   {
     topic: 'Coffee is bitter — here is why',
-    image: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=320&q=80',
+    image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=320&q=80',
     contentType: 'short-video',
   },
   {
     topic: 'A morning ritual worth keeping',
-    image: 'https://images.unsplash.com/photo-1494314671902-399b18174975?w=320&q=80',
+    image: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=320&q=80',
     contentType: 'still',
   },
 ];

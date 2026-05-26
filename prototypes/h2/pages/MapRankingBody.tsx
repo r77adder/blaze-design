@@ -3,40 +3,32 @@ import { useSearchParams } from 'react-router-dom';
 import { Button, Heading, Text } from '@/components';
 import { StatusPill, useToast } from '@/staging';
 import ArrowRightSm from '@/icons/16/ArrowRightSm';
-import Check from '@/icons/16/Check';
-import Camera1 from '@/icons/20/Camera1';
-import Clock1 from '@/icons/20/Clock1';
-import Document from '@/icons/20/Document';
+import PhoneCall01 from '@/icons/16/PhoneCall01';
 import EyeOpen from '@/icons/20/EyeOpen';
-import Lightning from '@/icons/20/Lightning';
-import List from '@/icons/20/List';
+import Globe from '@/icons/20/Globe';
+import Map02 from '@/icons/20/Map02';
 import Marker03 from '@/icons/20/Marker03';
-import MessageChat01 from '@/icons/20/MessageChat01';
 import Send1 from '@/icons/20/Send1';
-import ShieldChecked from '@/icons/20/ShieldChecked';
+import Share from '@/icons/20/Share';
 import Star from '@/icons/20/Star';
-import Stars from '@/icons/20/Stars';
 import { useDevState } from '../dev-state-context';
-import type { Icon } from '@/components';
+import { FeedItem } from '../FeedItem';
+import type { FeedItem as FeedItemData } from '../feed-data';
 
 /**
  * Map Ranking experience body — extracted from the deleted `/h2/map-ranking`
  * route so it can be rendered inside the AEO page as a sub-tab. Does NOT
  * wrap in <H2Layout> — the host (AEO) owns the chrome.
  *
- * Five views gated on a localStorage flag:
- *   1. audit   — connected pill, business card, animated SVG score ring,
- *                gap list, sell-strip, "Fix these for me" CTA.
- *   2. loading — orb + sequenced step list (700ms apart) auto-advances.
- *   3. review  — 3 grouped summary blocks + trust strip + "Confirm & go live".
- *   4. live    — congrats screen, auto-advances to home (1.7s).
- *   5. home    — steady state: metric cards, dismissable action card,
- *                competitor ladder, recent activity, profile strength,
- *                month-at-a-glance.
+ * Two views gated on a localStorage flag:
+ *   1. audit — single consolidated "Review your Google Business Profile"
+ *              screen with 10 field cards (left) + Google preview (right).
+ *              One click on "Looks good — continue" jumps to home.
+ *   2. home  — steady state: metric cards, dismissable action card,
+ *              competitor ladder, recent activity, profile strength.
  *
  * The host passes its own `pathname` so the dev-state context can key the
- * cold/steady toggle to the parent page (e.g. `/h2/seo-aeo`) rather than the
- * removed `/h2/map-ranking`.
+ * cold/steady toggle to the parent page (e.g. `/h2/seo-aeo`).
  *
  * On mount: if localStorage[STORAGE_KEY] is set, jumps straight to 'home'.
  * Otherwise renders 'audit'. Designers can replay the setup via the
@@ -45,97 +37,251 @@ import type { Icon } from '@/components';
 
 const STORAGE_KEY = 'h2-map-ranking:setup-complete';
 
-type View = 'audit' | 'loading' | 'review' | 'live' | 'home';
+type View = 'audit' | 'home';
 
 // ─── DATA ─────────────────────────────────────────────────────────────
 
-const AUDIT_GAPS: { icon: Icon; t: string; s: string }[] = [
-  { icon: Camera1, t: 'Add 5+ recent job photos', s: 'Profiles with photos see 35% more views in the Map Pack.' },
-  { icon: List, t: 'List your services', s: "Customers can't find you for searches like 'roof repair near me' yet." },
-  { icon: Marker03, t: 'Define your service area', s: "We'll add the cities you actually drive to." },
-  { icon: Clock1, t: 'Confirm hours of operation', s: "Currently showing 'closed' on weekends." },
+type FieldStatus = 'ok' | 'adjusted';
+type FieldEditor = 'single' | 'multi' | 'hours' | 'none';
+
+interface ProfileField {
+  label: string;
+  status: FieldStatus;
+  /** Plain-text value used both for display and as the seed for the inline editor. */
+  value: string;
+  /** Which inline editor to render in edit mode. */
+  editor: FieldEditor;
+}
+
+const SERVICES_DEFAULT =
+  'Interior painting, Exterior painting, Cabinet refinishing, Color consultation, Deck & fence staining, Drywall repair, Power washing, Stucco repair, Wood rot repair';
+
+const HOURS_DEFAULT =
+  'Mon: 8 AM – 6 PM\nTue: 8 AM – 6 PM\nWed: 8 AM – 6 PM\nThu: 8 AM – 6 PM\nFri: 8 AM – 6 PM\nSat: 9 AM – 2 PM\nSun: Closed';
+
+const PROFILE_FIELDS: ProfileField[] = [
+  {
+    label: 'Business name',
+    status: 'ok',
+    value: 'CertaPro Painters of Austin',
+    editor: 'single',
+  },
+  {
+    label: 'Description',
+    status: 'adjusted',
+    value:
+      'Your local painters in Austin, TX. CertaPro Painters of Austin handles residential and commercial painting across the Austin metro — interior and exterior, cabinet refinishing, color consultation, and more. We make the process easy and convenient. Call (512) 323-9502 for a free estimate.',
+    editor: 'multi',
+  },
+  {
+    label: 'Primary category',
+    status: 'adjusted',
+    value: 'Painting contractor',
+    editor: 'single',
+  },
+  {
+    label: 'Additional categories',
+    status: 'adjusted',
+    value:
+      'Painter, Commercial painter, House painter, Cabinet maker, Drywall contractor, Deck builder, Power washing service, Stucco contractor, Color consultant',
+    editor: 'multi',
+  },
+  {
+    label: 'Services',
+    status: 'adjusted',
+    value: SERVICES_DEFAULT,
+    editor: 'multi',
+  },
+  {
+    label: 'Hours',
+    status: 'ok',
+    value: HOURS_DEFAULT,
+    editor: 'hours',
+  },
+  {
+    label: 'Service areas',
+    status: 'ok',
+    value: 'Austin, Cedar Park, Round Rock, Lakeway, Westlake, Bee Cave, Pflugerville, Leander, Dripping Springs',
+    editor: 'single',
+  },
+  {
+    label: 'Phone',
+    status: 'ok',
+    value: '(512) 323-9502',
+    editor: 'single',
+  },
+  {
+    label: 'Website',
+    status: 'ok',
+    value: 'https://certapro.com/austin/',
+    editor: 'single',
+  },
+  {
+    label: 'Address',
+    status: 'ok',
+    value: '12444 Research Blvd, Austin, TX 78759',
+    editor: 'single',
+  },
 ];
 
-const LOADING_STEPS: { icon: Icon; t: string }[] = [
-  { icon: List, t: 'Reading your current profile' },
-  { icon: EyeOpen, t: 'Scanning the top 5 competitors in Austin' },
-  { icon: Stars, t: 'Drafting services, hours and description' },
-  { icon: Send1, t: 'Planning your first month of Google Posts' },
-  { icon: ShieldChecked, t: 'Running compliance checks for residential contractors' },
-];
-
-const SUMMARY_BLOCKS: { section: string; items: { icon: Icon; t: string; s: string }[] }[] = [
-  {
-    section: 'Profile',
-    items: [
-      { icon: List, t: 'Services list rewritten', s: '5 most-searched services surfaced first — Roof Repair, Storm Damage, Insurance Claims, Roof Replacement, Inspections.' },
-      { icon: Document, t: 'Description drafted', s: '138 words, professional tone. Highlights your 25-year workmanship warranty and Austin focus.' },
-      { icon: Clock1, t: 'Hours confirmed', s: 'Mon–Fri 7 AM–6 PM · Sat 8 AM–1 PM. Memorial Day flagged for review.' },
-      { icon: Marker03, t: 'Service area expanded', s: 'Austin, Round Rock, Cedar Park, 78704, 78745.' },
-    ],
-  },
-  {
-    section: 'Content',
-    items: [
-      { icon: Send1, t: 'First 4 Google Posts drafted', s: 'Storm prep checklist, behind-the-scenes tear-off, customer story, material spotlight — one a week.' },
-      { icon: Camera1, t: 'Brand colors + logo applied', s: "We'll use your green & gold on posts until you upload real job photos." },
-    ],
-  },
-  {
-    section: 'Ongoing',
-    items: [
-      { icon: Star, t: 'Review monitoring on', s: "We'll draft replies to every new review and notify you for approval." },
-      { icon: MessageChat01, t: 'Q&A drafts ready', s: '3 common customer questions answered, waiting for your sign-off.' },
-      { icon: ShieldChecked, t: 'Compliance guardrails', s: "Phrases like 'guaranteed' and 'best price' are auto-flagged for residential contractors." },
-    ],
-  },
+const PREVIEW_HOURS: { day: string; hours: string }[] = [
+  { day: 'Mon', hours: '8 AM – 6 PM' },
+  { day: 'Tue', hours: '8 AM – 6 PM' },
+  { day: 'Wed', hours: '8 AM – 6 PM' },
+  { day: 'Thu', hours: '8 AM – 6 PM' },
+  { day: 'Fri', hours: '8 AM – 6 PM' },
+  { day: 'Sat', hours: '9 AM – 2 PM' },
+  { day: 'Sun', hours: 'Closed' },
 ];
 
 const COMPETITORS = [
-  { rank: 1, name: 'Texas Star Roofing', reviews: 144, recent: '+4 this month', you: false },
-  { rank: 2, name: 'Apex Roofing (you)', reviews: 31, recent: '+5 this month', you: true },
-  { rank: 3, name: 'Lone Star Roofing Pro', reviews: 99, recent: '+1 this month', you: false },
-  { rank: 4, name: 'Hill Country Roofs', reviews: 68, recent: '+1 this month', you: false },
+  { rank: 1, name: 'Five Star Painting of South Austin', reviews: 144, recent: '+4 this month', you: false },
+  { rank: 2, name: 'CertaPro Painters of Austin (you)', reviews: 187, recent: '+6 this month', you: true },
+  { rank: 3, name: 'Paper Moon Painting', reviews: 99, recent: '+2 this month', you: false },
+  { rank: 4, name: 'WOW 1 Day Painting Austin', reviews: 68, recent: '+1 this month', you: false },
 ];
 
-interface ActivityRow {
-  icon: Icon;
-  kind: 'success' | 'info' | 'action' | '';
-  t: string;
-  s: string;
-  /** Right-side meta. Used when the row is read-only history. */
-  time?: string;
-  /** Set when the row represents an open action item. Renders a small
-   *  "Needs action" chip on the left and an inline button on the right. */
-  action?: { label: string; toast: string };
-}
-
-const ACTIVITY: ActivityRow[] = [
+// Map Pack activity uses the same shape as the Home screen feed
+// (`FeedItem` component + FeedItemData type) so the two surfaces read as
+// one product, just scoped. Source is either 'map' (Google Business
+// Profile edits, posts published, profile completeness) or 'reputation'
+// (review activity).
+const MAP_PACK_ACTIVITY: FeedItemData[] = [
   {
-    icon: MessageChat01,
+    id: 'mp-action-photos',
+    source: 'map',
+    sourceLabel: 'Google Profile',
+    href: '#',
     kind: 'action',
-    t: 'Reply to 3 new reviews from Maria H. and 2 others',
-    s: 'The agent drafted replies. Approve to publish, or tap to edit.',
-    action: { label: 'Review & reply', toast: 'Replies queued — review in your inbox' },
+    title: 'Add 5+ recent project photos',
+    body: 'Biggest single boost · +12% to profile completeness. Tarrytown cabinet refinish, Lakeway exterior, and Round Rock HOA are ready to upload from your Brand Kit Media Library.',
+    time: '12m ago',
+    primary: 'Open uploader',
+    secondary: null,
+    thumbnails: [
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/cabinet-staining.jpg',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2024/12/After-3-scaled.jpeg',
+    ],
   },
   {
-    icon: Clock1,
+    id: 'mp-action-qa',
+    source: 'map',
+    sourceLabel: 'Google Profile',
+    href: '#',
     kind: 'action',
-    t: 'Add holiday hours for Memorial Day',
-    s: 'Coming up in 4 weeks · customers searching this weekend',
-    action: { label: 'Add hours', toast: 'Holiday hours added' },
+    title: 'Answer 3 homeowner questions',
+    body: 'Drafts ready · 1-min review. Two on cabinet refinishing turnaround, one on exterior warranty length.',
+    time: '38m ago',
+    primary: 'Review Q&A',
+    secondary: null,
   },
-  { icon: Star, kind: 'success', t: 'New 5-star review from Daniel K.', s: '"Crew was on time and cleaned up perfectly. Highly recommend."', time: '2h ago' },
-  { icon: Send1, kind: 'info', t: 'Post published to Google', s: 'Storm prep checklist · 47 views in the first hour', time: 'Yesterday' },
-  { icon: MessageChat01, kind: 'info', t: 'Replied to a 4-star review', s: 'Drafted by Blaze · Approved by you · Published', time: 'Yesterday' },
-  { icon: Clock1, kind: '', t: 'Profile update: hours confirmed', s: 'Saturday hours updated to 8 AM – 1 PM', time: 'Sat' },
-  { icon: Star, kind: 'success', t: 'New 5-star review from Janelle B.', s: '"They handled the insurance claim end to end. Stress-free."', time: 'Apr 18' },
-  { icon: Send1, kind: 'info', t: 'Post published to Google', s: 'Behind the scenes — South Austin tear-off', time: 'Apr 16' },
-];
-
-const IMPROVE_LIST: { icon: Icon; t: string; s: string; toast: string }[] = [
-  { icon: Camera1, t: 'Add 5+ recent job photos', s: 'Biggest single boost · +12% to score', toast: 'Photo upload opened' },
-  { icon: MessageChat01, t: 'Answer 3 customer questions', s: 'Drafts ready · 1-min review', toast: 'Q&A drafted — tap to review' },
+  {
+    id: 'mp-action-reviews',
+    source: 'reputation',
+    sourceLabel: 'Reputation',
+    href: '#',
+    kind: 'action',
+    title: 'Reply to 3 new reviews from Maria H. and 2 others',
+    body: 'The agent drafted replies in your tone — calm, on-brand, and offering a same-week touch-up where Maria flagged a baseboard drip. Approve to publish or tap to edit.',
+    time: '1h ago',
+    primary: 'Review & reply',
+    secondary: null,
+    thumbnails: [
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg',
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/IMG_9426-scaled.jpeg',
+    ],
+  },
+  {
+    id: 'mp-action-hours',
+    source: 'map',
+    sourceLabel: 'Google Profile',
+    href: '#',
+    kind: 'action',
+    title: 'Add holiday hours for Memorial Day',
+    body: 'Coming up in 4 weeks · homeowners booking exterior jobs are already searching this weekend. Confirm Sat 9–2 closure or set a custom Memorial Day window.',
+    time: '4h ago',
+    primary: 'Add hours',
+    secondary: null,
+  },
+  {
+    id: 'mp-insight-review-daniel',
+    source: 'reputation',
+    sourceLabel: 'Reputation',
+    href: '#',
+    kind: 'insight',
+    title: 'New 5-star review from Daniel K. — Cedar Park',
+    body: '"Crew showed up on time and cleaned up perfectly. Highly recommend." Posted to your Google Business Profile 2h ago — auto-share to social is queued.',
+    time: '2h ago',
+    primary: null,
+    secondary: null,
+  },
+  {
+    id: 'mp-insight-post-cabinet',
+    source: 'map',
+    sourceLabel: 'Google Profile',
+    href: '#',
+    kind: 'insight',
+    title: 'Post published to Google — Cabinet refinish reveal',
+    body: 'Tarrytown kitchen before & after · 62 views in the first hour, 4 calls into the SDR line within 90 minutes of publish.',
+    time: 'Yesterday',
+    primary: null,
+    secondary: null,
+    thumbnails: [
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/cabinet-staining.jpg',
+    ],
+  },
+  {
+    id: 'mp-insight-reply-4star',
+    source: 'reputation',
+    sourceLabel: 'Reputation',
+    href: '#',
+    kind: 'insight',
+    title: 'Replied to a 4-star review',
+    body: 'Drafted by Blaze · Approved by John · Published. Auto-thank-you scheduled for the customer\'s next anniversary.',
+    time: 'Yesterday',
+    primary: null,
+    secondary: null,
+  },
+  {
+    id: 'mp-insight-hours-confirmed',
+    source: 'map',
+    sourceLabel: 'Google Profile',
+    href: '#',
+    kind: 'insight',
+    title: 'Profile update: hours confirmed',
+    body: 'Saturday hours updated to 9 AM – 2 PM across Google, Yelp, and the certapro.com/austin contact page.',
+    time: 'Sat',
+    primary: null,
+    secondary: null,
+  },
+  {
+    id: 'mp-insight-review-janelle',
+    source: 'reputation',
+    sourceLabel: 'Reputation',
+    href: '#',
+    kind: 'insight',
+    title: 'New 5-star review from Janelle B. — Westlake',
+    body: '"Painted our exterior in 4 days, on budget. John explained every step." Auto-reply queued; the agent referenced her color choice from the consultation file.',
+    time: 'Apr 18',
+    primary: null,
+    secondary: null,
+  },
+  {
+    id: 'mp-insight-post-hoa',
+    source: 'map',
+    sourceLabel: 'Google Profile',
+    href: '#',
+    kind: 'insight',
+    title: 'Post published to Google — HOA project',
+    body: '14 buildings over 6 weeks in Round Rock · 38 views, 1 inbound HOA inquiry within 24 hours.',
+    time: 'Apr 16',
+    primary: null,
+    secondary: null,
+    thumbnails: [
+      'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2024/12/After-3-scaled.jpeg',
+    ],
+  },
 ];
 
 // Mini ring used in the home "Profile strength" card (no animation).
@@ -180,149 +326,169 @@ function MiniRing({ score, size = 72, stroke = 6 }: { score: number; size?: numb
   );
 }
 
-// ─── SETUP STEPS ──────────────────────────────────────────────────────
+// ─── CONFIRM (cold-start consolidated screen) ─────────────────────────
 
-function AuditStep({ onNext }: { onNext: () => void }) {
-  const completeness = 36;
-  const fixesPending = AUDIT_GAPS.length;
+type CadenceId = 'twice-week' | 'once-week' | 'twice-month';
+
+interface CadenceOption {
+  id: CadenceId;
+  label: string;
+  subtitle: string;
+  footer: string;
+  recommended?: boolean;
+}
+
+const CADENCE_OPTIONS: CadenceOption[] = [
+  {
+    id: 'twice-week',
+    label: 'Twice a week',
+    subtitle: 'Most active. Best for fast growth.',
+    footer: '8 posts/mo',
+  },
+  {
+    id: 'once-week',
+    label: 'Once a week',
+    subtitle: 'Keeps you fresh without overdoing it.',
+    footer: '4 posts/mo',
+    recommended: true,
+  },
+  {
+    id: 'twice-month',
+    label: 'Twice a month',
+    subtitle: 'Light touch. Stay present without much effort.',
+    footer: '2 posts/mo',
+  },
+];
+
+interface ProposedPost {
+  eyebrow: string;
+  date: string;
+  channel: string;
+  title: string;
+  excerpt: string;
+  slot: number;
+  /** Big headline that sits on top of the media block. Short, punchy. */
+  mediaHeadline: string;
+  /** One-line subhead under the headline. */
+  mediaSubhead: string;
+  /** Background gradient for the media block — picks the mood per post. */
+  mediaGradient: string;
+}
+
+const PROPOSED_POSTS: ProposedPost[] = [
+  {
+    eyebrow: 'Color-trends',
+    date: 'Wed, May 27',
+    channel: 'Google Post',
+    title: 'Exterior colors for Texas heat',
+    excerpt:
+      "Austin summers are brutal on exterior paint. Here are the four colors our crews are pulling most often this year — they reflect heat, hide dust, and hold up to UV.",
+    slot: 1,
+    mediaHeadline: 'Built for\nTexas heat.',
+    mediaSubhead: 'Our 2026 exterior palette.',
+    mediaGradient:
+      'linear-gradient(160deg, #f6efe1 0%, #d9b98a 50%, #a6754a 100%)',
+  },
+  {
+    eyebrow: 'Cabinet-refresh',
+    date: 'Wed, Jun 3',
+    channel: 'Google Post',
+    title: 'Cabinet refinish — Tarrytown kitchen',
+    excerpt:
+      "A Tarrytown homeowner saved roughly 70% versus full replacement by refinishing instead of replacing. Here's the before, the prep, and the final result.",
+    slot: 2,
+    mediaHeadline: 'Cabinets that\nlook factory-fresh.',
+    mediaSubhead: 'Refinish, don\'t replace.',
+    mediaGradient:
+      'linear-gradient(160deg, #f5f3ec 0%, #c8ddc8 50%, #6f8a76 100%)',
+  },
+  {
+    eyebrow: 'Hoa-project',
+    date: 'Wed, Jun 10',
+    channel: 'Google Post',
+    title: 'HOA repaint — 14 buildings in Round Rock',
+    excerpt:
+      'Our commercial crew repainted 14 buildings over six weeks for a Round Rock HOA — coordinated access, kept residents in the loop, and finished on schedule.',
+    slot: 3,
+    mediaHeadline: '14 buildings.\n6 weeks.',
+    mediaSubhead: 'On schedule, on budget.',
+    mediaGradient:
+      'linear-gradient(160deg, #c9633a 0%, #a14a26 50%, #d6a86b 100%)',
+  },
+  {
+    eyebrow: 'Crew-spotlight',
+    date: 'Wed, Jun 17',
+    channel: 'Google Post',
+    title: 'Meet Matthew — prep + paint quality',
+    excerpt:
+      'Matthew Tims, our VP of Residential Services, walks through the prep steps that make a paint job last — and why we never skip them, even on tight timelines.',
+    slot: 4,
+    mediaHeadline: 'Prep is\neverything.',
+    mediaSubhead: 'Why our paint lasts longer.',
+    mediaGradient:
+      'linear-gradient(160deg, #1d2c44 0%, #2f4769 50%, #ead8ba 100%)',
+  },
+];
+
+function ConfirmStep({ onConfirm }: { onConfirm: () => void }) {
+  // Lifted: per-field edited values. Each card reads/writes its own slot,
+  // initialized lazily from the canonical PROFILE_FIELDS seeds.
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(PROFILE_FIELDS.map((f) => [f.label, f.value])),
+  );
+  const updateField = (label: string, next: string) =>
+    setFieldValues((prev) => ({ ...prev, [label]: next }));
+
+  const [cadence, setCadence] = useState<CadenceId>('once-week');
+
   return (
     <>
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '36px 28px 140px' }}>
-        {/* section: header — business + inline progress */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 10,
-              background:
-                "center/cover url('https://images.unsplash.com/photo-1605045174877-cf9d8c1b69cd?w=200&q=70'), #2A3F2C",
-              flexShrink: 0,
-            }}
-          />
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <Heading level={2} style={{ marginBottom: 2 }}>
-              Apex Roofing &amp; Restoration
-            </Heading>
-            <Text variant="secondary">Roofing contractor · Austin, TX · 23 reviews</Text>
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          padding: '32px 28px 120px',
+        }}
+      >
+        {/* section: header */}
+        <div style={{ marginBottom: 28, maxWidth: 720 }}>
+          <Heading level={1} style={{ marginBottom: 8 }}>
+            Review your Google Business Profile.
+          </Heading>
+          <Text variant="secondary">
+            Here&apos;s what we have for each field. Edit anything before continuing — nothing publishes yet.
+          </Text>
+        </div>
+
+        {/* section: two-column grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 380px)',
+            gap: 28,
+            alignItems: 'start',
+          }}
+        >
+          {/* LEFT — field cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+            {PROFILE_FIELDS.map((f) => (
+              <ProfileFieldCard
+                key={f.label}
+                field={f}
+                value={fieldValues[f.label]}
+                onSave={(next) => updateField(f.label, next)}
+              />
+            ))}
+          </div>
+
+          {/* RIGHT — sticky Google preview */}
+          <div style={{ position: 'sticky', top: 24, minWidth: 0 }}>
+            <GooglePreview />
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <Text variant="primary" style={{ fontWeight: 500 }}>
-            {completeness}% complete
-          </Text>
-          <Text variant="secondary">·</Text>
-          <Text variant="secondary">
-            {fixesPending} {fixesPending === 1 ? 'fix' : 'fixes'} pending
-          </Text>
-        </div>
-        <div
-          style={{
-            height: 4,
-            borderRadius: 999,
-            background: 'var(--dark-8)',
-            overflow: 'hidden',
-            marginBottom: 32,
-          }}
-        >
-          <div
-            style={{
-              width: `${completeness}%`,
-              height: '100%',
-              background: 'var(--dark-90)',
-              borderRadius: 999,
-            }}
-          />
-        </div>
-
-        {/* section: recommended fixes */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            paddingBottom: 12,
-            borderBottom: '1px solid var(--dark-8)',
-            marginBottom: 4,
-          }}
-        >
-          <Heading level={3}>Recommended fixes</Heading>
-          <Text variant="metadata">Drafted by the agent</Text>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {AUDIT_GAPS.map((g, i) => {
-            const Ic = g.icon;
-            return (
-              <div
-                key={g.t}
-                style={{
-                  display: 'flex',
-                  gap: 14,
-                  alignItems: 'flex-start',
-                  padding: '16px 0',
-                  borderBottom: i < AUDIT_GAPS.length - 1 ? '1px solid var(--dark-4)' : 'none',
-                }}
-              >
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    background: 'var(--dark-4)',
-                    color: 'var(--dark-80)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <Ic size={16} />
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <Heading level={3} style={{ marginBottom: 4 }}>
-                    {g.t}
-                  </Heading>
-                  <Text variant="secondary">{g.s}</Text>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* section: outcome strip */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '8px 20px',
-            padding: '16px 0',
-            marginTop: 12,
-            borderTop: '1px solid var(--dark-8)',
-            borderBottom: '1px solid var(--dark-8)',
-          }}
-        >
-          {[
-            { num: '+38%', label: 'map visibility' },
-            { num: '~5 min', label: 'to confirm' },
-            { num: '$0', label: 'extra ad spend' },
-          ].map((s, i) => (
-            <div key={s.num} style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
-                <Text variant="primary" style={{ fontWeight: 500 }}>
-                  {s.num}
-                </Text>
-                <Text variant="secondary">{s.label}</Text>
-              </div>
-              {i < 2 && (
-                <span
-                  style={{ width: 1, height: 14, background: 'var(--dark-8)', display: 'inline-block' }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+        {/* section: posting plan */}
+        <PostingPlanSection cadence={cadence} onCadenceChange={setCadence} />
       </div>
 
       {/* sticky primary CTA */}
@@ -342,467 +508,709 @@ function AuditStep({ onNext }: { onNext: () => void }) {
           zIndex: 10,
         }}
       >
-        <Text variant="secondary">Auto-replies + Google Posts handled · nothing goes live without your approval</Text>
-        <Button variant="primary" size="lg" endIcon={ArrowRightSm} onPress={onNext}>
-          Let&apos;s fix this — about 5 min
+        <Button variant="primary" size="lg" endIcon={ArrowRightSm} onPress={onConfirm}>
+          Looks good — continue
         </Button>
       </div>
     </>
   );
 }
 
-function LoadingStep({ onAdvance }: { onAdvance: () => void }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [done, setDone] = useState<boolean[]>(() => LOADING_STEPS.map(() => false));
+function ProfileFieldCard({
+  field,
+  value,
+  onSave,
+}: {
+  field: ProfileField;
+  value: string;
+  onSave: (next: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    LOADING_STEPS.forEach((_, i) => {
-      timers.push(
-        setTimeout(() => {
-          setDone((prev) => {
-            const next = [...prev];
-            next[i] = true;
-            return next;
-          });
-          if (i + 1 < LOADING_STEPS.length) setActiveIdx(i + 1);
-        }, 700 + i * 700),
-      );
-    });
-    timers.push(setTimeout(onAdvance, 700 + LOADING_STEPS.length * 700 + 600));
-    return () => {
-      timers.forEach(clearTimeout);
-    };
-  }, [onAdvance]);
+  const startEdit = () => {
+    setDraft(value);
+    setIsEditing(true);
+  };
+  const cancel = () => {
+    setDraft(value);
+    setIsRegenerating(false);
+    setIsEditing(false);
+  };
+  const save = () => {
+    onSave(draft);
+    setIsRegenerating(false);
+    setIsEditing(false);
+  };
+  const regenerate = () => {
+    // Visual-only — show a brief "Regenerating…" state then close. No real LLM call.
+    setIsRegenerating(true);
+    window.setTimeout(() => {
+      setIsRegenerating(false);
+      setIsEditing(false);
+    }, 600);
+  };
 
   return (
     <div
       style={{
-        maxWidth: 560,
-        margin: '60px auto',
-        padding: '0 28px',
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        background: 'var(--light-100)',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 12,
+        padding: '14px 16px',
       }}
     >
-      <div style={{ position: 'relative', width: 180, height: 180, marginBottom: 32 }}>
-        <svg viewBox="0 0 240 240" style={{ width: '100%', height: '100%' }}>
-          <circle
-            cx="120"
-            cy="120"
-            r="110"
-            fill="none"
-            stroke="rgba(0,0,0,0.08)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeDasharray="80 600"
-            style={{ transformOrigin: 'center', animation: 'mr-spin 6s linear infinite' }}
-          />
-          <circle
-            cx="120"
-            cy="120"
-            r="86"
-            fill="none"
-            stroke="rgba(252,183,40,0.5)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeDasharray="60 400"
-            style={{ transformOrigin: 'center', animation: 'mr-spin 4s linear infinite reverse' }}
-          />
-          <circle
-            cx="120"
-            cy="120"
-            r="62"
-            fill="none"
-            stroke="rgba(0,0,0,0.18)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeDasharray="40 280"
-            style={{ transformOrigin: 'center', animation: 'mr-spin 3s linear infinite' }}
-          />
-        </svg>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#B06000',
-          }}
-        >
-          <span style={{ animation: 'mr-pulse 2.4s ease-in-out infinite', display: 'inline-flex' }}>
-            <Stars size={28} />
-          </span>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes mr-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes mr-pulse { 0%,100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.15); opacity: 1; } }
-        @keyframes mr-spin-check { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
-
-      <div
-        style={{
-          fontSize: 12,
-          textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          color: 'var(--dark-60)',
-          fontWeight: 500,
-          marginBottom: 8,
-        }}
-      >
-        Working on it
-      </div>
-      <h1
-        style={{
-          fontSize: 32,
-          fontWeight: 500,
-          lineHeight: 1.1,
-          letterSpacing: '-0.4px',
-          color: 'var(--dark-90)',
-          marginBottom: 12,
-        }}
-      >
-        The agent is fixing your profile.
-      </h1>
-      <p style={{ fontSize: 16, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 auto 24px' }}>
-        This usually takes about 10 seconds. Hold tight — nothing is published yet.
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, textAlign: 'left', width: '100%' }}>
-        {LOADING_STEPS.map((step, i) => {
-          const isDone = done[i];
-          const isActive = !isDone && i === activeIdx;
-          const Ic = step.icon;
-          return (
-            <div
-              key={step.t}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '12px 14px',
-                background: 'var(--light-100)',
-                border: `1px solid ${isDone || isActive ? 'var(--dark-15)' : 'var(--dark-8)'}`,
-                borderRadius: 10,
-                transition: 'opacity 0.2s, border-color 0.2s',
-                opacity: isDone || isActive ? 1 : 0.5,
-              }}
-            >
-              <div
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  border: isDone
-                    ? '1.5px solid var(--status-approved)'
-                    : isActive
-                      ? '1.5px solid #B06000'
-                      : '1.5px solid var(--dark-15)',
-                  borderTopColor: isActive ? 'transparent' : undefined,
-                  background: isDone ? 'var(--status-approved)' : 'transparent',
-                  color: 'var(--light-100)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  animation: isActive ? 'mr-spin-check 0.8s linear infinite' : undefined,
-                }}
-              >
-                {isDone && <Check size={10} />}
-              </div>
-              <span style={{ color: 'var(--dark-60)', display: 'inline-flex' }}>
-                <Ic size={14} />
-              </span>
-              <span style={{ fontSize: 14, color: 'var(--dark-90)', flex: 1 }}>{step.t}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function ReviewStep({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
-  const { showToast } = useToast();
-
-  const totalChanges = SUMMARY_BLOCKS.reduce((sum, b) => sum + b.items.length, 0);
-
-  return (
-    <>
-    <div style={{ maxWidth: 880, margin: '0 auto', padding: '36px 28px 140px' }}>
-      <div
-        style={{
-          fontSize: 12,
-          textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          color: 'var(--dark-60)',
-          fontWeight: 500,
-          marginBottom: 8,
-        }}
-      >
-        Review &amp; confirm
-      </div>
-      <h1
-        style={{
-          fontSize: 32,
-          fontWeight: 500,
-          lineHeight: 1.1,
-          letterSpacing: '-0.4px',
-          color: 'var(--dark-90)',
-          marginBottom: 12,
-        }}
-      >
-        Here&apos;s what we set up for you.
-      </h1>
-      <p style={{ fontSize: 16, color: 'var(--dark-60)', lineHeight: 1.55, maxWidth: 560, marginBottom: 28 }}>
-        Nothing is live yet. Glance through the changes — when you confirm, we&apos;ll publish your profile and queue
-        your posts.
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {SUMMARY_BLOCKS.map((b) => (
-          <div
-            key={b.section}
-            style={{
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 14,
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '14px 18px',
-                borderBottom: '1px solid var(--dark-4)',
-                background: 'var(--dark-2)',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: 'var(--dark-90)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                }}
-              >
-                {b.section}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>
-                {b.items.length} {b.items.length === 1 ? 'change' : 'changes'}
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {b.items.map((it, i) => {
-                const Ic = it.icon;
-                return (
-                  <div
-                    key={it.t}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 14,
-                      padding: '14px 18px',
-                      borderBottom: i < b.items.length - 1 ? '1px solid var(--dark-4)' : 'none',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: 'var(--dark-4)',
-                        color: 'var(--dark-80)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Ic size={16} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 500,
-                          color: 'var(--dark-90)',
-                          marginBottom: 2,
-                          letterSpacing: '0.05px',
-                        }}
-                      >
-                        {it.t}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.45 }}>{it.s}</div>
-                    </div>
-                    <StatusPill tone="success" size="sm" style={{ flexShrink: 0 }}>
-                      Ready
-                    </StatusPill>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          alignItems: 'flex-start',
-          background: 'var(--dark-2)',
-          border: '1px solid var(--dark-8)',
-          borderRadius: 12,
-          padding: '14px 16px',
-          marginTop: 16,
-          fontSize: 14,
-          color: 'var(--dark-80)',
-          lineHeight: 1.55,
-        }}
-      >
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            background: 'var(--light-100)',
-            border: '1px solid var(--dark-8)',
-            color: 'var(--dark-80)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <ShieldChecked size={14} />
-        </div>
-        <div>
-          <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-            Approving publishes everything above to Google.
-          </strong>
-          <span> You can still edit, pause, or roll back any item from your dashboard.</span>
-        </div>
-      </div>
-
+      {/* header row */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 12,
-          marginTop: 32,
-          paddingTop: 20,
-          borderTop: '1px solid var(--dark-4)',
+          marginBottom: 8,
         }}
       >
-        <Button variant="tertiary" size="md" onPress={onBack}>
-          Back
-        </Button>
-        <Button variant="secondary" size="md" onPress={() => showToast({ message: 'Edit step (out of scope here)' })}>
-          Edit changes
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1, flexWrap: 'wrap' }}>
+          <span
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: 'var(--dark-90)',
+              letterSpacing: '0.05px',
+            }}
+          >
+            {field.label}
+          </span>
+          {field.status === 'ok' ? (
+            <StatusPill tone="success" size="sm">Looks good</StatusPill>
+          ) : (
+            <StatusPill tone="accent" size="sm">Adjusted by Blaze</StatusPill>
+          )}
+        </div>
+        {!isEditing && (
+          <button
+            type="button"
+            onClick={startEdit}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
+              fontFamily: 'inherit',
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'var(--dark-60)',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            Edit
+          </button>
+        )}
       </div>
-    </div>
 
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 238,
-        right: 0,
-        background: 'var(--light-100)',
-        borderTop: '1px solid var(--dark-8)',
-        padding: '16px 28px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: 12,
-        zIndex: 10,
-      }}
-    >
-      <Text variant="secondary">
-        {totalChanges} changes across {SUMMARY_BLOCKS.length} areas · nothing live yet
-      </Text>
-      <Button variant="primary" size="lg" frontIcon={Lightning} onPress={onNext}>
-        Confirm &amp; go live
-      </Button>
+      {/* body — display OR inline editor */}
+      {isEditing ? (
+        <InlineEditor
+          editor={field.editor}
+          value={draft}
+          onChange={setDraft}
+          onSave={save}
+          onCancel={cancel}
+          onRegenerate={regenerate}
+          isRegenerating={isRegenerating}
+        />
+      ) : (
+        <FieldDisplay editor={field.editor} value={value} />
+      )}
     </div>
-    </>
   );
 }
 
-function LiveStep() {
+/** Read-only renderer for a field's value. Hours gets a stacked layout;
+ *  everything else renders as plain text. */
+function FieldDisplay({ editor, value }: { editor: FieldEditor; value: string }) {
+  if (editor === 'hours') {
+    const lines = value.split('\n').filter(Boolean);
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.5 }}>
+        {lines.map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+      {value}
+    </div>
+  );
+}
+
+/** Inline editor with Save / Regenerate / Cancel. Hours uses a plain textarea
+ *  with one line per day — same control as `multi`, just larger. */
+function InlineEditor({
+  editor,
+  value,
+  onChange,
+  onSave,
+  onCancel,
+  onRegenerate,
+  isRegenerating,
+}: {
+  editor: FieldEditor;
+  value: string;
+  onChange: (next: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onRegenerate: () => void;
+  isRegenerating: boolean;
+}) {
+  const inputBaseStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 12px',
+    fontSize: 14,
+    fontFamily: 'inherit',
+    background: 'var(--light-100)',
+    border: '1px solid var(--dark-15)',
+    borderRadius: 10,
+    color: 'var(--dark-90)',
+    outline: 'none',
+    boxSizing: 'border-box',
+    lineHeight: 1.5,
+    resize: 'vertical',
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {editor === 'single' ? (
+        <input
+          autoFocus
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={inputBaseStyle}
+        />
+      ) : (
+        <textarea
+          autoFocus
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={editor === 'hours' ? 6 : 3}
+          style={inputBaseStyle}
+        />
+      )}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <Button variant="tertiary" size="sm" onPress={onCancel}>
+          Cancel
+        </Button>
+        <Button variant="secondary" size="sm" onPress={onRegenerate}>
+          {isRegenerating ? 'Regenerating…' : 'Regenerate'}
+        </Button>
+        <Button variant="primary" size="sm" onPress={onSave}>
+          Save
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── POSTING PLAN ─────────────────────────────────────────────────────
+
+function PostingPlanSection({
+  cadence,
+  onCadenceChange,
+}: {
+  cadence: CadenceId;
+  onCadenceChange: (id: CadenceId) => void;
+}) {
+  return (
+    <div style={{ marginTop: 40 }}>
+      <Heading level={3} style={{ marginBottom: 16 }}>
+        Posting plan
+      </Heading>
+
+      {/* Cadence */}
+      <div style={{ marginBottom: 32 }}>
+        <Text
+          variant="smallList"
+          style={{ display: 'block', color: 'var(--dark-90)', fontWeight: 500, marginBottom: 12 }}
+        >
+          Posting cadence
+        </Text>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          {CADENCE_OPTIONS.map((opt) => {
+            const selected = cadence === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onCadenceChange(opt.id)}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 6,
+                  padding: 16,
+                  background: 'var(--light-100)',
+                  border: `1.5px solid ${selected ? 'var(--dark-90)' : 'var(--dark-8)'}`,
+                  borderRadius: 10,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'border-color 120ms ease',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {opt.recommended && (
+                  <span style={{ position: 'absolute', top: 12, right: 12 }}>
+                    <StatusPill tone="success" size="sm">Recommended</StatusPill>
+                  </span>
+                )}
+                <span
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 500,
+                    color: 'var(--dark-90)',
+                    letterSpacing: '0.05px',
+                  }}
+                >
+                  {opt.label}
+                </span>
+                <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>
+                  {opt.subtitle}
+                </span>
+                <span
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12,
+                    color: 'var(--dark-60)',
+                    background: 'var(--dark-4)',
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                  }}
+                >
+                  {opt.footer}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* First 4 posts */}
+      <div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 12,
+          }}
+        >
+          <Text
+            variant="smallList"
+            style={{ color: 'var(--dark-90)', fontWeight: 500 }}
+          >
+            Your first 4 posts
+          </Text>
+          <Button variant="tertiary" size="sm">
+            Regenerate
+          </Button>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: 12,
+          }}
+        >
+          {PROPOSED_POSTS.map((p) => (
+            <PostCard key={p.slot} post={p} />
+          ))}
+        </div>
+
+        <div style={{ marginTop: 16, fontSize: 12, color: 'var(--dark-60)' }}>
+          Drafted by Blaze · May 21, 2:34 PM
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PostCard({ post }: { post: ProposedPost }) {
   return (
     <div
       style={{
-        maxWidth: 480,
-        margin: '80px auto',
-        padding: '0 28px',
-        textAlign: 'center',
+        background: 'var(--light-100)',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 14,
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
       }}
     >
+      {/* account header — avatar + business name + scheduled date */}
       <div
         style={{
-          width: 120,
-          height: 120,
-          borderRadius: '50%',
-          background: 'var(--green-10)',
-          border: '2px solid var(--status-approved)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 12px 6px',
+        }}
+      >
+        <Avatar />
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1, lineHeight: 1.25 }}>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'var(--dark-90)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            CertaPro Austin
+          </span>
+          <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>
+            Scheduled · {post.date}
+          </span>
+        </div>
+      </div>
+
+      {/* caption — sits above the media, like a real post. Clamped to 2 lines
+          with ellipsis so narrow 4-up cards stay tidy. The outer wrapper
+          enforces an exact max-height equal to 2× line-box (2.9em) so the
+          3rd line can never peek through under the media block — the
+          line-clamp alone leaves a sliver on some browsers / zoom levels. */}
+      <div style={{ padding: '0 12px 10px' }}>
+        <div
+          style={{
+            fontSize: 12,
+            color: 'var(--dark-90)',
+            lineHeight: 1.45,
+            maxHeight: '2.9em',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+          }}
+        >
+          {post.excerpt}
+        </div>
+      </div>
+
+      {/* media block — full-bleed with overlaid headline + subhead */}
+      <div
+        style={{
+          position: 'relative',
+          aspectRatio: '4 / 5',
+          background: post.mediaGradient,
+          color: 'var(--light-100)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 28,
-          animation: 'mr-launch-pop 0.6s cubic-bezier(0.2,0,0,1) backwards',
+          padding: '14px 16px',
+          textAlign: 'center',
+          overflow: 'hidden',
         }}
       >
+        {/* soft inner vignette so the type always has enough contrast */}
         <div
+          aria-hidden
           style={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            background: 'var(--status-approved)',
-            color: 'var(--light-100)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,0.35) 100%)',
+            pointerEvents: 'none',
           }}
-        >
-          <Check size={36} />
+        />
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span
+            style={{
+              fontFamily: '"Times New Roman", Georgia, serif',
+              fontSize: 18,
+              fontWeight: 500,
+              lineHeight: 1.15,
+              letterSpacing: '-0.3px',
+              whiteSpace: 'pre-line',
+              textShadow: '0 1px 8px rgba(0,0,0,0.25)',
+            }}
+          >
+            {post.mediaHeadline}
+          </span>
+          <span
+            style={{
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.85)',
+              letterSpacing: '0.05px',
+            }}
+          >
+            {post.mediaSubhead}
+          </span>
         </div>
       </div>
-      <style>{`
-        @keyframes mr-launch-pop {
-          from { transform: scale(0); opacity: 0; }
-          to   { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
-      <h1
+
+      {/* CTA strip — "Learn more" + edit affordance, like the real GBP post footer */}
+      <div
         style={{
-          fontSize: 32,
-          fontWeight: 500,
-          lineHeight: 1.1,
-          letterSpacing: '-0.4px',
-          color: 'var(--dark-90)',
-          marginBottom: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 12px',
+          borderTop: '1px solid var(--dark-4)',
         }}
       >
-        You&apos;re live.
-      </h1>
-      <p style={{ fontSize: 16, color: 'var(--dark-60)', lineHeight: 1.55, margin: '0 auto 8px' }}>
-        Your profile is published. Loading your overview…
-      </p>
+        <button
+          type="button"
+          style={{
+            border: 'none',
+            background: 'transparent',
+            padding: 0,
+            fontFamily: 'inherit',
+            fontSize: 12,
+            fontWeight: 500,
+            color: '#2871d6',
+            cursor: 'pointer',
+          }}
+        >
+          Learn more →
+        </button>
+        <button
+          type="button"
+          style={{
+            border: 'none',
+            background: 'transparent',
+            padding: 0,
+            fontFamily: 'inherit',
+            fontSize: 11,
+            fontWeight: 500,
+            color: 'var(--dark-60)',
+            cursor: 'pointer',
+          }}
+        >
+          Edit
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Avatar() {
+  // Brand-yellow disk + dark monogram, sits to the left of the business name
+  // in each post card header. Matches the reference screenshot's circular
+  // social-style avatar.
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 26,
+        height: 26,
+        borderRadius: '50%',
+        background: 'var(--brand)',
+        color: 'var(--dark-90)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: '"Times New Roman", Georgia, serif',
+        fontSize: 14,
+        fontWeight: 700,
+        flexShrink: 0,
+      }}
+    >
+      C
+    </span>
+  );
+}
+
+function GooglePreview() {
+  const chips: { icon: Icon; label: string }[] = [
+    { icon: Globe, label: 'Website' },
+    { icon: Map02, label: 'Directions' },
+    { icon: PhoneCall01, label: 'Call' },
+    { icon: Share, label: 'Share' },
+  ];
+  return (
+    <div
+      style={{
+        background: 'var(--light-100)',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 14,
+        padding: '20px 20px 24px',
+      }}
+    >
+      {/* eyebrow row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <span
+          style={{
+            width: 18,
+            height: 18,
+            borderRadius: '50%',
+            background: '#fff',
+            border: '1px solid var(--dark-8)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 11,
+            fontWeight: 500,
+            color: 'var(--dark-80)',
+            letterSpacing: '-0.2px',
+          }}
+        >
+          G
+        </span>
+        <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+          Preview · how this looks on Google
+        </span>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--dark-40)', marginBottom: 10 }}>
+        Map Pack · Austin, 78759
+      </div>
+
+      {/* title */}
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 500,
+          color: 'var(--dark-90)',
+          letterSpacing: '-0.1px',
+          lineHeight: 1.3,
+          marginBottom: 8,
+        }}
+      >
+        CertaPro Painters of Austin
+      </div>
+
+      {/* rating row */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          fontSize: 13,
+          color: 'var(--dark-80)',
+          marginBottom: 16,
+          flexWrap: 'wrap',
+        }}
+      >
+        <span style={{ display: 'inline-flex', gap: 1, color: '#F5B400' }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Star key={i} size={14} />
+          ))}
+        </span>
+        <span style={{ fontWeight: 500, color: 'var(--dark-90)' }}>4.7</span>
+        <span style={{ color: 'var(--dark-60)' }}>(187)</span>
+        <span style={{ color: 'var(--dark-40)' }}>·</span>
+        <span style={{ color: 'var(--dark-60)' }}>Painting contractor</span>
+      </div>
+
+      {/* action chips */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 8,
+          marginBottom: 20,
+        }}
+      >
+        {chips.map((c) => {
+          const Ic = c.icon;
+          return (
+            <div
+              key={c.label}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: 'var(--dark-4)',
+                  color: 'var(--dark-90)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ic size={16} />
+              </div>
+              <span style={{ fontSize: 12, color: 'var(--dark-80)' }}>{c.label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* description */}
+      <div
+        style={{
+          fontSize: 13,
+          color: 'var(--dark-80)',
+          lineHeight: 1.55,
+          paddingBottom: 16,
+          marginBottom: 16,
+          borderBottom: '1px solid var(--dark-4)',
+        }}
+      >
+        Your local painters in Austin, TX. CertaPro Painters of Austin handles residential and commercial
+        painting across the Austin metro — interior and exterior, cabinet refinishing, color consultation,
+        and more. We make the process easy and convenient. Call (512) 323-9502 for a free estimate.
+      </div>
+
+      {/* hours */}
+      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--dark-4)' }}>
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: 'var(--dark-90)',
+            marginBottom: 6,
+          }}
+        >
+          Hours
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {PREVIEW_HOURS.map((h) => (
+            <div
+              key={h.day}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: 13,
+                color: 'var(--dark-80)',
+              }}
+            >
+              <span style={{ color: 'var(--dark-60)' }}>{h.day}</span>
+              <span>{h.hours}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* service area */}
+      <div>
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: 'var(--dark-90)',
+            marginBottom: 6,
+          }}
+        >
+          Service area
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--dark-80)' }}>Austin metro · 50+ ZIP codes</div>
+      </div>
     </div>
   );
 }
@@ -833,7 +1241,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
           value="#2"
           delta="↑ 2"
           deltaKind="up"
-          foot={'"roof repair austin" · last month'}
+          foot={'"painters austin" · last month'}
         />
         <MetricCard
           icon={EyeOpen}
@@ -846,8 +1254,8 @@ function HomeView({ onReset }: { onReset: () => void }) {
         <MetricCard
           icon={Star}
           label="New reviews"
-          value="5"
-          unit="★ 4.8"
+          value="6"
+          unit="★ 4.7"
           foot="2 responded today"
         />
         <MetricCard
@@ -903,31 +1311,34 @@ function HomeView({ onReset }: { onReset: () => void }) {
             Up 2 spots this week — let&apos;s keep the momentum going.
           </h2>
           <p style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.55, marginBottom: 16, maxWidth: 480 }}>
-            You moved from #4 → #2 for &quot;roof repair austin.&quot; The Texas Star team is still adding reviews
+            You moved from #4 → #2 for &quot;painters austin.&quot; Five Star Painting is still adding reviews
             fast. One more push and you could take #1 by month-end.
           </p>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <Button
-              variant="primary"
-              size="md"
-              endIcon={ArrowRightSm}
-              onPress={() => showToast({ message: 'Review request sent to your last 5 customers' })}
-            >
-              Send review request
-            </Button>
-            <Button
-              variant="tertiary"
-              size="md"
-              onPress={() => showToast({ message: 'Insights view (out of scope here)' })}
-            >
-              See full insight
-            </Button>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 16 }}>
-            Rather have us handle this?{' '}
-            <a style={{ color: 'var(--purple)', fontWeight: 500, cursor: 'pointer', textDecoration: 'none' }}>
-              Upgrade to Done-for-You →
-            </a>
+          {/* Inline profile-strength stat — folded in from the standalone
+              "Profile strength" card to keep the nudge as the single canonical
+              "what to do next" surface. The 2 improvement actions that used to
+              live here moved into the Recent activity feed. */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '10px 14px 10px 10px',
+              background: 'var(--dark-2)',
+              border: '1px solid var(--dark-4)',
+              borderRadius: 12,
+              marginBottom: 16,
+            }}
+          >
+            <MiniRing score={78} size={44} stroke={4} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+                Profile 78% complete
+              </span>
+              <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.4 }}>
+                Almost fully optimized — 2 quick fixes left in your activity feed.
+              </span>
+            </div>
           </div>
         </div>
         <div
@@ -951,7 +1362,7 @@ function HomeView({ onReset }: { onReset: () => void }) {
               borderBottom: '1px solid var(--dark-4)',
             }}
           >
-            &quot;Roof repair austin&quot; — top 5
+            &quot;Painters austin&quot; — top 5
           </div>
           {COMPETITORS.map((c) => (
             <div
@@ -989,193 +1400,75 @@ function HomeView({ onReset }: { onReset: () => void }) {
         </div>
       </div>
 
-      {/* Two-up: activity + side */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
-        <div>
+      {/* Posts up for review — Google Business Profile post drafts the agent
+          has queued. Same PostCard component used in the cold-state Confirm
+          screen, just scoped under a "up for review" header here. Surfaced
+          above the activity feed because approving drafts is the next action
+          most operators take after scanning the metrics + nudge. */}
+      <div style={{ marginBottom: 32 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 12,
+          }}
+        >
           <h3
             style={{
               fontSize: 14,
               fontWeight: 500,
               color: 'var(--dark-90)',
-              margin: '0 0 12px',
+              margin: 0,
               letterSpacing: '0.05px',
             }}
           >
-            Recent activity
+            Posts up for review
           </h3>
-          <div
-            style={{
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 12,
-              overflow: 'hidden',
-            }}
+          <Button
+            variant="tertiary"
+            size="sm"
+            onPress={() => showToast({ message: 'All 4 drafts approved and scheduled' })}
           >
-            {ACTIVITY.map((a, i) => {
-              const Ic = a.icon;
-              const isAction = a.kind === 'action';
-              const iconBg =
-                a.kind === 'success'
-                  ? 'var(--green-10)'
-                  : a.kind === 'info'
-                    ? 'var(--info-10, rgba(0,131,226,0.10))'
-                    : isAction
-                      ? 'rgba(252,183,40,0.16)'
-                      : 'var(--dark-4)';
-              const iconColor =
-                a.kind === 'success'
-                  ? 'var(--status-approved)'
-                  : a.kind === 'info'
-                    ? 'rgb(0,131,226)'
-                    : isAction
-                      ? '#B06000'
-                      : 'var(--dark-80)';
-              return (
-                <div
-                  key={i}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '32px 1fr auto',
-                    gap: 12,
-                    alignItems: 'center',
-                    padding: '12px 16px',
-                    borderBottom: i < ACTIVITY.length - 1 ? '1px solid var(--dark-4)' : 'none',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      background: iconBg,
-                      color: iconColor,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Ic size={14} />
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        flexWrap: 'wrap',
-                        marginBottom: 2,
-                      }}
-                    >
-                      {isAction && (
-                        <StatusPill tone="warning" size="sm">Needs action</StatusPill>
-                      )}
-                      <span
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 500,
-                          color: 'var(--dark-90)',
-                          letterSpacing: '0.05px',
-                        }}
-                      >
-                        {a.t}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.45 }}>{a.s}</div>
-                  </div>
-                  {isAction && a.action ? (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onPress={() => showToast({ message: a.action!.toast })}
-                    >
-                      {a.action.label}
-                    </Button>
-                  ) : (
-                    <div style={{ fontSize: 12, color: 'var(--dark-40)', flexShrink: 0 }}>
-                      {a.time}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+            Approve all
+          </Button>
         </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: 12,
+          }}
+        >
+          {PROPOSED_POSTS.map((p) => (
+            <PostCard key={p.slot} post={p} />
+          ))}
+        </div>
+      </div>
 
-        <div>
-          <h3
-            style={{
-              fontSize: 14,
-              fontWeight: 500,
-              color: 'var(--dark-90)',
-              margin: '0 0 12px',
-              letterSpacing: '0.05px',
-            }}
-          >
-            Profile strength
-          </h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-            <MiniRing score={78} />
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>78% complete</div>
-              <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2, lineHeight: 1.4 }}>
-                Almost fully optimized
-              </div>
-            </div>
-          </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {IMPROVE_LIST.map((it) => {
-              const Ic = it.icon;
-              return (
-                <li
-                  key={it.t}
-                  onClick={() => showToast({ message: it.toast })}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '32px 1fr 16px',
-                    gap: 12,
-                    alignItems: 'center',
-                    padding: '12px 0',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background: 'var(--dark-4)',
-                      color: 'var(--dark-80)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Ic size={16} />
-                  </span>
-                  <div>
-                    <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{it.t}</div>
-                    <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{it.s}</div>
-                  </div>
-                  <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}>
-                    <ArrowRightSm size={14} />
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-          <div
-            style={{
-              fontSize: 12,
-              color: 'var(--dark-60)',
-              lineHeight: 1.5,
-            }}
-          >
-            Want to handle these in 30 seconds? Our team can take care of profile maintenance for you.{' '}
-            <a style={{ color: 'var(--purple)', fontWeight: 500, cursor: 'pointer', textDecoration: 'none' }}>
-              Learn more →
-            </a>
-          </div>
+      {/* Recent activity — same FeedItem card shape as the Home screen feed,
+          scoped to Map Pack / Google Business Profile / reputation. The two
+          surfaces read as one product just filtered to this tab. */}
+      <div>
+        <h3
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            color: 'var(--dark-90)',
+            margin: '0 0 12px',
+            letterSpacing: '0.05px',
+          }}
+        >
+          Recent activity
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {MAP_PACK_ACTIVITY.map((item) => (
+            <FeedItem
+              key={item.id}
+              item={item}
+              onAction={(label) => showToast({ message: `${label} — opened` })}
+            />
+          ))}
         </div>
       </div>
 
@@ -1322,8 +1615,7 @@ export function MapRankingBody({ devStatePath }: MapRankingBodyProps) {
   useEffect(() => {
     setView((prev) => {
       if (devState === 'cold') return 'audit';
-      // For 'steady', skip the intermediate setup steps and go straight to home.
-      if (prev === 'audit' || prev === 'loading' || prev === 'review') return 'home';
+      if (prev === 'audit') return 'home';
       return prev;
     });
   }, [devState]);
@@ -1337,21 +1629,15 @@ export function MapRankingBody({ devStatePath }: MapRankingBodyProps) {
     }
   }, [searchParams, setSearchParams]);
 
-  // The "live" congrats view auto-advances to home after 1.7s and persists
-  // the setup-complete flag.
-  useEffect(() => {
-    if (view !== 'live') return;
-    const id = setTimeout(() => {
-      try {
-        window.localStorage.setItem(STORAGE_KEY, '1');
-      } catch {
-        /* ignore */
-      }
-      setView('home');
-      setDevState(devStatePath, 'steady');
-    }, 1700);
-    return () => clearTimeout(id);
-  }, [view, setDevState, devStatePath]);
+  const handleConfirm = () => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, '1');
+    } catch {
+      /* ignore */
+    }
+    setView('home');
+    setDevState(devStatePath, 'steady');
+  };
 
   const handleReset = () => {
     try {
@@ -1366,12 +1652,7 @@ export function MapRankingBody({ devStatePath }: MapRankingBodyProps) {
 
   return (
     <>
-      {view === 'audit' && <AuditStep onNext={() => setView('loading')} />}
-      {view === 'loading' && <LoadingStep onAdvance={() => setView('review')} />}
-      {view === 'review' && (
-        <ReviewStep onBack={() => setView('audit')} onNext={() => setView('live')} />
-      )}
-      {view === 'live' && <LiveStep />}
+      {view === 'audit' && <ConfirmStep onConfirm={handleConfirm} />}
       {view === 'home' && <HomeView onReset={handleReset} />}
     </>
   );

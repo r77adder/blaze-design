@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { StatusPill, TabChip, useToast } from '@/staging';
@@ -13,6 +13,12 @@ import Instagram from '@/icons/20/Instagram';
 import TikTok from '@/icons/20/TikTok';
 import LinkedIn from '@/icons/20/LinkedIn';
 import Twitter from '@/icons/20/Twitter';
+import CoverImage from '@/icons/20/CoverImage';
+import FileMultiple from '@/icons/20/FileMultiple';
+import Document from '@/icons/20/Document';
+import Emails from '@/icons/20/Emails';
+import AlertTriangle from '@/icons/20/AlertTriangle';
+import FolderClosed from '@/icons/20/FolderClosed';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
@@ -94,29 +100,29 @@ const NP_TIMES = ['8:00 AM', '10:00 AM', '12:00 PM', '2:00 PM', '4:00 PM', '6:00
 
 const NP_THUMBS = [
   'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=70',
-  'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=400&q=70',
-  'https://images.unsplash.com/photo-1599447332411-fcf9c2406715?w=400&q=70',
-  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=70',
-  'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&q=70',
-  'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400&q=70',
-  'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&q=70',
-  'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=70',
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=70',
+  'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=400&q=70',
+  'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=70',
+  'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&q=70',
+  'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=400&q=70',
+  'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&q=70',
+  'https://images.unsplash.com/photo-1574607383476-c8ee45a07f5e?w=400&q=70',
 ];
 
 const SEED_POSTS: Post[] = [
-  { day: 'mon', time: '9:00 AM', platform: 'instagram', type: 'Reel', title: "Why your morning routine isn't sticking — and the 3-minute fix.", thumb: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?w=400&q=70', status: 'scheduled', source: 'Spring Sale 2026' },
-  { day: 'mon', time: '1:00 PM', platform: 'tiktok', type: 'Short', title: "30-second adaptogen primer — what they do, what they don't.", thumb: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=400&q=70', status: 'scheduled', source: 'Tips & Tricks March' },
-  { day: 'tue', time: '8:00 AM', platform: 'linkedin', type: 'Post', title: 'How we built our supplement formula — the unsexy truth.', thumb: null, status: 'draft', source: 'Founder Journey Q1' },
-  { day: 'tue', time: '4:00 PM', platform: 'instagram', type: 'Carousel', title: '5 supplements that actually do something.', thumb: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=70', status: 'scheduled', source: 'Tips & Tricks March' },
-  { day: 'wed', time: '9:00 AM', platform: 'instagram', type: 'Story', title: 'BTS — packing day at the SF studio.', thumb: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&q=70', status: 'scheduled', source: 'Founder Journey Q1' },
-  { day: 'wed', time: '2:00 PM', platform: 'x', type: 'Post', title: 'Sleep stack quick thread — what each ingredient does, in 6 tweets.', thumb: null, status: 'review', source: 'Tips & Tricks March' },
-  { day: 'thu', time: '10:00 AM', platform: 'instagram', type: 'Reel', title: 'Day in the life — founder edition.', thumb: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=70', status: 'scheduled', source: 'Founder Journey Q1' },
-  { day: 'thu', time: '5:00 PM', platform: 'tiktok', type: 'Short', title: 'How adaptogens differ from caffeine.', thumb: 'https://images.unsplash.com/photo-1599447332411-fcf9c2406715?w=400&q=70', status: 'scheduled', source: 'Tips & Tricks March' },
-  { day: 'fri', time: '11:00 AM', platform: 'instagram', type: 'Reel', title: 'Friday reset routine — 60-second walk-through.', thumb: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=70', status: 'review', source: 'Tips & Tricks March' },
-  { day: 'fri', time: '3:00 PM', platform: 'linkedin', type: 'Post', title: 'What we learned shipping V2 — three uncomfortable lessons.', thumb: null, status: 'draft', source: 'Founder Journey Q1' },
-  { day: 'sat', time: '9:00 AM', platform: 'instagram', type: 'Carousel', title: 'Weekend reset routine — five small habits that compound.', thumb: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400&q=70', status: 'scheduled', source: 'Tips & Tricks March' },
-  { day: 'sat', time: '7:00 PM', platform: 'tiktok', type: 'Short', title: 'Why we slowed down our launch cadence.', thumb: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&q=70', status: 'draft', source: 'Founder Journey Q1' },
-  { day: 'sun', time: '5:00 PM', platform: 'instagram', type: 'Story', title: 'Sunday Q&A — drop your supplement questions.', thumb: 'https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=400&q=70', status: 'scheduled', source: 'Tips & Tricks March' },
+  { day: 'mon', time: '9:00 AM', platform: 'instagram', type: 'Reel', title: 'Before & after — Tarrytown kitchen cabinet refinish in 60 seconds.', thumb: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=70', status: 'scheduled', source: 'Cabinet Refresh May' },
+  { day: 'mon', time: '1:00 PM', platform: 'tiktok', type: 'Short', title: '30-second guide to picking exterior colors for Texas heat.', thumb: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&q=70', status: 'scheduled', source: 'Color Trends 2026' },
+  { day: 'tue', time: '8:00 AM', platform: 'linkedin', type: 'Post', title: "Why prep matters more than paint — Matthew's playbook.", thumb: null, status: 'draft', source: 'Crew Spotlights' },
+  { day: 'tue', time: '4:00 PM', platform: 'instagram', type: 'Carousel', title: '5 paint mistakes Austin homeowners keep making (and how to avoid them).', thumb: 'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=400&q=70', status: 'scheduled', source: 'Color Trends 2026' },
+  { day: 'wed', time: '9:00 AM', platform: 'instagram', type: 'Story', title: 'BTS — Round Rock HOA repaint, day 18 of 42.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=70', status: 'scheduled', source: 'HOA Round Rock' },
+  { day: 'wed', time: '2:00 PM', platform: 'x', type: 'Post', title: 'Quick thread — what a free estimate actually covers, in 6 tweets.', thumb: null, status: 'review', source: 'Estimate FAQ' },
+  { day: 'thu', time: '10:00 AM', platform: 'instagram', type: 'Reel', title: 'A day on the crew — exterior repaint in Westlake.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&q=70', status: 'scheduled', source: 'Crew Spotlights' },
+  { day: 'thu', time: '5:00 PM', platform: 'tiktok', type: 'Short', title: 'Cabinet refinish vs replace — what it really costs in Austin.', thumb: 'https://images.unsplash.com/photo-1556909114-44e3e9399a2d?w=400&q=70', status: 'scheduled', source: 'Cabinet Refresh May' },
+  { day: 'fri', time: '11:00 AM', platform: 'instagram', type: 'Reel', title: 'Friday reveal — Lakeway exterior, 4 days from prep to finish.', thumb: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=400&q=70', status: 'review', source: 'Color Trends 2026' },
+  { day: 'fri', time: '3:00 PM', platform: 'linkedin', type: 'Post', title: 'What we learned running an HOA repaint with 14 buildings on one timeline.', thumb: null, status: 'draft', source: 'HOA Round Rock' },
+  { day: 'sat', time: '9:00 AM', platform: 'instagram', type: 'Carousel', title: 'Weekend project — 5 small interior paint refreshes that change a room.', thumb: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=400&q=70', status: 'scheduled', source: 'Color Trends 2026' },
+  { day: 'sat', time: '7:00 PM', platform: 'tiktok', type: 'Short', title: 'Why we never skip the power wash — even on tight timelines.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&q=70', status: 'draft', source: 'Crew Spotlights' },
+  { day: 'sun', time: '5:00 PM', platform: 'instagram', type: 'Story', title: 'Sunday Q&A — drop your Austin paint questions, John is answering.', thumb: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&q=70', status: 'scheduled', source: 'Estimate FAQ' },
 ];
 
 interface DayInfo {
@@ -734,7 +740,7 @@ function NewPostModal({
 
       <NPSection label="Source campaign" optional>
         <input
-          placeholder="e.g., Tips & Tricks March"
+          placeholder="e.g., Color Trends 2026"
           value={draft.source}
           onChange={(e) => setField('source', e.target.value)}
           style={{
@@ -814,14 +820,32 @@ export function OrganicSocialRoute() {
   );
 }
 
+type OrganicSubtab = 'calendar' | 'insights' | 'recents' | 'approvals';
+
+const SUBTABS: ReadonlySet<OrganicSubtab> = new Set(['calendar', 'insights', 'recents', 'approvals']);
+
+function parseSubtab(raw: string | null): OrganicSubtab {
+  return raw && SUBTABS.has(raw as OrganicSubtab) ? (raw as OrganicSubtab) : 'calendar';
+}
+
 function OrganicSocialRouteInner() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { openModal, closeModal } = useModals();
   const { getState } = useDevState();
   const isCold = getState('/h2/organic-social') === 'cold';
   const [posts, setPosts] = useState<Post[]>(SEED_POSTS);
   const [weekOffset, setWeekOffset] = useState(0);
+  // Tab lives in the URL (?tab=insights etc.) so deep-links and cross-page
+  // tabbing (Campaigns's topbar links back here with the param set) work.
+  const tab = parseSubtab(searchParams.get('tab'));
+  const setTab = (next: OrganicSubtab) => {
+    const sp = new URLSearchParams(searchParams);
+    if (next === 'calendar') sp.delete('tab');
+    else sp.set('tab', next);
+    setSearchParams(sp, { replace: true });
+  };
 
   const visibleWeek = useMemo(() => weekFromOffset(weekOffset), [weekOffset]);
   const weekLabel = useMemo(() => formatWeekLabel(visibleWeek, weekOffset), [visibleWeek, weekOffset]);
@@ -857,8 +881,11 @@ function OrganicSocialRouteInner() {
 
   const topbarCenter = (
     <div style={{ display: 'inline-flex', gap: 6 }}>
-      <TabChip selected onSelect={() => {}}>Calendar</TabChip>
       <TabChip selected={false} onSelect={() => navigate('/h2/campaigns')}>Campaigns</TabChip>
+      <TabChip selected={tab === 'calendar'} onSelect={() => setTab('calendar')}>Calendar</TabChip>
+      <TabChip selected={tab === 'approvals'} onSelect={() => setTab('approvals')}>Approvals</TabChip>
+      <TabChip selected={tab === 'insights'} onSelect={() => setTab('insights')}>Insights</TabChip>
+      <TabChip selected={tab === 'recents'} onSelect={() => setTab('recents')}>Recents</TabChip>
     </div>
   );
 
@@ -866,6 +893,30 @@ function OrganicSocialRouteInner() {
     return (
       <H2Layout>
         <OrganicSocialColdView />
+      </H2Layout>
+    );
+  }
+
+  if (tab === 'insights') {
+    return (
+      <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
+        <EmptyTab heading="Insights coming soon" body="Cross-platform performance summaries, top-post breakdowns, and audience trends will land here." />
+      </H2Layout>
+    );
+  }
+
+  if (tab === 'approvals') {
+    return (
+      <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
+        <EmptyTab heading="Approvals coming soon" body="Posts the agent flags for sign-off — and your team's approval queue — will land here." />
+      </H2Layout>
+    );
+  }
+
+  if (tab === 'recents') {
+    return (
+      <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
+        <RecentsTab onOpen={(p) => showToast({ message: `Open · ${p.title.slice(0, 40)}` })} />
       </H2Layout>
     );
   }
@@ -924,9 +975,19 @@ function OrganicSocialRouteInner() {
               <ChevronRight size={16} />
             </button>
           </div>
-          <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenChooser}>
-            Create new
-          </Button>
+          <div style={{ display: 'inline-flex', gap: 8 }}>
+            <Button
+              variant="tertiary"
+              size="md"
+              frontIcon={FolderClosed}
+              onPress={() => showToast({ message: 'Archived posts — 38 posts in the last 90 days' })}
+            >
+              Archived posts
+            </Button>
+            <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenChooser}>
+              Create new
+            </Button>
+          </div>
         </div>
         <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto' }}>
           <div
@@ -951,5 +1012,303 @@ function OrganicSocialRouteInner() {
       </div>
 
     </H2Layout>
+  );
+}
+
+// ─── EMPTY TAB ─────────────────────────────────────────────────────
+
+function EmptyTab({ heading, body }: { heading: string; body: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: '120px 24px',
+        gap: 8,
+        color: 'var(--dark-90)',
+        minHeight: 400,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 17,
+          fontWeight: 500,
+          color: 'var(--dark-90)',
+          letterSpacing: '-0.1px',
+        }}
+      >
+        {heading}
+      </div>
+      <div
+        style={{
+          fontSize: 14,
+          color: 'var(--dark-60)',
+          lineHeight: 1.55,
+          maxWidth: 440,
+        }}
+      >
+        {body}
+      </div>
+    </div>
+  );
+}
+
+// ─── RECENTS TAB ───────────────────────────────────────────────────
+
+type RecentType = 'still' | 'carousel' | 'blog' | 'email';
+type RecentStatus = 'new' | 'review';
+
+interface RecentRow {
+  id: string;
+  type: RecentType;
+  title: string;
+  body: string;
+  date: string;
+  time: string;
+  status: RecentStatus;
+  thumb: string;
+}
+
+const RECENT_TYPE_META: Record<RecentType, { label: string; icon: typeof CoverImage; color: string; bg: string }> = {
+  still: { label: 'Still Image', icon: CoverImage, color: 'var(--red-70)', bg: 'rgba(188, 1, 11, 0.10)' },
+  carousel: { label: 'Carousel', icon: FileMultiple, color: '#ed7c2c', bg: 'rgba(237, 124, 44, 0.12)' },
+  blog: { label: 'Blog Post', icon: Document, color: 'var(--status-approved)', bg: 'rgba(4, 175, 0, 0.10)' },
+  email: { label: 'Email', icon: Emails, color: '#edb62c', bg: 'rgba(237, 182, 44, 0.14)' },
+};
+
+const RECENT_POSTS: RecentRow[] = [
+  {
+    id: 'r1',
+    type: 'still',
+    title: 'Built for Texas heat — our 2026 exterior palette',
+    body: "Austin summers are brutal on exterior paint. Here are the four colors our crews are pulling most this season — and the prep that makes them last.",
+    date: 'Mon, May 25',
+    time: '12:30pm',
+    status: 'new',
+    thumb: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
+  },
+  {
+    id: 'r2',
+    type: 'carousel',
+    title: 'Cabinet refinish vs replace — Tarrytown kitchen breakdown',
+    body: 'A Tarrytown homeowner saved roughly 70% versus full cabinet replacement by refinishing. Carousel of the before, the prep, and the final reveal.',
+    date: 'Thu, May 28',
+    time: '9:00am',
+    status: 'review',
+    thumb: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/cabinet-staining.jpg',
+  },
+  {
+    id: 'r3',
+    type: 'still',
+    title: 'Why we never skip the power wash',
+    body: 'Even on tight timelines, prep is the longest job — because clean substrate is what makes our 2-year warranty hold up.',
+    date: 'Tue, May 26',
+    time: '12:00pm',
+    status: 'review',
+    thumb: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/power-washing-2.jpg',
+  },
+  {
+    id: 'r4',
+    type: 'blog',
+    title: 'Choosing an Austin painter? Here is what to ask first.',
+    body: 'A 6-minute read for Austin homeowners — license + insurance + warranty + crew + prep + cleanup. The same checklist John runs with every estimate.',
+    date: 'Fri, May 29',
+    time: '2:00pm',
+    status: 'new',
+    thumb: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2022/03/white-painted-brick-home-686x353.jpg',
+  },
+  {
+    id: 'r5',
+    type: 'still',
+    title: 'Lakeway reveal — 4 days from prep to finish',
+    body: 'Full stucco repaint, three trim colors, all wrapped up in 4 days. We sent a slow-pan walk-through to the homeowner before they got home from work.',
+    date: 'Mon, May 25',
+    time: '3:00pm',
+    status: 'review',
+    thumb: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2025/01/After-4-rotated.jpeg',
+  },
+  {
+    id: 'r6',
+    type: 'still',
+    title: 'Color consultation — what John actually does on site',
+    body: 'Free with every estimate. John walks the rooms with three deck options, talks light direction, and leaves you with sample patches on the wall.',
+    date: 'Fri, May 29',
+    time: '12:00pm',
+    status: 'new',
+    thumb: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/color_consultation_certapro_preview-686x353.jpg',
+  },
+  {
+    id: 'r7',
+    type: 'email',
+    title: 'Spring exterior estimates — book before the rains',
+    body: 'A short note for past customers. May calendar is filling up; we are still booking exterior projects for first-half June if you have been holding off.',
+    date: 'Mon, May 25',
+    time: '8:00am',
+    status: 'new',
+    thumb: 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg',
+  },
+];
+
+function RecentsTab({ onOpen }: { onOpen: (row: RecentRow) => void }) {
+  return (
+    <div style={{ padding: '8px 0 24px' }}>
+      {/* Header row */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '40px 90px minmax(0, 1fr) 160px 140px',
+          gap: 16,
+          alignItems: 'center',
+          padding: '12px 20px',
+          color: 'var(--dark-40)',
+          fontSize: 12,
+          fontWeight: 500,
+          letterSpacing: '0.04em',
+          borderBottom: '1px solid var(--dark-8)',
+        }}
+      >
+        <span />
+        <span>Preview</span>
+        <span>Name</span>
+        <span>Post Date &amp; Time</span>
+        <span>Post Status</span>
+      </div>
+
+      {RECENT_POSTS.map((r, i) => {
+        const meta = RECENT_TYPE_META[r.type];
+        const TypeIc = meta.icon;
+        return (
+          <div
+            key={r.id}
+            onClick={() => onOpen(r)}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '40px 90px minmax(0, 1fr) 160px 140px',
+              gap: 16,
+              alignItems: 'center',
+              padding: '18px 20px',
+              borderBottom: '1px solid var(--dark-4)',
+              cursor: 'pointer',
+              background: 'transparent',
+              transition: 'background 120ms ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--dark-2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            <span style={{ color: 'var(--dark-40)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+              {i + 1}
+            </span>
+            <img
+              src={r.thumb}
+              alt=""
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 10,
+                objectFit: 'cover',
+                border: '1px solid var(--dark-8)',
+                background: 'var(--dark-4)',
+              }}
+            />
+            <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: meta.color,
+                  background: meta.bg,
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <TypeIc size={14} color={meta.color} />
+                {meta.label}
+              </span>
+              <span
+                style={{
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: 'var(--dark-90)',
+                  letterSpacing: '-0.05px',
+                  lineHeight: 1.35,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {r.title}
+              </span>
+              <span
+                style={{
+                  fontSize: 13,
+                  color: 'var(--dark-60)',
+                  lineHeight: 1.5,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {r.body}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontSize: 13, color: 'var(--dark-90)' }}>{r.date}</span>
+              <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.time}</span>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              {r.status === 'new' ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '3px 10px',
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: 'var(--light-100)',
+                    background: 'var(--purple)',
+                  }}
+                >
+                  New
+                </span>
+              ) : (
+                <>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '3px 10px',
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: '#8a5a00',
+                      background: 'rgba(252, 183, 40, 0.18)',
+                    }}
+                  >
+                    Review
+                  </span>
+                  <span style={{ color: '#d99a00', display: 'inline-flex' }}>
+                    <AlertTriangle size={16} color="currentColor" />
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }

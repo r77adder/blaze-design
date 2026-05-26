@@ -20,7 +20,7 @@ const TYPES: ContentType[] = [
     description: 'Single image post for feeds',
     cost: 6,
     imageUrl:
-      'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=400&q=80',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80',
   },
   {
     id: 'carousels',
@@ -28,7 +28,7 @@ const TYPES: ContentType[] = [
     description: 'Multi-slide storytelling',
     cost: 24,
     imageUrl:
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80',
+      'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=400&q=80',
   },
   {
     id: 'feed-videos',
@@ -36,7 +36,7 @@ const TYPES: ContentType[] = [
     description: 'Polished video for feed',
     cost: 40,
     imageUrl:
-      'https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=400&q=80',
+      'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&q=80',
     withPlay: true,
   },
   {
@@ -45,7 +45,7 @@ const TYPES: ContentType[] = [
     description: 'Reels, TikToks, Shorts',
     cost: 40,
     imageUrl:
-      'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80',
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80',
     withPlay: true,
   },
   {
@@ -54,7 +54,7 @@ const TYPES: ContentType[] = [
     description: 'Ephemeral vertical content',
     cost: 6,
     imageUrl:
-      'https://images.unsplash.com/photo-1488741222121-fc9efa90f25f?w=400&q=80',
+      'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=80',
   },
   {
     id: 'blogs',
@@ -62,7 +62,7 @@ const TYPES: ContentType[] = [
     description: 'Long-form SEO articles',
     cost: 20,
     imageUrl:
-      'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&q=80',
+      'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=400&q=80',
   },
   {
     id: 'emails',
@@ -70,7 +70,7 @@ const TYPES: ContentType[] = [
     description: 'Newsletters and campaigns',
     cost: 8,
     imageUrl:
-      'https://images.unsplash.com/photo-1526045431048-f857369baa09?w=400&q=80',
+      'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=80',
   },
   {
     id: 'meta-ads',
@@ -78,7 +78,7 @@ const TYPES: ContentType[] = [
     description: 'Facebook and Instagram ads',
     cost: 36,
     imageUrl:
-      'https://images.unsplash.com/photo-1492138645846-2bcabb05e2f7?w=400&q=80',
+      'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&q=80',
   },
 ];
 

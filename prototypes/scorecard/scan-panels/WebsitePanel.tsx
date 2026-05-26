@@ -1,4 +1,4 @@
-// Browser-chrome wrapper around an HVAC-site hero photo. Used for the
+// Browser-chrome wrapper around a painting-site hero photo. Used for the
 // "Analyzing your website" and "Examining website experience" scan steps.
 // The highlightRow prop draws a soft scroll/highlight band over the image
 // when step 2 ("examining experience") is active — sells the idea that the
@@ -48,7 +48,7 @@ export function WebsitePanel({ highlightRow = false }: { highlightRow?: boolean 
             letterSpacing: '0.02em',
           }}
         >
-          brightdayhvac.com
+          certapro.com/austin
         </div>
         <div style={{ width: 33 }} />
       </div>
@@ -56,7 +56,7 @@ export function WebsitePanel({ highlightRow = false }: { highlightRow?: boolean 
       {/* viewport */}
       <div style={{ position: 'relative', height: 'calc(100% - 42px)', background: '#0B0B0B', overflow: 'hidden' }}>
         <img
-          src="https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=1200&q=75"
+          src="https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png"
           alt=""
           style={{
             position: 'absolute',
@@ -68,7 +68,7 @@ export function WebsitePanel({ highlightRow = false }: { highlightRow?: boolean 
           }}
         />
 
-        {/* hero overlay text — sells it as a real HVAC site */}
+        {/* hero overlay text — sells it as a real painting-contractor site */}
         <div
           style={{
             position: 'absolute',
@@ -82,10 +82,10 @@ export function WebsitePanel({ highlightRow = false }: { highlightRow?: boolean 
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.85, marginBottom: 6 }}>
-            Bright Day HVAC · Austin, TX
+            CertaPro Painters · Austin, TX
           </div>
           <div style={{ fontSize: 28, fontWeight: 500, lineHeight: 1.1, maxWidth: 360 }}>
-            Reliable HVAC service since 2008.
+            Your local painters since 1992.
           </div>
         </div>
 

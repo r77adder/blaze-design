@@ -139,7 +139,6 @@ export const H2_SECTIONS: SidebarSection[] = [
     items: [
       { label: 'Organic Campaigns', icon: Calendar1Sm, href: '/h2/organic-social' },
       { label: 'SEO/AEO', icon: Globe, href: '/h2/seo-aeo' },
-      { label: 'Ranking', icon: LineChartUp02, href: '/h2/ranking' },
       { label: 'UGC Content', icon: UserProfileCircle, href: '/h2/influencer-content' },
       { label: 'Paid Social', icon: Cursor04, href: '/h2/paid-social' },
       { label: 'Paid Search', icon: BarChartSquare, href: '/h2/paid-search' },
@@ -152,6 +151,13 @@ export const H2_SECTIONS: SidebarSection[] = [
       { label: 'Landing Pages', icon: Templates, href: '/h2/landing-pages' },
       { label: 'AI Receptionist', icon: UserProfileGroup, href: '/h2/sdr' },
       { label: 'Reputation', icon: Star, href: '/h2/reputation' },
+    ],
+  },
+  {
+    label: 'Work in progress',
+    collapsible: true,
+    items: [
+      { label: 'Ranking', icon: LineChartUp02, href: '/h2/ranking' },
     ],
   },
   {

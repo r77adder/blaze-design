@@ -1,4 +1,4 @@
-import { Button, Heading, Text } from '@/components';
+import { Heading, Text } from '@/components';
 import { GaugeRing, useAnimatedScore } from './GaugeRing';
 import { statusColor, statusLabel, statusTrack, type Status } from './tokens';
 
@@ -65,10 +65,10 @@ function CategoryRing({ score, max, status }: { score: number; max: number; stat
 export function Sidebar() {
   return (
     <aside style={{
-      padding: 24,
+      padding: '24px 24px 120px',
       position: 'sticky',
       top: 0,
-      height: '100vh',
+      minHeight: '100vh',
       overflowY: 'auto',
       display: 'flex',
       flexDirection: 'column',
@@ -123,12 +123,6 @@ export function Sidebar() {
         ))}
       </div>
 
-      {/* section: CTA */}
-      <Button variant="primary" size="xl" fullWidth onPress={() => {
-        document.getElementById('recommendation')?.scrollIntoView({ behavior: 'smooth' });
-      }}>
-        Fix All That with Blaze
-      </Button>
     </aside>
   );
 }

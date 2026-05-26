@@ -42,7 +42,7 @@ const STEPS = [
 const PURPLE_BG = 'linear-gradient(180deg, #F4F1FF 0%, #E9E4FF 100%)';
 const PURPLE_BORDER = 'rgba(124, 92, 252, 0.18)';
 
-export function RecCard() {
+export function RecCard({ onCtaClick }: { onCtaClick?: () => void } = {}) {
   return (
     <div
       id="recommendation"
@@ -165,8 +165,8 @@ export function RecCard() {
 
       {/* CTA row */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <Button variant="primary" size="xl">Book a 30-min call with a strategist →</Button>
-        <Button variant="secondary" size="xl">Email me this scorecard</Button>
+        <Button variant="primary" size="xl" onPress={onCtaClick}>Book a 30-min call with a strategist →</Button>
+        <Button variant="secondary" size="xl" onPress={onCtaClick}>Email me this scorecard</Button>
         <Text variant="label" color="var(--dark-40)">No credit card. No pitch deck.</Text>
       </div>
     </div>

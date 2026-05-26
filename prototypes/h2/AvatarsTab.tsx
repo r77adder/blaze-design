@@ -87,29 +87,29 @@ interface AvatarProfile {
 // ---------------------------------------------------------------------------
 
 const THUMB_POOL = [
-  // Kitchens / food
+  // Interior painting work
+  'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=400&q=80',
+  'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=400&q=80',
   'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80',
-  'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80',
-  'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80',
-  // Outdoors / wellness
-  'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80',
-  'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&q=80',
-  'https://images.unsplash.com/photo-1540206395-68808572332f?w=400&q=80',
-  // Studio / portrait
-  'https://images.unsplash.com/photo-1554080353-a576cf803bda?w=400&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=80',
-  // Beauty / skincare
-  'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&q=80',
-  'https://images.unsplash.com/photo-1522335789203-aaa6e2354b06?w=400&q=80',
-  'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=80',
-  // Workshops / craft
-  'https://images.unsplash.com/photo-1503602642458-232111445657?w=400&q=80',
-  'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&q=80',
-  'https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=400&q=80',
-  // City / urban
-  'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=400&q=80',
-  'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400&q=80',
+  // Exteriors / home facades
+  'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=400&q=80',
+  'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=400&q=80',
+  'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&q=80',
+  // Paint detail / process
+  'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&q=80',
+  'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=80',
+  'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&q=80',
+  // Kitchens / cabinets
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80',
+  'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=400&q=80',
+  'https://images.unsplash.com/photo-1556909114-44e3e9399a2d?w=400&q=80',
+  // Crew in action
+  'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=400&q=80',
+  'https://images.unsplash.com/photo-1574607383476-c8ee45a07f5e?w=400&q=80',
+  'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80',
+  // Modern interiors
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&q=80',
+  'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=400&q=80',
 ];
 
 const thumb = (i: number) => THUMB_POOL[i % THUMB_POOL.length];
@@ -142,180 +142,180 @@ const buildCampaigns = (
 // Unsplash portrait URLs (publicly hostable). Sized via ?w= query param.
 const AVATARS_SEED: AvatarProfile[] = [
   {
-    id: 'sofia',
-    name: 'Sofia Romano',
+    id: 'brenna',
+    name: 'Brenna Walsh',
     imageUrl:
       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80',
-    summary: 'Sophisticated Mediterranean tastemaker',
-    ethnicity: 'Southern European (Italian)',
-    toneOfVoice: 'Warm, refined, conversational',
-    accent: 'Light Italian English',
+    summary: 'Austin home + DIY creator',
+    ethnicity: 'White American',
+    toneOfVoice: 'Warm, trustworthy, conversational',
+    accent: 'American (Texas)',
     visualDescription:
-      'Mid-30s, olive skin, dark wavy hair often loosely tied back. Linen blouses, gold hoops, minimal makeup. Sunlit kitchens and terracotta interiors.',
+      'Mid-30s, blonde wavy hair, denim shirts, simple jewelry. Sunlit Austin homes, kitchens, and front porches.',
     personalCharacteristics:
-      'Curious, generous host, opinionated about food. Loves slow mornings and long lunches.',
+      'Real Austin homeowner. Honest about what painting actually looks like — prep, drips, color-swatch indecision.',
     enabled: true,
     videos: buildVideos(
       [
-        { title: 'Slow Sunday pasta — bucatini al limone', metric: '1.4M views · 5.2% CTR', deltaPct: 18, topPerformer: true, thumb: 0 },
-        { title: 'Terrace breakfast routine', metric: '820K views · 3.8% CTR', deltaPct: 7, thumb: 1 },
-        { title: 'Market haul — Tuscany weekend', metric: '612K views · 4.1% CTR', deltaPct: -4, thumb: 2 },
-        { title: 'Olive-oil tasting at home', metric: '480K views · 2.9% CTR', deltaPct: 11, thumb: 9 },
-        { title: 'Espresso bar etiquette', metric: '390K views · 3.5% CTR', deltaPct: -12, thumb: 16 },
-        { title: 'Linen wardrobe essentials', metric: '275K views · 2.4% CTR', deltaPct: 5, thumb: 11 },
+        { title: 'Westlake exterior — before & after', metric: '1.4M views · 5.2% CTR', deltaPct: 18, topPerformer: true, thumb: 0 },
+        { title: 'Painting our front door 5 times', metric: '820K views · 3.8% CTR', deltaPct: 7, thumb: 1 },
+        { title: 'How to pick a Texas-heat paint', metric: '612K views · 4.1% CTR', deltaPct: -4, thumb: 2 },
+        { title: 'Kitchen cabinet color swatch test', metric: '480K views · 2.9% CTR', deltaPct: 11, thumb: 9 },
+        { title: 'Crew day 1 vs day 4 — exterior', metric: '390K views · 3.5% CTR', deltaPct: -12, thumb: 16 },
+        { title: 'Color consult walkthrough', metric: '275K views · 2.4% CTR', deltaPct: 5, thumb: 11 },
       ],
-      'sofia',
+      'brenna',
     ),
     campaigns: buildCampaigns(
       [
-        { name: 'Mediterranean Pantry Launch', channel: 'paid', status: 'live', dateHint: 'Started Mar 1 · ends Mar 31' },
-        { name: 'Spring Tablescape Series', channel: 'organic', status: 'live', dateHint: 'Started Mar 8 · ongoing' },
-        { name: 'Summer Riviera Drop', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for Apr 14' },
-        { name: 'Olive Oil Storytelling', channel: 'organic', status: 'ended', dateHint: 'Ran Feb 12 – Feb 28' },
-        { name: 'Founder POV Q1', channel: 'organic', status: 'ended', dateHint: 'Ran Jan 6 – Feb 4' },
+        { name: 'Spring Exterior Push 2026', channel: 'paid', status: 'live', dateHint: 'Started Mar 1 · ends Mar 31' },
+        { name: 'Color Tip Series', channel: 'organic', status: 'live', dateHint: 'Started Mar 8 · ongoing' },
+        { name: 'Summer Exterior Drop', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for Apr 14' },
+        { name: 'Westlake Case Study', channel: 'organic', status: 'ended', dateHint: 'Ran Feb 12 – Feb 28' },
+        { name: 'Owner POV Q1', channel: 'organic', status: 'ended', dateHint: 'Ran Jan 6 – Feb 4' },
       ],
-      'sofia',
+      'brenna',
     ),
   },
   {
-    id: 'jordan',
-    name: 'Jordan Hayes',
+    id: 'marco',
+    name: 'Marco Hayes',
     imageUrl:
-      'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=600&q=80',
-    summary: 'Streetwear-loving urban creative',
+      'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=600&q=80',
+    summary: 'East Austin renovation storyteller',
     ethnicity: 'Black American',
     toneOfVoice: 'Punchy, confident, playful',
-    accent: 'American (New York)',
+    accent: 'American (Texas)',
     visualDescription:
-      'Late 20s, close-cropped fade, vintage tees, layered chains, oversized denim. Always shot against graffiti walls or rooftop skylines.',
+      'Late 20s, close-cropped fade, vintage tees, paint-stained denim. Always shot in front of fresh renovations or rooftop skylines.',
     personalCharacteristics:
-      'Tastemaker energy, plugged into music + sneaker drops, opinionated and quick-witted.',
+      'Renovation tastemaker, knows every paint store and color trend in Austin. Opinionated and quick-witted.',
     enabled: true,
     videos: buildVideos(
       [
-        { title: 'Sneaker rotation — March picks', metric: '2.1M views · 6.1% CTR', deltaPct: 24, topPerformer: true, thumb: 15 },
-        { title: 'Rooftop fit check', metric: '1.0M views · 4.3% CTR', deltaPct: 9, thumb: 16 },
-        { title: 'Vinyl haul — Brooklyn dig', metric: '740K views · 3.7% CTR', deltaPct: -6, thumb: 12 },
-        { title: 'Layered chains, layered fits', metric: '510K views · 2.8% CTR', deltaPct: 14, thumb: 6 },
-        { title: 'Block-party recap', metric: '430K views · 3.2% CTR', deltaPct: -3, thumb: 14 },
+        { title: 'East Austin color trends — March', metric: '2.1M views · 6.1% CTR', deltaPct: 24, topPerformer: true, thumb: 15 },
+        { title: 'My rental repaint walkthrough', metric: '1.0M views · 4.3% CTR', deltaPct: 9, thumb: 16 },
+        { title: 'Paint store haul — Sherwin vs Behr', metric: '740K views · 3.7% CTR', deltaPct: -6, thumb: 12 },
+        { title: 'Layered accent walls done right', metric: '510K views · 2.8% CTR', deltaPct: 14, thumb: 6 },
+        { title: 'Cedar Park ranch repaint recap', metric: '430K views · 3.2% CTR', deltaPct: -3, thumb: 14 },
       ],
-      'jordan',
+      'marco',
     ),
     campaigns: buildCampaigns(
       [
-        { name: 'SS24 Streetwear Drop', channel: 'paid', status: 'live', dateHint: 'Started Feb 26 · ends Apr 7' },
-        { name: 'Sneaker Heat Index', channel: 'organic', status: 'live', dateHint: 'Started Mar 4 · ongoing' },
-        { name: 'Brooklyn Block Series', channel: 'organic', status: 'scheduled', dateHint: 'Scheduled for Apr 22' },
-        { name: 'Vinyl Club x Collab', channel: 'paid', status: 'ended', dateHint: 'Ran Jan 20 – Feb 18' },
+        { name: 'Spring Color Trend Drop', channel: 'paid', status: 'live', dateHint: 'Started Feb 26 · ends Apr 7' },
+        { name: 'Austin Color of the Week', channel: 'organic', status: 'live', dateHint: 'Started Mar 4 · ongoing' },
+        { name: 'East Austin Block Series', channel: 'organic', status: 'scheduled', dateHint: 'Scheduled for Apr 22' },
+        { name: 'Paint Store Tour Collab', channel: 'paid', status: 'ended', dateHint: 'Ran Jan 20 – Feb 18' },
       ],
-      'jordan',
+      'marco',
     ),
   },
   {
-    id: 'elise',
-    name: 'Elise Bergström',
+    id: 'tess',
+    name: 'Tess Andersen',
     imageUrl:
       'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&q=80',
-    summary: 'Minimalist Scandinavian luxury',
-    ethnicity: 'Northern European (Swedish)',
+    summary: 'Minimalist Austin interior stylist',
+    ethnicity: 'White American',
     toneOfVoice: 'Calm, precise, understated',
-    accent: 'British RP',
+    accent: 'American (Midwest)',
     visualDescription:
-      'Early 30s, platinum blonde shoulder-length hair, neutral palette: cream knits, beige trousers, leather loafers. Shot in soft natural light, white-walled spaces.',
+      'Early 30s, platinum blonde shoulder-length hair, neutral palette: cream knits, beige trousers, simple loafers. Shot in soft natural light, white-walled Austin interiors.',
     personalCharacteristics:
-      'Methodical, design-literate, reserved warmth. Prefers fewer better things.',
+      'Methodical, design-literate, reserved warmth. Prefers a tight color palette over loud accents.',
     enabled: false,
     videos: buildVideos(
       [
-        { title: 'A capsule wardrobe in nine pieces', metric: '980K views · 4.6% CTR', deltaPct: 16, topPerformer: true, thumb: 11 },
-        { title: 'Cream-on-cream interior tour', metric: '720K views · 3.9% CTR', deltaPct: 8, thumb: 7 },
-        { title: 'Morning skincare — three steps', metric: '540K views · 3.1% CTR', deltaPct: -5, thumb: 9 },
-        { title: 'Slow design — Stockholm picks', metric: '410K views · 2.7% CTR', deltaPct: 12, thumb: 6 },
-        { title: 'Linen everything', metric: '320K views · 2.2% CTR', deltaPct: -8, thumb: 5 },
+        { title: 'A nine-color whole-house palette', metric: '980K views · 4.6% CTR', deltaPct: 16, topPerformer: true, thumb: 11 },
+        { title: 'Cream-on-cream Cedar Park tour', metric: '720K views · 3.9% CTR', deltaPct: 8, thumb: 7 },
+        { title: 'Trim color in three steps', metric: '540K views · 3.1% CTR', deltaPct: -5, thumb: 9 },
+        { title: 'Quiet design — Austin picks', metric: '410K views · 2.7% CTR', deltaPct: 12, thumb: 6 },
+        { title: 'Why I keep painting white', metric: '320K views · 2.2% CTR', deltaPct: -8, thumb: 5 },
       ],
-      'elise',
+      'tess',
     ),
     campaigns: buildCampaigns(
       [
-        { name: 'Minimalist Spring Capsule', channel: 'paid', status: 'live', dateHint: 'Started Mar 6 · ends Apr 20' },
+        { name: 'Minimalist Spring Interior', channel: 'paid', status: 'live', dateHint: 'Started Mar 6 · ends Apr 20' },
         { name: 'Quiet Luxury Editorial', channel: 'organic', status: 'scheduled', dateHint: 'Scheduled for Apr 9' },
-        { name: 'Nordic Home Edit', channel: 'organic', status: 'live', dateHint: 'Started Mar 10 · ongoing' },
-        { name: 'Cashmere & Cotton', channel: 'paid', status: 'ended', dateHint: 'Ran Feb 1 – Feb 28' },
+        { name: 'Cedar Park Home Edit', channel: 'organic', status: 'live', dateHint: 'Started Mar 10 · ongoing' },
+        { name: 'Trim & Doors', channel: 'paid', status: 'ended', dateHint: 'Ran Feb 1 – Feb 28' },
       ],
-      'elise',
+      'tess',
     ),
   },
   {
     id: 'yuki',
     name: 'Yuki Tanaka',
     imageUrl:
-      'https://images.unsplash.com/photo-1554151228-14d9def656e4?w=600&q=80',
-    summary: 'Calm modern Japanese-American',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=80',
+    summary: 'Quiet renovation diarist',
     ethnicity: 'Japanese American',
     toneOfVoice: 'Gentle, thoughtful, observational',
     accent: 'American Midwest',
     visualDescription:
-      'Late 20s, shoulder-length straight black hair, often wears soft pastels, oversized button-downs, simple gold studs. Café and bookshop settings.',
+      'Late 20s, shoulder-length straight black hair, soft pastels, oversized button-downs. Renovation diaries in sunlit kitchens and bookshop-quiet living rooms.',
     personalCharacteristics:
-      'Introspective, detail-oriented, dry humor. Reads voraciously, journals, drinks lots of tea.',
+      'Introspective, detail-oriented, dry humor. Documents every step of her ongoing Austin home renovation.',
     enabled: true,
     videos: buildVideos(
       [
-        { title: 'My bookshelf, organized', metric: '1.1M views · 4.9% CTR', deltaPct: 21, topPerformer: true, thumb: 7 },
-        { title: 'Tea ritual at sunrise', metric: '680K views · 3.6% CTR', deltaPct: 6, thumb: 1 },
-        { title: 'Café-hopping in Portland', metric: '520K views · 3.0% CTR', deltaPct: -7, thumb: 16 },
-        { title: 'Journaling prompts for March', metric: '395K views · 2.6% CTR', deltaPct: 10, thumb: 8 },
-        { title: 'Soft-pastel everyday makeup', metric: '305K views · 2.3% CTR', deltaPct: -4, thumb: 9 },
-        { title: 'Five books that changed me', metric: '240K views · 2.0% CTR', deltaPct: 3, thumb: 12 },
+        { title: 'My library, painted in three colors', metric: '1.1M views · 4.9% CTR', deltaPct: 21, topPerformer: true, thumb: 7 },
+        { title: 'Tea-and-paint ritual at sunrise', metric: '680K views · 3.6% CTR', deltaPct: 6, thumb: 1 },
+        { title: 'Color-store-hopping in Austin', metric: '520K views · 3.0% CTR', deltaPct: -7, thumb: 16 },
+        { title: 'Painting prompts for March', metric: '395K views · 2.6% CTR', deltaPct: 10, thumb: 8 },
+        { title: 'Soft-pastel kitchen reveal', metric: '305K views · 2.3% CTR', deltaPct: -4, thumb: 9 },
+        { title: 'Five colors that changed my home', metric: '240K views · 2.0% CTR', deltaPct: 3, thumb: 12 },
       ],
       'yuki',
     ),
     campaigns: buildCampaigns(
       [
         { name: 'Mindful Mornings Series', channel: 'organic', status: 'live', dateHint: 'Started Mar 3 · ongoing' },
-        { name: 'Q2 Tea & Wellness Drop', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for Apr 1' },
-        { name: 'Bookworm Brand Collab', channel: 'organic', status: 'live', dateHint: 'Started Mar 11 · ends Mar 31' },
-        { name: 'Winter Skincare Push', channel: 'paid', status: 'ended', dateHint: 'Ran Jan 8 – Feb 10' },
-        { name: 'Founder POV — Yuki', channel: 'organic', status: 'ended', dateHint: 'Ran Feb 5 – Feb 26' },
+        { name: 'Q2 Color Refresh Drop', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for Apr 1' },
+        { name: 'Library Reveal Collab', channel: 'organic', status: 'live', dateHint: 'Started Mar 11 · ends Mar 31' },
+        { name: 'Winter Interior Push', channel: 'paid', status: 'ended', dateHint: 'Ran Jan 8 – Feb 10' },
+        { name: 'Renovation POV — Yuki', channel: 'organic', status: 'ended', dateHint: 'Ran Feb 5 – Feb 26' },
       ],
       'yuki',
     ),
   },
   {
-    id: 'amara',
-    name: 'Amara Okafor',
+    id: 'james',
+    name: 'James Okafor',
     imageUrl:
-      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80',
-    summary: 'Bold vibrant West African storyteller',
-    ethnicity: 'West African (Nigerian)',
+      'https://images.unsplash.com/photo-1545167622-3a6ac756afa4?w=600&q=80',
+    summary: 'Bold Austin neighborhood storyteller',
+    ethnicity: 'Black American',
     toneOfVoice: 'Warm, authoritative, rhythmic',
-    accent: 'Nigerian English (Lagos)',
+    accent: 'American (Texas)',
     visualDescription:
-      'Early 30s, deep brown skin, natural twist-out or braids, statement earrings, vivid prints and bold jewel tones. Outdoor markets, sunlit homes.',
+      'Early 30s, deep brown skin, natural twist-out or braids, statement earrings, vivid prints. Outdoor Austin neighborhoods, sunlit homes, front-porch sittings.',
     personalCharacteristics:
-      'Charismatic, community-minded, storyteller at heart. Cooks loudly, laughs loudly, hosts often.',
+      'Charismatic, community-minded, storyteller at heart. Knows every long-time homeowner on his block.',
     enabled: true,
     videos: buildVideos(
       [
-        { title: 'Jollof rice — the real way', metric: '2.4M views · 6.4% CTR', deltaPct: 28, topPerformer: true, thumb: 0 },
-        { title: 'Lagos market haul', metric: '1.3M views · 4.5% CTR', deltaPct: 11, thumb: 2 },
-        { title: 'Ankara fits for spring', metric: '910K views · 3.9% CTR', deltaPct: -6, thumb: 11 },
-        { title: 'Hosting 12 with one pot', metric: '780K views · 3.5% CTR', deltaPct: 15, thumb: 1 },
-        { title: 'Stories from my grandmother', metric: '560K views · 3.0% CTR', deltaPct: 4, thumb: 14 },
-        { title: 'Family Sunday playlist', metric: '410K views · 2.7% CTR', deltaPct: -2, thumb: 6 },
-        { title: 'Outdoor kitchen tour', metric: '320K views · 2.4% CTR', deltaPct: 8, thumb: 13 },
+        { title: 'East Austin front-porch repaint', metric: '2.4M views · 6.4% CTR', deltaPct: 28, topPerformer: true, thumb: 0 },
+        { title: 'Neighborhood color tour', metric: '1.3M views · 4.5% CTR', deltaPct: 11, thumb: 2 },
+        { title: 'Bold color fits for spring', metric: '910K views · 3.9% CTR', deltaPct: -6, thumb: 11 },
+        { title: 'Hosting 12 in a freshly painted living room', metric: '780K views · 3.5% CTR', deltaPct: 15, thumb: 1 },
+        { title: 'Stories from my grandmother\'s kitchen', metric: '560K views · 3.0% CTR', deltaPct: 4, thumb: 14 },
+        { title: 'Family Sunday color playlist', metric: '410K views · 2.7% CTR', deltaPct: -2, thumb: 6 },
+        { title: 'Outdoor patio paint tour', metric: '320K views · 2.4% CTR', deltaPct: 8, thumb: 13 },
       ],
-      'amara',
+      'james',
     ),
     campaigns: buildCampaigns(
       [
-        { name: 'Spring Spice Drop', channel: 'paid', status: 'live', dateHint: 'Started Mar 5 · ends Apr 5' },
-        { name: 'Family Table Series', channel: 'organic', status: 'live', dateHint: 'Started Feb 28 · ongoing' },
-        { name: 'Mother’s Day Push', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for May 1' },
-        { name: 'Lagos to LA Storytelling', channel: 'organic', status: 'scheduled', dateHint: 'Scheduled for Apr 18' },
+        { name: 'Spring Front-Porch Drop', channel: 'paid', status: 'live', dateHint: 'Started Mar 5 · ends Apr 5' },
+        { name: 'Front Porch Story Series', channel: 'organic', status: 'live', dateHint: 'Started Feb 28 · ongoing' },
+        { name: 'Mother\'s Day Kitchen Push', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for May 1' },
+        { name: 'East Austin Storytelling', channel: 'organic', status: 'scheduled', dateHint: 'Scheduled for Apr 18' },
         { name: 'Holiday Hosting Recap', channel: 'organic', status: 'ended', dateHint: 'Ran Dec 5 – Dec 28' },
       ],
-      'amara',
+      'james',
     ),
   },
   {
@@ -323,31 +323,31 @@ const AVATARS_SEED: AvatarProfile[] = [
     name: 'Mateo Reyes',
     imageUrl:
       'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80',
-    summary: 'Quiet craftsman, Latin American roots',
+    summary: 'Quiet craftsman, Austin trades roots',
     ethnicity: 'Latino (Mexican American)',
     toneOfVoice: 'Soft-spoken, sincere, practical',
     accent: 'American Southwest with light Spanish lilt',
     visualDescription:
-      'Mid-30s, warm tan skin, short beard, work shirts and aprons, well-worn hands. Workshops, garages, ceramic studios.',
+      'Mid-30s, warm tan skin, short beard, work shirts and aprons, paint-flecked hands. Workshops, garages, finished exteriors.',
     personalCharacteristics:
-      'Patient, hands-on, deeply proud of craft. Says little, means everything he says.',
+      'Patient, hands-on, deeply proud of craft. Says little, but every paint job he shows has been prepped to spec.',
     enabled: false,
     videos: buildVideos(
       [
-        { title: 'Workshop tour — Oaxaca pieces', metric: '730K views · 4.1% CTR', deltaPct: 13, topPerformer: true, thumb: 12 },
-        { title: 'Glazing a ceramic mug', metric: '520K views · 3.4% CTR', deltaPct: 6, thumb: 13 },
-        { title: 'Father’s carpentry tools', metric: '410K views · 2.9% CTR', deltaPct: -5, thumb: 14 },
-        { title: 'Quiet hands, slow work', metric: '290K views · 2.5% CTR', deltaPct: 9, thumb: 6 },
-        { title: 'Patio table from scrap', metric: '195K views · 2.0% CTR', deltaPct: -3, thumb: 5 },
+        { title: 'Workshop tour — color mixing demo', metric: '730K views · 4.1% CTR', deltaPct: 13, topPerformer: true, thumb: 12 },
+        { title: 'Caulking trim the right way', metric: '520K views · 3.4% CTR', deltaPct: 6, thumb: 13 },
+        { title: 'Father\'s painting tools', metric: '410K views · 2.9% CTR', deltaPct: -5, thumb: 14 },
+        { title: 'Quiet hands, slow brush', metric: '290K views · 2.5% CTR', deltaPct: 9, thumb: 6 },
+        { title: 'Restoring a Round Rock porch', metric: '195K views · 2.0% CTR', deltaPct: -3, thumb: 5 },
       ],
       'mateo',
     ),
     campaigns: buildCampaigns(
       [
         { name: 'Maker Brand Partnership', channel: 'organic', status: 'live', dateHint: 'Started Mar 7 · ongoing' },
-        { name: 'Spring Craft Goods', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for Apr 11' },
-        { name: 'Workshop Open House', channel: 'organic', status: 'scheduled', dateHint: 'Scheduled for Apr 25' },
-        { name: 'Holiday Gifting — Handmade', channel: 'paid', status: 'ended', dateHint: 'Ran Nov 20 – Dec 15' },
+        { name: 'Spring Craft Repaints', channel: 'paid', status: 'scheduled', dateHint: 'Scheduled for Apr 11' },
+        { name: 'Crew Open House', channel: 'organic', status: 'scheduled', dateHint: 'Scheduled for Apr 25' },
+        { name: 'Holiday Gifting — Painted', channel: 'paid', status: 'ended', dateHint: 'Ran Nov 20 – Dec 15' },
       ],
       'mateo',
     ),
@@ -381,7 +381,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-naomi',
     name: 'Naomi Carter',
     imageUrl:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=80',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=80',
     summary: 'Confident editorial brand voice',
     ethnicity: 'Black American',
     toneOfVoice: 'Polished, warm, authoritative',
@@ -396,7 +396,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-luca',
     name: 'Luca Bianchi',
     imageUrl:
-      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&q=80',
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&q=80',
     summary: 'Charming European lifestyle host',
     ethnicity: 'Southern European (Italian)',
     toneOfVoice: 'Charismatic, expressive, playful',
@@ -442,7 +442,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-hana',
     name: 'Hana Kim',
     imageUrl:
-      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&q=80',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80',
     summary: 'Soft minimalist beauty creator',
     ethnicity: 'Korean American',
     toneOfVoice: 'Soft, gentle, reassuring',
@@ -457,7 +457,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-david',
     name: 'David Park',
     imageUrl:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&q=80',
+      'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=600&q=80',
     summary: 'Tech-forward product reviewer',
     ethnicity: 'Korean American',
     toneOfVoice: 'Crisp, analytical, friendly',
@@ -472,7 +472,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-ava',
     name: 'Ava Mitchell',
     imageUrl:
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&q=80',
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80',
     summary: 'Warm Southern hospitality voice',
     ethnicity: 'White American (Southern)',
     toneOfVoice: 'Warm, expressive, sincere',
@@ -487,7 +487,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-kenji',
     name: 'Kenji Sato',
     imageUrl:
-      'https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?w=600&q=80',
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&q=80',
     summary: 'Quiet craftsman, Japanese roots',
     ethnicity: 'Japanese',
     toneOfVoice: 'Spare, precise, contemplative',
@@ -517,7 +517,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-isabela',
     name: 'Isabela Costa',
     imageUrl:
-      'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&q=80',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=80',
     summary: 'Sunny Latin American wellness coach',
     ethnicity: 'Latina (Brazilian)',
     toneOfVoice: 'Bright, encouraging, rhythmic',
@@ -532,7 +532,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-noor',
     name: 'Noor Al-Amin',
     imageUrl:
-      'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=600&q=80',
+      'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=600&q=80',
     summary: 'Thoughtful design editor',
     ethnicity: 'Middle Eastern',
     toneOfVoice: 'Measured, intellectual, generous',
@@ -562,7 +562,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-omar',
     name: 'Omar Diallo',
     imageUrl:
-      'https://images.unsplash.com/photo-1463453091185-61582044d556?w=600&q=80',
+      'https://images.unsplash.com/photo-1545167622-3a6ac756afa4?w=600&q=80',
     summary: 'Cosmopolitan travel storyteller',
     ethnicity: 'West African (Senegalese)',
     toneOfVoice: 'Vivid, lyrical, observational',
@@ -577,7 +577,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-rachel',
     name: 'Rachel Stone',
     imageUrl:
-      'https://images.unsplash.com/photo-1485875437342-9b39470b3d95?w=600&q=80',
+      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=600&q=80',
     summary: 'Sharp finance explainer',
     ethnicity: 'White American',
     toneOfVoice: 'Direct, analytical, occasionally wry',
@@ -592,7 +592,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-arman',
     name: 'Arman Petrosyan',
     imageUrl:
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&q=80',
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&q=80',
     summary: 'Architecture-loving city walker',
     ethnicity: 'Armenian',
     toneOfVoice: 'Thoughtful, descriptive, gently funny',
@@ -607,7 +607,7 @@ const AVATAR_OPTIONS: AvatarOption[] = [
     id: 'opt-sade',
     name: 'Sade Williams',
     imageUrl:
-      'https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?w=600&q=80',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80',
     summary: 'Plant-forward food voice',
     ethnicity: 'Black British',
     toneOfVoice: 'Warm, expressive, sensorial',

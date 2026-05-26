@@ -102,7 +102,7 @@ function HomeInner() {
             level={2}
             style={{ lineHeight: 1.2, letterSpacing: '-0.4px', marginBottom: 6 }}
           >
-            Good morning, Fabian.
+            Good morning, John.
           </Heading>
           <Text
             variant="secondary"

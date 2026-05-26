@@ -4,40 +4,40 @@
 
 const COMPETITORS = [
   {
-    name: 'Austin Air Pros',
+    name: 'Five Star Painting of South Austin',
     rating: '4.8',
-    reviews: '1.2K',
-    range: '$150–$400',
+    reviews: '1.4K',
+    range: '$$',
     address: '5821 Burnet Rd, Austin, TX',
-    hours: 'Open 24 hours',
-    photo: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=160&q=75',
+    hours: 'Open · Closes 6 PM',
+    photo: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=160&q=75',
   },
   {
-    name: 'Reliable Comfort HVAC',
+    name: 'Paper Moon Painting',
     rating: '4.7',
     reviews: '892',
-    range: '$120–$380',
+    range: '$$',
     address: '3104 N Lamar Blvd, Austin, TX',
-    hours: 'Closed · Opens 7 AM',
-    photo: 'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=160&q=75',
+    hours: 'Closed · Opens 8 AM',
+    photo: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=160&q=75',
   },
   {
-    name: 'Lone Star Heating & Air',
+    name: 'WOW 1 DAY PAINTING Austin',
     rating: '4.6',
     reviews: '654',
-    range: '$140–$420',
+    range: '$$$',
     address: '2210 S Congress Ave, Austin, TX',
-    hours: 'Open 24 hours',
+    hours: 'Open · Closes 7 PM',
     photo: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=160&q=75',
   },
   {
-    name: 'Hill Country HVAC',
+    name: 'College Pro Painters',
     rating: '4.5',
     reviews: '418',
-    range: '$130–$390',
+    range: '$',
     address: '8001 Research Blvd, Austin, TX',
-    hours: 'Closed · Opens 8 AM',
-    photo: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=160&q=75',
+    hours: 'Closed · Opens 9 AM',
+    photo: 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=160&q=75',
   },
 ];
 
@@ -57,7 +57,7 @@ export function CompetitorListPanel() {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-60)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-          Local pack · HVAC repair Austin
+          Local pack · painters Austin
         </div>
         <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>6 results</div>
       </div>

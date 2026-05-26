@@ -56,8 +56,8 @@ interface Campaign {
 const CAMPAIGNS: Campaign[] = [
   {
     id: 1,
-    name: 'Day Heel — AI Avatar Campaign',
-    avatars: ['Sofia', 'Elise'],
+    name: 'Exterior Painting — AI Avatar Campaign',
+    avatars: ['Brenna', 'Tess'],
     videos: 5,
     statusKey: 'production',
     progress: 35,
@@ -65,8 +65,8 @@ const CAMPAIGNS: Campaign[] = [
   },
   {
     id: 2,
-    name: 'The Flat — Lifestyle AI Series',
-    avatars: ['Jordan', 'Yuki', 'Amara'],
+    name: 'Cabinet Refresh — Lifestyle AI Series',
+    avatars: ['Marco', 'Yuki', 'Brenna'],
     videos: 5,
     statusKey: 'review',
     progress: 60,
@@ -74,8 +74,8 @@ const CAMPAIGNS: Campaign[] = [
   },
   {
     id: 3,
-    name: 'Spring Loafer Drop — AI Demos',
-    avatars: ['Sofia', 'Yuki', 'Amara'],
+    name: 'Spring HOA Repaint — AI Demos',
+    avatars: ['Tess', 'Yuki', 'James'],
     videos: 8,
     statusKey: 'ads',
     progress: 80,
@@ -115,29 +115,29 @@ interface ContentItem {
 }
 
 const CONTENT: ContentItem[] = [
-  { id: 1, type: 'AI Lifestyle', creator: 'Sofia (AI)', campaign: 'Day Heel', status: 'approved', platform: 'Instagram', duration: '22s', note: '✓ Tone match 94%' },
-  { id: 2, type: 'AI Demo', creator: 'Sofia (AI)', campaign: 'Day Heel', status: 'approved', platform: 'TikTok', duration: '41s', note: '✓ Clear product showcase' },
-  { id: 3, type: 'AI Testimonial', creator: 'Jordan (AI)', campaign: 'The Flat', status: 'reviewing', platform: 'YouTube', duration: '29s', note: '⚠ Tone slightly casual' },
-  { id: 4, type: 'AI Lifestyle', creator: 'Elise (AI)', campaign: 'The Flat', status: 'approved', platform: 'Instagram', duration: '19s', note: '✓ Elegant, on-brand' },
-  { id: 5, type: 'AI Demo', creator: 'Sofia (AI)', campaign: 'Spring Loafer Drop', status: 'approved', platform: 'Instagram', duration: '27s', note: '✓ Brand guidelines passed' },
-  { id: 6, type: 'AI Tutorial', creator: 'Yuki (AI)', campaign: 'Spring Loafer Drop', status: 'reviewing', platform: 'TikTok', duration: '52s', note: '⚠ Awaiting brand check' },
-  { id: 7, type: 'AI Lifestyle', creator: 'Amara (AI)', campaign: 'Spring Loafer Drop', status: 'approved', platform: 'Instagram', duration: '24s', note: '✓ Vibrant, engaging' },
+  { id: 1, type: 'Before/After', creator: 'Brenna (AI)', campaign: 'Exterior Painting', status: 'approved', platform: 'Instagram', duration: '22s', note: '✓ Tone match 94%' },
+  { id: 2, type: 'Day-of-Work', creator: 'Brenna (AI)', campaign: 'Exterior Painting', status: 'approved', platform: 'TikTok', duration: '41s', note: '✓ Clear crew showcase' },
+  { id: 3, type: 'Customer Testimonial', creator: 'Marco (AI)', campaign: 'Cabinet Refresh', status: 'reviewing', platform: 'YouTube', duration: '29s', note: '⚠ Tone slightly casual' },
+  { id: 4, type: 'Color Walkthrough', creator: 'Tess (AI)', campaign: 'Cabinet Refresh', status: 'approved', platform: 'Instagram', duration: '19s', note: '✓ Elegant, on-brand' },
+  { id: 5, type: 'Crew on Site', creator: 'Brenna (AI)', campaign: 'Spring HOA Repaint', status: 'approved', platform: 'Instagram', duration: '27s', note: '✓ Brand guidelines passed' },
+  { id: 6, type: 'Color Tutorial', creator: 'Yuki (AI)', campaign: 'Spring HOA Repaint', status: 'reviewing', platform: 'TikTok', duration: '52s', note: '⚠ Awaiting brand check' },
+  { id: 7, type: 'Project Reveal', creator: 'James (AI)', campaign: 'Spring HOA Repaint', status: 'approved', platform: 'Instagram', duration: '24s', note: '✓ Vibrant, engaging' },
 ];
 
 // ─── SUMMARY MODAL DATA ───────────────────────────────────────────
 
 const PRODUCTS = [
-  'Margaux The Day Heel',
-  'Margaux The Flat',
-  'Margaux The Loafer',
-  'Margaux The Boot',
-  'Margaux The Mule',
-  'Margaux The Sneaker',
+  'Exterior painting',
+  'Interior painting',
+  'Cabinet refinishing',
+  'Color consultation',
+  'Deck & fence staining',
+  'HOA & commercial repaints',
 ];
 
-const AVATARS = ['Sofia', 'Jordan', 'Elise', 'Amara', 'Yuki'];
+const AVATARS = ['Brenna', 'Marco', 'Yuki', 'Tess', 'James'];
 const STYLES = ['Editorial', 'Lifestyle', 'UGC-style', 'Studio/Clean'];
-const TONES = ['Aspirational', 'Playful', 'Educational', 'Luxurious', 'Relatable', 'Minimal', 'Bold'];
+const TONES = ['Aspirational', 'Playful', 'Educational', 'Trustworthy', 'Relatable', 'Minimal', 'Bold'];
 const VOLUMES = ['5 videos', '10 videos', '25 videos', '50 videos'];
 const USAGES = ['Organic only', 'Paid ads allowed', 'Whitelisting'];
 const EXCLUSIVITIES = ['None', '14 days', '30 days', '90 days'];
@@ -153,10 +153,10 @@ interface SummaryState {
 }
 
 const initialSummary = (): SummaryState => ({
-  product: 'Margaux The Day Heel',
-  avatar: 'Sofia',
-  style: 'Editorial',
-  tone: 'Aspirational',
+  product: 'Exterior painting',
+  avatar: 'Brenna',
+  style: 'Lifestyle',
+  tone: 'Trustworthy',
   volume: '5 videos',
   usage: 'Paid ads allowed',
   exclusivity: '30 days',
@@ -644,27 +644,21 @@ function SummaryLoading({ taskIdx }: { taskIdx: number }) {
   );
 }
 
-function productSlug(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
 
 const AVATAR_EMOJI: Record<string, string> = {
-  Sofia: '👩🏻',
-  Jordan: '🧑🏽',
-  Elise: '👱🏼‍♀️',
-  Amara: '👩🏾',
+  Brenna: '👩🏻',
+  Marco: '🧑🏽',
   Yuki: '🧑🏻',
+  Tess: '👱🏼‍♀️',
+  James: '👨🏾',
 };
 
 const AVATAR_GRADIENT: Record<string, string> = {
-  Sofia: 'linear-gradient(135deg, #FCB728, #ED7C2C)',
-  Jordan: 'linear-gradient(135deg, #7C5CFC, #0179CF)',
-  Elise: 'linear-gradient(135deg, #E65CAC, #7F24B7)',
-  Amara: 'linear-gradient(135deg, #ED7C2C, #BC010B)',
+  Brenna: 'linear-gradient(135deg, #FCB728, #ED7C2C)',
+  Marco: 'linear-gradient(135deg, #7C5CFC, #0179CF)',
   Yuki: 'linear-gradient(135deg, #04AF00, #0179CF)',
+  Tess: 'linear-gradient(135deg, #E65CAC, #7F24B7)',
+  James: 'linear-gradient(135deg, #ED7C2C, #BC010B)',
 };
 
 const STYLE_SWATCH: Record<string, string> = {
@@ -674,10 +668,30 @@ const STYLE_SWATCH: Record<string, string> = {
   'Studio/Clean': 'linear-gradient(135deg, var(--dark-4), var(--dark-15))',
 };
 
+// Real CertaPro Austin project photos keyed by service name. Falls back to
+// the white-brick exterior shot for anything not in the catalog so the
+// product picker never shows a random placeholder.
+const PRODUCT_THUMBS: Record<string, string> = {
+  'Exterior painting': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
+  'Interior painting': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg',
+  'Cabinet refinishing': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/cabinet-staining.jpg',
+  'Color consultation': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/color_consultation_certapro_preview-686x353.jpg',
+  'Deck & fence staining': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/deck-staining-1.jpg',
+  'Power washing': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/power-washing-2.jpg',
+  'Stucco repair': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/02/After-Pic.png',
+  'Drywall repair': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/IMG_9426-scaled.jpeg',
+  'Wood rot repair': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/20250719220330/siding-painting.jpg',
+  'Commercial painting': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2025/01/After-4-rotated.jpeg',
+  'HOA repaint': 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2024/12/After-3-scaled.jpeg',
+};
+
+const FALLBACK_PRODUCT_THUMB =
+  'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2022/03/white-painted-brick-home-686x353.jpg';
+
 function ProductThumb({ name }: { name: string }) {
   return (
     <img
-      src={`https://picsum.photos/seed/${productSlug(name)}/96/72`}
+      src={PRODUCT_THUMBS[name] ?? FALLBACK_PRODUCT_THUMB}
       alt=""
       style={{
         width: 48,

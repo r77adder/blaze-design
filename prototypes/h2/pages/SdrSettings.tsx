@@ -59,8 +59,87 @@ import {
  */
 type SettingsSubTab = 'agent' | 'conversations' | 'connections';
 
+// CertaPro Painters of Austin — local override of the imported defaults for
+// this prototype. We preserve the underlying shape and field set so every
+// editor (text inputs, channel cards, escalation rules) renders identically.
+// Painting-specific escalation triggers — replace the generic home-services
+// defaults (burst pipe / gas safety) with what an Austin painting business
+// actually needs to escalate on.
+const CERTAPRO_ESCALATION_TRIGGERS = [
+  { id: 'storm-damage', label: 'Storm or hail damage', description: 'Caller reports active siding or trim damage after a storm.', duringHours: 'escalate' as const, afterHours: 'escalate' as const },
+  { id: 'warranty-claim', label: 'Warranty claim', description: 'Existing customer reporting peeling, fading, or blistering within warranty.', duringHours: 'escalate' as const, afterHours: 'escalate' as const },
+  { id: 'complaint', label: 'Caller mentions complaint', description: 'Dissatisfied with a recent job or crew.', duringHours: 'escalate' as const, afterHours: 'digest' as const },
+  { id: 'ask-human', label: 'Asks to speak to a human', description: 'Explicitly requests a person.', duringHours: 'escalate' as const, afterHours: 'decline' as const },
+  { id: 'ask-price', label: 'Asks for firm price over phone', description: 'Wants a fixed quote without an in-home estimate.', duringHours: 'escalate' as const, afterHours: 'digest' as const },
+  { id: 'reschedule', label: 'Wants to reschedule estimate', description: 'Existing prospect changing a booked estimate slot.', duringHours: 'handle' as const, afterHours: 'handle' as const },
+];
+
+const CERTAPRO_SDR_SETTINGS: SdrSettings = {
+  ...DEFAULT_SDR_SETTINGS,
+  escalation: { triggers: CERTAPRO_ESCALATION_TRIGGERS },
+  brand: {
+    ...DEFAULT_SDR_SETTINGS.brand,
+    businessName: 'CertaPro Painters of Austin',
+    vertical: 'home-services',
+    ownerName: 'John Bunnell',
+    serviceArea: 'Austin metro — Austin, Cedar Park, Round Rock, Lakeway, Westlake, Bee Cave, Pflugerville, Leander, Dripping Springs',
+    address: '8127 Mesa Dr, Austin, TX 78759',
+  },
+  business: {
+    ...DEFAULT_SDR_SETTINGS.business,
+    services: [
+      'Interior painting',
+      'Exterior painting',
+      'Cabinet refinishing',
+      'Color consultation',
+      'Deck & fence staining',
+      'HOA & commercial repaints',
+    ],
+    faq:
+      'We serve the Austin metro area — Austin, Cedar Park, Round Rock, Lakeway, Westlake, Bee Cave, Pflugerville, Leander, and Dripping Springs. ' +
+      'In-home estimates are free. Average residential interior runs $3,500–$12,000; full exterior $8,000–$25,000. HOA and commercial repaints start at $30,000. ' +
+      'Every job carries a 2-year written warranty.',
+  },
+  mediums: {
+    ...DEFAULT_SDR_SETTINGS.mediums,
+    phone: {
+      ...DEFAULT_SDR_SETTINGS.mediums.phone,
+      aiNumber: '+1 (512) 323-9502',
+    },
+    sms: {
+      ...DEFAULT_SDR_SETTINGS.mediums.sms,
+      senderNumber: '+1 (512) 323-9502',
+      signature: '— CertaPro Painters of Austin',
+    },
+    email: {
+      ...DEFAULT_SDR_SETTINGS.mediums.email,
+      fromEmail: 'austin@certapro.com',
+      signature: 'CertaPro Painters of Austin · (512) 323-9502 · certapro.com/austin',
+    },
+  },
+  booking: {
+    ...DEFAULT_SDR_SETTINGS.booking,
+    confirmationSms:
+      "Hi {caller_name}, thanks for reaching CertaPro Painters of Austin! Your {service} estimate on {date} at {time} is in. " +
+      "Matthew will confirm by end of day. Reply here with questions or call {business_phone}.",
+    ownerEmail: 'matthew@certapro.com',
+    accountEmail: 'matthew@certapro.com',
+    eventType: 'In-home estimate',
+    durationMin: 45,
+  },
+  voice: {
+    ...DEFAULT_SDR_SETTINGS.voice,
+    greeting:
+      "Hi, thanks for reaching CertaPro Painters of Austin! I'm an AI assistant helping John's team — I can help schedule a free in-home estimate or answer questions about our painting services. " +
+      'Just so you know, this conversation may be logged. What can I help you with today?',
+    topicsToAvoid:
+      "Don't quote firm prices over the phone — direct callers to a free in-home estimate. Don't comment on competitor pricing or quality. " +
+      "If asked about specific paint warranty claims, say \"I'll have Matthew Tims, our VP of Residential, follow up directly.\"",
+  },
+};
+
 export function SdrSettingsBody() {
-  const [settings, setSettings] = useState<SdrSettings>(DEFAULT_SDR_SETTINGS);
+  const [settings, setSettings] = useState<SdrSettings>(CERTAPRO_SDR_SETTINGS);
   const [subTab, setSubTab] = useState<SettingsSubTab>('agent');
   return (
     <div
@@ -109,7 +188,7 @@ function Intro() {
     <div>
       <Heading level={2} style={{ marginBottom: 8 }}>AI Receptionist settings</Heading>
       <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', maxWidth: 720, lineHeight: 1.5 }}>
-        Tune how the AI Receptionist represents your business, what conversations it can drive, and what it's wired to.
+        Tune how the AI Receptionist represents CertaPro Painters of Austin, what conversations it can drive, and what it's wired to.
       </Text>
     </div>
   );

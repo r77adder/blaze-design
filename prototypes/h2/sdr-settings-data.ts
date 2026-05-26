@@ -416,80 +416,80 @@ export const DEFAULT_SDR_SETTINGS: SdrSettings = {
   channels: DEFAULT_CHANNEL_SETTINGS,
   primaryProvider: 'calendly',
   providerAccount: {
-    email: 'kira@radianthealth.com',
-    eventType: 'Discovery call',
+    email: 'john@certapro.com',
+    eventType: 'On-site estimate',
     durationMin: 30,
   },
   brand: {
-    businessName: 'Radiant Health',
-    vertical: 'wellness-fitness',
-    ownerName: 'Kira Almanac',
-    serviceArea: 'Greater Austin, TX (within 30 miles)',
-    address: '2847 Oak Creek Blvd, Austin, TX 78704',
+    businessName: 'CertaPro Painters of Austin',
+    vertical: 'home-services',
+    ownerName: 'John Bunnell',
+    serviceArea: 'Austin metro · 50+ ZIP codes (Austin, Cedar Park, Round Rock, Lakeway, Westlake, Bee Cave)',
+    address: '12444 Research Blvd, Austin, TX 78759',
   },
   business: {
     services: [
-      'Wellness consultations',
-      'IV vitamin therapy',
-      'Recovery & massage',
-      'Health coaching',
-      'Corporate wellness programs',
+      'Interior painting',
+      'Exterior painting',
+      'Cabinet refinishing',
+      'Color consultation',
+      'Commercial painting (HOA, office, healthcare, retail)',
     ],
     hours: {
       mon: { closed: false, open: '08:00', close: '18:00' },
       tue: { closed: false, open: '08:00', close: '18:00' },
       wed: { closed: false, open: '08:00', close: '18:00' },
       thu: { closed: false, open: '08:00', close: '18:00' },
-      fri: { closed: false, open: '08:00', close: '17:00' },
+      fri: { closed: false, open: '08:00', close: '18:00' },
       sat: { closed: false, open: '09:00', close: '14:00' },
       sun: { closed: true,  open: '09:00', close: '14:00' },
     },
     faq:
-      'We serve the greater Austin area, within roughly 30 miles of downtown. ' +
-      'Initial wellness consultations are complimentary; follow-ups are $120. ' +
-      'IV therapy starts at $150. Same-day appointments are available for existing clients.',
+      'We serve the greater Austin metro — Austin, Cedar Park, Round Rock, Lakeway, Westlake, Bee Cave, Pflugerville, Leander, Dripping Springs, and surrounding 50+ ZIP codes. ' +
+      'Free on-site estimates and color consultations. Interior projects typically run $3–8k; exterior projects $5–15k for a single-family home. ' +
+      'HOA and commercial bids are scoped individually. We back exterior work with a 4-year written warranty.',
   },
   goals: {
     primaryGoal: 'book',
-    requiredFields: new Set<RequiredFieldId>(['callerName', 'phone', 'service', 'date', 'time']),
+    requiredFields: new Set<RequiredFieldId>(['callerName', 'phone', 'service', 'address', 'date', 'time']),
     afterHours: 'accept',
   },
   escalation: { triggers: DEFAULT_ESCALATION_TRIGGERS },
   mediums: {
     phone: {
-      aiNumber: '+1 (512) 555-0142',
+      aiNumber: '+1 (512) 323-9502',
       routingMethod: 'after-hours',
       discloseAi: true,
     },
     sms: {
-      senderNumber: '+1 (512) 555-0142',
-      signature: '— Radiant Health',
+      senderNumber: '+1 (512) 323-9502',
+      signature: '— CertaPro Austin',
     },
     email: {
-      fromEmail: 'hello@radianthealth.com',
-      signature: 'Radiant Health · Greater Austin · radianthealth.com',
+      fromEmail: 'austin@certapro.com',
+      signature: 'CertaPro Painters of Austin · Your Local Painters · certapro.com/austin',
     },
   },
   booking: {
     outputMethod: 'ics',
     confirmationMode: 'pending',
     confirmationSms:
-      "Hi {caller_name}, thanks for reaching Radiant Health! Your {service} on {date} at {time} is in. " +
+      "Hi {caller_name}, thanks for reaching CertaPro Painters of Austin! Your {service} estimate on {date} at {time} at {address} is in. " +
       "We'll confirm by end of day. Reply here with questions or call {business_phone}.",
-    ownerEmail: 'kira@radianthealth.com',
-    accountEmail: 'kira@radianthealth.com',
-    eventType: 'Discovery call',
+    ownerEmail: 'john@certapro.com',
+    accountEmail: 'john@certapro.com',
+    eventType: 'On-site estimate',
     durationMin: 30,
   },
   voice: {
     voiceId: 'sarah',
     tone: 'warm',
     greeting:
-      "Hi, thanks for reaching Radiant Health! I'm an AI assistant helping Kira's team — I can help schedule a consultation or answer questions about our services. " +
+      "Hi, thanks for calling CertaPro Painters of Austin — your local painters! I'm an AI assistant helping John's team — I can line up a free on-site estimate or answer questions about interior, exterior, cabinet, or commercial painting. " +
       'Just so you know, this conversation may be logged. What can I help you with today?',
     topicsToAvoid:
-      "Don't make medical claims or diagnoses. Don't comment on competitor pricing or quality. " +
-      "If asked about pre-existing conditions, say \"I'll have someone from Kira's team follow up with you directly.\"",
+      "Don't quote a firm price without an on-site walkthrough — every project's prep varies. Don't comment on competitor pricing or quality. " +
+      "If asked about lead-paint abatement or mold, say \"I'll have someone from John's team follow up with you directly.\"",
     maxCallDuration: 5,
   },
 };

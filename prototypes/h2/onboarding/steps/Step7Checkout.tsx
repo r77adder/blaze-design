@@ -48,13 +48,13 @@ export function Step7Checkout() {
 
   // Pre-filled, plausibly-real-looking values. The user just presses Pay.
   const [card, setCard] = useState({
-    email: 'shereen@shereenhoban.com',
+    email: 'john@certapro.com',
     cardNumber: '4242 4242 4242 4242',
     expiry: '12 / 28',
     cvc: '424',
-    nameOnCard: 'Shereen Hoban',
+    nameOnCard: 'John Bunnell',
     country: 'United States',
-    zip: '94103',
+    zip: '78759',
   });
 
   const handlePay = () => {

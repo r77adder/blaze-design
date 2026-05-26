@@ -22,7 +22,7 @@ export function Step1Website() {
     e.preventDefault();
     if (!localUrl.trim()) {
       // Default to a demo URL so the flow always advances — it's a prototype.
-      setWebsiteUrl('shereenhoban.com');
+      setWebsiteUrl('certapro.com/austin');
     } else {
       setWebsiteUrl(localUrl.trim());
     }

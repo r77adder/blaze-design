@@ -53,11 +53,11 @@ export const DEFAULT_ASSISTANT_CONFIG: AssistantConfig = {
   name: 'Riley',
   voicePersona: 'warm-professional',
   greeting:
-    "Hi! Thanks for reaching out to Radiant Health. I'm Riley, your AI receptionist. I'd love to learn a bit about what you're looking for so I can point you in the right direction — what brings you in today?",
+    "Hi! Thanks for reaching out to CertaPro Painters of Austin. I'm Riley, John's AI receptionist. I can line up a free estimate or color consultation — to point you to the right crew, can you tell me a bit about the project?",
   qualifyingQuestions: [
-    "What's prompting the search now?",
-    'Who else needs to be involved in the decision?',
-    'When are you hoping to get started?',
+    'Is this for interior, exterior, cabinets, or commercial?',
+    'What part of the Austin metro is the property in?',
+    'When are you hoping to have the work done?',
   ],
   capabilities: new Set<Capability>([
     'book-meetings',

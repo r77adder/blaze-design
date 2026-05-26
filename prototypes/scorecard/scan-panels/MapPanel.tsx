@@ -13,12 +13,12 @@ interface Pin {
 }
 
 const PINS: Pin[] = [
-  { x: 52, y: 50, label: 'Bright Day HVAC', isYou: true },
-  { x: 28, y: 32, label: 'Austin Air Pros' },
-  { x: 70, y: 28, label: 'Reliable Comfort' },
-  { x: 22, y: 66, label: 'Lone Star H&A' },
-  { x: 78, y: 60, label: 'Hill Country HVAC' },
-  { x: 44, y: 76, label: 'Comfort Pros' },
+  { x: 52, y: 50, label: 'CertaPro Austin', isYou: true },
+  { x: 28, y: 32, label: 'Five Star Painting' },
+  { x: 70, y: 28, label: 'Paper Moon Painting' },
+  { x: 22, y: 66, label: 'WOW 1 DAY Austin' },
+  { x: 78, y: 60, label: 'College Pro Painters' },
+  { x: 44, y: 76, label: 'Austin Custom Painting' },
 ];
 
 export function MapPanel({ revealCompetitors = false }: { revealCompetitors?: boolean }) {

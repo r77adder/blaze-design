@@ -26,14 +26,15 @@ import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
+import { MapRankingBody } from './MapRankingBody';
 
-type SeoAeoTab = 'dashboard' | 'analytics' | 'seo-analytics' | 'settings';
+type SeoAeoTab = 'dashboard' | 'analytics' | 'seo-analytics' | 'map-pack' | 'settings';
 
 // ─── DASHBOARD DATA ───────────────────────────────────────────────────
 
 type DifficultyLevel = 'Easy' | 'Medium' | 'Hard';
 type PostStatus = 'Review' | 'Queued';
-type TopicCluster = 'Best Executive Coaching Programs' | 'How to Improve Work Performance' | 'Leadership Coaching for New Managers' | 'Mindset & Resilience Coaching';
+type TopicCluster = 'Best Painters in Austin' | 'Interior Paint Colors' | 'Cabinet Painting Cost Guide' | 'Exterior Painting in Texas Heat';
 
 interface ContentRow {
   num: number;
@@ -49,14 +50,14 @@ interface ContentRow {
 }
 
 const CONTENT_ROWS: ContentRow[] = [
-  { num: 1, cluster: 'Best Executive Coaching Programs',     keyword: 'best executive coaching programs 2026',   title: 'The 7 Best Executive Coaching Programs for 2026',           searchVol: '14.2K', aiVol: '9.9K', difficulty: 'Hard',   scheduled: 'May 19', aeoGain: '+0.5 pts', status: 'Review'  },
-  { num: 2, cluster: 'Best Executive Coaching Programs',     keyword: 'executive coaching for startup founders', title: 'Why Startup Founders Need Executive Coaching',               searchVol: '5.4K',  aiVol: '3.2K', difficulty: 'Medium', scheduled: 'May 22', aeoGain: '+0.4 pts', status: 'Queued'  },
-  { num: 3, cluster: 'Best Executive Coaching Programs',     keyword: 'what does a performance coach do',        title: 'What Does a Performance Coach Actually Do?',                 searchVol: '1.2K',  aiVol: '480',  difficulty: 'Easy',   scheduled: 'May 26', aeoGain: '+0.3 pts', status: 'Queued'  },
-  { num: 4, cluster: 'How to Improve Work Performance',      keyword: 'executive coaching ROI statistics',       title: 'Executive Coaching ROI: What the Data Actually Shows',       searchVol: '9.1K',  aiVol: '6.8K', difficulty: 'Medium', scheduled: 'May 28', aeoGain: '+0.4 pts', status: 'Review'  },
-  { num: 5, cluster: 'How to Improve Work Performance',      keyword: 'leadership coaching vs executive coach',  title: 'Leadership Coach vs Executive Coach: The Key Differences',   searchVol: '6.3K',  aiVol: '4.1K', difficulty: 'Easy',   scheduled: 'Jun 2',  aeoGain: '+0.3 pts', status: 'Queued'  },
-  { num: 6, cluster: 'Leadership Coaching for New Managers', keyword: 'coaching programs for new managers',      title: 'The Best Coaching Programs for First-Time Managers in 2026', searchVol: '7.8K',  aiVol: '5.5K', difficulty: 'Medium', scheduled: 'Jun 5',  aeoGain: '+0.4 pts', status: 'Queued'  },
-  { num: 7, cluster: 'Leadership Coaching for New Managers', keyword: '360 coaching feedback methods',           title: 'How 360-Degree Feedback Supercharges Coaching Outcomes',     searchVol: '3.2K',  aiVol: '2.1K', difficulty: 'Easy',   scheduled: 'Jun 9',  aeoGain: '+0.3 pts', status: 'Queued'  },
-  { num: 8, cluster: 'Mindset & Resilience Coaching',        keyword: 'resilience coaching techniques',          title: '8 Resilience Coaching Techniques That Actually Work',        searchVol: '5.9K',  aiVol: '3.8K', difficulty: 'Medium', scheduled: 'Jun 12', aeoGain: '+0.4 pts', status: 'Queued'  },
+  { num: 1, cluster: 'Best Painters in Austin',           keyword: 'best painters austin 2026',            title: 'The 7 best painters in Austin for 2026',                       searchVol: '14.2K', aiVol: '9.9K', difficulty: 'Hard',   scheduled: 'May 19', aeoGain: '+0.5 pts', status: 'Review'  },
+  { num: 2, cluster: 'Best Painters in Austin',           keyword: 'house painters austin TX',             title: 'How to choose a house painter in Austin without getting burned', searchVol: '5.4K',  aiVol: '3.2K', difficulty: 'Medium', scheduled: 'May 22', aeoGain: '+0.4 pts', status: 'Queued'  },
+  { num: 3, cluster: 'Best Painters in Austin',           keyword: 'painter near me',                      title: 'Why "painter near me" matters more than you think',             searchVol: '1.2K',  aiVol: '480',  difficulty: 'Easy',   scheduled: 'May 26', aeoGain: '+0.3 pts', status: 'Queued'  },
+  { num: 4, cluster: 'Interior Paint Colors',             keyword: 'interior painting austin',             title: 'Interior paint colors trending in Austin homes this year',      searchVol: '9.1K',  aiVol: '6.8K', difficulty: 'Medium', scheduled: 'May 28', aeoGain: '+0.4 pts', status: 'Review'  },
+  { num: 5, cluster: 'Interior Paint Colors',             keyword: 'low-VOC interior paint',               title: 'Low-VOC interior paint: what families and pet owners should know', searchVol: '6.3K', aiVol: '4.1K', difficulty: 'Easy',  scheduled: 'Jun 2',  aeoGain: '+0.3 pts', status: 'Queued'  },
+  { num: 6, cluster: 'Cabinet Painting Cost Guide',       keyword: 'cabinet painting austin',              title: 'Cabinet painting cost in Austin — refinish vs replace in 2026',  searchVol: '7.8K',  aiVol: '5.5K', difficulty: 'Medium', scheduled: 'Jun 5',  aeoGain: '+0.4 pts', status: 'Queued'  },
+  { num: 7, cluster: 'Cabinet Painting Cost Guide',       keyword: 'kitchen cabinet refinishing',          title: 'How long does a cabinet refinishing project actually take?',    searchVol: '3.2K',  aiVol: '2.1K', difficulty: 'Easy',   scheduled: 'Jun 9',  aeoGain: '+0.3 pts', status: 'Queued'  },
+  { num: 8, cluster: 'Exterior Painting in Texas Heat',   keyword: 'exterior painting austin',             title: '8 exterior paint colors that survive Texas heat',               searchVol: '5.9K',  aiVol: '3.8K', difficulty: 'Medium', scheduled: 'Jun 12', aeoGain: '+0.4 pts', status: 'Queued'  },
 ];
 
 // Neutral palette for difficulty — the table reads as data, not status
@@ -75,11 +76,11 @@ const STATUS_TONE: Record<PostStatus, StatusPillTone> = {
 type ClusterFilter = 'all' | TopicCluster;
 
 const CLUSTER_FILTERS: { key: ClusterFilter; label: string; count: number }[] = [
-  { key: 'all',                                  label: 'All topics',                          count: 20 },
-  { key: 'Best Executive Coaching Programs',      label: 'Best Executive Coaching Programs',    count: 6  },
-  { key: 'How to Improve Work Performance',       label: 'How to Improve Work Performance',     count: 5  },
-  { key: 'Leadership Coaching for New Managers',  label: 'Leadership Coaching for New Managers', count: 4 },
-  { key: 'Mindset & Resilience Coaching',         label: 'Mindset & Resilience Coaching',       count: 5  },
+  { key: 'all',                                   label: 'All topics',                       count: 20 },
+  { key: 'Best Painters in Austin',               label: 'Best Painters in Austin',          count: 6  },
+  { key: 'Interior Paint Colors',                 label: 'Interior Paint Colors',            count: 5  },
+  { key: 'Cabinet Painting Cost Guide',           label: 'Cabinet Painting Cost Guide',      count: 4  },
+  { key: 'Exterior Painting in Texas Heat',       label: 'Exterior Painting in Texas Heat',  count: 5  },
 ];
 
 // ─── ANALYTICS DATA ───────────────────────────────────────────────────
@@ -97,11 +98,11 @@ interface Competitor {
 }
 
 const COMPETITORS: Competitor[] = [
-  { rank: 1, brand: 'BetterUp',        isYou: false, sov: 38, sovLabel: '38%', avgPos: '#1.4', citations: '52/wk', wow: '↑ +1%',   wowUp: true  },
-  { rank: 2, brand: 'CoachHub',         isYou: false, sov: 31, sovLabel: '31%', avgPos: '#1.9', citations: '43/wk', wow: '→ Flat',  wowUp: null  },
-  { rank: 3, brand: 'Radiant Health',   isYou: true,  sov: 29, sovLabel: '29%', avgPos: '#2.1', citations: '28/wk', wow: '↑ +6 pts', wowUp: true  },
-  { rank: 4, brand: 'Tony Robbins',     isYou: false, sov: 22, sovLabel: '22%', avgPos: '#2.6', citations: '31/wk', wow: '↓ −2%',  wowUp: false },
-  { rank: 5, brand: 'Torch',            isYou: false, sov: 16, sovLabel: '16%', avgPos: '#3.0', citations: '19/wk', wow: '↑ +1%',  wowUp: true  },
+  { rank: 1, brand: 'Five Star Painting of South Austin', isYou: false, sov: 38, sovLabel: '38%', avgPos: '#1.4', citations: '52/wk', wow: '↑ +1%',    wowUp: true  },
+  { rank: 2, brand: 'Paper Moon Painting',                isYou: false, sov: 31, sovLabel: '31%', avgPos: '#1.9', citations: '43/wk', wow: '→ Flat',   wowUp: null  },
+  { rank: 3, brand: 'CertaPro Painters of Austin',        isYou: true,  sov: 29, sovLabel: '29%', avgPos: '#2.1', citations: '28/wk', wow: '↑ +6 pts', wowUp: true  },
+  { rank: 4, brand: 'WOW 1 Day Painting Austin',          isYou: false, sov: 22, sovLabel: '22%', avgPos: '#2.6', citations: '31/wk', wow: '↓ −2%',    wowUp: false },
+  { rank: 5, brand: 'College Pro Painters',               isYou: false, sov: 16, sovLabel: '16%', avgPos: '#3.0', citations: '19/wk', wow: '↑ +1%',    wowUp: true  },
 ];
 
 type QueryIntent = 'Commercial' | 'Informational' | 'Navigational' | 'Comparison';
@@ -116,12 +117,12 @@ interface QueryRow {
 }
 
 const QUERY_ROWS: QueryRow[] = [
-  { query: 'executive coaching programs 2026',    intent: 'Commercial',    cited: true,  aiVol: '14.2K', trend: '↑ Strong', trendUp: true  },
-  { query: 'performance coaching for leaders',    intent: 'Commercial',    cited: true,  aiVol: '10.3K', trend: '↑ Rising', trendUp: true  },
-  { query: 'how to find a performance coach',     intent: 'Informational', cited: true,  aiVol: '8.7K',  trend: '→ Stable', trendUp: null  },
-  { query: 'best coaching platforms 2026',        intent: 'Commercial',    cited: true,  aiVol: '6.2K',  trend: '→ Stable', trendUp: null  },
-  { query: 'leadership coaching ROI',             intent: 'Informational', cited: false, aiVol: '8.1K',  trend: '↓ Missed', trendUp: false },
-  { query: 'executive coaching cost',             intent: 'Commercial',    cited: false, aiVol: '7.2K',  trend: '↓ Missed', trendUp: false },
+  { query: 'painters austin',                     intent: 'Commercial',    cited: true,  aiVol: '14.2K', trend: '↑ Strong', trendUp: true  },
+  { query: 'house painters austin TX',            intent: 'Commercial',    cited: true,  aiVol: '10.3K', trend: '↑ Rising', trendUp: true  },
+  { query: 'how to choose an austin painter',     intent: 'Informational', cited: true,  aiVol: '8.7K',  trend: '→ Stable', trendUp: null  },
+  { query: 'cabinet painting austin',             intent: 'Commercial',    cited: true,  aiVol: '6.2K',  trend: '→ Stable', trendUp: null  },
+  { query: 'interior painting austin cost',       intent: 'Informational', cited: false, aiVol: '8.1K',  trend: '↓ Missed', trendUp: false },
+  { query: 'commercial painters austin',          intent: 'Commercial',    cited: false, aiVol: '7.2K',  trend: '↓ Missed', trendUp: false },
 ];
 
 interface CitationItem {
@@ -134,11 +135,11 @@ interface CitationItem {
 }
 
 const CITATION_ITEMS: CitationItem[] = [
-  { icon: '📋', title: 'The Complete Guide to Performance Coaching in 2026',    type: 'Blog',    date: 'Mar 18', platforms: 'ChatGPT + Perplexity', citations: 18 },
-  { icon: '📱', title: 'Executive Coaching vs Mentoring: Which One You Need',   type: 'Blog',    date: 'Apr 2',  platforms: 'ChatGPT',              citations: 11 },
-  { icon: '📊', title: '7 Things to Look For When Hiring a Performance Coach',  type: 'Blog',    date: 'Mar 28', platforms: 'ChatGPT',              citations: 9  },
-  { icon: '🔍', title: 'Radiant Health Coaching Services Overview & Pricing',   type: 'Landing', date: 'Apr 10', platforms: 'Perplexity',           citations: 6  },
-  { icon: '⚡', title: 'Performance Coaching ROI: What the Data Shows',          type: 'Blog',    date: 'Apr 7',  platforms: 'Perplexity',           citations: 3  },
+  { icon: '🎨', title: 'The complete guide to hiring a painter in Austin (2026)',    type: 'Blog',    date: 'Mar 18', platforms: 'ChatGPT + Perplexity', citations: 18 },
+  { icon: '🏠', title: 'Cabinet refinishing vs replacement — Austin cost guide',     type: 'Blog',    date: 'Apr 2',  platforms: 'ChatGPT',              citations: 11 },
+  { icon: '✅', title: '7 things to look for when hiring an Austin painter',          type: 'Blog',    date: 'Mar 28', platforms: 'ChatGPT',              citations: 9  },
+  { icon: '🔍', title: 'CertaPro Painters of Austin — services & service area',       type: 'Landing', date: 'Apr 10', platforms: 'Perplexity',           citations: 6  },
+  { icon: '🌞', title: 'Exterior paint colors that survive Texas heat',               type: 'Blog',    date: 'Apr 7',  platforms: 'Perplexity',           citations: 3  },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────
@@ -471,10 +472,10 @@ function SetupModal({ onClose }: { onClose: () => void }) {
       field: 'Business name',
       status: 'error',
       values: [
-        { platform: 'Website', value: 'Radiant Health', ok: true },
-        { platform: 'Google Business', value: 'Radiant Health Inc.', ok: false },
-        { platform: 'LinkedIn', value: 'Radiant Health LLC', ok: false },
-        { platform: 'Yelp', value: 'Radiant Health', ok: true },
+        { platform: 'Website', value: 'CertaPro Painters of Austin', ok: true },
+        { platform: 'Google Business', value: 'CertaPro Painters Austin', ok: false },
+        { platform: 'LinkedIn', value: 'CertaPro Austin TX', ok: false },
+        { platform: 'Yelp', value: 'CertaPro Painters of Austin', ok: true },
       ],
       note: 'Inconsistent name signals confuse entity matching. Use exact same string everywhere.',
       editLinks: [
@@ -501,10 +502,10 @@ function SetupModal({ onClose }: { onClose: () => void }) {
       field: 'Service categories',
       status: 'warning',
       values: [
-        { platform: 'Website', value: 'Executive Coaching, Leadership Dev., Mindset', ok: true },
-        { platform: 'Google Business', value: 'Business Consultant, Coach', ok: false },
-        { platform: 'LinkedIn', value: 'Professional Training & Coaching', ok: true },
-        { platform: 'Yelp', value: 'Life Coach', ok: false },
+        { platform: 'Website', value: 'Interior painting, Exterior painting, Cabinet refinishing', ok: true },
+        { platform: 'Google Business', value: 'Painter', ok: false },
+        { platform: 'LinkedIn', value: 'Painting contractor & cabinet refinishing', ok: true },
+        { platform: 'Yelp', value: 'Painters', ok: false },
       ],
       note: 'Category labels affect how AI engines classify you. Align with your primary keyword clusters.',
       editLinks: [
@@ -516,10 +517,10 @@ function SetupModal({ onClose }: { onClose: () => void }) {
       field: 'Phone number',
       status: 'ok',
       values: [
-        { platform: 'Website', value: '(415) 555-0182', ok: true },
-        { platform: 'Google Business', value: '(415) 555-0182', ok: true },
-        { platform: 'LinkedIn', value: '(415) 555-0182', ok: true },
-        { platform: 'Yelp', value: '(415) 555-0182', ok: true },
+        { platform: 'Website', value: '(512) 323-9502', ok: true },
+        { platform: 'Google Business', value: '(512) 323-9502', ok: true },
+        { platform: 'LinkedIn', value: '(512) 323-9502', ok: true },
+        { platform: 'Yelp', value: '(512) 323-9502', ok: true },
       ],
       note: '',
       editLinks: [],
@@ -544,7 +545,7 @@ function SetupModal({ onClose }: { onClose: () => void }) {
         subHeader={
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
-              Blaze found mismatches across your platforms. Fix these to help AI engines reliably identify Radiant Health as a single authoritative entity.
+              Blaze found mismatches across your platforms. Fix these to help AI engines reliably identify CertaPro Painters of Austin as a single authoritative entity.
             </Text>
             <div style={{ display: 'flex', gap: 8 }}>
               <StatusPill tone="danger" size="sm">{errorCount} error{errorCount !== 1 ? 's' : ''}</StatusPill>
@@ -612,7 +613,7 @@ function SetupModal({ onClose }: { onClose: () => void }) {
 function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () => void }) {
   const [activePanel, setActivePanel] = useState<'actions' | 'metadata' | 'comments'>('actions');
 
-  const title = row?.title ?? 'The 7 Best Executive Coaching Programs for 2026';
+  const title = row?.title ?? 'The 7 best painters in Austin for 2026';
   const score = 83;
 
   const describeArc = (cx: number, cy: number, r: number, startDeg: number, endDeg: number) => {
@@ -684,25 +685,25 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
               </div>
               <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.25, color: 'var(--dark-90)', marginBottom: 20, fontFamily: 'Georgia, serif' }}>{title}</h1>
               <p style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--dark-80)', marginBottom: 24 }}>
-                Summer mornings at camp set the tone for the day: the quiet, the fresh air, and the promise of a good meal. Choosing the best camping stoves means finding gear that fits your trip, your cooking style, and your eco-conscious values. This guide helps you cut through the noise with clear advice on options that make summer cooking simple, reliable, and sustainable. Let's get your camp kitchen ready for the season.
+                Hiring a painter in Austin is more than picking the lowest bid. The right crew balances prep work, paint quality, and clear communication — and the wrong one can leave you with peeling trim a year later. This guide walks through the seven painters Austin homeowners recommend most, what each one is known for, and how to pick the right fit for your project.
               </p>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--dark-90)', marginBottom: 16, fontFamily: 'Georgia, serif' }}>Choosing the Right Camping Stove</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--dark-90)', marginBottom: 16, fontFamily: 'Georgia, serif' }}>Choosing the right Austin painter</h2>
               <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 20, position: 'relative' }}>
-                <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2d6a4f 100%)', height: 180, display: 'flex', alignItems: 'flex-end', padding: 20 }}>
+                <div style={{ background: 'linear-gradient(135deg, #c9633a 0%, #d6a86b 100%)', height: 180, display: 'flex', alignItems: 'flex-end', padding: 20 }}>
                   <div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--light-100)', lineHeight: 1.2, marginBottom: 4 }}>Best Camping Stoves</div>
-                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>Find the right fit for your trip at REI Co-op.</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--light-100)', lineHeight: 1.2, marginBottom: 4 }}>Best painters in Austin</div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>Vetted local pros for interior, exterior, and cabinets.</div>
                   </div>
                 </div>
               </div>
               <p style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--dark-80)', marginBottom: 16 }}>
-                Not all camping stoves are created equal. Whether you're a solo backpacker or cooking for a group, the right stove balances weight, fuel efficiency, and ease of use. Here's what to look for before you buy.
+                Not every painter is the right fit for every job. Whether you're refinishing a kitchen, repainting a stucco exterior, or running an HOA repaint project, the right crew balances prep, communication, and finish quality. Here's what to look for before you sign.
               </p>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--dark-90)', marginBottom: 10 }}>Top Picks for Summer 2026</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--dark-90)', marginBottom: 10 }}>Top picks for Austin in 2026</h3>
               <ul style={{ paddingLeft: 20, lineHeight: 2, color: 'var(--dark-80)', fontSize: 15 }}>
-                <li>MSR PocketRocket Deluxe — best for ultralight backpacking</li>
-                <li>Camp Chef Everest 2X — best for car camping & family trips</li>
-                <li>BioLite CampStove 2+ — best eco-conscious option</li>
+                <li>CertaPro Painters of Austin — best for residential + HOA repaints</li>
+                <li>Five Star Painting of South Austin — best for interior repaints</li>
+                <li>Paper Moon Painting — best for color consultation</li>
               </ul>
 
               {/* Ask Blaze bar */}
@@ -768,7 +769,7 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
                 </div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--dark-60)', marginBottom: 8 }}>Doc info</div>
-                  {[['Owner', 'Gordon Test'], ['Created', 'Today at 6:14pm'], ['Updated', 'Today at 10:37pm']].map(([k, v]) => (
+                  {[['Owner', 'John Bunnell'], ['Created', 'Today at 6:14pm'], ['Updated', 'Today at 10:37pm']].map(([k, v]) => (
                     <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
                       <span style={{ color: 'var(--dark-60)' }}>{k}</span>
                       <span style={{ color: 'var(--dark-80)', fontWeight: 500 }}>{v}</span>
@@ -907,7 +908,7 @@ function DashboardTab() {
         </div>
         {[
           { num: 1, title: 'Answer-first structure + FAQ blocks', desc: 'Configure how every generated post is formatted so AI engines cite it more often.', pts: '+6 pts', cta: 'Configure', modal: 'configure' as const },
-          { num: 2, title: 'Entity profile & brand consistency', desc: 'Set your canonical brand description so AI engines recognize Radiant Health as a single authoritative source.', pts: '+4 pts', cta: 'Set up', modal: 'setup' as const },
+          { num: 2, title: 'Entity profile & brand consistency', desc: 'Set your canonical brand description so AI engines recognize CertaPro Painters of Austin as a single authoritative source.', pts: '+4 pts', cta: 'Set up', modal: 'setup' as const },
         ].map((step, i, arr) => (
           <button
             key={step.num}
@@ -953,7 +954,7 @@ function DashboardTab() {
             Posts Blaze will generate for you
           </Heading>
           <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>
-            High-AEO-value keywords where Radiant Health isn't being cited · 20 posts across 4 topic clusters
+            High-AEO-value keywords where CertaPro Austin isn't being cited · 20 posts across 4 topic clusters
           </Text>
         </div>
         <ClusterFilterChips active={clusterFilter} onChange={setClusterFilter} />
@@ -1086,7 +1087,7 @@ function AnalyticsTab() {
           </div>
           <BulletList
             items={[
-              { label: 'Radiant Health', value: '29%' },
+              { label: 'CertaPro Austin', value: '29%' },
               { label: 'Category avg.', value: '18%' },
             ]}
           />
@@ -1150,7 +1151,7 @@ function AnalyticsTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <Heading level={3} style={{ display: 'block' }}>AI Share of Voice trend — 12 weeks</Heading>
-            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>Radiant Health vs. category average</Text>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>CertaPro Austin vs. category average</Text>
           </div>
           <StatusPill tone="accent" size="sm">29% this week</StatusPill>
         </div>
@@ -1169,7 +1170,7 @@ function AnalyticsTab() {
           <div>
             <Heading level={3} style={{ display: 'block' }}>Competitor Leaderboard</Heading>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>
-              AI Share of Voice vs. direct competitors · executive coaching category
+              AI Share of Voice vs. direct competitors · Austin painting category
             </Text>
           </div>
           <Button size="sm" variant="tertiary" frontIcon={Plus}>Add competitor</Button>
@@ -1233,7 +1234,7 @@ function AnalyticsTab() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
             <Heading level={3} style={{ display: 'block' }}>Query Performance</Heading>
-            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>How Radiant Health appears across AI search queries</Text>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>How CertaPro Austin appears across AI search queries</Text>
           </div>
           <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, overflow: 'hidden', background: 'var(--light-100)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1323,11 +1324,11 @@ function AnalyticsTab() {
 // ─── SETUP TAB ────────────────────────────────────────────────────────
 
 const SEED_CLUSTERS = [
-  { label: 'Performance Coaching',  keywords: 42, reason: 'High AI search volume, low citation competition' },
-  { label: 'Executive Coaching',    keywords: 38, reason: 'Core service — strong entity signal opportunity' },
-  { label: 'Leadership Development', keywords: 31, reason: 'Trending upward on Perplexity in the last 30 days' },
-  { label: 'Mindset & Resilience',  keywords: 24, reason: 'Low difficulty, quick citation wins' },
-  { label: 'Coaching ROI & Outcomes', keywords: 19, reason: 'Commercial intent — high conversion value' },
+  { label: 'Best Painters in Austin',         keywords: 42, reason: 'High AI search volume, low citation competition' },
+  { label: 'Interior Paint Colors',           keywords: 38, reason: 'Core service — strong entity signal opportunity' },
+  { label: 'Cabinet Painting Cost Guide',     keywords: 31, reason: 'Trending upward on Perplexity in the last 30 days' },
+  { label: 'Exterior Painting in Texas Heat', keywords: 24, reason: 'Low difficulty, quick citation wins' },
+  { label: 'HOA & Commercial Repaints',       keywords: 19, reason: 'Commercial intent — high conversion value' },
 ];
 
 const AI_SURFACES = [
@@ -1367,7 +1368,7 @@ function ToggleRow({ label, desc, defaultOn = false }: { label: string; desc: st
 
 function SetupTab() {
   const [selectedClusters, setSelectedClusters] = useState<Set<string>>(
-    new Set(['Performance Coaching', 'Executive Coaching', 'Leadership Development'])
+    new Set(['Best Painters in Austin', 'Interior Paint Colors', 'Cabinet Painting Cost Guide'])
   );
   const [selectedSurfaces, setSelectedSurfaces] = useState<Set<string>>(
     new Set(['chatgpt', 'perplexity', 'google'])
@@ -1395,11 +1396,11 @@ function SetupTab() {
       {/* Brand Description */}
       <SectionCard
         title="Brand description"
-        subtitle="Pulled from your Brand Kit. Blaze embeds this in every generated post so AI engines recognize Radiant Health as an authoritative source."
+        subtitle="Pulled from your Brand Kit. Blaze embeds this in every generated post so AI engines recognize CertaPro Painters of Austin as an authoritative source."
       >
         <div style={{ background: 'var(--dark-4)', border: '1px solid var(--dark-4)', borderRadius: 8, padding: '14px 16px' }}>
           <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.6 }}>
-            Radiant Health is a premium executive and performance coaching firm helping leaders, founders, and high-achievers unlock peak performance through evidence-based coaching methodologies. We specialize in executive coaching, leadership development, mindset & resilience training, and performance optimization — with a proven track record of measurable ROI for individuals and organizations.
+            CertaPro Painters of Austin is your local painting contractor serving homeowners and commercial properties across the Austin metro. We handle interior and exterior painting, cabinet refinishing, color consultation, deck & fence staining, drywall repair, power washing, stucco repair, and wood rot repair. We make the process easy and convenient — clear estimates, respectful crews, and finishes that last.
           </Text>
         </div>
         <Button variant="ghost" size="sm" endIcon={ArrowRight} style={{ marginTop: 10 }}>
@@ -1539,13 +1540,13 @@ interface KeywordRankRow {
 }
 
 const KEYWORD_RANK_ROWS: KeywordRankRow[] = [
-  { keyword: 'best executive coaching programs',        cluster: 'Best Exec. Coaching',    currentRank: 3,  prevRank: 7,  searchVol: '14.2K', url: '/blog/best-executive-coaching-programs' },
-  { keyword: 'executive coaching for startup founders', cluster: 'Best Exec. Coaching',    currentRank: 6,  prevRank: 9,  searchVol: '5.4K',  url: '/blog/executive-coaching-startups'       },
-  { keyword: 'executive coaching ROI statistics',       cluster: 'Work Performance',        currentRank: 4,  prevRank: 4,  searchVol: '9.1K',  url: '/blog/executive-coaching-roi'           },
-  { keyword: 'leadership coaching vs executive coach',  cluster: 'Work Performance',        currentRank: 11, prevRank: 18, searchVol: '6.3K',  url: '/blog/leadership-vs-executive-coaching'  },
-  { keyword: 'coaching programs for new managers',      cluster: 'Leadership Coaching',     currentRank: 8,  prevRank: 14, searchVol: '7.8K',  url: '/blog/coaching-for-new-managers'        },
-  { keyword: 'resilience coaching techniques',          cluster: 'Mindset & Resilience',    currentRank: 15, prevRank: 22, searchVol: '5.9K',  url: '/blog/resilience-coaching-techniques'   },
-  { keyword: 'what does a performance coach do',        cluster: 'Best Exec. Coaching',    currentRank: 2,  prevRank: 5,  searchVol: '1.2K',  url: '/blog/what-does-a-performance-coach-do' },
+  { keyword: 'painters austin',                   cluster: 'Best Painters Austin', currentRank: 3,  prevRank: 7,  searchVol: '14.2K', url: '/austin/blog/best-painters-austin'          },
+  { keyword: 'house painters austin TX',          cluster: 'Best Painters Austin', currentRank: 6,  prevRank: 9,  searchVol: '5.4K',  url: '/austin/blog/how-to-choose-an-austin-painter' },
+  { keyword: 'interior painting austin',          cluster: 'Interior Colors',      currentRank: 4,  prevRank: 4,  searchVol: '9.1K',  url: '/austin/blog/interior-paint-colors-austin'  },
+  { keyword: 'low-VOC interior paint',            cluster: 'Interior Colors',      currentRank: 11, prevRank: 18, searchVol: '6.3K',  url: '/austin/blog/low-voc-interior-paint'        },
+  { keyword: 'cabinet painting austin',           cluster: 'Cabinet Cost Guide',   currentRank: 8,  prevRank: 14, searchVol: '7.8K',  url: '/austin/blog/cabinet-painting-cost-austin'  },
+  { keyword: 'exterior painting austin',          cluster: 'Texas Heat',           currentRank: 15, prevRank: 22, searchVol: '5.9K',  url: '/austin/blog/exterior-paint-colors-texas-heat' },
+  { keyword: 'painter near me',                   cluster: 'Best Painters Austin', currentRank: 2,  prevRank: 5,  searchVol: '1.2K',  url: '/austin/blog/painter-near-me'               },
 ];
 
 interface ConversionRow {
@@ -1558,10 +1559,10 @@ interface ConversionRow {
 }
 
 const CONVERSION_ROWS: ConversionRow[] = [
-  { event: 'Discovery call booked',  source: 'Organic search', conversions: 58,  convRate: '3.2%', trend: '↑ +14%', trendUp: true  },
-  { event: 'Lead form submitted',    source: 'Organic search', conversions: 41,  convRate: '2.3%', trend: '↑ +9%',  trendUp: true  },
-  { event: 'Resource downloaded',    source: 'Organic search', conversions: 29,  convRate: '1.6%', trend: '→ Flat', trendUp: false },
-  { event: 'Newsletter sign-up',     source: 'Organic search', conversions: 14,  convRate: '0.8%', trend: '↑ +22%', trendUp: true  },
+  { event: 'Free estimate requested', source: 'Organic search', conversions: 58,  convRate: '3.2%', trend: '↑ +14%', trendUp: true  },
+  { event: 'Phone call booked',       source: 'Organic search', conversions: 41,  convRate: '2.3%', trend: '↑ +9%',  trendUp: true  },
+  { event: 'Color guide downloaded',  source: 'Organic search', conversions: 29,  convRate: '1.6%', trend: '→ Flat', trendUp: false },
+  { event: 'Newsletter sign-up',      source: 'Organic search', conversions: 14,  convRate: '0.8%', trend: '↑ +22%', trendUp: true  },
 ];
 
 interface BacklinkRow {
@@ -1573,12 +1574,12 @@ interface BacklinkRow {
 }
 
 const BACKLINK_ROWS: BacklinkRow[] = [
-  { domain: 'forbes.com',             authority: 94, links: 2,  firstSeen: 'May 14', isNew: true  },
-  { domain: 'inc.com',                authority: 88, links: 1,  firstSeen: 'May 11', isNew: true  },
-  { domain: 'hbr.org',                authority: 91, links: 3,  firstSeen: 'Apr 28', isNew: false },
-  { domain: 'coachingfederation.org', authority: 72, links: 5,  firstSeen: 'Apr 19', isNew: false },
-  { domain: 'entrepreneur.com',       authority: 85, links: 1,  firstSeen: 'May 16', isNew: true  },
-  { domain: 'fastcompany.com',        authority: 87, links: 2,  firstSeen: 'Mar 30', isNew: false },
+  { domain: 'austin.curbed.com',       authority: 94, links: 2, firstSeen: 'May 14', isNew: true  },
+  { domain: 'do512.com',               authority: 78, links: 1, firstSeen: 'May 11', isNew: true  },
+  { domain: 'kxan.com',                authority: 88, links: 3, firstSeen: 'Apr 28', isNew: false },
+  { domain: 'hgtv.com',                authority: 91, links: 5, firstSeen: 'Apr 19', isNew: false },
+  { domain: 'austin.eater.com',        authority: 82, links: 1, firstSeen: 'May 16', isNew: true  },
+  { domain: 'bobvila.com',             authority: 87, links: 2, firstSeen: 'Mar 30', isNew: false },
 ];
 
 function OrgTrafficSparkline() {
@@ -1789,7 +1790,7 @@ function SeoAnalyticsTab() {
           </div>
           <div>
             <Text variant="metadata" style={{ color: 'var(--dark-40)', display: 'block' }}>Top converting page</Text>
-            <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>/blog/best-executive-coaching-programs</Text>
+            <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>/austin/blog/best-painters-austin</Text>
           </div>
         </div>
         </div>
@@ -1862,12 +1863,12 @@ function SeoAnalyticsTab() {
 // ─── ONBOARDING FLOW ─────────────────────────────────────────────────
 
 const ONBOARDING_CLUSTERS: { label: string; keywords: number; kd: number; vol: string; defaultChecked: boolean }[] = [
-  { label: 'Best Executive Coaching Programs',     keywords: 13, kd: 3.0,  vol: '40.5k', defaultChecked: true  },
-  { label: 'How to Improve Work Performance',      keywords: 8,  kd: 7.0,  vol: '74k',   defaultChecked: true  },
-  { label: 'Executive Coaching ROI & Outcomes',    keywords: 11, kd: 0.0,  vol: '3.6k',  defaultChecked: true  },
-  { label: 'Leadership Coaching for New Managers', keywords: 13, kd: 16.0, vol: '6.6k',  defaultChecked: false },
-  { label: 'Mindset & Resilience Coaching',        keywords: 9,  kd: 4.0,  vol: '12.1k', defaultChecked: false },
-  { label: 'How to Find an Executive Coach',       keywords: 11, kd: 11.0, vol: '301k',  defaultChecked: false },
+  { label: 'Best Painters in Austin',           keywords: 13, kd: 3.0,  vol: '40.5k', defaultChecked: true  },
+  { label: 'Interior Paint Colors',             keywords: 8,  kd: 7.0,  vol: '74k',   defaultChecked: true  },
+  { label: 'Cabinet Painting Cost Guide',       keywords: 11, kd: 0.0,  vol: '3.6k',  defaultChecked: true  },
+  { label: 'Exterior Painting in Texas Heat',   keywords: 13, kd: 16.0, vol: '6.6k',  defaultChecked: false },
+  { label: 'HOA & Commercial Repaints',         keywords: 9,  kd: 4.0,  vol: '12.1k', defaultChecked: false },
+  { label: 'How to Find an Austin Painter',     keywords: 11, kd: 11.0, vol: '301k',  defaultChecked: false },
 ];
 
 const PLATFORM_OPTIONS = [
@@ -1909,9 +1910,9 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
             <div style={{ width: 210, background: 'var(--light-100)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.22)', flexShrink: 0 }}>
               <div style={{ height: 80, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>📝</div>
               <div style={{ padding: '12px 14px' }}>
-                <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--dark-90)', lineHeight: 1.4, marginBottom: 4 }}>Best Executive Coaching Programs for 2026</div>
+                <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--dark-90)', lineHeight: 1.4, marginBottom: 4 }}>The 7 best painters in Austin for 2026</div>
                 <div style={{ fontSize: 10, color: 'var(--dark-60)' }}>July 8, 2026</div>
-                <div style={{ fontSize: 10, color: 'var(--dark-60)', marginTop: 4, lineHeight: 1.5 }}>In recent years, executive performance coaching has become increasingly popular, and with the...</div>
+                <div style={{ fontSize: 10, color: 'var(--dark-60)', marginTop: 4, lineHeight: 1.5 }}>Hiring a painter in Austin is more than picking the lowest bid. The right crew balances prep work, paint quality, and...</div>
               </div>
             </div>
 
@@ -2122,13 +2123,13 @@ const ADD_CLUSTER_ROWS: {
   aiVol: string;
   recommended?: boolean;
 }[] = [
-  { label: 'How to Find an Executive Coach',       keywords: 11, kd: 11.0, searchVol: '301k', aiVol: '18.2k', recommended: true  },
-  { label: 'Career Transition Coaching',            keywords: 9,  kd:  6.0, searchVol: '22.3k', aiVol: '9.1k',  recommended: true  },
-  { label: 'Workplace Productivity Coaching',       keywords: 12, kd:  5.0, searchVol: '12.4k', aiVol: '7.8k',  recommended: false },
-  { label: 'Team Performance Coaching',             keywords: 8,  kd:  3.0, searchVol: '8.1k',  aiVol: '5.2k',  recommended: false },
-  { label: 'Executive Presence & Communication',    keywords: 10, kd:  2.0, searchVol: '5.9k',  aiVol: '4.4k',  recommended: false },
-  { label: 'Executive Coaching ROI & Outcomes',     keywords: 11, kd:  0.0, searchVol: '3.6k',  aiVol: '2.1k',  recommended: false },
-  { label: 'Coaching for High-Potential Employees', keywords: 7,  kd:  4.0, searchVol: '2.8k',  aiVol: '1.9k',  recommended: false },
+  { label: 'How to Find an Austin Painter',       keywords: 11, kd: 11.0, searchVol: '301k',  aiVol: '18.2k', recommended: true  },
+  { label: 'Deck & Fence Staining in Austin',     keywords: 9,  kd:  6.0, searchVol: '22.3k', aiVol: '9.1k',  recommended: true  },
+  { label: 'Stucco Repair & Repainting',          keywords: 12, kd:  5.0, searchVol: '12.4k', aiVol: '7.8k',  recommended: false },
+  { label: 'Wood Rot Repair Before Painting',     keywords: 8,  kd:  3.0, searchVol: '8.1k',  aiVol: '5.2k',  recommended: false },
+  { label: 'Color Consultation for Austin Homes', keywords: 10, kd:  2.0, searchVol: '5.9k',  aiVol: '4.4k',  recommended: false },
+  { label: 'HOA & Commercial Repaints',           keywords: 11, kd:  0.0, searchVol: '3.6k',  aiVol: '2.1k',  recommended: false },
+  { label: 'Power Washing Before Painting',       keywords: 7,  kd:  4.0, searchVol: '2.8k',  aiVol: '1.9k',  recommended: false },
 ];
 
 function AddClusterModal({ onClose }: { onClose: () => void }) {
@@ -2249,10 +2250,12 @@ export function SeoAeoRoute() {
   const [tab, setTab] = useState<SeoAeoTab>('dashboard');
   const [showAddCluster, setShowAddCluster] = useState(false);
 
-  if (devState === 'cold') {
+  if (devState === 'cold' && tab !== 'map-pack') {
     // "Go to my SEO plan" → flip the dev-state to 'steady' so the next
     // render shows the dashboard. The DevStatePanel toggle remains the
-    // other way to swap views.
+    // other way to swap views. Map Pack handles its own cold view (the
+    // audit) inside <MapRankingBody>, so when that tab is active we let
+    // the render fall through.
     return <OnboardingFlow onComplete={() => setState('/h2/seo-aeo', 'steady')} />;
   }
 
@@ -2261,13 +2264,15 @@ export function SeoAeoRoute() {
       <TabChip selected={tab === 'dashboard'} onSelect={() => setTab('dashboard')}>Dashboard</TabChip>
       <TabChip selected={tab === 'seo-analytics'} onSelect={() => setTab('seo-analytics')}>SEO Analytics</TabChip>
       <TabChip selected={tab === 'analytics'} onSelect={() => setTab('analytics')}>AEO Analytics</TabChip>
+      <TabChip selected={tab === 'map-pack'} onSelect={() => setTab('map-pack')}>Map Pack</TabChip>
       <TabChip selected={tab === 'settings'} onSelect={() => setTab('settings')}>Settings</TabChip>
     </div>
   );
 
   // Auto-publish lives inside Settings — see SetupTab. Topbar keeps the
-  // Add-topic-cluster + Generate-report actions for the data tabs.
-  const topbarRight = tab === 'settings' ? null : (
+  // Add-topic-cluster + Generate-report actions for the SEO/AEO data tabs;
+  // Map Pack owns its own internal CTAs and shouldn't surface them either.
+  const topbarRight = tab === 'settings' || tab === 'map-pack' ? null : (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <Button variant="tertiary" onClick={() => setShowAddCluster(true)}>
         <Plus size={16} />
@@ -2279,7 +2284,22 @@ export function SeoAeoRoute() {
 
   return (
     <H2Layout topbarCenter={topbarCenter} topbarRight={topbarRight ?? undefined}>
-      {tab === 'dashboard' ? <DashboardTab /> : tab === 'analytics' ? <AnalyticsTab /> : tab === 'seo-analytics' ? <SeoAnalyticsTab /> : <SetupTab />}
+      {tab === 'dashboard' ? (
+        <DashboardTab />
+      ) : tab === 'analytics' ? (
+        <AnalyticsTab />
+      ) : tab === 'seo-analytics' ? (
+        <SeoAnalyticsTab />
+      ) : tab === 'map-pack' ? (
+        // Share the parent /h2/seo-aeo dev-state key so the floating
+        // <DevStatePanel> cold/steady toggle drives Map Pack's audit/home
+        // view directly. The cold→onboarding early-return above is gated
+        // on `tab !== 'map-pack'`, so flipping to cold here shows the
+        // Map Pack audit instead of the SEO Plan onboarding.
+        <MapRankingBody devStatePath="/h2/seo-aeo" />
+      ) : (
+        <SetupTab />
+      )}
       {showAddCluster && <AddClusterModal onClose={() => setShowAddCluster(false)} />}
       {tab === 'settings' && (
         <div

@@ -81,162 +81,157 @@ interface Campaign {
 
 const CAMPAIGNS: Campaign[] = [
   {
-    id: 'sept-hiring',
-    name: 'September Hiring Campaign',
-    budget: 250,
-    spent: 4820,
-    results: 47,
-    costPerResult: 102.55,
+    id: 'spring-exterior',
+    name: 'Spring Exterior Campaign',
+    budget: 120,
+    spent: 2840,
+    results: 38,
+    costPerResult: 74.7,
     status: 'spending-too-fast',
     enabled: true,
     flagged: true,
     ads: [
       {
-        id: 'sept-hiring-ad-1',
-        name: 'Hiring — Reel A',
-        // Candid working/people photo — close-up of a smiling employee at work.
-        thumb: 'https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=200&q=80',
-        budget: 80,
-        spent: 1640,
-        results: 21,
-        costPerResult: 78.1,
+        id: 'spring-exterior-ad-1',
+        name: 'Exterior — Reel A',
+        // Painter on a ladder finishing an exterior — Austin home.
+        thumb: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&q=80',
+        budget: 50,
+        spent: 980,
+        results: 18,
+        costPerResult: 54.4,
         status: 'winner',
         enabled: true,
         flagged: true,
         fatigue: {
           ageDays: 21,
-          signal: 'CTR -32% past 7d',
+          signal: 'CTR -28% past 7d',
           currentAd: {
-            name: 'Hiring — Reel A',
-            // Candid employee close-up — same image used as the row thumbnail.
-            imageUrl: 'https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=600&q=80',
-            caption: 'Founder testimonial · static · 1080×1350',
+            name: 'Exterior — Reel A',
+            imageUrl: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+            caption: 'Crew painting Westlake home · static · 1080×1350',
           },
           proposedAd: {
-            name: 'Hiring — Stat-first Reel',
-            // Fresh concept — short-form vertical reel scene (creator filming on phone).
-            imageUrl: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&q=80',
-            caption: 'Sofia avatar reel · 15s vertical · stat-first hook',
+            name: 'Exterior — Before/after Reel',
+            // Fresh concept — before/after slide reel of an exterior repaint.
+            imageUrl: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
+            caption: 'Cedar Park before/after reel · 15s vertical · transformation hook',
           },
           signals: [
-            { label: 'CTR', value: '−32% past 7 days', tone: 'negative' },
-            { label: 'CPM', value: '+18% past 7 days', tone: 'negative' },
-            { label: 'Frequency', value: '4.6 — saturated', tone: 'negative' },
-            { label: 'Audience overlap', value: '+22% with peer set', tone: 'warning' },
-            { label: 'Competitor shift', value: '3 peers moved to vertical video in 14d', tone: 'warning' },
+            { label: 'CTR', value: '−28% past 7 days', tone: 'negative' },
+            { label: 'CPM', value: '+16% past 7 days', tone: 'negative' },
+            { label: 'Frequency', value: '4.3 — saturated', tone: 'negative' },
+            { label: 'Audience overlap', value: '+19% with peer set', tone: 'warning' },
+            { label: 'Competitor shift', value: '3 Austin painters moved to before/after reels in 14d', tone: 'warning' },
           ],
         },
       },
       {
-        id: 'sept-hiring-ad-2',
-        name: 'Hiring — Static B',
-        // Office / workspace shot — clean desk + laptop scene.
-        thumb: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&q=80',
-        budget: 80,
-        spent: 1610,
-        results: 17,
-        costPerResult: 94.7,
+        id: 'spring-exterior-ad-2',
+        name: 'Exterior — Static B',
+        // Clean modern Austin home exterior shot.
+        thumb: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&q=80',
+        budget: 40,
+        spent: 920,
+        results: 14,
+        costPerResult: 65.7,
         status: 'testing',
         enabled: true,
         flagged: true,
         fatigue: {
           ageDays: 17,
-          signal: 'CPL +46% past 5d',
+          signal: 'Cost/lead +42% past 5d',
           currentAd: {
-            name: 'Hiring — Static B',
-            // Clean empty workspace — same image used as the row thumbnail.
-            imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',
-            caption: 'Empty-office hero · static · 1080×1080',
+            name: 'Exterior — Static B',
+            imageUrl: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+            caption: 'Finished exterior hero · static · 1080×1080',
           },
           proposedAd: {
-            name: 'Hiring — Team quote pull-out',
-            // Fresh concept — real team shot, collaborative scene.
-            imageUrl: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80',
-            caption: 'Team photo · name + role overlay · single-CTA',
+            name: 'Exterior — Crew + warranty overlay',
+            imageUrl: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
+            caption: 'Crew on site · 2-year warranty overlay · single-CTA',
           },
           signals: [
-            { label: 'CPL', value: '+46% past 5 days', tone: 'negative' },
-            { label: 'Click-to-apply', value: '−38% past 5 days', tone: 'negative' },
+            { label: 'Cost per lead', value: '+42% past 5 days', tone: 'negative' },
+            { label: 'Click-to-estimate', value: '−34% past 5 days', tone: 'negative' },
             { label: 'Impressions', value: 'Flat — scroll-stop failing', tone: 'warning' },
-            { label: 'Frequency', value: '3.9 — high recall', tone: 'warning' },
-            { label: 'Competitor shift', value: '2 peers swapped to annotated team photos in 10d', tone: 'warning' },
+            { label: 'Frequency', value: '3.7 — high recall', tone: 'warning' },
+            { label: 'Competitor shift', value: '2 Austin peers added crew + warranty overlays in 10d', tone: 'warning' },
           ],
         },
       },
       {
-        id: 'sept-hiring-ad-3',
-        name: 'Hiring — Carousel C',
-        // Hands-on / collaborative scene — people working together at a table.
-        thumb: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&q=80',
-        budget: 90,
-        spent: 1570,
-        results: 9,
-        costPerResult: 174.4,
+        id: 'spring-exterior-ad-3',
+        name: 'Exterior — Carousel C',
+        // Painters at work, prep stage on a residential exterior.
+        thumb: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=200&q=80',
+        budget: 30,
+        spent: 940,
+        results: 6,
+        costPerResult: 156.7,
         status: 'over-budget',
         enabled: true,
       },
     ],
   },
   {
-    id: 'bogo-1',
-    name: 'BOGO Campaign',
-    budget: 10.75,
-    spent: 215.4,
-    results: 14,
-    costPerResult: 15.39,
+    id: 'cabinet-1',
+    name: 'Cabinet Refinishing Campaign',
+    budget: 60,
+    spent: 1280,
+    results: 22,
+    costPerResult: 58.18,
     status: 'on-track',
     enabled: true,
     flagged: true,
     fatigue: {
       ageDays: 28,
-      signal: 'Conv -41% past 7d',
+      signal: 'Estimate req -38% past 7d',
       currentAd: {
-        name: 'BOGO — Carousel (offer slide 3)',
-        // Product flat-lay — current carousel hero image.
-        imageUrl: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&q=80',
-        caption: '4-slide carousel · offer on slide 3 · 1080×1080',
+        name: 'Cabinet — Carousel (offer slide 3)',
+        imageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+        caption: '4-slide before/after carousel · offer on slide 3 · 1080×1080',
       },
       proposedAd: {
-        name: 'BOGO — Offer-first Carousel',
-        // Fresh concept — bold offer-first creative with bundle imagery.
-        imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80',
-        caption: 'Offer in frame 1 · urgency overlay · 1080×1350',
+        name: 'Cabinet — Offer-first Carousel',
+        imageUrl: 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80',
+        caption: 'Save $500 on full kitchen · frame 1 · urgency overlay · 1080×1350',
       },
       signals: [
-        { label: 'Conversion rate', value: '−41% past 7 days', tone: 'negative' },
-        { label: 'Spend per result', value: '+34% past 7 days', tone: 'negative' },
+        { label: 'Estimate request rate', value: '−38% past 7 days', tone: 'negative' },
+        { label: 'Spend per lead', value: '+31% past 7 days', tone: 'negative' },
         { label: 'CTR', value: 'Healthy — landing mismatch likely', tone: 'warning' },
-        { label: 'Frequency', value: '5.1 — saturated', tone: 'negative' },
-        { label: 'Competitor shift', value: 'Aster & Oak now leads with offer on slide 1', tone: 'warning' },
+        { label: 'Frequency', value: '4.8 — saturated', tone: 'negative' },
+        { label: 'Competitor shift', value: 'Paper Moon now leads with offer on slide 1', tone: 'warning' },
       ],
     },
   },
   {
-    id: 'bogo-2',
-    name: 'BOGO Campaign',
-    budget: 1.75,
-    spent: 38.2,
-    results: 3,
-    costPerResult: 12.73,
+    id: 'cabinet-2',
+    name: 'Cabinet Refinishing Campaign',
+    budget: 20,
+    spent: 412,
+    results: 5,
+    costPerResult: 82.4,
     status: 'spending-slowly',
     enabled: true,
   },
   {
-    id: 'mindfulness-1',
-    name: 'Mindfulness Campaign',
-    budget: 10.75,
-    spent: 198.6,
-    results: 22,
-    costPerResult: 9.03,
+    id: 'hoa-repaint-1',
+    name: 'HOA Repaint Campaign',
+    budget: 80,
+    spent: 1840,
+    results: 9,
+    costPerResult: 204.4,
     status: 'winner',
     enabled: true,
     flagged: true,
   },
   {
-    id: 'mindfulness-2',
-    name: 'Mindfulness Campaign',
-    budget: 1.75,
-    spent: 12.8,
+    id: 'hoa-repaint-2',
+    name: 'HOA Repaint Campaign',
+    budget: 25,
+    spent: 180,
     results: 0,
     costPerResult: 0,
     status: 'paused',
@@ -325,9 +320,9 @@ function collectFatigues(): FatigueBannerItem[] {
 }
 
 function PaidSocialBody() {
-  // The "September Hiring Campaign" is expanded by default. Designers can
+  // The "Spring Exterior Campaign" is expanded by default. Designers can
   // collapse it / expand others for the demo.
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(['sept-hiring']));
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['spring-exterior']));
 
   const toggleExpanded = (id: string) =>
     setExpanded((prev) => {
@@ -575,7 +570,7 @@ function CampaignRow({
       </div>
       <TwoLineCell value={formatMoney(campaign.budget)} sub="daily" />
       <TwoLineCell value={formatMoney(campaign.spent)} sub="total" />
-      <TwoLineCell value={String(campaign.results)} sub="website leads" />
+      <TwoLineCell value={String(campaign.results)} sub="estimate requests" />
       <TwoLineCell value={formatMoney(campaign.costPerResult)} sub="per lead" />
       <div>
         <StatusChip status={campaign.status} />
@@ -625,7 +620,7 @@ function AdRow({ ad }: { ad: Ad }) {
       </div>
       <TwoLineCell value={formatMoney(ad.budget)} sub="daily" />
       <TwoLineCell value={formatMoney(ad.spent)} sub="total" />
-      <TwoLineCell value={String(ad.results)} sub="website leads" />
+      <TwoLineCell value={String(ad.results)} sub="estimate requests" />
       <TwoLineCell value={formatMoney(ad.costPerResult)} sub="per lead" />
       <div>
         <StatusChip status={ad.status} />
@@ -1040,81 +1035,81 @@ interface MarketIntelCard {
 const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
   {
     id: 'mi-s-1',
-    peer: 'NorthSun Wellness',
+    peer: 'Five Star Painting of South Austin',
     metric: '3.2x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=600&q=80',
-    observedSummary: 'Founder-led testimonial · stat hook in first 2s.',
-    adaptedSummary: 'Sofia avatar voice-over · "3 in 4 women feel tired by 3pm".',
+    observedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    observedSummary: 'Owner-led testimonial · "187 reviews" stat in first 2s.',
+    adaptedSummary: 'John Bunnell voice-over · "Painted 1,200 Austin homes since 2008".',
     observed:
-      'Founder-led testimonial with a stat hook in the first 2 seconds — close-up framing, daylight, hand-held delivery to feel unscripted.',
+      'Owner-led testimonial with a review-count stat hook in the first 2 seconds — close-up framing, daylight, hand-held delivery to feel unscripted.',
     adapted:
-      'Sofia avatar voice-over, opening with "3 in 4 women feel tired by 3pm — here\'s what changed for me." Same close-up framing, in our brand palette.',
+      'John Bunnell (CertaPro Austin owner) voice-over, opening with "1,200 Austin homes painted since 2008 — here\'s how we do it." Same close-up framing, in our brand palette.',
   },
   {
     id: 'mi-s-2',
-    peer: 'Helia Botanicals',
+    peer: 'Paper Moon Painting',
     metric: 'CTR 4.8%',
-    observedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&q=80',
-    observedSummary: 'Split-screen before/after carousel.',
-    adaptedSummary: 'Three-frame: groggy → bundle → energized.',
+    observedImage: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=80',
+    observedSummary: 'Split-screen exterior before/after carousel.',
+    adaptedSummary: 'Three-frame: faded siding → prep → fresh repaint.',
     observed:
-      'Split-screen "before/after" carousel showing the morning routine swap. Heavy-grain still + on-brand sans typography.',
+      'Split-screen "before/after" carousel showing a full exterior repaint. Heavy-grain still + on-brand sans typography.',
     adapted:
-      'Three-frame carousel: groggy morning → Daily Wellness Bundle unboxing → energized commute. Re-shot in Radiant Health brand palette.',
+      'Three-frame carousel: faded west-facing siding → prep + caulk → fresh CertaPro exterior. Re-shot in CertaPro brand palette.',
   },
   {
     id: 'mi-s-3',
-    peer: 'Quiet Mind Co.',
+    peer: 'WOW 1 DAY PAINTING Austin',
     metric: '2.4x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80',
-    observedSummary: 'Narrative reel with hand-drawn stat overlays.',
-    adaptedSummary: 'Elise avatar · ashwagandha + magnesium story.',
+    observedImage: 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+    observedSummary: 'Narrative reel with hand-drawn timeline overlays.',
+    adaptedSummary: 'Matthew Tims walks through a 4-day exterior schedule.',
     observed:
-      'Narrative reel with hand-drawn stat overlays and ambient soundtrack. Calm, slow pacing — feels editorial, not promotional.',
+      'Narrative reel with hand-drawn timeline overlays and ambient soundtrack. Calm, slow pacing — feels editorial, not promotional.',
     adapted:
-      'Elise avatar narrates the ashwagandha + magnesium story, on-brand serif typography, same ambient soundtrack.',
+      'Matthew Tims (VP Residential) narrates the day-by-day exterior repaint timeline, on-brand serif typography, same ambient soundtrack.',
   },
   {
     id: 'mi-s-4',
-    peer: 'Verdant Daily',
+    peer: 'College Pro Painters',
     metric: 'CTR 5.6%',
-    observedImage: 'https://images.unsplash.com/photo-1542736667-069246bdbc6d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&q=80',
+    observedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
     observedSummary: 'UGC compilation · 5 customer clips.',
-    adaptedSummary: 'Stitch from 5 top-rated Radiant Health reviews.',
+    adaptedSummary: 'Stitch from 5 top-rated CertaPro Austin reviews.',
     observed:
       'UGC compilation — 5 customer clips stitched with one shared caption. Quick cuts, natural audio, captions burnt-in.',
     adapted:
-      'Pull from the 5 highest-rated Radiant Health reviews, stitched into a 20s reel with our caption style and brand-safe music.',
+      'Pull from the 5 highest-rated CertaPro Austin Google reviews, stitched into a 20s reel with our caption style and brand-safe music.',
   },
   {
     id: 'mi-s-5',
-    peer: 'Aster & Oak',
+    peer: 'Austin Custom Painting',
     metric: '2.9x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=600&q=80',
-    observedSummary: 'Founder unboxing · handwritten note overlay.',
-    adaptedSummary: 'Sofia unboxes the Daily Wellness Bundle.',
+    observedImage: 'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    observedSummary: 'Color consult walkthrough · handwritten swatch overlay.',
+    adaptedSummary: 'Free color consultation with every CertaPro estimate.',
     observed:
-      'Founder unboxing the product on a desk with a handwritten note overlay. Soft natural light, single take.',
+      'Color consultant walks a homeowner through swatches on a kitchen wall, handwritten swatch overlay. Soft natural light, single take.',
     adapted:
-      'Sofia unboxes the Daily Wellness Bundle, scribbled "for tired moms" note on frame, our gold + cream palette.',
+      'CertaPro consultant runs a free color consult in a Cedar Park kitchen, scribbled "free with every estimate" note on frame, our brand palette.',
   },
   {
     id: 'mi-s-6',
-    peer: 'Ground State Labs',
+    peer: 'Sherwin-Williams Pro Painters',
     metric: 'CTR 4.1%',
-    observedImage: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&q=80',
-    observedSummary: 'Static ingredient diagram with arrows + CTA.',
-    adaptedSummary: '5-supplement stack breakdown · naturopath callouts.',
+    observedImage: 'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+    observedSummary: 'Static paint-chip diagram with arrows + CTA.',
+    adaptedSummary: 'Texas-heat paint guide · CertaPro callouts.',
     observed:
-      'Static "ingredient diagram" with hand-drawn arrows and a strong CTA. Single frame designed to stop the scroll.',
+      'Static "paint chip diagram" with hand-drawn arrows and a strong CTA. Single frame designed to stop the scroll.',
     adapted:
-      'Radiant Health ingredient breakdown of the 5-supplement stack with naturopath callouts, in our editorial style.',
+      'CertaPro Austin "best paints for Texas heat" breakdown with on-brand callouts, in our editorial style.',
   },
 ];
 
@@ -1260,7 +1255,7 @@ function MarketIntelCardView({ card }: { card: MarketIntelCard }) {
               marginBottom: 4,
             }}
           >
-            Adapted for Radiant Health
+            Adapted for CertaPro Austin
           </Text>
           <Text variant="smallList" style={{ color: 'var(--dark-90)' }}>
             {card.adaptedSummary}
@@ -1305,7 +1300,7 @@ function MarketIntelComparisonModal({
             body={card.observed}
           />
           <ComparisonPanel
-            heading="Proposed for Radiant Health"
+            heading="Proposed for CertaPro Austin"
             image={card.adaptedImage}
             label="Adapted"
             body={card.adapted}

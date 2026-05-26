@@ -65,21 +65,21 @@ interface Campaign {
 }
 
 const INITIAL_PAGES: Page[] = [
-  { name: 'CRM for small teams — landing page', source: 'Spring SEO Push — Small Business CRM', status: 'Live', cvr: '4.6%', updated: '2 days ago', channel: 'Organic' },
+  { name: 'Exterior painting Austin — landing page', source: 'Spring SEO Push — Exterior Painting Austin', status: 'Live', cvr: '4.6%', updated: '2 days ago', channel: 'Organic' },
 ];
 
 const CAMPAIGNS: Campaign[] = [
-  { id: 'c1', name: 'Spring SEO Push — Small Business CRM', type: 'Organic', typeC: 'organic', status: 'Active', metric: "Top keyword: 'crm for small teams'", metricSub: '12.4k impressions / wk', headline: '12.4k impressions' },
-  { id: 'c2', name: 'Google Ads — Competitor Keywords', type: 'Paid Search', typeC: 'paid', status: 'Active', metric: 'CTR 6.1%', metricSub: '$2.18 CPC', headline: '6.1%' },
-  { id: 'c3', name: 'Retargeting — Abandoned Trial Users', type: 'Paid Search', typeC: 'paid', status: 'Active', metric: 'CVR 8.9%', metricSub: '1,402 in audience', headline: '8.9%' },
-  { id: 'c4', name: 'LinkedIn — Ops Manager Persona', type: 'Social', typeC: 'social', status: 'Active', metric: 'CTR 2.4%', metricSub: '42 leads · last 14d', headline: '2.4%' },
-  { id: 'c5', name: 'Best Email Tool — Organic Cluster', type: 'Organic', typeC: 'organic', status: 'Paused', metric: 'Page 1 for 18 terms', metricSub: '8.6k organic / mo', headline: '18 terms' },
-  { id: 'c6', name: 'YouTube Pre-roll — Founder Story', type: 'Social', typeC: 'social', status: 'Active', metric: 'View-rate 41%', metricSub: '$0.04 CPV', headline: '41%' },
+  { id: 'c1', name: 'Spring SEO Push — Exterior Painting Austin', type: 'Organic', typeC: 'organic', status: 'Active', metric: "Top keyword: 'exterior painting austin'", metricSub: '9.8k impressions / wk', headline: '9.8k impressions' },
+  { id: 'c2', name: 'Google Ads — Competitor Keywords', type: 'Paid Search', typeC: 'paid', status: 'Active', metric: 'CTR 6.1%', metricSub: '$3.42 CPC', headline: '6.1%' },
+  { id: 'c3', name: 'Retargeting — Estimate Form Abandons', type: 'Paid Search', typeC: 'paid', status: 'Active', metric: 'CVR 8.9%', metricSub: '1,402 in audience', headline: '8.9%' },
+  { id: 'c4', name: 'Facebook — HOA Board Persona', type: 'Social', typeC: 'social', status: 'Active', metric: 'CTR 2.4%', metricSub: '42 leads · last 14d', headline: '2.4%' },
+  { id: 'c5', name: 'Cabinet Painting Cost — Organic Cluster', type: 'Organic', typeC: 'organic', status: 'Paused', metric: 'Page 1 for 18 terms', metricSub: '6.4k organic / mo', headline: '18 terms' },
+  { id: 'c6', name: 'YouTube Pre-roll — Owner Story', type: 'Social', typeC: 'social', status: 'Active', metric: 'View-rate 41%', metricSub: '$0.04 CPV', headline: '41%' },
 ];
 
 const SECTIONS: { id: SectionId; name: string }[] = [
   { id: 'hero', name: 'Hero' },
-  { id: 'why', name: 'Why Radiant' },
+  { id: 'why', name: 'Why CertaPro Austin' },
   { id: 'benefits', name: 'Key Benefits' },
   { id: 'proof', name: 'Social Proof' },
   { id: 'cta', name: 'Final CTA' },
@@ -96,43 +96,43 @@ interface SectionCopy {
 
 const COPY: Record<SectionId, SectionCopy> = {
   hero: {
-    eyebrow: 'CRM · Built for small teams',
-    headline: 'The CRM your team will actually use.',
-    sub: 'Spend less time wrangling pipelines and more time closing. Built for teams of 2–20 — no admin, no consultants, no 30-day onboarding.',
-    cta: 'Start free trial',
+    eyebrow: 'Exterior painting · Austin metro',
+    headline: 'Your Austin home, painted to last.',
+    sub: 'CertaPro Painters of Austin — locally owned, professionally certified. Free in-home estimate. 2-year written warranty on every job.',
+    cta: 'Get a free estimate',
   },
   why: {
-    eyebrow: 'Why Radiant',
-    headline: 'CRM that fits how small teams actually work.',
-    sub: 'No bloated enterprise checklists. No multi-week setup. Just the pipeline, inbox, and reporting your reps need to close — designed for teams of 2 to 20.',
+    eyebrow: 'Why CertaPro Austin',
+    headline: 'Painting built for the Texas climate.',
+    sub: 'We use premium UV-stable paints rated for Texas sun, prep every surface to manufacturer spec, and back every job with a 2-year written warranty. 187 5-star Google reviews and counting.',
   },
   benefits: {
     eyebrow: 'Key Benefits',
-    headline: 'What you get on day one.',
+    headline: 'What you get when you book CertaPro.',
     items: [
-      { icn: '⚡', t: 'Set up in 10 minutes', s: "Drop in your inbox, import your contacts, you're live." },
-      { icn: '✦', t: 'Pipelines that auto-update', s: 'No more nagging reps to update deal stages.' },
-      { icn: '◆', t: 'Reports your team will read', s: "One screen showing what's working — and what's not." },
+      { icn: '⚡', t: 'Free in-home estimate', s: 'Same-week visit. Detailed walkthrough, written quote, no surprises.' },
+      { icn: '✦', t: 'Certified, background-checked crews', s: 'No subcontractors — uniformed, insured CertaPro painters.' },
+      { icn: '◆', t: '2-year written warranty', s: "If anything peels or fails, we come back and fix it. In writing." },
     ],
   },
   proof: {
     eyebrow: 'Social Proof',
-    headline: 'Loved by small teams that ship.',
+    headline: 'Trusted by Austin homeowners.',
     quotes: [
-      { text: '"Switched from Salesforce in a weekend. Our reps actually use this one."', who: '— Maya R., Head of Sales, Pollen Studio' },
-      { text: "\"The first CRM that didn't need a consultant. Set up in an afternoon.\"", who: '— Jamie L., Co-founder, NorthMark' },
+      { text: '"They painted our Westlake exterior in 4 days. Spotless crew, beautiful finish. Worth every dollar."', who: '— Priya P., Westlake homeowner' },
+      { text: "\"Best painting experience we've had. The 2-year warranty made the decision easy.\"", who: '— Marco T., Cedar Park homeowner' },
     ],
   },
   cta: {
     eyebrow: 'Get started',
-    headline: 'Run your sales pipeline like a small team should.',
-    sub: 'Free 14-day trial. No credit card.',
-    cta: 'Start free trial',
+    headline: "Ready for a fresh coat? Let's talk.",
+    sub: 'Free in-home estimate. Call (512) 323-9502 or request online.',
+    cta: 'Request my free estimate',
   },
 };
 
 const SUGGESTIONS = [
-  { id: 's1', body: <><b>Headline variant with urgency language</b> is outperforming on similar paid pages — try applying ("Start your trial today" vs. current).</> },
+  { id: 's1', body: <><b>Headline variant with urgency language</b> is outperforming on similar paid pages — try applying ("Book your spring exterior before May" vs. current).</> },
   { id: 's2', body: <><b>Organic visitors are bouncing at the benefits section</b> — consider reordering Social Proof above Key Benefits for first-time visitors.</> },
   { id: 's3', body: <><b>This page's CTR is 18% below your paid average</b> — a layout change to a single-column hero may help on Google Ads traffic.</> },
 ];
@@ -142,7 +142,7 @@ const LOAD_LINES = [
   'Identifying highest-converting keywords…',
   'Reading organic traffic patterns…',
   'Applying BrandKit — voice, images, layout…',
-  'Structuring page for conversion…',
+  'Structuring page for estimate requests…',
   'Done — your page is ready.',
 ];
 
@@ -297,7 +297,7 @@ function CampaignChooserModal({
     <Modal.Root size="lg" aria-labelledby="campaign-modal-title" data-testid="campaign-chooser-modal">
       <Modal.Header
         title="Which campaign should we build from?"
-        subtitle="Blaze reads your top-performing ads, keywords, and audience signals to draft a page that converts."
+        subtitle="Blaze reads your top-performing painting ads, keywords, and audience signals to draft a page that drives estimate requests."
         id="campaign-modal-title"
         onClose={close}
         compact={false}
@@ -592,7 +592,7 @@ function SectionBody({ id }: { id: SectionId }) {
             marginBottom: 10,
           }}
         >
-          The CRM your team will <span style={{ color: '#B06000', fontStyle: 'italic' }}>actually use</span>.
+          Your Austin home, <span style={{ color: '#B06000', fontStyle: 'italic' }}>painted to last</span>.
         </h1>
       ) : (
         <h2
@@ -616,7 +616,7 @@ function SectionBody({ id }: { id: SectionId }) {
         <>
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, maxWidth: 420 }}>
             <input
-              placeholder="Work email"
+              placeholder="Your email"
               style={{
                 flex: 1,
                 padding: '10px 12px',
@@ -650,7 +650,7 @@ function SectionBody({ id }: { id: SectionId }) {
           {id === 'hero' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--dark-60)' }}>
               <span style={{ color: '#FCB728', letterSpacing: 1 }}>★★★★★</span>
-              <span>4.8 — 1,200+ teams</span>
+              <span>4.7 — 187 Google reviews</span>
             </div>
           )}
         </>
@@ -703,10 +703,10 @@ interface ChatMessage {
 
 const SEEDED_MESSAGES: ChatMessage[] = [
   { id: 'm1', role: 'user', text: 'Make the headline punchier' },
-  { id: 'm2', role: 'agent', text: "Updated. New headline: 'Climb to #1 in Local Search'." },
+  { id: 'm2', role: 'agent', text: "Updated. New headline: 'Austin's most-trusted exterior painters'." },
   { id: 'm3', role: 'user', text: 'Use the brand yellow for the CTA' },
-  { id: 'm4', role: 'agent', text: 'Done. The Get Started button now uses the brand color.' },
-  { id: 'm5', role: 'user', text: 'Add a customer logo strip under the hero' },
+  { id: 'm4', role: 'agent', text: 'Done. The Get a free estimate button now uses the CertaPro yellow.' },
+  { id: 'm5', role: 'user', text: 'Add a Cedar Park before/after photo strip under the hero' },
 ];
 
 function ChatPanel() {
@@ -1093,7 +1093,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
               color: 'var(--dark-80)',
             }}
           >
-            radiant.com/crm-small-teams
+            certapro.com/austin/exterior
           </code>
           <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>Published 2 min ago</span>
         </div>
@@ -1260,7 +1260,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
             </div>
             {[
               { src: 'Hero', val: '100% viewed' },
-              { src: 'Why Radiant', val: '88% viewed' },
+              { src: 'Why CertaPro Austin', val: '88% viewed' },
               { src: 'Key Benefits', val: '61% viewed · ⚠ drop-off' },
               { src: 'Social Proof', val: '52% viewed' },
               { src: 'Final CTA', val: '38% viewed' },
@@ -1315,13 +1315,13 @@ function LandingPagesRouteInner() {
   const [view, setView] = useState<View>('hub');
   const [pages, setPages] = useState<Page[]>(INITIAL_PAGES);
   const [campaign, setCampaign] = useState<Campaign | null>(CAMPAIGNS[0]);
-  const [pageName, setPageName] = useState('CRM for small teams — landing page');
+  const [pageName, setPageName] = useState('Exterior painting Austin — landing page');
 
   const openCampaignChooser = useCallback(() => {
     openModal(CampaignChooserModal, {
       onGenerate: (c) => {
         setCampaign(c);
-        setPageName('CRM for small teams — landing page');
+        setPageName('Exterior painting Austin — landing page');
         closeModal();
         setView('loading');
       },
@@ -1409,7 +1409,7 @@ function LandingPagesRouteInner() {
         />
       );
     }
-    if (view === 'published') return 'Landing pages › CRM for small teams';
+    if (view === 'published') return 'Landing pages › Exterior painting Austin';
     return 'Landing pages';
   }, [view, pageName, campaign]);
 
