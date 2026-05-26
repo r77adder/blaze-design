@@ -1,0 +1,13 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g transform="translate(0,-2)">
+        <path
+          d="M10 18.333C13.333 15 15 12.222 15 10A5 5 0 0 0 10 5a5 5 0 0 0-5 5c0 2.222 1.667 5 5 8.333Z"
+          stroke="currentColor"
+          stroke-opacity="0.8"
+          stroke-width="1.15"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <circle cx="10" cy="10" r="2.0" stroke="currentColor" stroke-opacity="0.8" stroke-width="1.15" />
+      </g>
+</svg>

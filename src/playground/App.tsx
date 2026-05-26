@@ -1,10 +1,35 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { prototypeRoutes, type PrototypeRoute } from './router';
+import { prototypeRoutes, iosPrototypeRoutes, type PrototypeRoute } from './router';
 import { CommentOverlay } from '../../prototypes/_shell/CommentOverlay';
 import '../tokens/colors.css';
 import '../tokens/fonts.scss';
 import '../tokens/reset.css';
+import '../../ios/tokens/colors.css';
+import '../../ios/tokens/spacing.css';
+import '../../ios/tokens/typography.css';
+
+const listStyle: React.CSSProperties = { listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 };
+const linkStyle: React.CSSProperties = { fontFamily: "'Sohne', sans-serif", fontSize: 14, color: 'var(--dark-90)', textDecoration: 'none', padding: '6px 10px', borderRadius: 6, display: 'inline-block' };
+
+function Section({ title, routes, prefix = '' }: { title: string; routes: typeof prototypeRoutes; prefix?: string }) {
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ fontFamily: "'Sohne', sans-serif", fontSize: 11, fontWeight: 500, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 8 }}>{title}</div>
+      {routes.length === 0 ? (
+        <p style={{ fontFamily: "'Sohne', sans-serif", fontSize: 13, color: 'var(--dark-40)', margin: 0 }}>No prototypes yet.</p>
+      ) : (
+        <ul style={listStyle}>
+          {routes.map((r) => (
+            <li key={r.slug}>
+              <Link to={`${prefix}/${r.slug}`} style={linkStyle}>{r.slug}</Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const FONT_STACK = "'Sohne', sans-serif";
 
@@ -129,7 +154,7 @@ function Index() {
     };
   }, []);
 
-  if (prototypeRoutes.length === 0) {
+  if (prototypeRoutes.length === 0 && iosPrototypeRoutes.length === 0) {
     return (
       <main style={{ padding: 24, fontFamily: FONT_STACK }}>
         <h1>No prototypes yet</h1>
@@ -150,40 +175,49 @@ function Index() {
       }}
     >
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-      <header style={{ marginBottom: 28 }}>
-        <h1
-          style={{
-            fontSize: 32,
-            fontWeight: 500,
-            letterSpacing: '0.32px',
-            margin: 0,
-          }}
-        >
-          Prototypes
-        </h1>
-        <p
-          style={{
-            margin: '8px 0 0',
-            color: 'var(--dark-60)',
-            fontSize: 14,
-            lineHeight: 1.5,
-          }}
-        >
-          {prototypeRoutes.length} prototype{prototypeRoutes.length === 1 ? '' : 's'} ·
-          sorted by most recently updated
-        </p>
-      </header>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: 20,
-        }}
-      >
-        {prototypeRoutes.map((r) => (
-          <Card key={r.slug} route={r} />
-        ))}
-      </div>
+        <header style={{ marginBottom: 28 }}>
+          <h1
+            style={{
+              fontSize: 32,
+              fontWeight: 500,
+              letterSpacing: '0.32px',
+              margin: 0,
+            }}
+          >
+            Prototypes
+          </h1>
+          <p
+            style={{
+              margin: '8px 0 0',
+              color: 'var(--dark-60)',
+              fontSize: 14,
+              lineHeight: 1.5,
+            }}
+          >
+            {prototypeRoutes.length + iosPrototypeRoutes.length} prototype{prototypeRoutes.length + iosPrototypeRoutes.length === 1 ? '' : 's'} ·
+            sorted by most recently updated
+          </p>
+        </header>
+        {prototypeRoutes.length > 0 && (
+          <>
+            <div style={{ fontFamily: FONT_STACK, fontSize: 11, fontWeight: 500, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 16 }}>Web</div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: 20,
+                marginBottom: 40,
+              }}
+            >
+              {prototypeRoutes.map((r) => (
+                <Card key={r.slug} route={r} />
+              ))}
+            </div>
+          </>
+        )}
+        {iosPrototypeRoutes.length > 0 && (
+          <Section title="iOS" routes={iosPrototypeRoutes} prefix="/ios" />
+        )}
       </div>
     </main>
   );
@@ -197,6 +231,9 @@ export function App() {
         <Route path="/" element={<Index />} />
         {prototypeRoutes.map(({ slug, Component }) => (
           <Route key={slug} path={`/${slug}/*`} element={<Component />} />
+        ))}
+        {iosPrototypeRoutes.map(({ slug, Component }) => (
+          <Route key={slug} path={`/ios/${slug}/*`} element={<Component />} />
         ))}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

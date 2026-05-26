@@ -1,0 +1,488 @@
+import { useState } from 'react';
+import { StatePicker, useStateContext, PhoneFrame } from '../_shell';
+import { TabBar, Sheet, Stepper } from '@ios/components';
+import type { TabItem } from '@ios/components';
+import { HomeScreen } from './HomeScreen';
+import { CalendarScreen, CAL_POSTS } from './CalendarScreen';
+import { CampaignsScreen } from './CampaignsScreen';
+import { BrandKitScreen } from './BrandKitScreen';
+import { MoreScreen } from './MoreScreen';
+import { ContentPreviewSheet } from './ContentPreviewSheet';
+import { CampaignSettingsOverlay } from './CampaignSettingsOverlay';
+import { ASSETS } from './assets';
+
+import plusIcon from '@ios/icons/plus-01.svg';
+import checkBrokenIcon from '@ios/icons/lighter_weight/check-broken.svg';
+import postIcon from '@ios/icons/lighter_weight/design.svg';
+import popoverCalendarIcon from '@ios/icons/lighter_weight/calendar-01.svg';
+import addStrategyIcon from '@ios/icons/lighter_weight/add-strategy.svg';
+import homeIcon from '@ios/icons/home-04.svg';
+import homeFilledIcon from '@ios/icons/home-filled.svg';
+import calendarIcon from '@ios/icons/calendar-01.svg';
+import campaignsIcon from '@ios/icons/layers-05.svg';
+import brandKitIcon from '@ios/icons/atom.svg';
+import brandKitFilledIcon from '@ios/icons/brandkit_filled.svg';
+import moreIcon from '@ios/icons/more-dots.svg';
+
+const TABS = ['home', 'calendar', 'campaigns', 'brand-kit', 'more'] as const;
+type Tab = (typeof TABS)[number];
+
+const TAB_ITEMS: TabItem[] = [
+  { id: 'home',       label: 'Home',      icon: homeIcon,      iconActive: homeFilledIcon },
+  { id: 'calendar',   label: 'Calendar',  icon: calendarIcon },
+  { id: 'campaigns',  label: 'Campaigns', icon: campaignsIcon },
+  { id: 'brand-kit',  label: 'Brand Kit', icon: brandKitIcon,  iconActive: brandKitFilledIcon },
+  { id: 'more',       label: 'More',      icon: moreIcon },
+];
+
+function AppScreens({ onCalendarPostClick, onCampaignsSettings, showSkeleton }: { onCalendarPostClick: (idx: number) => void; onCampaignsSettings: () => void; showSkeleton?: boolean }) {
+  const { state } = useStateContext();
+  return (
+    <>
+      {state === 'home'      && <HomeScreen />}
+      {state === 'calendar'  && <CalendarScreen onPostClick={onCalendarPostClick} />}
+      {state === 'campaigns' && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} />}
+      {state === 'brand-kit' && <BrandKitScreen />}
+      {state === 'more'      && <MoreScreen />}
+      <div style={{ height: 126 }} />
+    </>
+  );
+}
+
+function AppTabBar({ onPlusClick }: { onPlusClick: () => void }) {
+  const { state, setState } = useStateContext();
+  return (
+    <TabBar
+      tabs={TAB_ITEMS}
+      activeTab={state}
+      onTabChange={setState}
+      floatingButton={
+        (state === 'calendar' || state === 'campaigns')
+          ? { icon: plusIcon, label: 'New', onClick: onPlusClick }
+          : undefined
+      }
+    />
+  );
+}
+
+type StrategyView = 'add-strategies' | 'content-qty' | null;
+
+export default function MobileApp() {
+  const [calPreviewIdx, setCalPreviewIdx]       = useState<number | null>(null);
+  const [campSettingsOpen, setCampSettingsOpen] = useState(false);
+  const [showCampToast, setShowCampToast]       = useState(false);
+  const [showDefaultsToast, setShowDefaultsToast] = useState(false);
+  const [plusPopoverOpen, setPlusPopoverOpen]   = useState(false);
+  const [strategyView, setStrategyView]         = useState<StrategyView>(null);
+  const [showStrategyToast, setShowStrategyToast] = useState(false);
+  const [showSkeleton, setShowSkeleton]         = useState(false);
+
+  // campaign settings confirmed — show "Changes applied" toast
+  function handleCampConfirm() {
+    setCampSettingsOpen(false);
+    setShowCampToast(true);
+    setTimeout(() => setShowCampToast(false), 5000);
+  }
+
+  // schedule / growth defaults saved — show "Saved new defaults" toast
+  function handleSaveDefaults() {
+    setShowDefaultsToast(true);
+    setTimeout(() => setShowDefaultsToast(false), 4000);
+  }
+
+  // strategy launched — show skeleton + "Added new strategies" toast
+  function handleStrategyLaunch() {
+    setStrategyView(null);
+    setShowSkeleton(true);
+    setShowStrategyToast(true);
+    setTimeout(() => {
+      setShowStrategyToast(false);
+      setShowSkeleton(false);
+    }, 4000);
+  }
+
+  const calOverlay = calPreviewIdx !== null ? (
+    <ContentPreviewSheet
+      key={calPreviewIdx}
+      post={CAL_POSTS[calPreviewIdx]}
+      hasPrev={calPreviewIdx > 0}
+      hasNext={calPreviewIdx < CAL_POSTS.length - 1}
+      onClose={() => setCalPreviewIdx(null)}
+      onPrev={() => setCalPreviewIdx(i => (i !== null && i > 0 ? i - 1 : i))}
+      onNext={() => setCalPreviewIdx(i => (i !== null && i < CAL_POSTS.length - 1 ? i + 1 : i))}
+    />
+  ) : null;
+
+  const campOverlay = campSettingsOpen ? (
+    <CampaignSettingsOverlay
+      onClose={() => setCampSettingsOpen(false)}
+      onConfirm={handleCampConfirm}
+      onSaveDefaults={handleSaveDefaults}
+    />
+  ) : null;
+
+  const plusPopover = plusPopoverOpen ? (
+    <PlusPopover
+      onClose={() => setPlusPopoverOpen(false)}
+      onStrategy={() => { setPlusPopoverOpen(false); setStrategyView('add-strategies'); }}
+    />
+  ) : null;
+
+  const strategyOverlay = strategyView ? (
+    <StrategyFlow
+      view={strategyView}
+      onClose={() => setStrategyView(null)}
+      onNext={() => setStrategyView('content-qty')}
+      onLaunch={handleStrategyLaunch}
+    />
+  ) : null;
+
+  return (
+    <StatePicker states={TABS} defaultState="home">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
+        <PhoneFrame
+          footer={<AppTabBar onPlusClick={() => setPlusPopoverOpen(v => !v)} />}
+          overlay={
+            <>
+              {calOverlay ?? campOverlay ?? strategyOverlay ?? plusPopover ?? null}
+              <CampToast show={showCampToast} />
+              <DefaultsToast show={showDefaultsToast} />
+              <StrategyToast show={showStrategyToast} />
+            </>
+          }
+        >
+          <AppScreens
+            onCalendarPostClick={setCalPreviewIdx}
+            onCampaignsSettings={() => setCampSettingsOpen(true)}
+            showSkeleton={showSkeleton}
+          />
+        </PhoneFrame>
+      </div>
+    </StatePicker>
+  );
+}
+
+// ─── Toast components ─────────────────────────────────────────────────────────
+
+const TOAST_ANIM = `
+  @keyframes iosToastIn { from { opacity:0; transform:translateX(-50%) translateY(-60px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+  .ios-toast { animation: iosToastIn 0.32s cubic-bezier(0.34,1.4,0.64,1) forwards; }
+`;
+
+function ToastBase({ children }: { children: React.ReactNode }) {
+  const font = 'var(--ios-font)';
+  return (
+    <>
+      <style>{TOAST_ANIM}</style>
+      <div className="ios-toast" style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.9)', borderRadius: 99, height: 52, padding: '0 20px', display: 'flex', alignItems: 'center', gap: 10, zIndex: 200, whiteSpace: 'nowrap', fontFamily: font }}>
+        {children}
+      </div>
+    </>
+  );
+}
+
+function ToastIcon() {
+  return (
+    <div style={{ width: 20, height: 20, borderRadius: 99, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <img src={checkBrokenIcon} alt="" style={{ width: 16, height: 16 }} />
+    </div>
+  );
+}
+
+function CampToast({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <ToastBase>
+      <ToastIcon />
+      <span style={{ fontSize: 16, fontWeight: 400, color: 'white' }}>Changes applied to 6 campaigns</span>
+    </ToastBase>
+  );
+}
+
+function DefaultsToast({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <ToastBase>
+      <ToastIcon />
+      <span style={{ fontSize: 16, fontWeight: 400, color: 'white' }}>Saved new defaults</span>
+    </ToastBase>
+  );
+}
+
+function StrategyToast({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <ToastBase>
+      <ToastIcon />
+      <span style={{ fontSize: 16, fontWeight: 400, color: 'white' }}>Added new strategies</span>
+    </ToastBase>
+  );
+}
+
+// ─── Plus popover ("Create new") ─────────────────────────────────────────────
+
+function PlusPopover({ onClose, onStrategy }: { onClose: () => void; onStrategy: () => void }) {
+  const font = 'var(--ios-font)';
+
+  const items = [
+    {
+      bg: 'rgba(106,0,255,0.1)',
+      iconSrc: postIcon as unknown as string,
+      label: 'Post',
+      desc: 'Single post for a campaign',
+      onClick: onClose,
+    },
+    {
+      bg: 'rgba(0,131,226,0.1)',
+      iconSrc: popoverCalendarIcon as unknown as string,
+      label: 'Campaign',
+      desc: 'Series of posts over time',
+      onClick: onClose,
+    },
+    {
+      bg: 'rgba(32,161,79,0.1)',
+      iconSrc: addStrategyIcon as unknown as string,
+      label: 'Strategy',
+      desc: 'Campaigns organized by goal',
+      onClick: onStrategy,
+    },
+  ];
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 100 }} />
+      {/* Card — matches Figma: left:20, w:362, rounded-24, p:20, gap:20 */}
+      <div style={{
+        position: 'absolute',
+        bottom: 100,
+        left: 20,
+        width: 362,
+        background: 'rgba(255,255,255,0.97)',
+        borderRadius: 24,
+        boxShadow: '0 0 32px rgba(0,0,0,0.08)',
+        padding: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 20,
+        zIndex: 101,
+      }}>
+        {/* Title */}
+        <p style={{ fontFamily: font, fontSize: 18, fontWeight: 400, color: 'var(--ios-dark-90)', margin: 0 }}>Create new</p>
+        {/* Items */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.onClick}
+              style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+            >
+              {/* icon box 50×50 */}
+              <div style={{ width: 50, height: 50, borderRadius: 10, background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <img src={item.iconSrc} alt="" aria-hidden="true" style={{ width: 30, height: 30 }} />
+              </div>
+              {/* text */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', letterSpacing: '0.16px' }}>{item.label}</div>
+                <div style={{ fontFamily: font, fontSize: 14, fontWeight: 400, color: 'var(--ios-dark-60)', marginTop: 2, letterSpacing: '0.14px' }}>{item.desc}</div>
+              </div>
+              {/* chevron */}
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden="true">
+                <path d="M1 1l6 6-6 6" stroke="rgba(0,0,0,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Strategy flow ────────────────────────────────────────────────────────────
+
+function StrategyFlow({ view, onClose, onNext, onLaunch }: {
+  view: StrategyView;
+  onClose: () => void;
+  onNext: () => void;
+  onLaunch: () => void;
+}) {
+  const font = 'var(--ios-font)';
+  const [selectedStrategy, setSelectedStrategy] = useState<string>('thought-leadership');
+
+  // content qty: default 1 each, email 0
+  const [contentQty, setContentQty] = useState({
+    stillImage: 1, carousel: 1, feedVideo: 1, shortForm: 1, stories: 1, email: 0,
+  });
+
+  const RECOMMENDED = [
+    {
+      id: 'thought-leadership',
+      label: '💭 Thought Leadership',
+      desc: 'Position yourself as the go-to-expert with insights that build authority.',
+      counter: 2,
+      thumbSrc: ASSETS.stratThumbThoughtLead,
+      thumbGradient: 'linear-gradient(180deg, #f1b748, #904300)',
+    },
+    {
+      id: 'educational',
+      label: '📚 Educational Content',
+      desc: 'Teach your audience something valuable. Build trust by helping before selling.',
+      counter: 3,
+      thumbSrc: ASSETS.stratThumbEducational,
+      thumbGradient: 'linear-gradient(-52deg, #6d8b30, #dccb7f)',
+    },
+    {
+      id: 'offer-promotion',
+      label: '🛍️ Offer & Promotion',
+      desc: 'Highlight what you do and why clients choose over the competition.',
+      counter: 4,
+      thumbSrc: ASSETS.stratThumbOffer,
+      thumbGradient: 'linear-gradient(180deg, #ff6d5f, #d030c8, #68057a)',
+    },
+  ];
+
+  const CONTENT_TYPES = [
+    { key: 'stillImage' as const, label: 'Still image post', subtitle: 'Single image post',    credits: 6,  thumb: ASSETS.contentThumbStillImage },
+    { key: 'carousel'   as const, label: 'Carousel post',    subtitle: 'Multi-image swipeable', credits: 24, thumb: ASSETS.contentThumbCarousel },
+    { key: 'feedVideo'  as const, label: 'Feed video post',  subtitle: 'Standard video',        credits: 40, thumb: ASSETS.contentThumbFeedVideo },
+    { key: 'shortForm'  as const, label: 'Short form video', subtitle: 'Reels, Shorts, TikTok', credits: 40, thumb: ASSETS.contentThumbShortForm },
+    { key: 'stories'    as const, label: 'Stories',          subtitle: 'Ephemeral content',     credits: 6,  thumb: ASSETS.contentThumbStories },
+    { key: 'email'      as const, label: 'Email',            subtitle: 'Email newsletter',      credits: 8,  thumb: ASSETS.contentThumbEmail },
+  ];
+
+  const totalCredits = CONTENT_TYPES.reduce((sum, t) => sum + t.credits * contentQty[t.key], 0);
+
+  return (
+    <>
+      {/* ── Add strategies sheet ── */}
+      <Sheet
+        visible={view === 'add-strategies'}
+        title="Add strategies"
+        size="large"
+        onClose={onClose}
+        primaryContent={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'white' }}>Launch Now</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {/* Credits icon — lightning bolt */}
+              <svg width="16" height="18" viewBox="0 0 10 12" fill="none" aria-hidden="true">
+                <path d="M5.5 1L1 6.5h4L3.5 11 9 5.5H5L5.5 1Z" fill="rgba(255,255,255,0.8)"/>
+              </svg>
+              <span style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'rgba(255,255,255,0.8)' }}>64</span>
+            </div>
+          </div>
+        }
+        onPrimary={onNext}
+      >
+        <div style={{ padding: '0 20px 32px', background: 'var(--ios-background-gray)', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+          {/* Description */}
+          <p style={{ fontFamily: font, fontSize: 16, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.5, margin: 0 }}>
+            Pick a strategy to add to your current plan
+          </p>
+
+          {/* Strategy cards — single select */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {RECOMMENDED.map((s) => {
+              const isSelected = selectedStrategy === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSelectedStrategy(s.id)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                    padding: 8,
+                    background: 'var(--ios-light-100)',
+                    border: isSelected ? '1px solid var(--ios-dark-90)' : '1px solid var(--ios-dark-8)',
+                    borderRadius: 16, cursor: 'pointer', textAlign: 'left',
+                    position: 'relative',
+                  }}
+                >
+                  {/* thumbnail — left */}
+                  <div style={{ width: 75, height: 75, borderRadius: 12, overflow: 'hidden', flexShrink: 0, position: 'relative', background: s.thumbGradient }}>
+                    <img src={s.thumbSrc} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  {/* text — middle */}
+                  <div style={{ flex: 1, minWidth: 0, paddingRight: isSelected ? 32 : 0 }}>
+                    <div style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', marginBottom: 4 }}>{s.label}</div>
+                    <p style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, margin: 0, letterSpacing: '0.12px' }}>{s.desc}</p>
+                  </div>
+                  {/* radio — top-right (absolute), only when selected */}
+                  {isSelected && (
+                    <div style={{ position: 'absolute', right: 8, top: 6, width: 24, height: 24, borderRadius: 99, background: 'var(--ios-dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+                        <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </Sheet>
+
+      {/* ── Set default content sheet ── */}
+      <Sheet
+        visible={view === 'content-qty'}
+        title="Set default content"
+        size="large"
+        leftButton="back"
+        onClose={onClose}
+        primaryLabel="Add Campaigns Now"
+        onPrimary={onLaunch}
+        footerNote={
+          <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-60)' }}>
+            {totalCredits} credits per campaign
+          </span>
+        }
+      >
+        <div style={{ padding: '16px 20px 32px', background: 'var(--ios-background-gray)' }}>
+          {/* 2-column grid */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {CONTENT_TYPES.map((ct) => (
+              <div
+                key={ct.key}
+                style={{
+                  width: 'calc(50% - 4px)',
+                  border: '1.5px solid var(--ios-dark-8)',
+                  borderRadius: 24,
+                  padding: 13.5,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'var(--ios-light-100)',
+                  boxSizing: 'border-box',
+                }}
+              >
+                {/* illustration thumbnail */}
+                <div style={{ width: 150, height: 150, borderRadius: 12, overflow: 'hidden', background: 'rgba(0,0,0,0.03)', flexShrink: 0 }}>
+                  <img src={ct.thumb} alt={ct.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                {/* label + subtitle */}
+                <div style={{ textAlign: 'center', width: '100%' }}>
+                  <div style={{ fontFamily: font, fontSize: 16, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>{ct.label}</div>
+                  <div style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-60)', lineHeight: 1.4, letterSpacing: '0.12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ct.subtitle}</div>
+                </div>
+                {/* stepper */}
+                <Stepper
+                  value={contentQty[ct.key]}
+                  min={0}
+                  max={10}
+                  onChange={(v) => setContentQty(prev => ({ ...prev, [ct.key]: v }))}
+                />
+                {/* credits */}
+                <span style={{ fontFamily: font, fontSize: 12, fontWeight: 400, color: 'var(--ios-dark-40)', letterSpacing: '0.12px' }}>
+                  Costs {ct.credits} credits
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Sheet>
+    </>
+  );
+}

@@ -1,0 +1,54 @@
+/**
+ * iOS Design Tokens — Typography
+ *
+ * Source of truth: ios/design.md §2.2.
+ * Typeface: Söhne (Buch 400, Kräftig 500). Fallback matches design spec.
+ * Font files live in ios/tokens/fonts/.
+ */
+
+/* ─── @font-face ─────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Söhne-Buch.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sohne';
+  src: url('./fonts/Söhne-Kräftig.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── Font stack ─────────────────────────────────────────────────────────── */
+/* Use var(--ios-font) as the font-family value in all ios/prototypes/. */
+:root {
+  --ios-font: 'Sohne', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* ─── Type scale — from design.md §2.2 ────────────────────────────────── */
+  /* Role             Family · Style  Wt   Size  LH   LS  */
+  /* New H1 Mobile    Söhne Buch      400  28px  1.1  0   */
+  /* New H2 Mobile    Söhne Buch      400  22px  1.2  0   */
+  /* New H3 Mobile    Söhne Buch      400  18px  1.4  0   */
+  /* New H4 Mobile    Söhne Kräftig   500  16px  1.4  0   */
+  /* New H5 Mobile    Söhne Kräftig   500  14px  1.4  1px */
+  /* Primary Text     Söhne Buch      400  16px  1.5  0   */
+  /* Secondary Text   Söhne Buch      400  14px  1.4  1px */
+  /* Metadata         Söhne Buch      400  12px  1.4  1px */
+  /* Label            Söhne Buch      400  12px  1.4  1px */
+
+  --ios-h1-size:  28px;  --ios-h1-weight: 400;  --ios-h1-lh: 1.1;  --ios-h1-ls: 0px;
+  --ios-h2-size:  22px;  --ios-h2-weight: 400;  --ios-h2-lh: 1.2;  --ios-h2-ls: 0px;
+  --ios-h3-size:  18px;  --ios-h3-weight: 400;  --ios-h3-lh: 1.4;  --ios-h3-ls: 0px;
+  --ios-h4-size:  16px;  --ios-h4-weight: 500;  --ios-h4-lh: 1.4;  --ios-h4-ls: 0px;
+  --ios-h5-size:  14px;  --ios-h5-weight: 500;  --ios-h5-lh: 1.4;  --ios-h5-ls: 1px;
+
+  --ios-body-size:      16px;  --ios-body-weight: 400;  --ios-body-lh: 1.5;  --ios-body-ls: 0px;
+  --ios-secondary-size: 14px;  --ios-secondary-weight: 400;  --ios-secondary-lh: 1.4;  --ios-secondary-ls: 1px;
+  --ios-meta-size:      12px;  --ios-meta-weight: 400;  --ios-meta-lh: 1.4;  --ios-meta-ls: 1px;
+  --ios-label-size:     12px;  --ios-label-weight: 400;  --ios-label-lh: 1.4;  --ios-label-ls: 1px;
+}

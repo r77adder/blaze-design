@@ -6,6 +6,10 @@ const modules = import.meta.glob<{ default: ComponentType }>('/prototypes/*/inde
   eager: true,
 });
 
+const iosModules = import.meta.glob<{ default: ComponentType }>('/ios/prototypes/*/index.tsx', {
+  eager: true,
+});
+
 export interface PrototypeRoute {
   slug: string;
   Component: ComponentType;
@@ -40,3 +44,19 @@ export const prototypeRoutes: PrototypeRoute[] = Object.entries(modules)
     if (am && bm) return bm.localeCompare(am);
     return a.slug.localeCompare(b.slug);
   });
+
+export const iosPrototypeRoutes: PrototypeRoute[] = Object.entries(iosModules)
+  .map(([path, mod]) => {
+    const match = path.match(/\/ios\/prototypes\/([^/]+)\/index\.tsx$/);
+    if (!match) return null;
+    const slug = match[1]!;
+    return {
+      slug,
+      Component: mod.default,
+      lastModified: null,
+      title: null,
+      description: null,
+    };
+  })
+  .filter((r): r is PrototypeRoute => r !== null)
+  .sort((a, b) => a.slug.localeCompare(b.slug));
