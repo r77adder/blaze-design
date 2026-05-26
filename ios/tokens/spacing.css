@@ -1,0 +1,52 @@
+/**
+ * iOS Design Tokens — Spacing
+ *
+ * Based on iOS Human Interface Guidelines 8pt grid. All values are multiples
+ * of 4px (half-grid steps) or 8px (full grid steps).
+ *
+ * Note: iOS uses points (pt), not pixels (px). At 2× (iPhone standard Retina)
+ * 1pt = 2px. These CSS values match the LOGICAL point sizes (1pt → 1px in
+ * our web prototypes), which is correct for design intent at 1×.
+ */
+
+:root {
+  /* ─── Base grid ───────────────────────────────────────────────────────────── */
+  --ios-space-0:  0px;
+  --ios-space-1:  4px;    /* 0.5 × 8pt */
+  --ios-space-2:  8px;    /* 1 × 8pt */
+  --ios-space-3:  12px;   /* 1.5 × 8pt */
+  --ios-space-4:  16px;   /* 2 × 8pt */
+  --ios-space-5:  20px;   /* 2.5 × 8pt */
+  --ios-space-6:  24px;   /* 3 × 8pt */
+  --ios-space-8:  32px;   /* 4 × 8pt */
+  --ios-space-10: 40px;   /* 5 × 8pt */
+  --ios-space-12: 48px;   /* 6 × 8pt */
+  --ios-space-16: 64px;   /* 8 × 8pt */
+  --ios-space-20: 80px;   /* 10 × 8pt */
+
+  /* ─── Semantic layout ─────────────────────────────────────────────────────── */
+  --ios-content-margin:       20px;  /* horizontal edge margin for content */
+  --ios-section-gap:          24px;  /* vertical gap between sections */
+  --ios-list-item-padding-v:  11px;  /* vertical padding for list rows */
+  --ios-list-item-padding-h:  16px;  /* horizontal padding for list rows */
+
+  /* ─── Corner radii ────────────────────────────────────────────────────────── */
+  --ios-radius-xs:    4px;
+  --ios-radius-sm:    8px;
+  --ios-radius-md:    12px;
+  --ios-radius-lg:    16px;
+  --ios-radius-xl:    20px;
+  --ios-radius-2xl:   28px;
+  --ios-radius-full:  9999px;
+
+  /* ─── Component heights ───────────────────────────────────────────────────── */
+  --ios-status-bar-height:     59px;   /* includes Dynamic Island safe area */
+  --ios-nav-bar-height:        44px;   /* standard navigation bar */
+  --ios-tab-bar-height:        83px;   /* tab bar + home indicator */
+  --ios-home-indicator-height: 34px;   /* home indicator safe area */
+  --ios-list-row-height:       44px;   /* minimum tappable row height */
+
+  /* ─── Device dimensions (iPhone 14 / 15 base) ─────────────────────────────── */
+  --ios-screen-width:  390px;
+  --ios-screen-height: 844px;
+}
