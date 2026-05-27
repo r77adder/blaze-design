@@ -1,22 +1,21 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Modal, ModalStack, useModals } from '@/components';
-import type { StackModalProps } from '@/components';
+import { Button, ModalStack, useModals } from '@/components';
 import { TabChip, useToast } from '@/staging';
-import { CrosspostWarningModal } from '../CrosspostWarningModal';
+import { CreateChooserModal, NewPostModal, type NewPostDraft, type ContentTypeId } from '../CreatePostFlow';
 import Plus from '@/icons/20/Plus';
 import ChevronLeft from '@/icons/24/ChevronLeft';
 import ChevronRight from '@/icons/24/ChevronRight';
-import Check2 from '@/icons/20/Check2';
 import Refresh01 from '@/icons/20/Refresh01';
 import Wrench from '@/icons/20/Wrench';
+import ClockBackward from '@/icons/20/ClockBackward';
 import Filter from '@/icons/20/Filter';
-import CoverImage from '@/icons/20/CoverImage';
 import FileMultiple from '@/icons/20/FileMultiple';
 import Document from '@/icons/20/Document';
 import Video from '@/icons/20/Video';
 import Emails from '@/icons/20/Emails';
 import AlertTriangle from '@/icons/20/AlertTriangle';
+import StillImageIcon from '../StillImageIcon';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
@@ -27,11 +26,12 @@ import { OrganicSocialColdView } from './ColdViews';
  *
  * Steady state: 7-day calendar of scheduled posts.
  * Interactivity:
- *  - Topbar "Create new" → CreateChooserModal (Campaign vs Post picker)
+ *  - Topbar "Create" → shared CreateChooserModal (Post / Campaign / Add Strategy)
+ *    from ../CreatePostFlow.
+ *    - Post → shared NewPostModal; created drafts map to calendar Posts via
+ *      CT_TO_KIND and land on the visible week.
  *    - Campaign → navigates to /h2/campaigns (wizard pending campaigns deep port)
- *    - Post → opens NewPostModal
- *  - NewPostModal: caption + platform/type/day/time pills + thumbnail picker
- *    + source input. Adds to local POSTS state and toasts confirmation.
+ *    - Add Strategy → placeholder toast.
  *  - Week nav: prev/next shifts the visible week (offset 0 = current week).
  *    Off-current-week shows empty cells (no posts).
  *
@@ -59,8 +59,8 @@ interface Post {
   source: string;
 }
 
-const CONTENT_META: Record<ContentKind, { label: string; icon: typeof CoverImage; color: string }> = {
-  still: { label: 'Still Image', icon: CoverImage, color: 'var(--red-70)' },
+const CONTENT_META: Record<ContentKind, { label: string; icon: typeof FileMultiple; color: string }> = {
+  still: { label: 'Still Image', icon: StillImageIcon, color: 'var(--red-70)' },
   carousel: { label: 'Carousel', icon: FileMultiple, color: 'var(--status-connect)' },
   blog: { label: 'Blog Post', icon: Document, color: 'var(--status-approved)' },
   'avatar-video': { label: 'AI Avatar Video', icon: Video, color: 'var(--purple)' },
@@ -71,40 +71,6 @@ const DAY_KEYS: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 // Base week — Monday May 4, 2026 (TODAY = Thu May 7).
 const BASE_MONDAY = new Date(2026, 4, 4);
-
-const PLATFORM_NAMES: Record<PlatformKey, string> = {
-  instagram: 'Instagram',
-  tiktok: 'TikTok',
-  linkedin: 'LinkedIn',
-  x: 'X',
-};
-
-const PLATFORM_DOT: Record<PlatformKey, string> = {
-  instagram: '#E1306C',
-  tiktok: '#111111',
-  linkedin: '#0A66C2',
-  x: '#1F2937',
-};
-
-const TYPES_BY_PLATFORM: Record<PlatformKey, string[]> = {
-  instagram: ['Reel', 'Carousel', 'Post', 'Story'],
-  tiktok: ['Short', 'Story'],
-  linkedin: ['Post', 'Carousel', 'Video'],
-  x: ['Post', 'Thread'],
-};
-
-const NP_TIMES = ['8:00 AM', '10:00 AM', '12:00 PM', '2:00 PM', '4:00 PM', '6:00 PM'];
-
-const NP_THUMBS = [
-  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=70',
-  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=70',
-  'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=400&q=70',
-  'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=70',
-  'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&q=70',
-  'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=400&q=70',
-  'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&q=70',
-  'https://images.unsplash.com/photo-1574607383476-c8ee45a07f5e?w=400&q=70',
-];
 
 const SEED_POSTS: Post[] = [
   { day: 'mon', time: '9:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Before & after — Tarrytown kitchen cabinet refinish in 60 seconds.', thumb: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=70', status: 'approved', source: 'Cabinet Refresh May' },
@@ -478,467 +444,6 @@ function HeaderIconButton({
   );
 }
 
-// ─── CHOOSER MODAL ─────────────────────────────────────────────────
-// Source: cc-mount in organic-social.html. Two big cards — Campaign and
-// Post — laid out 1:1 grid. Post → opens NewPostModal. Campaign →
-// navigates to campaigns wizard (TODO until campaigns deep port lands).
-
-function ChooserCard({
-  icon,
-  label,
-  description,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  description: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        padding: 20,
-        gap: 10,
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
-        cursor: 'pointer',
-        textAlign: 'left',
-        fontFamily: 'inherit',
-        transition: 'border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease',
-      }}
-    >
-      <span
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 11,
-          background: 'var(--default-bg)',
-          border: '1px solid var(--dark-8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--dark-90)',
-        }}
-      >
-        {icon}
-      </span>
-      <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px' }}>{label}</span>
-      <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{description}</span>
-    </button>
-  );
-}
-
-function CreateChooserModal({
-  close,
-  onPickCampaign,
-  onPickPost,
-}: StackModalProps & {
-  onPickCampaign: () => void;
-  onPickPost: () => void;
-}) {
-  return (
-    <Modal.Root size="md" aria-labelledby="chooser-title" data-testid="create-chooser-modal">
-      <Modal.Header
-        title="What do you want to create?"
-        id="chooser-title"
-        onClose={close}
-        compact={false}
-      />
-      <Modal.Content compact={false}>
-        <p style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--dark-60)' }}>
-          Pick one — the agent takes it from there.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <ChooserCard
-            icon={
-              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="5" width="18" height="14" rx="2" />
-                <path d="M3 9h18M9 5v14" />
-              </svg>
-            }
-            label="Campaign"
-            description="A multi-channel marketing campaign — agent picks the strategy and channel mix."
-            onClick={onPickCampaign}
-          />
-          <ChooserCard
-            icon={
-              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-                <path d="m3 16 5-5 4 4 3-3 6 6" />
-                <circle cx="9" cy="9" r="1.5" />
-              </svg>
-            }
-            label="Post"
-            description="A single organic social post for Instagram, TikTok, LinkedIn, or X."
-            onClick={onPickPost}
-          />
-        </div>
-      </Modal.Content>
-    </Modal.Root>
-  );
-}
-
-// ─── NEW-POST MODAL ────────────────────────────────────────────────
-// Source: np-mount + openNewPost() + renderNp(). Form fields:
-//  - Caption (textarea)
-//  - Platform pills (4 options w/ colored dot)
-//  - Type pills (depend on platform — auto-resets when platform changes)
-//  - Day pills (Mon–Sun for the current visible week)
-//  - Time pills (6 fixed slots)
-//  - Thumbnail picker (8 images + None tile)
-//  - Source campaign (text input)
-
-interface DraftPost {
-  title: string;
-  platform: PlatformKey;
-  type: string;
-  day: DayKey;
-  time: string;
-  source: string;
-  thumb: string | null;
-  status: Status;
-}
-
-const INITIAL_DRAFT: DraftPost = {
-  title: '',
-  platform: 'instagram',
-  type: 'Reel',
-  day: 'thu',
-  time: '10:00 AM',
-  source: '',
-  thumb: null,
-  status: 'scheduled',
-};
-
-function Pill({
-  selected,
-  onClick,
-  children,
-  dotColor,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  dotColor?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        background: selected ? 'var(--dark-90)' : 'var(--light-100)',
-        border: `1px solid ${selected ? 'var(--dark-90)' : 'var(--dark-15)'}`,
-        color: selected ? '#fff' : 'var(--dark-90)',
-        borderRadius: 99,
-        padding: '6px 12px',
-        fontFamily: 'inherit',
-        fontSize: 12,
-        cursor: 'pointer',
-        transition: 'background 120ms ease',
-      }}
-    >
-      {dotColor && (
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: dotColor,
-            opacity: 0.65,
-          }}
-        />
-      )}
-      {children}
-    </button>
-  );
-}
-
-function NPSection({
-  label,
-  optional,
-  children,
-}: {
-  label: string;
-  optional?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <label
-        style={{
-          display: 'block',
-          fontSize: 12,
-          fontWeight: 500,
-          color: 'var(--dark-60)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          marginBottom: 8,
-        }}
-      >
-        {label}
-        {optional && (
-          <span style={{ color: 'var(--dark-40)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-            {' '}
-            (optional)
-          </span>
-        )}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function NewPostModal({
-  close,
-  onSave,
-  visibleWeek,
-}: StackModalProps & {
-  onSave: (p: Post) => void;
-  visibleWeek: DayInfo[];
-}) {
-  const { openModal } = useModals();
-  const { showToast } = useToast();
-  // Modal mounts on demand via openModal — initial draft is always fresh,
-  // no need for the prior `useEffect(() => { if (isOpen) setDraft(INITIAL_DRAFT) })`.
-  const [draft, setDraft] = useState<DraftPost>(INITIAL_DRAFT);
-  const [crosspost, setCrosspost] = useState(true);
-
-  const setField = <K extends keyof DraftPost>(field: K, value: DraftPost[K]) => {
-    setDraft((prev) => {
-      const next = { ...prev, [field]: value };
-      if (field === 'platform') {
-        const types = TYPES_BY_PLATFORM[value as PlatformKey] ?? ['Post'];
-        if (!types.includes(prev.type)) next.type = types[0];
-      }
-      return next;
-    });
-  };
-
-  const types = TYPES_BY_PLATFORM[draft.platform] ?? ['Post'];
-  const titleTrimmed = draft.title.trim();
-  const canSave = titleTrimmed.length > 0;
-
-  const handleSave = () => {
-    if (!canSave) return;
-    onSave({
-      day: draft.day,
-      time: draft.time,
-      platform: draft.platform,
-      type: draft.type,
-      title: titleTrimmed,
-      thumb: draft.thumb,
-      status: draft.status,
-      source: draft.source.trim() || 'Standalone',
-    });
-  };
-
-  return (
-    <Modal.Root size="md" aria-labelledby="new-post-title" data-testid="new-post-modal">
-      <Modal.Header
-        title="New post"
-        id="new-post-title"
-        onClose={close}
-        compact={false}
-      />
-      <Modal.Content compact={false}>
-        <p style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--dark-60)' }}>
-          Add a single organic social post to your calendar. The agent will draft the rest.
-        </p>
-      <NPSection label="Caption / title">
-        <textarea
-          rows={3}
-          placeholder="What's the post about?"
-          value={draft.title}
-          onChange={(e) => setField('title', e.target.value)}
-          style={{
-            width: '100%',
-            fontFamily: 'inherit',
-            fontSize: 14,
-            color: 'var(--dark-90)',
-            background: 'var(--light-100)',
-            border: '1px solid var(--dark-15)',
-            borderRadius: 9,
-            padding: '10px 12px',
-            outline: 'none',
-            resize: 'vertical',
-            minHeight: 80,
-            lineHeight: 1.55,
-          }}
-        />
-      </NPSection>
-
-      <NPSection label="Platform">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {(Object.keys(PLATFORM_NAMES) as PlatformKey[]).map((p) => (
-            <Pill
-              key={p}
-              selected={draft.platform === p}
-              onClick={() => setField('platform', p)}
-              dotColor={PLATFORM_DOT[p]}
-            >
-              {PLATFORM_NAMES[p]}
-            </Pill>
-          ))}
-        </div>
-      </NPSection>
-
-      <NPSection label="Type">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {types.map((t) => (
-            <Pill key={t} selected={draft.type === t} onClick={() => setField('type', t)}>
-              {t}
-            </Pill>
-          ))}
-        </div>
-      </NPSection>
-
-      <NPSection label="Day">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {visibleWeek.map((d) => (
-            <Pill key={d.key} selected={draft.day === d.key} onClick={() => setField('day', d.key)}>
-              {d.name} {d.date.replace(/^[A-Za-z]+ /, '')}
-            </Pill>
-          ))}
-        </div>
-      </NPSection>
-
-      <NPSection label="Time">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {NP_TIMES.map((t) => (
-            <Pill key={t} selected={draft.time === t} onClick={() => setField('time', t)}>
-              {t}
-            </Pill>
-          ))}
-        </div>
-      </NPSection>
-
-      <NPSection label="Thumbnail" optional>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-          {NP_THUMBS.map((url) => {
-            const selected = draft.thumb === url;
-            return (
-              <button
-                key={url}
-                type="button"
-                aria-label="Pick thumbnail"
-                onClick={() => setField('thumb', url)}
-                style={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: 9,
-                  background: `center/cover url('${url}')`,
-                  border: `2px solid ${selected ? 'var(--dark-90)' : 'transparent'}`,
-                  cursor: 'pointer',
-                  padding: 0,
-                  transition: 'border-color 120ms ease, transform 120ms ease',
-                }}
-              />
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setField('thumb', null)}
-            style={{
-              width: 46,
-              height: 46,
-              borderRadius: 9,
-              background: 'var(--default-bg)',
-              border: '1px dashed var(--dark-15)',
-              color: 'var(--dark-60)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 12,
-              fontFamily: 'inherit',
-            }}
-          >
-            None
-          </button>
-        </div>
-      </NPSection>
-
-      <NPSection label="Source campaign" optional>
-        <input
-          placeholder="e.g., Color Trends 2026"
-          value={draft.source}
-          onChange={(e) => setField('source', e.target.value)}
-          style={{
-            width: '100%',
-            fontFamily: 'inherit',
-            fontSize: 14,
-            color: 'var(--dark-90)',
-            background: 'var(--light-100)',
-            border: '1px solid var(--dark-15)',
-            borderRadius: 9,
-            padding: '10px 12px',
-            outline: 'none',
-          }}
-        />
-      </NPSection>
-
-      <NPSection label="Crosspost">
-        <label
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            cursor: 'pointer',
-            fontSize: 14,
-            color: 'var(--dark-90)',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={crosspost}
-            onChange={(e) => {
-              if (!e.target.checked) {
-                openModal(CrosspostWarningModal, {
-                  onConfirm: () => {
-                    setCrosspost(false);
-                    showToast({ message: 'Crosspost disabled · posts will publish per account' });
-                  },
-                });
-              } else {
-                setCrosspost(true);
-              }
-            }}
-            style={{ accentColor: 'var(--dark-90)', width: 16, height: 16 }}
-          />
-          <span>Crosspost to all connected accounts</span>
-        </label>
-      </NPSection>
-      </Modal.Content>
-      <Modal.Footer>
-        <Modal.FooterContent slot="left">
-          <Modal.FooterButton variant="ghost" onPress={close}>
-            Cancel
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-        <Modal.FooterContent slot="right">
-          <Modal.FooterButton
-            variant="primary"
-            frontIcon={Check2}
-            isDisabled={!canSave}
-            onPress={handleSave}
-          >
-            Add to calendar
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-      </Modal.Footer>
-    </Modal.Root>
-  );
-}
-
 // ─── ROUTE ─────────────────────────────────────────────────────────
 
 export function OrganicSocialRoute() {
@@ -948,6 +453,19 @@ export function OrganicSocialRoute() {
     </ModalStack>
   );
 }
+
+// The New Post modal offers richer content types than the calendar's four
+// renderable card kinds — collapse each to the nearest one.
+const CT_TO_KIND: Record<ContentTypeId, ContentKind> = {
+  still: 'still',
+  carousel: 'carousel',
+  blog: 'blog',
+  'feed-video': 'avatar-video',
+  'short-video': 'avatar-video',
+  'ai-avatar': 'avatar-video',
+  story: 'still',
+  email: 'blog',
+};
 
 type OrganicSubtab = 'calendar' | 'insights' | 'learnings' | 'recents' | 'approvals';
 
@@ -985,24 +503,49 @@ function OrganicSocialRouteInner() {
     return map;
   }, [posts, isCurrentWeek]);
 
+  // Schedule slots for the New Post modal — one per visible day, label keyed
+  // back to a calendar day/time so created drafts land on real columns.
+  const dateSlots = useMemo(
+    () => visibleWeek.map((d) => ({ label: `${d.date}, 10:00am`, day: d.key, time: '10:00 AM' })),
+    [visibleWeek],
+  );
+
+  const createPosts = (drafts: NewPostDraft[]) => {
+    const fallbackThumb = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70';
+    const made: Post[] = drafts.map((d) => {
+      const slot = dateSlots.find((s) => s.label === d.date) ?? dateSlots[0];
+      return {
+        day: slot.day,
+        time: slot.time,
+        platform: 'instagram',
+        type: 'Post',
+        contentType: CT_TO_KIND[d.contentType],
+        title: d.topic.trim() || 'Untitled post',
+        thumb: d.refImage ?? fallbackThumb,
+        status: 'review',
+        source: 'Standalone',
+      };
+    });
+    setPosts((prev) => [...prev, ...made]);
+    closeModal();
+    if (weekOffset !== 0) setWeekOffset(0);
+    showToast({ message: `${made.length} post${made.length === 1 ? '' : 's'} added to calendar` });
+  };
+
   const handleOpenChooser = () => {
     openModal(CreateChooserModal, {
+      onPickPost: () => {
+        closeModal();
+        openModal(NewPostModal, { dateOptions: dateSlots.map((s) => s.label), onCreate: createPosts });
+      },
       onPickCampaign: () => {
         closeModal();
         showToast({ message: 'Campaign wizard coming with campaigns deep port' });
         navigate('/h2/campaigns');
       },
-      onPickPost: () => {
+      onPickStrategy: () => {
         closeModal();
-        openModal(NewPostModal, {
-          visibleWeek,
-          onSave: (p) => {
-            setPosts((prev) => [...prev, p]);
-            closeModal();
-            if (weekOffset !== 0) setWeekOffset(0);
-            showToast({ message: 'Post added to calendar' });
-          },
-        });
+        showToast({ message: 'Strategy builder coming soon' });
       },
     });
   };
@@ -1124,6 +667,15 @@ function OrganicSocialRouteInner() {
             >
               Improve
             </Button>
+            <Button
+              variant="ghost"
+              size="md"
+              frontIcon={ClockBackward}
+              onPress={() => showToast({ message: 'Unscheduled posts coming soon' })}
+            >
+              Unscheduled
+              <span style={{ marginLeft: 6, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>4</span>
+            </Button>
           </div>
 
           {/* View controls — right */}
@@ -1226,8 +778,8 @@ interface RecentRow {
   thumb: string;
 }
 
-const RECENT_TYPE_META: Record<RecentType, { label: string; icon: typeof CoverImage; color: string; bg: string }> = {
-  still: { label: 'Still Image', icon: CoverImage, color: 'var(--red-70)', bg: 'rgba(188, 1, 11, 0.10)' },
+const RECENT_TYPE_META: Record<RecentType, { label: string; icon: typeof FileMultiple; color: string; bg: string }> = {
+  still: { label: 'Still Image', icon: StillImageIcon, color: 'var(--red-70)', bg: 'rgba(188, 1, 11, 0.10)' },
   carousel: { label: 'Carousel', icon: FileMultiple, color: '#ed7c2c', bg: 'rgba(237, 124, 44, 0.12)' },
   blog: { label: 'Blog Post', icon: Document, color: 'var(--status-approved)', bg: 'rgba(4, 175, 0, 0.10)' },
   email: { label: 'Email', icon: Emails, color: '#edb62c', bg: 'rgba(237, 182, 44, 0.14)' },

@@ -95,7 +95,7 @@ const CAMPAIGNS: Campaign[] = [
         id: 'spring-exterior-ad-1',
         name: 'Exterior — Reel A',
         // Painter on a ladder finishing an exterior — Austin home.
-        thumb: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&q=80',
+        thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=80',
         budget: 50,
         spent: 980,
         results: 18,
@@ -108,7 +108,7 @@ const CAMPAIGNS: Campaign[] = [
           signal: 'CTR -28% past 7d',
           currentAd: {
             name: 'Exterior — Reel A',
-            imageUrl: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+            imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
             caption: 'Crew painting Westlake home · static · 1080×1350',
           },
           proposedAd: {
@@ -130,7 +130,7 @@ const CAMPAIGNS: Campaign[] = [
         id: 'spring-exterior-ad-2',
         name: 'Exterior — Static B',
         // Clean modern Austin home exterior shot.
-        thumb: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&q=80',
+        thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=80',
         budget: 40,
         spent: 920,
         results: 14,
@@ -143,7 +143,7 @@ const CAMPAIGNS: Campaign[] = [
           signal: 'Cost/lead +42% past 5d',
           currentAd: {
             name: 'Exterior — Static B',
-            imageUrl: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+            imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
             caption: 'Finished exterior hero · static · 1080×1080',
           },
           proposedAd: {
@@ -1037,8 +1037,8 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     id: 'mi-s-1',
     peer: 'Five Star Painting of South Austin',
     metric: '3.2x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    observedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
     observedSummary: 'Owner-led testimonial · "187 reviews" stat in first 2s.',
     adaptedSummary: 'John Bunnell voice-over · "Painted 1,200 Austin homes since 2008".',
     observed:
@@ -1077,7 +1077,7 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     peer: 'College Pro Painters',
     metric: 'CTR 5.6%',
     observedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
     observedSummary: 'UGC compilation · 5 customer clips.',
     adaptedSummary: 'Stitch from 5 top-rated CertaPro Austin reviews.',
     observed:
@@ -1090,7 +1090,7 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     peer: 'Austin Custom Painting',
     metric: '2.9x ROAS',
     observedImage: 'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
     observedSummary: 'Color consult walkthrough · handwritten swatch overlay.',
     adaptedSummary: 'Free color consultation with every CertaPro estimate.',
     observed:
@@ -1102,7 +1102,7 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     id: 'mi-s-6',
     peer: 'Sherwin-Williams Pro Painters',
     metric: 'CTR 4.1%',
-    observedImage: 'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=600&q=80',
+    observedImage: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&q=80',
     adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
     observedSummary: 'Static paint-chip diagram with arrows + CTA.',
     adaptedSummary: 'Texas-heat paint guide · CertaPro callouts.',
