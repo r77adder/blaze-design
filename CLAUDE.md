@@ -15,19 +15,28 @@ This repo is the Blaze design system + a prototype playground. Two audiences use
 6. **ALWAYS import via `@/components` (vetted lib) or `@/staging` (work-in-progress)** inside `prototypes/` and `src/playground/`. **ALWAYS use relative imports** inside `src/components/` and `src/staging/` — the alias is intentionally not in the lib's tsconfig because it would leak into emitted `.d.ts` files. Vetted code MUST NOT import from staging (would leak into the published surface); staging may import from `../../components/<Name>`.
 7. **For any visual gap investigation against prod**, follow `.claude/skills/visual-debugging.md`. First step is verifying chrome-devtools-mcp is connected — if `list_pages` errors, walk the user through plugin install BEFORE attempting screenshot comparisons. Never ping-pong screenshots with the user when the MCP would settle the question in one tool call.
 8. **Snapshot tests are for vetted components and Ladle stories ONLY.** Never add Playwright snapshot tests for prototypes or staging components — the maintenance cost (Cloudinary asset churn, copy edits, layout iteration) outweighs the value, and prototypes are throwaway by design. If a vetted component has Ladle stories that mirror prod's, those Ladle stories are fair game to snapshot via `tests/visual/`. See `.claude/skills/visual-snapshot-testing.md`.
-9. **NEVER commit to `main` directly.** Before staging any commit, check the current branch — if on `main`, create a new branch named after the work scope (`prototype/<slug>`, `staging/<name>`, `docs/<topic>`, etc.). The remote `main` branch is server-protected; direct pushes will be rejected. Use `/share` (`.claude/commands/share.md`) to handle the full branch+commit+push+PR flow automatically.
+9. **iOS prototypes live in `ios/prototypes/<slug>/`, NOT `prototypes/`.** Use `<PhoneFrame>` from `ios/prototypes/_shell/` instead of `<PrototypeShell>`. Import iOS tokens (`@ios/tokens/colors.css` etc.) for `var(--ios-*)` variables. Route will be `/ios/<slug>`.
+10. **NEVER commit to `main` directly.** Before staging any commit, check the current branch — if on `main`, create a new branch named after the work scope (`prototype/<slug>`, `staging/<name>`, `docs/<topic>`, etc.). The remote `main` branch is server-protected; direct pushes will be rejected. Use `/share` (`.claude/commands/share.md`) to handle the full branch+commit+push+PR flow automatically.
 
 ---
 
 ## What's where
 
+### Web (primary)
 - `src/components/` — **vetted lib surface (publishable).** Only components that are 1:1 with prod's vetted dirs (`apps/blaze/src/blaze-ui/` and `apps/blaze/src/almanac-ui/` — both count as upstream sources of truth). Eng-protected. Today: `Button`, `ButtonLink`, `Heading`, `IconButton`, `IconButtonLink`, `Modal`, `Paragraph`, `Text`.
 - `src/staging/` — shared-across-prototypes work-in-progress components. NOT shipped in the published lib. Open to prototype-driven evolution. Promote to `src/components/` only when prod adopts the component into `apps/blaze/src/blaze-ui/` — see `.claude/skills/promoting-staging-component.md`.
 - `src/icons/` — eng-protected icon components, organized by pixel size (`12/`, `14/`, `16/`, etc.)
 - `src/tokens/` — `colors.css` + `typography.scss` + `fonts.scss` + `reset.css` + Söhne font files
 - `src/playground/` — Vite app entrypoint (dev infra, never shipped in the package)
-- `prototypes/_shell/` — `<PrototypeShell>` + `<StatePicker>`. Use these in every prototype. NOT in the lib.
-- `prototypes/<slug>/` — designer/PM playground. Open access.
+- `prototypes/_shell/` — `<PrototypeShell>` + `<StatePicker>`. Use these in every **web** prototype. NOT in the lib.
+- `prototypes/<slug>/` — web designer/PM playground. Open access. Routes at `/<slug>`.
+
+### iOS (parallel)
+- `ios/components/` — **iOS components.** The canonical home for all iOS UI patterns. Add new components here directly. Aliased as `@ios/components`.
+- `ios/staging/` — **deprecated shim.** Re-exports everything from `ios/components/` for backward compat. Do not add new files here; use `ios/components/` instead.
+- `ios/tokens/` — Three CSS token files loaded globally by the playground: `colors.css` (iOS semantic color system mapped to Blaze tokens), `spacing.css` (8pt grid + device dimensions), `typography.css` (Dynamic Type scale). Import via `@ios/tokens/colors.css` etc.
+- `ios/prototypes/_shell/` — `<PhoneFrame>` + `<StatusBar>`. Use these in every **iOS** prototype instead of `<PrototypeShell>`. Re-exports `StatePicker` and `useStateContext` from the web shell.
+- `ios/prototypes/<slug>/` — iOS designer/PM playground. Open access. Routes at `/ios/<slug>`.
 - `.ladle/` — component dev environment config
 - `.claude/commands/` — slash commands (one per file)
 - `.claude/skills/` — longer workflow guides for specific tasks
@@ -39,6 +48,7 @@ This repo is the Blaze design system + a prototype playground. Two audiences use
 | User asks | Do this |
 |---|---|
 | "Make a new prototype X" | `pnpm plop prototype --name X`, ensure `pnpm dev` is running, open browser to `http://localhost:5173/X` |
+| "Make a new iOS prototype X" | Create `ios/prototypes/X/index.tsx` manually (no plop template yet). Wrap in `<StatePicker>` + `<PhoneFrame>` from `'../_shell'`. Import components from `@ios/components`. Open `http://localhost:5173/ios/X`. |
 | "Add a new component X" | `pnpm plop component --name X`. The plop prompt asks vetted vs staging — pick **staging** unless prod's `apps/blaze/src/blaze-ui/X/` already exists. Then follow `.claude/skills/writing-a-component.md`. |
 | "Promote staging component X to vetted" (eng) | Follow `.claude/skills/promoting-staging-component.md`. Hard gate: prod must already have `apps/blaze/src/blaze-ui/X/`. |
 | "Add icon X size N" (eng) | `pnpm plop icon --name X --size N`, paste SVG paths into the new file |

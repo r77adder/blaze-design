@@ -2,23 +2,21 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { StatusPill, TabChip, useToast } from '@/staging';
-import type { StatusPillTone } from '@/staging';
+import { TabChip, useToast } from '@/staging';
 import { CrosspostWarningModal } from '../CrosspostWarningModal';
 import Plus from '@/icons/20/Plus';
 import ChevronLeft from '@/icons/24/ChevronLeft';
 import ChevronRight from '@/icons/24/ChevronRight';
 import Check2 from '@/icons/20/Check2';
-import Instagram from '@/icons/20/Instagram';
-import TikTok from '@/icons/20/TikTok';
-import LinkedIn from '@/icons/20/LinkedIn';
-import Twitter from '@/icons/20/Twitter';
+import Refresh01 from '@/icons/20/Refresh01';
+import Wrench from '@/icons/20/Wrench';
+import Filter from '@/icons/20/Filter';
 import CoverImage from '@/icons/20/CoverImage';
 import FileMultiple from '@/icons/20/FileMultiple';
 import Document from '@/icons/20/Document';
+import Video from '@/icons/20/Video';
 import Emails from '@/icons/20/Emails';
 import AlertTriangle from '@/icons/20/AlertTriangle';
-import FolderClosed from '@/icons/20/FolderClosed';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
@@ -42,32 +40,37 @@ import { OrganicSocialColdView } from './ColdViews';
  */
 
 type PlatformKey = 'instagram' | 'tiktok' | 'linkedin' | 'x';
-type Status = 'scheduled' | 'draft' | 'review';
+type Status = 'scheduled' | 'draft' | 'review' | 'approved';
 type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+// Calendar cards are typed by *content kind* (what the post renders as),
+// independent of the platform it ships to.
+type ContentKind = 'still' | 'carousel' | 'blog' | 'avatar-video';
 
 interface Post {
   day: DayKey;
   time: string;
   platform: PlatformKey;
   type: string;
+  contentType: ContentKind;
   title: string;
+  body?: string;
   thumb: string | null;
   status: Status;
   source: string;
 }
+
+const CONTENT_META: Record<ContentKind, { label: string; icon: typeof CoverImage; color: string }> = {
+  still: { label: 'Still Image', icon: CoverImage, color: 'var(--red-70)' },
+  carousel: { label: 'Carousel', icon: FileMultiple, color: 'var(--status-connect)' },
+  blog: { label: 'Blog Post', icon: Document, color: 'var(--status-approved)' },
+  'avatar-video': { label: 'AI Avatar Video', icon: Video, color: 'var(--purple)' },
+};
 
 const TODAY: DayKey = 'thu';
 const DAY_KEYS: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 // Base week — Monday May 4, 2026 (TODAY = Thu May 7).
 const BASE_MONDAY = new Date(2026, 4, 4);
-
-const PLATFORM_ICONS: Record<PlatformKey, React.ComponentType<{ size?: number }>> = {
-  instagram: Instagram,
-  tiktok: TikTok,
-  linkedin: LinkedIn,
-  x: Twitter,
-};
 
 const PLATFORM_NAMES: Record<PlatformKey, string> = {
   instagram: 'Instagram',
@@ -81,12 +84,6 @@ const PLATFORM_DOT: Record<PlatformKey, string> = {
   tiktok: '#111111',
   linkedin: '#0A66C2',
   x: '#1F2937',
-};
-
-const STATUS_TONE: Record<Status, StatusPillTone> = {
-  scheduled: 'neutral',
-  draft: 'neutral',
-  review: 'warning',
 };
 
 const TYPES_BY_PLATFORM: Record<PlatformKey, string[]> = {
@@ -110,25 +107,26 @@ const NP_THUMBS = [
 ];
 
 const SEED_POSTS: Post[] = [
-  { day: 'mon', time: '9:00 AM', platform: 'instagram', type: 'Reel', title: 'Before & after — Tarrytown kitchen cabinet refinish in 60 seconds.', thumb: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=70', status: 'scheduled', source: 'Cabinet Refresh May' },
-  { day: 'mon', time: '1:00 PM', platform: 'tiktok', type: 'Short', title: '30-second guide to picking exterior colors for Texas heat.', thumb: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&q=70', status: 'scheduled', source: 'Color Trends 2026' },
-  { day: 'tue', time: '8:00 AM', platform: 'linkedin', type: 'Post', title: "Why prep matters more than paint — Matthew's playbook.", thumb: null, status: 'draft', source: 'Crew Spotlights' },
-  { day: 'tue', time: '4:00 PM', platform: 'instagram', type: 'Carousel', title: '5 paint mistakes Austin homeowners keep making (and how to avoid them).', thumb: 'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=400&q=70', status: 'scheduled', source: 'Color Trends 2026' },
-  { day: 'wed', time: '9:00 AM', platform: 'instagram', type: 'Story', title: 'BTS — Round Rock HOA repaint, day 18 of 42.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=70', status: 'scheduled', source: 'HOA Round Rock' },
-  { day: 'wed', time: '2:00 PM', platform: 'x', type: 'Post', title: 'Quick thread — what a free estimate actually covers, in 6 tweets.', thumb: null, status: 'review', source: 'Estimate FAQ' },
-  { day: 'thu', time: '10:00 AM', platform: 'instagram', type: 'Reel', title: 'A day on the crew — exterior repaint in Westlake.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&q=70', status: 'scheduled', source: 'Crew Spotlights' },
-  { day: 'thu', time: '5:00 PM', platform: 'tiktok', type: 'Short', title: 'Cabinet refinish vs replace — what it really costs in Austin.', thumb: 'https://images.unsplash.com/photo-1556909114-44e3e9399a2d?w=400&q=70', status: 'scheduled', source: 'Cabinet Refresh May' },
-  { day: 'fri', time: '11:00 AM', platform: 'instagram', type: 'Reel', title: 'Friday reveal — Lakeway exterior, 4 days from prep to finish.', thumb: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=400&q=70', status: 'review', source: 'Color Trends 2026' },
-  { day: 'fri', time: '3:00 PM', platform: 'linkedin', type: 'Post', title: 'What we learned running an HOA repaint with 14 buildings on one timeline.', thumb: null, status: 'draft', source: 'HOA Round Rock' },
-  { day: 'sat', time: '9:00 AM', platform: 'instagram', type: 'Carousel', title: 'Weekend project — 5 small interior paint refreshes that change a room.', thumb: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=400&q=70', status: 'scheduled', source: 'Color Trends 2026' },
-  { day: 'sat', time: '7:00 PM', platform: 'tiktok', type: 'Short', title: 'Why we never skip the power wash — even on tight timelines.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&q=70', status: 'draft', source: 'Crew Spotlights' },
-  { day: 'sun', time: '5:00 PM', platform: 'instagram', type: 'Story', title: 'Sunday Q&A — drop your Austin paint questions, John is answering.', thumb: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&q=70', status: 'scheduled', source: 'Estimate FAQ' },
+  { day: 'mon', time: '9:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Before & after — Tarrytown kitchen cabinet refinish in 60 seconds.', thumb: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=70', status: 'approved', source: 'Cabinet Refresh May' },
+  { day: 'mon', time: '1:00 PM', platform: 'tiktok', type: 'Short', contentType: 'still', title: '30-second guide to picking exterior colors for Texas heat.', thumb: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=600&q=70', status: 'approved', source: 'Color Trends 2026' },
+  { day: 'tue', time: '8:00 AM', platform: 'linkedin', type: 'Post', contentType: 'blog', title: 'Why prep matters more than paint — the playbook our crews run on every job', body: 'Prep is the part nobody sees, and the part that decides whether a finish lasts two years or ten. Here is the exact sequence Matthew walks before a single drop of paint goes on.', thumb: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=70', status: 'review', source: 'Crew Spotlights' },
+  { day: 'tue', time: '4:00 PM', platform: 'instagram', type: 'Carousel', contentType: 'carousel', title: '5 paint mistakes Austin homeowners keep making (and how to avoid them).', thumb: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&q=70', status: 'approved', source: 'Color Trends 2026' },
+  { day: 'wed', time: '9:00 AM', platform: 'instagram', type: 'Story', contentType: 'still', title: 'BTS — Round Rock HOA repaint, day 18 of 42.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=70', status: 'approved', source: 'HOA Round Rock' },
+  { day: 'wed', time: '2:00 PM', platform: 'x', type: 'Post', contentType: 'still', title: 'What a free estimate actually covers — the six things every Austin homeowner should expect.', thumb: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=70', status: 'review', source: 'Estimate FAQ' },
+  { day: 'thu', time: '10:00 AM', platform: 'instagram', type: 'Reel', contentType: 'avatar-video', title: 'A day on the crew — exterior repaint in Westlake.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=70', status: 'approved', source: 'Crew Spotlights' },
+  { day: 'thu', time: '5:00 PM', platform: 'tiktok', type: 'Short', contentType: 'carousel', title: 'Cabinet refinish vs replace — what it really costs in Austin.', thumb: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=70', status: 'approved', source: 'Cabinet Refresh May' },
+  { day: 'fri', time: '11:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Friday reveal — Lakeway exterior, 4 days from prep to finish.', thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', status: 'review', source: 'Color Trends 2026' },
+  { day: 'fri', time: '3:00 PM', platform: 'linkedin', type: 'Post', contentType: 'blog', title: 'What we learned running an HOA repaint with 14 buildings on one timeline', body: 'Fourteen buildings, one timeline, zero missed handoffs. What coordinating an HOA-scale repaint taught us about sequencing crews and keeping color approvals moving.', thumb: 'https://images.unsplash.com/photo-1448630360428-65456885c650?w=600&q=70', status: 'approved', source: 'HOA Round Rock' },
+  { day: 'sat', time: '9:00 AM', platform: 'instagram', type: 'Carousel', contentType: 'carousel', title: 'Weekend project — 5 small interior paint refreshes that change a room.', thumb: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=70', status: 'approved', source: 'Color Trends 2026' },
+  { day: 'sat', time: '7:00 PM', platform: 'tiktok', type: 'Short', contentType: 'still', title: 'Why we never skip the power wash — even on tight timelines.', thumb: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&q=70', status: 'approved', source: 'Crew Spotlights' },
+  { day: 'sun', time: '5:00 PM', platform: 'instagram', type: 'Story', contentType: 'avatar-video', title: 'Sunday Q&A — drop your Austin paint questions, John is answering.', thumb: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=70', status: 'approved', source: 'Estimate FAQ' },
 ];
 
 interface DayInfo {
   key: DayKey;
   name: string;
   date: string;
+  full: string;
 }
 
 function weekFromOffset(offsetWeeks: number): DayInfo[] {
@@ -141,136 +139,239 @@ function weekFromOffset(offsetWeeks: number): DayInfo[] {
       key,
       name: DAY_NAMES[i],
       date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      full: d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     };
   });
 }
 
-function formatWeekLabel(days: DayInfo[], offsetWeeks: number): string {
-  const monday = new Date(BASE_MONDAY);
-  monday.setDate(monday.getDate() + offsetWeeks * 7);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
-}
+// Opaque status badge — readable whether it floats over a photo or sits on
+// a white surface (the lib StatusPill is 10%-translucent, so it'd wash out
+// over an image). `approved` = green, `review` = amber + warning triangle,
+// everything else = neutral grey.
+function StatusBadge({ status }: { status: Status }) {
+  const base: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    padding: '3px 8px',
+    borderRadius: 6,
+    fontSize: 12,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+  };
 
-function PostTile({ post, onOpen }: { post: Post; onOpen: () => void }) {
-  const Icon = PLATFORM_ICONS[post.platform];
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      style={{
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 9,
-        padding: 0,
-        cursor: 'pointer',
-        textAlign: 'left',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        fontFamily: 'inherit',
-        transition: 'border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease',
-      }}
-    >
-      <div
+  if (status === 'approved') {
+    return (
+      <span
         style={{
-          aspectRatio: '1.5 / 1',
-          background: post.thumb
-            ? `center/cover url('${post.thumb}'), var(--dark-4)`
-            : 'linear-gradient(135deg, #1B1B1A 0%, #2A2826 100%)',
-          color: post.thumb ? undefined : '#fff',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 12,
-          padding: post.thumb ? 0 : 10,
+          ...base,
+          backgroundImage:
+            'linear-gradient(rgba(4,175,0,0.14), rgba(4,175,0,0.14)), linear-gradient(var(--light-100), var(--light-100))',
+          border: '1px solid rgba(4,175,0,0.22)',
+          color: '#036b00',
         }}
       >
-        {!post.thumb && <span style={{ textAlign: 'center' }}>{post.title.slice(0, 80)}</span>}
-        <span
-          title={PLATFORM_NAMES[post.platform]}
-          style={{
-            position: 'absolute',
-            top: 6,
-            left: 6,
-            width: 22,
-            height: 22,
-            borderRadius: 6,
-            background: 'rgba(0,0,0,0.55)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Icon size={12} />
-        </span>
+        Approved
+      </span>
+    );
+  }
+
+  if (status === 'review') {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
         <span
           style={{
-            position: 'absolute',
-            bottom: 6,
-            right: 6,
-            background: 'rgba(0,0,0,0.55)',
-            color: '#fff',
-            borderRadius: 5,
-            padding: '2px 6px',
-            fontSize: 12,
-            fontWeight: 500,
+            ...base,
+            backgroundImage:
+              'linear-gradient(rgba(252,183,40,0.24), rgba(252,183,40,0.24)), linear-gradient(var(--light-100), var(--light-100))',
+            border: '1px solid rgba(252,183,40,0.45)',
+            color: '#8a5a00',
           }}
         >
-          {post.type}
+          Review
         </span>
-      </div>
-      <div style={{ padding: '9px 11px 11px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div
-          style={{
-            fontSize: 12,
-            color: 'var(--dark-60)',
-            fontVariantNumeric: 'tabular-nums',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-          }}
-        >
-          {post.time}
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--dark-15)' }} />
-          {PLATFORM_NAMES[post.platform]}
+        <span style={{ color: '#d99a00', display: 'inline-flex' }}>
+          <AlertTriangle size={16} color="currentColor" />
+        </span>
+      </span>
+    );
+  }
+
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  return (
+    <span
+      style={{
+        ...base,
+        backgroundImage:
+          'linear-gradient(var(--dark-4), var(--dark-4)), linear-gradient(var(--light-100), var(--light-100))',
+        border: '1px solid var(--dark-8)',
+        color: 'var(--dark-60)',
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function TypeAndTime({ post }: { post: Post }) {
+  const meta = CONTENT_META[post.contentType];
+  const TypeIcon = meta.icon;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--dark-80)' }}>
+        <TypeIcon size={16} color={meta.color} />
+        {meta.label}
+      </span>
+      <span style={{ fontSize: 13, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+        {post.time.toLowerCase().replace(/\s/g, '')}
+      </span>
+    </div>
+  );
+}
+
+function Caption({ text }: { text: string }) {
+  const truncated = text.length > 78;
+  const shown = truncated ? text.slice(0, 78).replace(/\s+\S*$/, '') : text;
+  return (
+    <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>
+      {shown}
+      {truncated && (
+        <>
+          {' … '}
+          <span style={{ color: 'var(--dark-40)' }}>more</span>
+        </>
+      )}
+    </div>
+  );
+}
+
+const cardShell: React.CSSProperties = {
+  background: 'var(--light-100)',
+  border: '1px solid var(--dark-8)',
+  borderRadius: 12,
+  padding: 0,
+  cursor: 'pointer',
+  textAlign: 'left',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  fontFamily: 'inherit',
+  width: '100%',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+  transition: 'border-color 120ms ease, box-shadow 120ms ease',
+};
+
+function PostCard({ post, dayFull, onOpen }: { post: Post; dayFull: string; onOpen: () => void }) {
+  // ── Blog variant — header, landscape image, serif title + body, status ──
+  if (post.contentType === 'blog') {
+    return (
+      <button type="button" onClick={onOpen} style={cardShell}>
+        <div style={{ padding: '11px 12px 9px' }}>
+          <TypeAndTime post={post} />
         </div>
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 500,
-            color: 'var(--dark-90)',
-            lineHeight: 1.3,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {post.title}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-          <StatusPill tone={STATUS_TONE[post.status]} size="sm">
-            {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
-          </StatusPill>
-          <span
-            title={post.source}
+        {post.thumb && (
+          <div style={{ aspectRatio: '16 / 9', background: `center/cover url('${post.thumb}'), var(--dark-4)` }} />
+        )}
+        <div style={{ padding: '12px 13px 13px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div
             style={{
-              fontSize: 12,
-              color: 'var(--dark-40)',
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: 'var(--dark-90)',
+              lineHeight: 1.2,
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              flex: 1,
-              minWidth: 0,
             }}
           >
-            {post.source}
+            {post.title}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--dark-40)' }}>{dayFull}</div>
+          {post.body && (
+            <div
+              style={{
+                fontSize: 13,
+                color: 'var(--dark-60)',
+                lineHeight: 1.5,
+                display: '-webkit-box',
+                WebkitLineClamp: 5,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {post.body}
+            </div>
+          )}
+          <div style={{ marginTop: 2 }}>
+            <StatusBadge status={post.status} />
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  // ── Media variant — header + caption, then image with status overlay ──
+  return (
+    <button type="button" onClick={onOpen} style={cardShell}>
+      <div style={{ padding: '11px 12px 10px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <TypeAndTime post={post} />
+        <Caption text={post.title} />
+      </div>
+      <div
+        style={{
+          position: 'relative',
+          aspectRatio: '4 / 5',
+          background: `center/cover url('${post.thumb ?? ''}'), var(--dark-4)`,
+        }}
+      >
+        {post.contentType === 'carousel' && (
+          <span
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              display: 'inline-flex',
+              filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="8" y="3" width="13" height="13" rx="3" stroke="#fff" strokeWidth="1.7" />
+              <path d="M4 8v9a4 4 0 0 0 4 4h9" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" />
+            </svg>
           </span>
+        )}
+        {post.contentType === 'avatar-video' && (
+          <span
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+            }}
+          >
+            <span
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'rgba(0,0,0,0.45)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
+                <path d="M2 2L14 9L2 16V2Z" fill="#fff" />
+              </svg>
+            </span>
+          </span>
+        )}
+        <div style={{ position: 'absolute', left: 10, bottom: 10 }}>
+          <StatusBadge status={post.status} />
         </div>
       </div>
     </button>
@@ -290,47 +391,37 @@ function DayColumn({
 }) {
   const isToday = isCurrentWeek && day.key === TODAY;
   return (
-    <div
-      style={{
-        borderRight: '1px solid var(--dark-8)',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 'calc(100vh - 220px)',
-      }}
-    >
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 240px)' }}>
       <div
         style={{
-          padding: '12px 14px',
-          background: isToday ? 'var(--light-100)' : 'var(--default-bg)',
-          borderBottom: '1px solid var(--dark-8)',
-          boxShadow: isToday ? 'inset 0 -2px 0 var(--dark-90)' : undefined,
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '4px 0 12px',
           position: 'sticky',
           top: 0,
           zIndex: 1,
+          background: 'var(--default-bg)',
         }}
       >
-        <div
+        <span
           style={{
-            fontSize: 12,
-            color: 'var(--dark-60)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            fontWeight: 500,
+            display: 'inline-flex',
+            alignItems: 'baseline',
+            gap: 6,
+            padding: '6px 12px',
+            borderRadius: 8,
+            background: isToday ? 'var(--dark-4)' : 'transparent',
           }}
         >
-          {day.name}
-          {isToday ? ' · TODAY' : ''}
-        </div>
-        <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-90)', marginTop: 2, letterSpacing: '-0.2px' }}>
-          {day.date}
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 2 }}>
-          {posts.length} post{posts.length === 1 ? '' : 's'}
-        </div>
+          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{day.date}</span>
+          <span style={{ fontSize: 14, fontWeight: 400, color: isToday ? 'var(--dark-60)' : 'var(--dark-40)' }}>
+            {day.name}
+          </span>
+        </span>
       </div>
-      <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
         {posts.length > 0 ? (
-          posts.map((p, i) => <PostTile key={i} post={p} onOpen={() => onOpenPost(p)} />)
+          posts.map((p, i) => <PostCard key={i} post={p} dayFull={day.full} onOpen={() => onOpenPost(p)} />)
         ) : (
           <div
             style={{
@@ -338,7 +429,7 @@ function DayColumn({
               padding: '28px 8px',
               textAlign: 'center',
               color: 'var(--dark-40)',
-              fontSize: 12,
+              fontSize: 13,
             }}
           >
             Nothing scheduled
@@ -346,6 +437,44 @@ function DayColumn({
         )}
       </div>
     </div>
+  );
+}
+
+// Ghost icon button for the calendar toolbar (chevrons, filter). Transparent
+// until hover, matching the borderless toolbar buttons in the screenshot.
+function HeaderIconButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        borderRadius: 8,
+        width: 32,
+        height: 32,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        color: 'var(--dark-80)',
+        padding: 0,
+        transition: 'background 120ms ease',
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -820,9 +949,9 @@ export function OrganicSocialRoute() {
   );
 }
 
-type OrganicSubtab = 'calendar' | 'insights' | 'recents' | 'approvals';
+type OrganicSubtab = 'calendar' | 'insights' | 'learnings' | 'recents' | 'approvals';
 
-const SUBTABS: ReadonlySet<OrganicSubtab> = new Set(['calendar', 'insights', 'recents', 'approvals']);
+const SUBTABS: ReadonlySet<OrganicSubtab> = new Set(['calendar', 'insights', 'learnings', 'recents', 'approvals']);
 
 function parseSubtab(raw: string | null): OrganicSubtab {
   return raw && SUBTABS.has(raw as OrganicSubtab) ? (raw as OrganicSubtab) : 'calendar';
@@ -848,7 +977,6 @@ function OrganicSocialRouteInner() {
   };
 
   const visibleWeek = useMemo(() => weekFromOffset(weekOffset), [weekOffset]);
-  const weekLabel = useMemo(() => formatWeekLabel(visibleWeek, weekOffset), [visibleWeek, weekOffset]);
   const isCurrentWeek = weekOffset === 0;
 
   const byDay = useMemo(() => {
@@ -883,8 +1011,9 @@ function OrganicSocialRouteInner() {
     <div style={{ display: 'inline-flex', gap: 6 }}>
       <TabChip selected={false} onSelect={() => navigate('/h2/campaigns')}>Campaigns</TabChip>
       <TabChip selected={tab === 'calendar'} onSelect={() => setTab('calendar')}>Calendar</TabChip>
-      <TabChip selected={tab === 'approvals'} onSelect={() => setTab('approvals')}>Approvals</TabChip>
+      <TabChip selected={tab === 'approvals'} count={4} onSelect={() => setTab('approvals')}>Approvals</TabChip>
       <TabChip selected={tab === 'insights'} onSelect={() => setTab('insights')}>Insights</TabChip>
+      <TabChip selected={tab === 'learnings'} onSelect={() => setTab('learnings')}>Learnings</TabChip>
       <TabChip selected={tab === 'recents'} onSelect={() => setTab('recents')}>Recents</TabChip>
     </div>
   );
@@ -901,6 +1030,14 @@ function OrganicSocialRouteInner() {
     return (
       <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
         <EmptyTab heading="Insights coming soon" body="Cross-platform performance summaries, top-post breakdowns, and audience trends will land here." />
+      </H2Layout>
+    );
+  }
+
+  if (tab === 'learnings') {
+    return (
+      <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
+        <EmptyTab heading="Learnings coming soon" body="What's working and what isn't — the patterns the agent has picked up from your posts, and the recommendations it's acting on." />
       </H2Layout>
     );
   }
@@ -922,80 +1059,97 @@ function OrganicSocialRouteInner() {
   }
 
   return (
-    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
-      <div style={{ margin: '-24px -24px 0', display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />} fullBleed>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--default-bg)' }}>
         <div
           style={{
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto 1fr',
             alignItems: 'center',
-            justifyContent: 'space-between',
             gap: 12,
-            padding: '18px 28px',
-            borderBottom: '1px solid var(--dark-8)',
+            padding: '12px 20px',
+            borderBottom: '1px solid var(--dark-4)',
             background: 'var(--default-bg)',
             flexShrink: 0,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Date navigation */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, justifySelf: 'start' }}>
+            <HeaderIconButton label="Previous week" onClick={() => setWeekOffset((o) => o - 1)}>
+              <ChevronLeft size={20} />
+            </HeaderIconButton>
             <button
               type="button"
-              aria-label="Previous week"
-              onClick={() => setWeekOffset((o) => o - 1)}
+              onClick={() => setWeekOffset(0)}
               style={{
-                background: 'var(--light-100)',
-                border: '1px solid var(--dark-15)',
+                background: 'transparent',
+                border: 'none',
                 borderRadius: 8,
-                padding: 6,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                padding: '6px 10px',
+                fontFamily: 'inherit',
+                fontSize: 14,
+                fontWeight: 500,
+                color: 'var(--dark-90)',
                 cursor: 'pointer',
+                transition: 'background 120ms ease',
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
-              <ChevronLeft size={16} />
+              Today
             </button>
-            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', minWidth: 180, textAlign: 'center' }}>
-              {weekLabel}
-            </span>
-            <button
-              type="button"
-              aria-label="Next week"
-              onClick={() => setWeekOffset((o) => o + 1)}
-              style={{
-                background: 'var(--light-100)',
-                border: '1px solid var(--dark-15)',
-                borderRadius: 8,
-                padding: 6,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <ChevronRight size={16} />
-            </button>
+            <HeaderIconButton label="Next week" onClick={() => setWeekOffset((o) => o + 1)}>
+              <ChevronRight size={20} />
+            </HeaderIconButton>
           </div>
-          <div style={{ display: 'inline-flex', gap: 8 }}>
+
+          {/* Actions — centered */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, justifySelf: 'center' }}>
+            <Button variant="ghost" size="md" frontIcon={Plus} onPress={handleOpenChooser}>
+              Create
+            </Button>
             <Button
-              variant="tertiary"
+              variant="ghost"
               size="md"
-              frontIcon={FolderClosed}
-              onPress={() => showToast({ message: 'Archived posts — 38 posts in the last 90 days' })}
+              frontIcon={Refresh01}
+              onPress={() => showToast({ message: 'Regenerating this week’s posts…' })}
             >
-              Archived posts
+              Regenerate
             </Button>
-            <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleOpenChooser}>
-              Create new
+            <Button
+              variant="ghost"
+              size="md"
+              frontIcon={Wrench}
+              onPress={() => showToast({ message: 'Improve — agent suggestions coming soon' })}
+            >
+              Improve
             </Button>
+          </div>
+
+          {/* View controls — right */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, justifySelf: 'end' }}>
+            <Button
+              variant="ghost"
+              size="md"
+              withChevron="down"
+              onPress={() => showToast({ message: 'View density — Compact / Comfortable coming soon' })}
+            >
+              Compact
+            </Button>
+            <HeaderIconButton label="Filter" onClick={() => showToast({ message: 'Filters coming soon' })}>
+              <Filter size={20} />
+            </HeaderIconButton>
           </div>
         </div>
-        <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto' }}>
+
+        <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', background: 'var(--default-bg)' }}>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(7, minmax(160px, 1fr))',
-              gap: 0,
-              minWidth: 1180,
+              gridTemplateColumns: 'repeat(7, minmax(240px, 1fr))',
+              gap: 12,
+              minWidth: 1640,
+              padding: '8px 16px 24px',
             }}
           >
             {visibleWeek.map((d) => (

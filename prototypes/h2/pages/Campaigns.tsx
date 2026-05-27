@@ -6,6 +6,7 @@ import type { StackModalProps } from '@/components';
 import { StatusPill, TabChip, useToast } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import Plus from '@/icons/20/Plus';
+import Settings from '@/icons/20/Settings';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { CrosspostWarningModal } from '../CrosspostWarningModal';
@@ -43,9 +44,9 @@ interface Campaign {
   isNew?: boolean;
 }
 
-const PHOTO_A = 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&h=200&fit=crop';
+const PHOTO_A = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=200&h=200&fit=crop';
 const PHOTO_B = 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&h=200&fit=crop';
-const PHOTO_C = 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=200&h=200&fit=crop';
+const PHOTO_C = 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=200&h=200&fit=crop';
 const PHOTO_D = 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=200&h=200&fit=crop';
 
 const HERO_IMG: Record<string, string> = {
@@ -261,9 +262,10 @@ function barStyleFor(status: CampaignStatus): BarStyle {
 interface GanttViewProps {
   campaigns: Campaign[];
   onOpenDetail: (id: string) => void;
+  actions?: ReactNode;
 }
 
-function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
+function GanttView({ campaigns, onOpenDetail, actions }: GanttViewProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const totalW = TOTAL_DAYS * DAY_W;
   const rows = useMemo(() => [...campaigns].sort((a, b) => parseISO(a.start).getTime() - parseISO(b.start).getTime()), [campaigns]);
@@ -338,48 +340,72 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
         position: 'relative',
       }}
     >
-      <div style={{ minWidth: Math.max(1400, totalW) }}>
-        {/* Header (sticky) */}
+      {/* Pinned actions — anchored at the top (first child), height:0 so it
+          overlays the month band instead of forming its own row, and stays put
+          on horizontal scroll so it shares the month-label row. */}
+      <div style={{ position: 'sticky', top: 0, left: 0, height: 0, zIndex: 5, pointerEvents: 'none' }}>
         <div
           style={{
-            height: 60,
+            position: 'absolute',
+            top: 0,
+            right: 16,
+            height: 44,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            pointerEvents: 'auto',
+            background: 'var(--light-100)',
+            paddingLeft: 16,
+            boxShadow: '-14px 0 12px 0 var(--light-100)',
+          }}
+        >
+          {actions}
+        </div>
+      </div>
+      <div style={{ width: totalW }}>
+        {/* Header (sticky) — month labels (left) and pinned actions (right) share one row */}
+        <div
+          style={{
+            height: 76,
             position: 'sticky',
             top: 0,
             background: 'var(--light-100)',
             zIndex: 3,
-            borderBottom: '1px solid var(--dark-8)',
+            borderBottom: '1px solid var(--dark-4)',
             width: totalW,
           }}
         >
-          <div style={{ display: 'flex', height: 28 }}>
+          {/* Month columns span the full header height; their right borders are
+              the month dividers and line up with the body gridlines, so each
+              month reads as one column from the top of the header all the way
+              down. */}
+          <div style={{ display: 'flex', height: '100%' }}>
             {months.map((m, i) => (
               <div
                 key={i}
                 style={{
                   width: m.w,
-                  borderRight: '1px solid var(--dark-8)',
-                  padding: '6px 12px',
+                  borderRight: i < months.length - 1 ? '1px solid var(--dark-8)' : 'none',
+                  padding: '0 12px 30px',
                   fontSize: 14,
                   fontWeight: 500,
                   color: 'var(--dark-90)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
                   flexShrink: 0,
                 }}
               >
                 <span>{m.label}</span>
-                <span style={{ color: 'var(--dark-40)', fontWeight: 400, fontSize: 12 }}>{m.year}</span>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', height: 32, borderTop: '1px solid var(--dark-8)' }}>
+          {/* Week ticks overlaid along the bottom of the header */}
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 30, display: 'flex', borderTop: '1px solid var(--dark-4)' }}>
             {weeks.map((w, i) => (
               <div
                 key={i}
                 style={{
                   width: w.w,
-                  borderRight: '1px solid var(--dark-8)',
                   padding: '0 8px',
                   fontSize: 12,
                   color: 'var(--dark-60)',
@@ -421,7 +447,7 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                   bottom: 0,
                   left: x,
                   width: 1,
-                  background: 'rgba(0,0,0,0.07)',
+                  background: 'var(--dark-8)',
                 }}
               />
             ))}
@@ -437,7 +463,7 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
             const tight = width < 220;
             const veryTight = width < 80;
             const bs = barStyleFor(c.status);
-            const showThumb = !c.proposed;
+            const showThumb = true;
             return (
               <div
                 key={c.id}
@@ -488,25 +514,6 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
                         flexShrink: 0,
                       }}
                     />
-                  )}
-                  {c.proposed && (
-                    <span
-                      style={{
-                        width: 26,
-                        height: 26,
-                        borderRadius: 8,
-                        background: 'rgba(106,0,255,0.12)',
-                        color: 'var(--purple)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 3v3M12 18v3M5 12H2M22 12h-3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" />
-                      </svg>
-                    </span>
                   )}
                   {c.isNew && (
                     <StatusPill
@@ -588,12 +595,14 @@ function GanttView({ campaigns, onOpenDetail }: GanttViewProps) {
 
 interface DetailViewProps {
   campaign: Campaign;
-  onBack: () => void;
   onSectionClick: (sid: SectionId) => void;
   onTurnOffCrosspost: () => void;
+  /** Fires true once the hero has scrolled out of view, so the topbar can
+   *  reveal the campaign name next to the back button. */
+  onScrolledChange?: (scrolled: boolean) => void;
 }
 
-function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }: DetailViewProps) {
+function DetailView({ campaign: c, onSectionClick, onTurnOffCrosspost, onScrolledChange }: DetailViewProps) {
   const start = parseISO(c.start);
   const end = parseISO(c.end);
   const days = daysBetween(start, end) + 1;
@@ -613,9 +622,15 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
     : c.status === 'generating'
       ? 'Blaze is producing content for this campaign. Sections will appear as they are ready for review.'
       : 'All sections are ready. Approve to schedule against the calendar.';
+  // Once Blaze has produced content (review/approved/posting) we show the
+  // review grid; before that (proposed/generating) we show editable prompts.
+  const isGenerated = c.status === 'review' || c.status === 'approved' || c.status === 'posting';
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', background: 'var(--light-100)' }}>
+    <div
+      style={{ flex: 1, overflowY: 'auto', background: 'var(--light-100)' }}
+      onScroll={(e) => onScrolledChange?.(e.currentTarget.scrollTop > 230)}
+    >
       {/* Hero */}
       <div
         style={{
@@ -639,32 +654,6 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
             pointerEvents: 'none',
           }}
         />
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Back"
-          data-testid="detail-back"
-          style={{
-            position: 'absolute',
-            top: 18,
-            left: 18,
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.85)',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--dark-90)',
-            zIndex: 1,
-          }}
-        >
-          <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
         <div style={{ position: 'relative', zIndex: 1, flex: 1 }}>
           <span
             style={{
@@ -817,89 +806,8 @@ function DetailView({ campaign: c, onBack, onSectionClick, onTurnOffCrosspost }:
           </DetailRow>
         </section>
 
-        {/* What's in this */}
-        <section style={{ marginBottom: 36 }}>
-          <header style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 14 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 500, letterSpacing: '-0.2px', color: 'var(--dark-90)', margin: 0, flex: 1 }}>
-              What's in this campaign
-            </h3>
-            <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>Click any section to review</span>
-          </header>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {c.sections.map((sid) => {
-              const meta = SECTION_META[sid];
-              if (!meta) return null;
-              const pillTone: StatusPillTone = meta.pillKind === 'ok' ? 'success' : 'warning';
-              return (
-                <button
-                  key={sid}
-                  type="button"
-                  onClick={() => onSectionClick(sid)}
-                  style={{
-                    display: 'flex',
-                    gap: 16,
-                    padding: '18px 20px',
-                    background: 'var(--light-100)',
-                    border: '1px solid var(--dark-8)',
-                    borderRadius: 14,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    textAlign: 'left',
-                    color: 'inherit',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      background: '#fafafa',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--dark-80)',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {meta.icon}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                      <h4 style={{ flex: 1, fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>
-                        {meta.title}
-                      </h4>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                        <StatusPill tone={pillTone} size="sm">{meta.pill}</StatusPill>
-                        <span style={{ color: 'var(--dark-40)' }}>
-                          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 6l6 6-6 6" />
-                          </svg>
-                        </span>
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--dark-80)', marginBottom: 8 }}>{meta.desc}</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {meta.chips.map((ch) => (
-                        <span
-                          key={ch}
-                          style={{
-                            fontSize: 12,
-                            padding: '3px 8px',
-                            borderRadius: 999,
-                            background: 'var(--dark-4)',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {ch}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        {/* Posts — editable prompts before generation, review grid once generated */}
+        {isGenerated ? <ReviewPostsSection /> : <PostPromptsSection />}
       </div>
     </div>
   );
@@ -917,6 +825,302 @@ const heroIconBtnStyle: CSSProperties = {
   justifyContent: 'center',
   color: 'var(--dark-90)',
 };
+
+// Topbar title for the detail view: a back button that replaces the page title,
+// with the campaign name fading in once the hero scrolls out of view.
+function DetailHeaderTitle({
+  name,
+  showName,
+  onBack,
+}: {
+  name: string;
+  showName: boolean;
+  onBack: () => void;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Back to campaigns"
+        data-testid="detail-back"
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          border: 'none',
+          background: 'transparent',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          color: 'var(--dark-90)',
+          padding: 0,
+          flexShrink: 0,
+          transition: 'background 120ms ease',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      >
+        <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      <span
+        style={{
+          fontSize: 16,
+          fontWeight: 500,
+          color: 'var(--dark-90)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: 520,
+          opacity: showName ? 1 : 0,
+          transform: showName ? 'translateX(0)' : 'translateX(-6px)',
+          transition: 'opacity 180ms ease, transform 180ms ease',
+        }}
+      >
+        {name}
+      </span>
+    </div>
+  );
+}
+
+// ─── DETAIL: POST PROMPTS (pre-generation) ─────────────────────────
+// Shown while a campaign is still proposed/generating: the editable brief the
+// agent will turn into content. Mirrors the production "Post Prompts" screen.
+
+const ghostTextBtn: CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent',
+  border: 'none', padding: '7px 10px', fontFamily: 'inherit', fontSize: 14,
+  color: 'var(--dark-80)', cursor: 'pointer', borderRadius: 8, whiteSpace: 'nowrap',
+};
+const promptIconBtn: CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30,
+  height: 30, background: 'transparent', border: 'none', color: 'var(--dark-60)',
+  cursor: 'pointer', borderRadius: 8, flexShrink: 0,
+};
+
+const RefreshGlyph = ({ s = 15 }: { s?: number }) => (
+  <svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 11A8 8 0 1 0 18 16.5M20 5v5h-5" />
+  </svg>
+);
+const ChevronGlyph = ({ s = 13 }: { s?: number }) => (
+  <svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+);
+
+interface PromptItem {
+  topic: string;
+  img: string;
+  type: string;
+  accounts: number;
+  when: string;
+  context?: string[];
+}
+
+const PROMPT_ITEMS: PromptItem[] = [
+  {
+    topic: 'Before & after — a Tarrytown kitchen cabinet refinish that saved the homeowner roughly 70% versus replacement. Lead with the reveal, keep the copy short.',
+    img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=400&fit=crop',
+    type: 'Still Image', accounts: 5, when: 'Oct 7, 12:15pm',
+    context: ['www.certapro.com', 'spring-brief.pdf'],
+  },
+  {
+    topic: 'Three quick signs your exterior paint is overdue — chalking, hairline cracks, and fading on the south-facing walls. Friendly, no-pressure tone.',
+    img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=400&fit=crop',
+    type: 'Still Image', accounts: 5, when: 'Oct 7, 12:15pm',
+  },
+  {
+    topic: 'Why prep matters more than paint — a carousel walking through the steps our crews never skip, one per slide.',
+    img: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=400&fit=crop',
+    type: 'Carousel', accounts: 5, when: 'Oct 8, 9:00am',
+  },
+  {
+    topic: 'A day on the crew — exterior repaint in Westlake, prep to final coat. Authentic, behind-the-scenes UGC feel with an on-camera host.',
+    img: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&h=400&fit=crop',
+    type: 'AI Avatar Video', accounts: 5, when: 'Oct 9, 4:00pm',
+  },
+];
+
+function PromptSelect({ children }: { children: ReactNode }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', border: '1px solid var(--dark-8)', borderRadius: 8, background: 'var(--light-100)', fontSize: 13, color: 'var(--dark-80)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+      {children}
+      <ChevronGlyph />
+    </span>
+  );
+}
+
+function PromptRow({ p }: { p: PromptItem }) {
+  return (
+    <div style={{ display: 'flex', gap: 18, padding: '20px 0', borderTop: '1px solid var(--dark-8)' }}>
+      {/* Reference image */}
+      <div style={{ position: 'relative', width: 132, height: 132, borderRadius: 12, flexShrink: 0, backgroundImage: `url('${p.img}')`, backgroundSize: 'cover', backgroundPosition: 'center', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 10px 8px', display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 12, background: 'linear-gradient(transparent, rgba(0,0,0,0.6))' }}>
+          Reference image
+          <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
+        </div>
+      </div>
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <span style={{ fontSize: 13, color: 'var(--dark-60)', flex: 1 }}>Topic:</span>
+          <button type="button" style={ghostTextBtn}>
+            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            Add Context
+          </button>
+          <button type="button" aria-label="Regenerate prompt" style={promptIconBtn}><RefreshGlyph s={16} /></button>
+          <button type="button" aria-label="Delete prompt" style={promptIconBtn}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></svg>
+          </button>
+        </div>
+        <p style={{ margin: '0 0 10px', fontSize: 15, color: 'var(--dark-90)', lineHeight: 1.45 }}>{p.topic}</p>
+        {p.context && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+            {p.context.map((ch) => (
+              <span key={ch} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px', border: '1px solid var(--dark-8)', borderRadius: 8, fontSize: 13, color: 'var(--dark-80)', background: 'var(--light-100)' }}>
+                {ch}
+                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </span>
+            ))}
+          </div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <PromptSelect>
+            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="var(--red-70)" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+            {p.type}
+          </PromptSelect>
+          <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>Posting to</span>
+          <PromptSelect>{p.accounts} Accounts</PromptSelect>
+          <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>on</span>
+          <PromptSelect>{p.when}</PromptSelect>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PostPromptsSection() {
+  return (
+    <section style={{ marginBottom: 36 }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 500, letterSpacing: '-0.2px', color: 'var(--dark-90)', margin: 0, flex: 1 }}>Post Prompts</h3>
+        <button type="button" style={ghostTextBtn}><RefreshGlyph /> Regenerate All Prompts</button>
+        <Button variant="secondary" size="md" frontIcon={Plus} withChevron="down">Add Post</Button>
+      </header>
+      <p style={{ margin: '0 0 4px', fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
+        Adjust the topics, type, and reference images before we generate your content. The topic defines your post's look and copy, while the reference image narrows down the exact visual you're going for.
+      </p>
+      <div>
+        {PROMPT_ITEMS.map((p, i) => <PromptRow key={i} p={p} />)}
+      </div>
+    </section>
+  );
+}
+
+// ─── DETAIL: REVIEW POSTS (post-generation) ────────────────────────
+// Shown once the campaign's content exists (review/approved/posting): a grid
+// of generated posts awaiting review.
+
+type ReviewKind = 'still' | 'story' | 'carousel' | 'feed-video';
+
+interface ReviewItem {
+  kind: ReviewKind;
+  date: string;
+  img: string;
+  caption?: string;
+  overlayTitle?: string;
+  overlaySub?: string;
+}
+
+const REVIEW_META: Record<ReviewKind, { label: string; color: string; glyph: ReactNode }> = {
+  still: { label: 'Still Image', color: 'var(--red-70)', glyph: (<><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></>) },
+  story: { label: 'Story', color: 'var(--status-new)', glyph: (<><rect x="4" y="3" width="16" height="18" rx="3" /><path d="M9 3v18" strokeDasharray="2 2" /></>) },
+  carousel: { label: 'Carousel', color: 'var(--status-connect)', glyph: (<><rect x="8" y="4" width="12" height="14" rx="2" /><path d="M4 7v11a3 3 0 0 0 3 3h11" /></>) },
+  'feed-video': { label: 'Feed Video Post', color: 'var(--purple)', glyph: (<><rect x="3" y="5" width="18" height="14" rx="3" /><path d="M10 9l5 3-5 3V9z" fill="currentColor" stroke="none" /></>) },
+};
+
+const REVIEW_ITEMS: ReviewItem[] = [
+  { kind: 'still', date: 'Sep 25 10:00am', img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&fit=crop', caption: 'Built for Texas heat — the four exterior colors our crews are pulling most this spring. Get r' },
+  { kind: 'story', date: 'Sep 25 10:00am', img: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&fit=crop', overlayTitle: 'What a Fresh Coat Really Changes', overlaySub: 'The small prep details that make a repaint last for years.' },
+  { kind: 'carousel', date: 'Sep 25 10:00am', img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&fit=crop', caption: '5 paint mistakes Austin homeowners keep making — swipe for the fixes. Get r' },
+  { kind: 'feed-video', date: 'Sep 25 10:00am', img: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&fit=crop', overlayTitle: 'Cabinet Refinish vs. Replace?', overlaySub: 'See what it really costs in Austin before you decide.' },
+  { kind: 'carousel', date: 'Sep 25 10:00am', img: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&fit=crop', caption: 'A day on the crew — exterior repaint in Westlake, prep to final coat. Get r' },
+  { kind: 'still', date: 'Sep 25 10:00am', img: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&fit=crop', caption: 'Weekend project — five small interior refreshes that change a whole room. Get r' },
+];
+
+function ReviewBadge() {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 6, fontSize: 12, fontWeight: 500, color: '#8a5a00', backgroundImage: 'linear-gradient(rgba(252,183,40,0.24), rgba(252,183,40,0.24)), linear-gradient(var(--light-100), var(--light-100))', border: '1px solid rgba(252,183,40,0.45)' }}>
+      Review
+    </span>
+  );
+}
+
+function ReviewCard({ r }: { r: ReviewItem }) {
+  const meta = REVIEW_META[r.kind];
+  const portrait = r.kind === 'story' || r.kind === 'feed-video';
+  return (
+    <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--dark-80)' }}>
+          <svg viewBox="0 0 24 24" width={15} height={15} fill="none" stroke={meta.color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">{meta.glyph}</svg>
+          {meta.label}
+        </span>
+        <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{r.date}</span>
+      </div>
+      {!portrait && r.caption && (
+        <div style={{ padding: '0 12px 10px', fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.4 }}>
+          {r.caption}
+          <span style={{ color: 'var(--dark-40)' }}> …more</span>
+        </div>
+      )}
+      <div style={{ position: 'relative', aspectRatio: portrait ? '3 / 4' : '4 / 3', backgroundImage: `url('${r.img}')`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        {portrait && (
+          <>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 45%)' }} />
+            <div style={{ position: 'absolute', top: 14, left: 14, right: 14, color: '#fff' }}>
+              <div style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.2, letterSpacing: '-0.2px' }}>{r.overlayTitle}</div>
+              <div style={{ fontSize: 12, lineHeight: 1.4, marginTop: 6, opacity: 0.9 }}>{r.overlaySub}</div>
+            </div>
+          </>
+        )}
+        {r.kind === 'feed-video' && (
+          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <span style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none"><path d="M2 2L14 9L2 16V2Z" fill="#fff" /></svg>
+            </span>
+          </span>
+        )}
+      </div>
+      <div style={{ padding: '10px 12px' }}>
+        <ReviewBadge />
+      </div>
+    </div>
+  );
+}
+
+function ReviewPostsSection() {
+  return (
+    <section style={{ marginBottom: 36 }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 500, letterSpacing: '-0.2px', color: 'var(--dark-90)', margin: 0, flex: 1 }}>Review Posts</h3>
+        <button type="button" style={ghostTextBtn}>
+          <RefreshGlyph /> Regenerate All
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 2, color: 'var(--dark-60)' }}>
+            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="var(--purple)" strokeWidth={1.5} strokeLinejoin="round"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3z" /></svg>
+            125
+          </span>
+        </button>
+        <Button variant="secondary" size="md" frontIcon={Plus}>Add Posts</Button>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'start' }}>
+        {REVIEW_ITEMS.map((r, i) => <ReviewCard key={i} r={r} />)}
+      </div>
+    </section>
+  );
+}
 
 function DetailRow({
   label,
@@ -1694,6 +1898,14 @@ function CampaignsRouteInner() {
   const { openModal, closeModal } = useModals();
   const [campaigns, setCampaigns] = useState<Campaign[]>(SEED_CAMPAIGNS);
   const [view, setView] = useState<{ kind: 'gantt' } | { kind: 'detail'; campaignId: string }>({ kind: 'gantt' });
+  // Whether the detail hero has scrolled out of view (drives the topbar name reveal).
+  const [detailScrolled, setDetailScrolled] = useState(false);
+
+  const openDetail = (id: string) => {
+    setDetailScrolled(false);
+    setView({ kind: 'detail', campaignId: id });
+  };
+  const backToGantt = () => setView({ kind: 'gantt' });
 
   const openWizard = () => {
     openModal(NewCampaignWizardModal, {
@@ -1722,8 +1934,9 @@ function CampaignsRouteInner() {
       <div style={{ display: 'inline-flex', gap: 6 }}>
         <TabChip selected onSelect={() => {}}>Campaigns</TabChip>
         <TabChip selected={false} onSelect={() => navigate('/h2/organic-social')}>Calendar</TabChip>
-        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social?tab=approvals')}>Approvals</TabChip>
+        <TabChip selected={false} count={4} onSelect={() => navigate('/h2/organic-social?tab=approvals')}>Approvals</TabChip>
         <TabChip selected={false} onSelect={() => navigate('/h2/organic-social?tab=insights')}>Insights</TabChip>
+        <TabChip selected={false} onSelect={() => navigate('/h2/organic-social?tab=learnings')}>Learnings</TabChip>
         <TabChip selected={false} onSelect={() => navigate('/h2/organic-social?tab=recents')}>Recents</TabChip>
       </div>
     ) : undefined;
@@ -1731,33 +1944,48 @@ function CampaignsRouteInner() {
   const detailCampaign =
     view.kind === 'detail' ? campaigns.find((c) => c.id === view.campaignId) ?? null : null;
 
+  // In detail view the topbar title becomes a back button (+ campaign name on scroll).
+  const topbarTitle =
+    detailCampaign ? (
+      <DetailHeaderTitle name={detailCampaign.name} showName={detailScrolled} onBack={backToGantt} />
+    ) : (
+      'Organic Campaigns'
+    );
+
   return (
-    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />} fullBleed>
+    <H2Layout title={topbarTitle} topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />} fullBleed>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {view.kind === 'gantt' && (
-          <>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                padding: '12px 28px',
-                borderBottom: '1px solid var(--dark-8)',
-                background: 'var(--light-100)',
-                flexShrink: 0,
-              }}
-            >
-              <Button variant="secondary" size="md" frontIcon={Plus} onPress={openChooser}>
-                Create new
-              </Button>
-            </div>
-            <GanttView campaigns={campaigns} onOpenDetail={(id) => setView({ kind: 'detail', campaignId: id })} />
-          </>
+          <GanttView
+            campaigns={campaigns}
+            onOpenDetail={openDetail}
+            actions={
+              <>
+                <Button variant="ghost" size="md" frontIcon={Plus} onPress={openChooser}>
+                  Create New
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="md"
+                  withChevron="down"
+                  onPress={() => showToast({ message: 'Campaign settings coming soon' })}
+                >
+                  {/* Settings is a stroke icon; rendering it via Button's frontIcon
+                      slot would inherit the variant's fill:currentColor and fill the
+                      gear solid. Rendering it as a child keeps it stroke-only. */}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <Settings size={18} />
+                    Settings
+                  </span>
+                </Button>
+              </>
+            }
+          />
         )}
         {view.kind === 'detail' && detailCampaign && (
           <DetailView
             campaign={detailCampaign}
-            onBack={() => setView({ kind: 'gantt' })}
+            onScrolledChange={setDetailScrolled}
             onSectionClick={(sid) => showToast({ message: `Open ${SECTION_META[sid]?.title ?? sid}` })}
             onTurnOffCrosspost={() => {
               openModal(CrosspostWarningModal, {
