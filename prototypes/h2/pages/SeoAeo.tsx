@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Heading, IconButton, Modal, Text } from '@/components';
 import {
   AlertTriangle,
@@ -12,12 +13,17 @@ import {
   Download,
   File02,
   Filter,
+  Globe,
   LinkAngled,
+  Map02,
+  Marker03,
   Microphone,
   Plus,
   Search,
   Send1 as Send,
   Settings,
+  Share,
+  Star,
   Stars,
 } from '@/icons/20';
 import { Check as CheckSm } from '@/icons/16';
@@ -26,9 +32,8 @@ import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
-import { MapRankingBody } from './MapRankingBody';
 
-type SeoAeoTab = 'dashboard' | 'analytics' | 'seo-analytics' | 'map-pack' | 'settings';
+type SeoAeoTab = 'dashboard' | 'analytics' | 'seo-analytics' | 'settings';
 
 // ─── DASHBOARD DATA ───────────────────────────────────────────────────
 
@@ -135,11 +140,11 @@ interface CitationItem {
 }
 
 const CITATION_ITEMS: CitationItem[] = [
-  { icon: '🎨', title: 'The complete guide to hiring a painter in Austin (2026)',    type: 'Blog',    date: 'Mar 18', platforms: 'ChatGPT + Perplexity', citations: 18 },
+  { icon: '🎨', title: 'The complete guide to hiring a painter in Austin (2026)',    type: 'Blog',    date: 'Mar 18', platforms: 'ChatGPT',              citations: 18 },
   { icon: '🏠', title: 'Cabinet refinishing vs replacement — Austin cost guide',     type: 'Blog',    date: 'Apr 2',  platforms: 'ChatGPT',              citations: 11 },
   { icon: '✅', title: '7 things to look for when hiring an Austin painter',          type: 'Blog',    date: 'Mar 28', platforms: 'ChatGPT',              citations: 9  },
-  { icon: '🔍', title: 'CertaPro Painters of Austin — services & service area',       type: 'Landing', date: 'Apr 10', platforms: 'Perplexity',           citations: 6  },
-  { icon: '🌞', title: 'Exterior paint colors that survive Texas heat',               type: 'Blog',    date: 'Apr 7',  platforms: 'Perplexity',           citations: 3  },
+  { icon: '🔍', title: 'CertaPro Painters of Austin — services & service area',       type: 'Landing', date: 'Apr 10', platforms: 'Google AI Overviews',  citations: 6  },
+  { icon: '🌞', title: 'Exterior paint colors that survive Texas heat',               type: 'Blog',    date: 'Apr 7',  platforms: 'Google AI Overviews',  citations: 3  },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────
@@ -299,44 +304,33 @@ function ModalBackdrop({
   );
 }
 
-function ConfigureModal({ onClose }: { onClose: () => void }) {
-  const [structure, setStructure] = useState<'answer-first' | 'traditional'>('answer-first');
-  const [faq, setFaq] = useState<'end' | 'inline' | 'off'>('end');
-  const [schema, setSchema] = useState<'both' | 'faq-only' | 'none'>('both');
+// ─── SHARED: structure settings data + primitives ─────────────────────
 
-  const platforms = ['Google', 'ChatGPT', 'Perplexity', 'Gemini'];
+const STRUCTURE_IMPACT_PLATFORMS = ['Google', 'ChatGPT', 'Gemini'];
 
-  const impacts: Record<string, Record<string, { dots: number; label: string; color: string }>> = {
-    structure: {
-      Google:     { dots: 3, label: 'High', color: 'var(--green-50)' },
-      ChatGPT:    { dots: 3, label: 'High', color: 'var(--green-50)' },
-      Perplexity: { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
-      Gemini:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
-    },
-    faq: {
-      Google:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
-      ChatGPT:    { dots: 3, label: 'High', color: 'var(--green-50)' },
-      Perplexity: { dots: 3, label: 'High', color: 'var(--green-50)' },
-      Gemini:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
-    },
-    schema: {
-      Google:     { dots: 3, label: 'High', color: 'var(--green-50)' },
-      ChatGPT:    { dots: 1, label: 'Low',  color: 'var(--dark-40)' },
-      Perplexity: { dots: 1, label: 'Low',  color: 'var(--dark-40)' },
-      Gemini:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
-    },
-  };
+const STRUCTURE_IMPACTS: Record<string, Record<string, { dots: number; label: string; color: string }>> = {
+  structure: {
+    Google:     { dots: 3, label: 'High', color: 'var(--green-50)' },
+    ChatGPT:    { dots: 3, label: 'High', color: 'var(--green-50)' },
+    Perplexity: { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
+    Gemini:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
+  },
+  faq: {
+    Google:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
+    ChatGPT:    { dots: 3, label: 'High', color: 'var(--green-50)' },
+    Perplexity: { dots: 3, label: 'High', color: 'var(--green-50)' },
+    Gemini:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
+  },
+  schema: {
+    Google:     { dots: 3, label: 'High', color: 'var(--green-50)' },
+    ChatGPT:    { dots: 1, label: 'Low',  color: 'var(--dark-40)' },
+    Perplexity: { dots: 1, label: 'Low',  color: 'var(--dark-40)' },
+    Gemini:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
+  },
+};
 
-  const ImpactDots = ({ dots, color }: { dots: number; color: string }) => (
-    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-      {[1, 2, 3].map((i) => (
-        <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i <= dots ? color : 'var(--dark-15)' }} />
-      ))}
-    </div>
-  );
-
-  // Selectable tile — no radio circle. Selection = dark-90 border + dark-4 fill.
-  const RadioOption = ({ checked, onSelect, label, sublabel }: { checked: boolean; onSelect: () => void; label: string; sublabel?: string }) => (
+function RadioOption({ checked, onSelect, label, sublabel }: { checked: boolean; onSelect: () => void; label: string; sublabel?: string }) {
+  return (
     <button
       type="button"
       onClick={onSelect}
@@ -356,21 +350,109 @@ function ConfigureModal({ onClose }: { onClose: () => void }) {
       {sublabel && <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{sublabel}</div>}
     </button>
   );
+}
 
-  const activeImpact = structure === 'answer-first' ? impacts.structure : ({} as typeof impacts.structure);
-
-  const currentImpacts = {
-    Google:     impacts.structure.Google,
-    ChatGPT:    impacts.faq.ChatGPT,
-    Perplexity: impacts.faq.Perplexity,
-    Gemini:     impacts.schema.Gemini,
+function StructureSettingsContent({
+  structure, setStructure,
+  faq, setFaq,
+  schema, setSchema,
+}: {
+  structure: 'answer-first' | 'traditional';
+  setStructure: (v: 'answer-first' | 'traditional') => void;
+  faq: 'end' | 'inline' | 'off';
+  setFaq: (v: 'end' | 'inline' | 'off') => void;
+  schema: 'both' | 'faq-only' | 'none';
+  setSchema: (v: 'both' | 'faq-only' | 'none') => void;
+}) {
+  const settingImpactMap: Record<string, typeof STRUCTURE_IMPACTS.structure> = {
+    'Post structure': STRUCTURE_IMPACTS.structure,
+    'FAQ blocks':     STRUCTURE_IMPACTS.faq,
+    'Schema markup':  STRUCTURE_IMPACTS.schema,
   };
 
-  const settingImpactMap: Record<string, typeof impacts.structure> = {
-    'Post structure': impacts.structure,
-    'FAQ blocks': impacts.faq,
-    'Schema markup': impacts.schema,
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Post structure */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <Text variant="primary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>Post structure</Text>
+          <StatusPill tone="success" size="sm">Recommended: Answer-First</StatusPill>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <RadioOption checked={structure === 'answer-first'} onSelect={() => setStructure('answer-first')} label="Answer-First (BLUF)" sublabel="Lead with the direct answer, then elaborate. AI engines pull from the first 2–3 sentences." />
+          <RadioOption checked={structure === 'traditional'} onSelect={() => setStructure('traditional')} label="Traditional Intro" sublabel="Context-setting opening paragraph before the main point." />
+        </div>
+      </div>
+
+      {/* FAQ block placement */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <Text variant="primary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>FAQ block placement</Text>
+          <StatusPill tone="success" size="sm">Recommended: End of post</StatusPill>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <RadioOption checked={faq === 'end'} onSelect={() => setFaq('end')} label="End of post" sublabel="FAQ section after main content — cleanest for Google FAQ schema." />
+          <RadioOption checked={faq === 'inline'} onSelect={() => setFaq('inline')} label="Inline throughout" sublabel="Q&A blocks after each section. Higher AI citation rate, more editorial." />
+          <RadioOption checked={faq === 'off'} onSelect={() => setFaq('off')} label="Off" sublabel="No FAQ blocks. Not recommended — loses AEO signal." />
+        </div>
+      </div>
+
+      {/* Structured data */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <Text variant="primary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>Structured data (schema markup)</Text>
+          <StatusPill tone="success" size="sm">Recommended: FAQ + HowTo</StatusPill>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <RadioOption checked={schema === 'both'} onSelect={() => setSchema('both')} label="FAQ + HowTo Schema" sublabel="Adds both schema types. Maximizes rich result eligibility." />
+          <RadioOption checked={schema === 'faq-only'} onSelect={() => setSchema('faq-only')} label="FAQ Schema only" sublabel="Adds FAQ structured data. Good baseline." />
+          <RadioOption checked={schema === 'none'} onSelect={() => setSchema('none')} label="None" sublabel="No schema markup. Not recommended." />
+        </div>
+      </div>
+
+      {/* Ranking impact table */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Heading level={3} style={{ display: 'block' }}>Ranking impact of your current settings</Heading>
+        <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 400, fontSize: 12, color: 'var(--dark-60)', borderBottom: '1px solid var(--dark-4)', whiteSpace: 'nowrap', width: '34%' }}>Setting</th>
+                {STRUCTURE_IMPACT_PLATFORMS.map((p) => (
+                  <th key={p} style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 400, fontSize: 12, color: 'var(--dark-60)', borderBottom: '1px solid var(--dark-4)', whiteSpace: 'nowrap' }}>{p}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(settingImpactMap).map(([label, imp]) => (
+                <tr key={label}>
+                  <td style={{ padding: '14px 12px', fontSize: 14, color: 'var(--dark-90)', borderBottom: '1px solid var(--dark-4)' }}>{label}</td>
+                  {STRUCTURE_IMPACT_PLATFORMS.map((p) => (
+                    <td key={p} style={{ padding: '14px 12px', textAlign: 'center', fontSize: 14, color: 'var(--dark-60)', borderBottom: '1px solid var(--dark-4)' }}>
+                      {imp[p].label}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfigureModal({ onClose }: { onClose: () => void }) {
+  const [structure, setStructure] = useState<'answer-first' | 'traditional'>('answer-first');
+  const [faq, setFaq] = useState<'end' | 'inline' | 'off'>('end');
+  const [schema, setSchema] = useState<'both' | 'faq-only' | 'none'>('both');
+
+  const settingImpactMap: Record<string, typeof STRUCTURE_IMPACTS.structure> = {
+    'Post structure': STRUCTURE_IMPACTS.structure,
+    'FAQ blocks':     STRUCTURE_IMPACTS.faq,
+    'Schema markup':  STRUCTURE_IMPACTS.schema,
   };
+  void settingImpactMap;
 
   return (
     <ModalBackdrop onClose={onClose} size="md">
@@ -385,76 +467,11 @@ function ConfigureModal({ onClose }: { onClose: () => void }) {
         }
       />
       <Modal.Content compact={false}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-          {/* Setting 1 */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <Text variant="primary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>Post structure</Text>
-              <StatusPill tone="success" size="sm">Recommended: Answer-First</StatusPill>
-            </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <RadioOption checked={structure === 'answer-first'} onSelect={() => setStructure('answer-first')} label="Answer-First (BLUF)" sublabel="Lead with the direct answer, then elaborate. AI engines pull from the first 2–3 sentences." />
-              <RadioOption checked={structure === 'traditional'} onSelect={() => setStructure('traditional')} label="Traditional Intro" sublabel="Context-setting opening paragraph before the main point." />
-            </div>
-          </div>
-
-          {/* Setting 2 */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <Text variant="primary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>FAQ block placement</Text>
-              <StatusPill tone="success" size="sm">Recommended: End of post</StatusPill>
-            </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <RadioOption checked={faq === 'end'} onSelect={() => setFaq('end')} label="End of post" sublabel="FAQ section after main content — cleanest for Google FAQ schema." />
-              <RadioOption checked={faq === 'inline'} onSelect={() => setFaq('inline')} label="Inline throughout" sublabel="Q&A blocks after each section. Higher AI citation rate, more editorial." />
-              <RadioOption checked={faq === 'off'} onSelect={() => setFaq('off')} label="Off" sublabel="No FAQ blocks. Not recommended — loses AEO signal." />
-            </div>
-          </div>
-
-          {/* Setting 3 */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <Text variant="primary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>Structured data (schema markup)</Text>
-              <StatusPill tone="success" size="sm">Recommended: FAQ + HowTo</StatusPill>
-            </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <RadioOption checked={schema === 'both'} onSelect={() => setSchema('both')} label="FAQ + HowTo Schema" sublabel="Adds both schema types. Maximizes rich result eligibility." />
-              <RadioOption checked={schema === 'faq-only'} onSelect={() => setSchema('faq-only')} label="FAQ Schema only" sublabel="Adds FAQ structured data. Good baseline." />
-              <RadioOption checked={schema === 'none'} onSelect={() => setSchema('none')} label="None" sublabel="No schema markup. Not recommended." />
-            </div>
-          </div>
-
-          {/* Impact table — looks like the rest of the page's tables now. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Heading level={3} style={{ display: 'block' }}>Ranking impact of your current settings</Heading>
-            <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 400, fontSize: 12, color: 'var(--dark-60)', borderBottom: '1px solid var(--dark-4)', whiteSpace: 'nowrap', width: '34%' }}>Setting</th>
-                    {platforms.map((p) => (
-                      <th key={p} style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 400, fontSize: 12, color: 'var(--dark-60)', borderBottom: '1px solid var(--dark-4)', whiteSpace: 'nowrap' }}>{p}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(settingImpactMap).map(([label, imp]) => (
-                    <tr key={label}>
-                      <td style={{ padding: '14px 12px', fontSize: 14, color: 'var(--dark-90)', borderBottom: '1px solid var(--dark-4)' }}>{label}</td>
-                      {platforms.map((p) => (
-                        <td key={p} style={{ padding: '14px 12px', textAlign: 'center', fontSize: 14, color: 'var(--dark-60)', borderBottom: '1px solid var(--dark-4)' }}>
-                          {imp[p].label}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
+        <StructureSettingsContent
+          structure={structure} setStructure={setStructure}
+          faq={faq} setFaq={setFaq}
+          schema={schema} setSchema={setSchema}
+        />
       </Modal.Content>
       <Modal.Footer>
         <Modal.FooterContent>
@@ -598,9 +615,6 @@ function SetupModal({ onClose }: { onClose: () => void }) {
 
       </Modal.Content>
       <Modal.Footer>
-        <Text slot="left" variant="secondary" style={{ color: 'var(--dark-60)' }}>
-          Fix the 3 issues above to unlock +4 AEO pts
-        </Text>
         <Modal.FooterContent>
           <Modal.FooterButton variant="ghost" onPress={onClose}>Close</Modal.FooterButton>
           <Modal.FooterButton variant="primary">Copy canonical brand profile</Modal.FooterButton>
@@ -846,9 +860,6 @@ function PostsTableRow({
         <StatusPill tone={DIFFICULTY_TONE[row.difficulty]}>{row.difficulty}</StatusPill>
       </td>
       <td style={{ ...tdStyle, color: 'var(--dark-60)' }}>{row.scheduled}</td>
-      <td style={{ ...tdStyle, textAlign: 'center' }}>
-        <AeoBadge label={row.aeoGain} />
-      </td>
       <td style={tdStyle}>
         <StatusPill tone={STATUS_TONE[row.status]}>{row.status}</StatusPill>
       </td>
@@ -857,8 +868,9 @@ function PostsTableRow({
 }
 
 function DashboardTab() {
+  const navigate = useNavigate();
   const [clusterFilter, setClusterFilter] = useState<ClusterFilter>('all');
-  const [activeModal, setActiveModal] = useState<'configure' | 'setup' | 'view-post' | null>(null);
+  const [activeModal, setActiveModal] = useState<'configure' | 'view-post' | null>(null);
   const [viewPostRow, setViewPostRow] = useState<ContentRow | null>(null);
 
   const filtered = clusterFilter === 'all'
@@ -907,13 +919,13 @@ function DashboardTab() {
           </Text>
         </div>
         {[
-          { num: 1, title: 'Answer-first structure + FAQ blocks', desc: 'Configure how every generated post is formatted so AI engines cite it more often.', pts: '+6 pts', cta: 'Configure', modal: 'configure' as const },
-          { num: 2, title: 'Entity profile & brand consistency', desc: 'Set your canonical brand description so AI engines recognize CertaPro Painters of Austin as a single authoritative source.', pts: '+4 pts', cta: 'Set up', modal: 'setup' as const },
+          { num: 1, title: 'Answer-first structure + FAQ blocks', desc: 'Configure how every generated post is formatted so AI engines cite it more often.', pts: '+6 pts', cta: 'Configure', action: () => setActiveModal('configure') },
+          { num: 2, title: 'Fix profile inconsistencies', desc: 'Your business name and categories differ across platforms — fix these to improve entity matching.', pts: '+4 pts', cta: 'Fix now', action: () => navigate('/h2/organic-profile?tab=profile-consistency') },
         ].map((step, i, arr) => (
           <button
             key={step.num}
             type="button"
-            onClick={() => setActiveModal(step.modal)}
+            onClick={() => step.action()}
             style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '12px 16px',
@@ -937,9 +949,6 @@ function DashboardTab() {
             </Text>
             <Text variant="metadata" style={{ color: 'var(--dark-60)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {step.desc}
-            </Text>
-            <Text variant="metadata" style={{ color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>
-              {step.pts}
             </Text>
             <ArrowRight size={16} color="var(--dark-40)" />
           </button>
@@ -968,7 +977,6 @@ function DashboardTab() {
             <col style={{ width: 130 }} />
             <col style={{ width: 100 }} />
             <col style={{ width: 100 }} />
-            <col style={{ width: 110 }} />
             <col style={{ width: 100 }} />
           </colgroup>
           <thead>
@@ -978,7 +986,6 @@ function DashboardTab() {
               <th style={{ ...thStyle, textAlign: 'right' }}>Search / AI vol.</th>
               <th style={thStyle}>Difficulty</th>
               <th style={thStyle}>Scheduled</th>
-              <th style={{ ...thStyle, textAlign: 'center' }}>AEO / post</th>
               <th style={thStyle}>Status</th>
             </tr>
           </thead>
@@ -1000,7 +1007,6 @@ function DashboardTab() {
       </div>
 
       {activeModal === 'configure' && <ConfigureModal onClose={() => setActiveModal(null)} />}
-      {activeModal === 'setup' && <SetupModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'view-post' && <ViewPostModal row={viewPostRow} onClose={() => setActiveModal(null)} />}
     </div>
   );
@@ -1105,7 +1111,7 @@ function AnalyticsTab() {
           <BulletList
             items={[
               { label: 'ChatGPT', value: '#1' },
-              { label: 'Perplexity', value: '#3' },
+              { label: 'Google AI', value: '#2' },
             ]}
           />
         </MetricCard>
@@ -1122,8 +1128,7 @@ function AnalyticsTab() {
           <BulletList
             items={[
               { label: 'ChatGPT', value: '17' },
-              { label: 'Perplexity', value: '11' },
-              { label: 'Google AI', value: '—' },
+              { label: 'Google AI', value: '11' },
             ]}
           />
         </MetricCard>
@@ -1326,15 +1331,14 @@ function AnalyticsTab() {
 const SEED_CLUSTERS = [
   { label: 'Best Painters in Austin',         keywords: 42, reason: 'High AI search volume, low citation competition' },
   { label: 'Interior Paint Colors',           keywords: 38, reason: 'Core service — strong entity signal opportunity' },
-  { label: 'Cabinet Painting Cost Guide',     keywords: 31, reason: 'Trending upward on Perplexity in the last 30 days' },
+  { label: 'Cabinet Painting Cost Guide',     keywords: 31, reason: 'Trending upward in AI search in the last 30 days' },
   { label: 'Exterior Painting in Texas Heat', keywords: 24, reason: 'Low difficulty, quick citation wins' },
   { label: 'HOA & Commercial Repaints',       keywords: 19, reason: 'Commercial intent — high conversion value' },
 ];
 
 const AI_SURFACES = [
-  { id: 'chatgpt',   label: 'ChatGPT',              desc: 'Via Bing web browsing. Requires Bing indexing.', icon: '✦', color: '#10A37F' },
-  { id: 'perplexity', label: 'Perplexity',          desc: 'High citation volume (~22 sources/response). Recency-sensitive.', icon: '◎', color: '#6366F1' },
-  { id: 'google',    label: 'Google AI Overviews',   desc: 'E-E-A-T + schema signals. Pulls from top 30% of page.', icon: '⬡', color: '#4285F4' },
+  { id: 'chatgpt', label: 'ChatGPT',            desc: 'Via Bing web browsing. Requires Bing indexing.', icon: '✦', color: '#10A37F' },
+  { id: 'google',  label: 'Google AI Overviews', desc: 'E-E-A-T + schema signals. Pulls from top 30% of page.', icon: '⬡', color: '#4285F4' },
 ];
 
 /** Section block for the Settings tab. Title + subtitle sit OUTSIDE the
@@ -1371,8 +1375,11 @@ function SetupTab() {
     new Set(['Best Painters in Austin', 'Interior Paint Colors', 'Cabinet Painting Cost Guide'])
   );
   const [selectedSurfaces, setSelectedSurfaces] = useState<Set<string>>(
-    new Set(['chatgpt', 'perplexity', 'google'])
+    new Set(['chatgpt', 'google'])
   );
+  const [structure, setStructure] = useState<'answer-first' | 'traditional'>('answer-first');
+  const [faq, setFaq] = useState<'end' | 'inline' | 'off'>('end');
+  const [schema, setSchema] = useState<'both' | 'faq-only' | 'none'>('both');
 
   function toggleCluster(label: string) {
     setSelectedClusters(prev => {
@@ -1494,6 +1501,18 @@ function SetupTab() {
         </div>
       </SectionCard>
 
+      {/* Answer-first structure & FAQ blocks */}
+      <SectionCard
+        title="Answer-first structure & FAQ blocks"
+        subtitle="Choose how Blaze structures every generated post. These settings affect how often you get cited by both Google and AI search engines."
+      >
+        <StructureSettingsContent
+          structure={structure} setStructure={setStructure}
+          faq={faq} setFaq={setFaq}
+          schema={schema} setSchema={setSchema}
+        />
+      </SectionCard>
+
       {/* Generation settings */}
       <SectionCard title="Generation settings" subtitle="Control how Blaze generates and publishes SEO/AEO content.">
         <div style={{ marginTop: -12 }}>
@@ -1502,20 +1521,10 @@ function SetupTab() {
             desc="Blaze publishes approved posts automatically on their scheduled date. Turn off to require manual approval before each post goes live."
             defaultOn={false}
           />
-          <ToggleRow
-            label="Answer-first structure"
-            desc="Every post opens with a direct answer in the first 40–60 words — the primary citation trigger for ChatGPT, Perplexity, and Google AI Overviews."
-            defaultOn={true}
-          />
-          <ToggleRow
-            label="FAQ blocks"
-            desc="Appends a structured FAQ section with FAQPage schema markup to every post. Strongly favored by Perplexity and Google AI Overviews."
-            defaultOn={true}
-          />
           <div style={{ paddingTop: 12 }}>
             <ToggleRow
               label="Include freshness signals"
-              desc="Adds the current year to post titles and headings. Improves Perplexity citation rate by ~30%. Posts are flagged for quarterly refresh."
+              desc="Adds the current year to post titles and headings. Improves AI citation rate. Posts are flagged for quarterly refresh."
               defaultOn={true}
             />
           </div>
@@ -2250,12 +2259,7 @@ export function SeoAeoRoute() {
   const [tab, setTab] = useState<SeoAeoTab>('dashboard');
   const [showAddCluster, setShowAddCluster] = useState(false);
 
-  if (devState === 'cold' && tab !== 'map-pack') {
-    // "Go to my SEO plan" → flip the dev-state to 'steady' so the next
-    // render shows the dashboard. The DevStatePanel toggle remains the
-    // other way to swap views. Map Pack handles its own cold view (the
-    // audit) inside <MapRankingBody>, so when that tab is active we let
-    // the render fall through.
+  if (devState === 'cold') {
     return <OnboardingFlow onComplete={() => setState('/h2/seo-aeo', 'steady')} />;
   }
 
@@ -2264,15 +2268,13 @@ export function SeoAeoRoute() {
       <TabChip selected={tab === 'dashboard'} onSelect={() => setTab('dashboard')}>Dashboard</TabChip>
       <TabChip selected={tab === 'seo-analytics'} onSelect={() => setTab('seo-analytics')}>SEO Analytics</TabChip>
       <TabChip selected={tab === 'analytics'} onSelect={() => setTab('analytics')}>AEO Analytics</TabChip>
-      <TabChip selected={tab === 'map-pack'} onSelect={() => setTab('map-pack')}>Map Pack</TabChip>
       <TabChip selected={tab === 'settings'} onSelect={() => setTab('settings')}>Settings</TabChip>
     </div>
   );
 
   // Auto-publish lives inside Settings — see SetupTab. Topbar keeps the
-  // Add-topic-cluster + Generate-report actions for the SEO/AEO data tabs;
-  // Map Pack owns its own internal CTAs and shouldn't surface them either.
-  const topbarRight = tab === 'settings' || tab === 'map-pack' ? null : (
+  // Add-topic-cluster + Generate-report actions for the SEO/AEO data tabs.
+  const topbarRight = tab === 'settings' ? null : (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <Button variant="tertiary" onClick={() => setShowAddCluster(true)}>
         <Plus size={16} />
@@ -2290,13 +2292,6 @@ export function SeoAeoRoute() {
         <AnalyticsTab />
       ) : tab === 'seo-analytics' ? (
         <SeoAnalyticsTab />
-      ) : tab === 'map-pack' ? (
-        // Share the parent /h2/seo-aeo dev-state key so the floating
-        // <DevStatePanel> cold/steady toggle drives Map Pack's audit/home
-        // view directly. The cold→onboarding early-return above is gated
-        // on `tab !== 'map-pack'`, so flipping to cold here shows the
-        // Map Pack audit instead of the SEO Plan onboarding.
-        <MapRankingBody devStatePath="/h2/seo-aeo" />
       ) : (
         <SetupTab />
       )}

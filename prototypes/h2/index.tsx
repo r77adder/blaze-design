@@ -20,6 +20,7 @@ import { PaidSocialRoute as PaidSocialPageRoute } from './pages/PaidSocial';
 import { ReputationRoute } from './pages/Reputation';
 import { RankingRoute } from './pages/Ranking';
 import { SeoAeoRoute } from './pages/SeoAeo';
+import { OrganicProfileRoute } from './pages/OrganicProfile';
 import { Placeholder } from './pages/Placeholder';
 import { DevStateProvider, useDevState } from './dev-state-context';
 import { DevStatePanel } from './DevStatePanel';
@@ -97,6 +98,7 @@ function H2RoutedShell() {
       <Route path="/" element={<Home />} />
       <Route path="/organic-social" element={<OrganicSocialRoute />} />
       <Route path="/ranking" element={<RankingRoute />} />
+      <Route path="/organic-profile" element={<OrganicProfileRoute />} />
       <Route path="/seo-aeo" element={<SeoAeoRoute />} />
       <Route path="/influencer-content" element={<InfluencerContentRoute />} />
       <Route path="/paid-social" element={<PaidSocialRoute />} />

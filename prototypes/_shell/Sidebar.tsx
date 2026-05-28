@@ -15,6 +15,7 @@ import {
   Help,
   Image as ImageIcon,
   Lightning,
+  Marker03,
   MetaBrand,
   Plus,
   Search,
@@ -138,6 +139,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Organic Campaigns', icon: Calendar1Sm, href: '/h2/organic-social' },
+      { label: 'Local SEO', icon: Marker03, href: '/h2/organic-profile' },
       { label: 'SEO/AEO', icon: Globe, href: '/h2/seo-aeo' },
       { label: 'UGC Content', icon: UserProfileCircle, href: '/h2/influencer-content' },
       { label: 'Paid Social', icon: Cursor04, href: '/h2/paid-social' },

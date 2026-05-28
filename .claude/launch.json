@@ -8,6 +8,12 @@
       "port": 5173
     },
     {
+      "name": "vite-worktree",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["/Users/gordontang/Documents/blaze-design/node_modules/vite/bin/vite.js", "/Users/gordontang/Documents/blaze-design/.claude/worktrees/sharp-ramanujan-83f378", "--port", "5200"],
+      "port": 5200
+    },
+    {
       "name": "ladle",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["ladle"],
