@@ -9,6 +9,7 @@ import videoIcon from '@ios/icons/video-on.svg';
 import fileEditIcon from '@ios/icons/file-edit2.svg';
 import paidAdsIcon from '@ios/icons/paid-ads.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
+import lineChartIcon from '@ios/icons/line-chart-up-01.svg';
 
 const T = {
   font:   'var(--ios-font)',
@@ -195,29 +196,32 @@ const METRICS: Metric[] = [
   { value: '8',     label: 'Posts published' },
 ];
 
-export function MetricsGrid() {
+export function MetricsGrid({ showTrends = true }: { showTrends?: boolean } = {}) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: '100%' }}>
+    <>
+      <style>{`.ll-hscroll::-webkit-scrollbar{display:none}`}</style>
+    <div className="ll-hscroll" style={{ display: 'flex', gap: 10, width: 'calc(100% + 20px)', overflowX: 'auto', marginRight: -20, padding: 0, scrollSnapType: 'x mandatory', scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const, WebkitOverflowScrolling: 'touch' }}>
       {METRICS.map(m => (
         <div key={m.label} style={{
-          width: 177, flex: '1 0 auto', position: 'relative', overflow: 'hidden',
+          flex: '0 0 auto', width: 156, position: 'relative', overflow: 'hidden',
           background: T.light, border: `1px solid ${T.dark8}`, borderRadius: 20,
-          padding: '32px 16px 16px',
+          padding: '32px 16px 16px', scrollSnapAlign: 'start',
         }}>
           <div style={{ fontFamily: T.font, fontSize: 22, fontWeight: 400, color: T.dark90, lineHeight: 1.2 }}>{m.value}</div>
           <div style={{ fontFamily: T.font, fontSize: 14, color: T.dark60, letterSpacing: '0.14px', lineHeight: 1.4 }}>{m.label}</div>
-          {m.trend && (
+          {showTrends && m.trend && (
             <div style={{ position: 'absolute', top: 9, right: 9, display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ fontFamily: T.font, fontSize: 14, color: m.dir === 'up' ? T.green : T.gray, letterSpacing: '0.14px' }}>{m.trend}</span>
               <TrendArrow dir={m.dir!} />
             </div>
           )}
-          {m.noChange && (
+          {showTrends && m.noChange && (
             <div style={{ position: 'absolute', top: 9, right: 8, fontFamily: T.font, fontSize: 12, color: T.gray, letterSpacing: '0.12px', lineHeight: 1.3 }}>No change</div>
           )}
         </div>
       ))}
     </div>
+    </>
   );
 }
 
@@ -231,64 +235,30 @@ function Last7Days() {
   );
 }
 
-// ── Pills (Learnings applied) ──────────────────────────────────────────────────────
-function NeutralPill({ label }: { label: string }) {
-  return (
-    <div style={{
-      display: 'inline-flex', alignItems: 'center', padding: '2px 4px', borderRadius: 4.69,
-      backgroundImage: 'linear-gradient(rgba(0,0,0,0.08),rgba(0,0,0,0.08)), linear-gradient(#fff,#fff)',
-      border: `1px solid ${T.dark4}`,
-    }}>
-      <span style={{ fontFamily: T.font, fontSize: 12, color: T.dark60, letterSpacing: '0.12px', lineHeight: 1.4, padding: '0 4px 1px' }}>{label}</span>
-    </div>
-  );
-}
-
-function AppliedPill() {
-  return (
-    <div style={{
-      display: 'inline-flex', alignItems: 'center', padding: '2px 4px', borderRadius: 4.69,
-      background: 'rgba(32,161,79,0.05)', border: '1px solid rgba(32,161,79,0.1)',
-    }}>
-      <img src={checkIcon} alt="" style={{ width: 12, height: 12, filter: 'invert(45%) sepia(64%) saturate(560%) hue-rotate(93deg) brightness(95%) contrast(90%)' }} />
-      <span style={{ fontFamily: T.font, fontSize: 12, color: T.green, letterSpacing: '0.12px', lineHeight: 1.4, padding: '0 4px 1px' }}>Applied</span>
-    </div>
-  );
-}
-
-function BulletLine() {
-  return (
-    <div style={{ width: 6, alignSelf: 'stretch', display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
-      <div style={{ width: 2, borderRadius: 99, background: T.dark25 }} />
-    </div>
-  );
-}
-
-const APPLIED_ITEMS = [
-  { title: 'Publish dates redistributed evenly across the week.', sub: 'Product Education posts were clustering on Mondays' },
-  { title: 'Pain-point hook style applied to upcoming content briefs.', sub: 'Thought Leadership hook pattern identified across 12 posts.' },
-];
-
-function LearningsApplied({ onViewMore }: { onViewMore: () => void }) {
+// ── Track & improve (replaces Learnings applied / Enable card) ─────────────────────
+function TrackAndImprove({ llState, onOpenLearningLoop }: { llState: LLDataState; onOpenLearningLoop: () => void }) {
+  const llSub =
+    llState === 'no-account' ? 'Recommendations, applied for you' :
+    llState === 'collecting' ? 'Day 3 of 7 — almost ready' :
+                               '3 recommendations available';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-      <SectionHeading title="Learnings applied" />
-      <div style={{ borderRadius: 24, background: T.dark3, padding: '16px 16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 20, width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <NeutralPill label="Organic" />
-          <AppliedPill />
+      <SectionHeading title="Track & improve" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={{ borderRadius: 12, background: T.light, border: `1px solid ${T.dark8}`, padding: '14px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 96 }}>
+          <img src={barGroupIcon} alt="" style={{ width: 18, height: 18, opacity: 0.85 }} />
+          <span style={{ fontFamily: T.font, fontSize: 14, fontWeight: 500, color: T.dark90, lineHeight: 1.4 }}>Insights</span>
+          <span style={{ fontFamily: T.font, fontSize: 12, color: T.dark60, letterSpacing: '0.12px', lineHeight: 1.4 }}>See what's driving your performance</span>
         </div>
-        {APPLIED_ITEMS.map((item, i) => (
-          <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
-            <BulletLine />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontFamily: T.font, fontSize: 14, color: T.dark90, letterSpacing: '0.14px', lineHeight: 1.4 }}>{item.title}</span>
-              <span style={{ fontFamily: T.font, fontSize: 14, color: T.dark60, letterSpacing: '0.14px', lineHeight: 1.4 }}>{item.sub}</span>
-            </div>
-          </div>
-        ))}
+        <div
+          onClick={onOpenLearningLoop}
+          style={{ borderRadius: 12, background: T.light, border: `1px solid ${T.dark8}`, padding: '14px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 96, cursor: 'pointer' }}
+        >
+          <img src={lineChartIcon} alt="" style={{ width: 18, height: 18, opacity: 0.85 }} />
+          <span style={{ fontFamily: T.font, fontSize: 14, fontWeight: 500, color: T.dark90, lineHeight: 1.4 }}>Learning Loop</span>
+          <span style={{ fontFamily: T.font, fontSize: 12, color: T.dark60, letterSpacing: '0.12px', lineHeight: 1.4 }}>{llSub}</span>
+        </div>
       </div>
-      <ContentAreaButton type="secondary" size="m" label="View More" rightIcon={arrowRightIcon} fullWidth onClick={onViewMore} />
     </div>
   );
 }
@@ -337,8 +307,7 @@ export function HomeScreen({ llState, onViewLearnings }: { llState: LLDataState;
         <UpNext />
         <UpcomingPosts />
         <Campaigns />
-        <Last7Days />
-        {llState === 'active' && <LearningsApplied onViewMore={onViewLearnings} />}
+        <TrackAndImprove llState={llState} onOpenLearningLoop={onViewLearnings} />
         <ExpandYourReach onUnlockLearningLoop={onViewLearnings} />
       </div>
       {/* spacer for tab bar */}

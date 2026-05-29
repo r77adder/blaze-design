@@ -5,6 +5,10 @@ import type { TabItem } from '@ios/components';
 import { HomeScreen } from './HomeScreen';
 import { LandingScreen } from './LandingScreen';
 import { LearningsScreen } from './LearningsScreen';
+import { MoreScreen } from './MoreScreen';
+import { NotifyMeModal } from './NotifyMeModal';
+import { IOSAlert } from './IOSAlert';
+import { LockScreen } from './LockScreen';
 
 import homeIcon from '@ios/icons/home-04.svg';
 import homeFilledIcon from '@ios/icons/home-filled.svg';
@@ -16,6 +20,7 @@ import moreIcon from '@ios/icons/more-dots.svg';
 import linkIcon from '@ios/icons/link-external.svg';
 
 export type LLDataState = 'no-account' | 'collecting' | 'active';
+type View = 'home' | 'more' | 'll' | 'lock-screen';
 
 const TABS: TabItem[] = [
   { id: 'home',      label: 'Home',      icon: homeIcon,      iconActive: homeFilledIcon },
@@ -26,19 +31,20 @@ const TABS: TabItem[] = [
 ];
 
 const PICKER: Array<{ key: LLDataState; label: string }> = [
-  { key: 'no-account', label: 'No account' },
-  { key: 'collecting', label: 'Collecting' },
-  { key: 'active',     label: 'Active' },
+  { key: 'no-account', label: 'No connected' },
+  { key: 'collecting', label: 'Data waiting' },
+  { key: 'active',     label: 'Steady' },
 ];
 
-// section: sticky connect footer (landing only)
-function ConnectFooter({ onConnect }: { onConnect: () => void }) {
+// section: sticky connect footer (no-account LL only)
+function ConnectFooter({ onConnect, onHowItWorks }: { onConnect: () => void; onHowItWorks: () => void }) {
   return (
     <div style={{
       position: 'absolute', bottom: 0, left: 0, right: 0,
-      padding: '0 20px 34px',
+      padding: '0 20px 30px',
       background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.98) 36%)',
       pointerEvents: 'none',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
     }}>
       <button
         type="button"
@@ -46,8 +52,8 @@ function ConnectFooter({ onConnect }: { onConnect: () => void }) {
         style={{
           pointerEvents: 'all',
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          padding: '14px 20px', borderRadius: 99, background: 'rgba(0,0,0,0.9)',
-          border: 'none', cursor: 'pointer', WebkitAppearance: 'none', marginBottom: 10,
+          padding: '16px 20px', borderRadius: 99, background: 'rgba(0,0,0,0.9)',
+          border: 'none', cursor: 'pointer', WebkitAppearance: 'none',
         }}
       >
         <img src={linkIcon} alt="" aria-hidden="true" style={{ width: 18, height: 18, filter: 'invert(1)' }} />
@@ -55,26 +61,73 @@ function ConnectFooter({ onConnect }: { onConnect: () => void }) {
           Connect Accounts
         </span>
       </button>
-      <p style={{
-        pointerEvents: 'all', margin: 0, textAlign: 'center',
-        fontFamily: "'Sohne', sans-serif", fontSize: 13, color: 'rgba(0,0,0,0.5)',
-      }}>
-        Takes around 2 min
-      </p>
+      <button
+        type="button"
+        onClick={onHowItWorks}
+        style={{
+          pointerEvents: 'all', background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+          fontFamily: "'Sohne', sans-serif", fontSize: 14, color: 'rgba(0,0,0,0.9)',
+        }}
+      >
+        How Learning Loop works →
+      </button>
     </div>
   );
 }
 
 export default function LearningLoopPrototype() {
-  const [llState, setLLState] = useState<LLDataState>('active');
-  const [view,    setView]    = useState<'home' | 'll'>('home');
-  const isLL = view === 'll';
+  const [llState, setLLState] = useState<LLDataState>('no-account');
+  const [view,    setView]    = useState<View>('home');
+  const [notifAccepted, setNotifAccepted] = useState(false);
+  const [modal, setModal] = useState<null | 'notify-me' | 'ios-alert'>(null);
 
-  const footer: ReactNode = !isLL
-    ? <TabBar tabs={TABS} activeTab="home" onTabChange={() => {}} />
-    : llState === 'no-account'
-    ? <ConnectFooter onConnect={() => { setLLState('collecting'); setView('home'); }} />
+  const openLearningLoop = () => setView('ll');
+  const backToHome       = () => setView('home');
+
+  // After the iOS alert is allowed, schedule a push to arrive shortly.
+  function acceptNotifications() {
+    setNotifAccepted(true);
+    setModal(null);
+    setTimeout(() => setView('lock-screen'), 1800);
+  }
+
+  // Tab bar — only "More" is interactive; other tabs are decorative.
+  function onTabChange(id: string) {
+    if (id === 'more') setView('more');
+    else if (id === 'home') setView('home');
+  }
+
+  const activeTab = view === 'more' ? 'more' : 'home';
+  const isLL = view === 'll';
+  const isLock = view === 'lock-screen';
+  const showTabBar = view === 'home' || view === 'more';
+
+  const footer: ReactNode = showTabBar
+    ? <TabBar tabs={TABS} activeTab={activeTab} onTabChange={onTabChange} />
+    : isLL && llState === 'no-account'
+    ? <ConnectFooter
+        onConnect={() => { setLLState('collecting'); /* stay on LL to show the new state */ }}
+        onHowItWorks={() => {}}
+      />
     : undefined;
+
+  // Modal overlays render above the footer.
+  let overlay: ReactNode = undefined;
+  if (modal === 'notify-me') {
+    overlay = (
+      <NotifyMeModal
+        onDismiss={() => setModal(null)}
+        onAccept={() => setModal('ios-alert')}
+      />
+    );
+  } else if (modal === 'ios-alert') {
+    overlay = (
+      <IOSAlert
+        onDeny={() => setModal(null)}
+        onAllow={acceptNotifications}
+      />
+    );
+  }
 
   return (
     <div style={{
@@ -92,7 +145,12 @@ export default function LearningLoopPrototype() {
           <button
             key={key}
             type="button"
-            onClick={() => { setLLState(key); if (isLL && key === 'no-account') setView('ll'); }}
+            onClick={() => {
+              setLLState(key);
+              // When picking active mid-flow, simulate "notification was granted earlier".
+              if (key === 'active') setNotifAccepted(true);
+              if (key === 'no-account') setNotifAccepted(false);
+            }}
             style={{
               padding: '7px 14px', borderRadius: 99, border: 'none', cursor: 'pointer',
               background: llState === key ? 'rgba(0,0,0,0.9)' : 'transparent',
@@ -107,18 +165,35 @@ export default function LearningLoopPrototype() {
         ))}
       </div>
 
-      <PhoneFrame footer={footer}>
-        {!isLL && (
+      <PhoneFrame footer={footer} overlay={overlay}>
+        {view === 'home' && (
           <HomeScreen
             llState={llState}
-            onViewLearnings={() => setView('ll')}
+            onViewLearnings={openLearningLoop}
           />
         )}
+        {view === 'more' && (
+          <MoreScreen onOpenLearningLoop={openLearningLoop} />
+        )}
         {isLL && llState === 'no-account' && (
-          <LandingScreen onBack={() => setView('home')} />
+          <LandingScreen onBack={backToHome} />
         )}
         {isLL && (llState === 'collecting' || llState === 'active') && (
-          <LearningsScreen state={llState} onBack={() => setView('home')} />
+          <LearningsScreen
+            state={llState}
+            onBack={backToHome}
+            notifAccepted={notifAccepted}
+            onOpenNotifyMe={() => setModal('notify-me')}
+          />
+        )}
+        {isLock && (
+          <LockScreen
+            onOpenNotification={() => {
+              // Tap notification → open Learning Loop in steady state.
+              setLLState('active');
+              setView('ll');
+            }}
+          />
         )}
       </PhoneFrame>
     </div>
