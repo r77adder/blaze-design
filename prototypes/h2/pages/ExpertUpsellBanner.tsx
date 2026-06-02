@@ -25,7 +25,7 @@ export function ExpertUpsellBanner({ onTalk }: { onTalk: () => void }) {
           flexShrink: 0,
           backgroundImage: `url("${HEADSHOT}")`,
           backgroundSize: 'cover',
-          backgroundPosition: '70% 50%',
+          backgroundPosition: '90% 50%',
           backgroundRepeat: 'no-repeat',
         }}
       />

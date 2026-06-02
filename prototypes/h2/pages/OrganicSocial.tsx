@@ -184,7 +184,7 @@ function TypeAndTime({ post }: { post: Post }) {
   const TypeIcon = meta.icon;
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--dark-80)' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 400, color: 'var(--dark-80)' }}>
         <TypeIcon size={16} color={meta.color} />
         {meta.label}
       </span>

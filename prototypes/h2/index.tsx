@@ -29,6 +29,13 @@ import { OnboardingProvider, useOnboarding } from './onboarding/onboarding-conte
 import { Onboarding } from './onboarding/Onboarding';
 import { BrandKitProvider } from './brand-kit/brand-kit-context';
 import { BrandKitFlow } from './brand-kit/BrandKitFlow';
+import { SavedCardsProvider } from './competitor-tracking/SavedCardsContext';
+import { CompetitorIntelPage } from './competitor-tracking/pages/CompetitorIntel';
+import { AlertsPage as CompetitorAlertsPage } from './competitor-tracking/pages/Alerts';
+import { LandscapePage } from './competitor-tracking/pages/Landscape';
+import { CompetitorDetailPage } from './competitor-tracking/pages/CompetitorDetail';
+import { MetaAdsPage } from './competitor-tracking/pages/MetaAds';
+import { GoogleAdsPage } from './competitor-tracking/pages/GoogleAds';
 
 /**
  * H2 mega-prototype. Wraps every sub-page in <H2Layout> (sidebar + topbar)
@@ -55,13 +62,15 @@ export default function H2() {
       <OnboardingProvider>
         <BrandKitProvider>
           <ToasterProvider>
-            <ModalStack>
-              <DevStateProvider>
-                <H2RoutedShell />
-                <DevStatePanel />
-              </DevStateProvider>
-              <Toaster />
-            </ModalStack>
+            <SavedCardsProvider>
+              <ModalStack>
+                <DevStateProvider>
+                  <H2RoutedShell />
+                  <DevStatePanel />
+                </DevStateProvider>
+                <Toaster />
+              </ModalStack>
+            </SavedCardsProvider>
           </ToasterProvider>
         </BrandKitProvider>
       </OnboardingProvider>
@@ -113,6 +122,12 @@ function H2RoutedShell() {
       <Route path="/tools" element={<ToolsRoute />} />
       <Route path="/brand-kit" element={<BrandKitFlow />} />
       <Route path="/scorecard/*" element={<ScorecardPrototype />} />
+      <Route path="/competitor-tracking" element={<CompetitorIntelPage />} />
+      <Route path="/competitor-tracking/alerts" element={<CompetitorAlertsPage />} />
+      <Route path="/competitor-tracking/landscape" element={<LandscapePage />} />
+      <Route path="/competitor-tracking/competitor/:key" element={<CompetitorDetailPage />} />
+      <Route path="/competitor-tracking/meta-ads" element={<MetaAdsPage />} />
+      <Route path="/competitor-tracking/google-ads" element={<GoogleAdsPage />} />
     </Routes>
   );
 }
