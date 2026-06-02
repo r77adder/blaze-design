@@ -113,7 +113,7 @@ export function Step5Strategy() {
   );
 }
 
-function FeatureCard({
+export function FeatureCard({
   id,
   selected,
   onToggle,
@@ -125,7 +125,15 @@ function FeatureCard({
   const Icon = TOOL_ICONS[id];
   const { gap, fix } = GAP_AND_FIX[id];
   return (
-    <div
+    // Whole card is the click target — keyboard activates via the native
+    // button (Enter/Space). The inner Toggle is purely a visual indicator
+    // (no nested buttons, which would be invalid markup).
+    <button
+      type="button"
+      role="switch"
+      aria-checked={selected}
+      aria-label={`${TOOL_LABEL[id]} — ${selected ? 'on' : 'off'}`}
+      onClick={onToggle}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -134,11 +142,22 @@ function FeatureCard({
         background: 'var(--light-100)',
         border: `1px solid ${selected ? 'var(--dark-15)' : 'var(--dark-4)'}`,
         borderRadius: 14,
-        transition: 'border-color 160ms ease',
+        transition: 'border-color 160ms ease, background-color 160ms ease',
+        cursor: 'pointer',
+        textAlign: 'left',
+        font: 'inherit',
+        color: 'inherit',
+        width: '100%',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = selected ? 'var(--dark-40)' : 'var(--dark-15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = selected ? 'var(--dark-15)' : 'var(--dark-4)';
       }}
     >
-      {/* Header row — icon + title on the left, toggle on the right. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      {/* Header row — icon + title on the left, toggle indicator on the right. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
         <span
           aria-hidden
           style={{
@@ -162,6 +181,7 @@ function FeatureCard({
           {TOOL_LABEL[id]}
         </Heading>
         <div
+          aria-hidden
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -170,7 +190,7 @@ function FeatureCard({
             transition: 'opacity 160ms ease',
           }}
         >
-          <Toggle on={selected} onPress={onToggle} />
+          <ToggleIndicator on={selected} />
         </div>
       </div>
 
@@ -183,11 +203,12 @@ function FeatureCard({
         style={{
           opacity: selected ? 1 : 0.4,
           transition: 'opacity 160ms ease',
+          width: '100%',
         }}
       >
         <NarrativeLine label="Fix" tone="ok" body={fix} />
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -229,29 +250,28 @@ function NarrativeLine({
   );
 }
 
-function Toggle({ on, onPress }: { on: boolean; onPress: () => void }) {
+/**
+ * Visual-only toggle indicator. The card itself is the click/keyboard
+ * target — this component just reflects state, so it must NOT be a button
+ * (nested buttons are invalid markup and would intercept clicks anyway).
+ */
+function ToggleIndicator({ on }: { on: boolean }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={onPress}
+    <span
+      aria-hidden
       style={{
         position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
         width: 44,
         height: 24,
         borderRadius: 999,
-        border: 'none',
-        cursor: 'pointer',
-        padding: 0,
         background: on ? 'var(--dark-90)' : 'var(--dark-15)',
         transition: 'background-color 160ms ease',
-        display: 'inline-flex',
-        alignItems: 'center',
+        flexShrink: 0,
       }}
     >
       <span
-        aria-hidden
         style={{
           position: 'absolute',
           top: 2,
@@ -269,6 +289,6 @@ function Toggle({ on, onPress }: { on: boolean; onPress: () => void }) {
       >
         {on && <Check2 size={12} color="var(--dark-90)" />}
       </span>
-    </button>
+    </span>
   );
 }

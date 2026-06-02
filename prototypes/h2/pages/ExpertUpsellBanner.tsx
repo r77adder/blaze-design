@@ -1,9 +1,24 @@
 import { Button, Heading, Text } from '@/components';
 import { ArrowRight } from '@/icons/20';
 
-const HEADSHOT = 'https://cdn.prod.website-files.com/64cd367074be316f3359db61/69fa1e7f4a1bab3f0a963897_image%20771-p-1600.jpg';
+// Drop the salesperson asset into public/salesperson.png — Vite serves /public
+// at the site root, so this path resolves to <site>/salesperson.png.
+const HEADSHOT = '/salesperson.png';
 
-export function ExpertUpsellBanner({ onTalk }: { onTalk: () => void }) {
+interface ExpertUpsellBannerProps {
+  onTalk: () => void;
+  /** Optional copy overrides — defaults match the original Map Ranking usage. */
+  heading?: string;
+  body?: string;
+  ctaLabel?: string;
+}
+
+export function ExpertUpsellBanner({
+  onTalk,
+  heading = 'Show up ahead of competitors on Google',
+  body = 'Run Local Service Ads to rise above the pack.',
+  ctaLabel = 'Talk to a marketing expert 1:1',
+}: ExpertUpsellBannerProps) {
   return (
     <div
       style={{
@@ -21,23 +36,22 @@ export function ExpertUpsellBanner({ onTalk }: { onTalk: () => void }) {
         style={{
           width: 96,
           height: 96,
-          borderRadius: 12,
           flexShrink: 0,
           backgroundImage: `url("${HEADSHOT}")`,
           backgroundSize: 'cover',
-          backgroundPosition: '90% 50%',
+          backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        <Heading level={5}>Show up ahead of competitors on Google</Heading>
-        <Text variant="secondary">Run Local Service Ads to rise above the pack.</Text>
+        <Heading level={5}>{heading}</Heading>
+        <Text variant="secondary">{body}</Text>
       </div>
 
       <div style={{ flexShrink: 0, paddingRight: 24 }}>
         <Button variant="secondary" endIcon={ArrowRight} onPress={onTalk}>
-          Talk to a marketing expert 1:1
+          {ctaLabel}
         </Button>
       </div>
     </div>

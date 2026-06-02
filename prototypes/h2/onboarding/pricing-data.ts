@@ -103,23 +103,32 @@ export const TOOL_PRICING: Record<ToolId, ToolPricing> = {
 /**
  * Term multipliers — 12mo is base (1.0); shorter terms cost more per month.
  * Mirrors common agency retainer pricing.
+ *
+ * NOTE: terms 1 (Monthly) and 18 are DIY-only and DFY's pricing UI never
+ * exposes them. They live here so `Record<Term, number>` stays total.
  */
 export const TERM_MULTIPLIER: Record<Term, number> = {
-  12: 1.0,
-  6: 1.15,
+  1: 1.4, // monthly (DIY only — DFY UI never renders this)
   3: 1.3,
+  6: 1.15,
+  12: 1.0,
+  18: 0.93, // longest term (DIY only)
 };
 
 export const TERM_LABEL: Record<Term, string> = {
-  12: '12-month plan',
-  6: '6-month plan',
+  1: 'Monthly plan',
   3: '3-month plan',
+  6: '6-month plan',
+  12: '12-month plan',
+  18: '18-month plan',
 };
 
 export const TERM_SUBTEXT: Record<Term, string> = {
-  12: 'Best value — save 30% per month',
-  6: 'Save 15% per month',
+  1: 'Pay-as-you-go — cancel any time',
   3: 'Most flexible',
+  6: 'Save 15% per month',
+  12: 'Best value — save 30% per month',
+  18: 'Deepest discount — save 35% per month',
 };
 
 /**
@@ -235,4 +244,87 @@ export function visibleLines(selectedTools: ToolId[]): PricingLine[] {
 
 export function fmtUsd(n: number): string {
   return `$${n.toLocaleString('en-US')}`;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// DIY plans
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Self-serve plan tiers — DIY users land on one based on how many features
+ * they kept in step 5 (≤3 → Starter, 4+ → Growth). Pricing is flat per-plan
+ * (no per-feature multipliers like DFY) — the user pays one monthly figure
+ * regardless of how many included features they actually turn on.
+ */
+export type DiyPlanTier = 'starter' | 'growth';
+
+export interface DiyPlan {
+  tier: DiyPlanTier;
+  label: string;
+  description: string;
+  /** Per-month price for each term, in USD. */
+  monthlyByTerm: Record<Term, number>;
+  /**
+   * Marketing discount % for each term — what we want printed on the chips.
+   * Kept separate from the actual price ratio because the prices are rounded
+   * to even dollars, which makes the implied math off by ~1pp.
+   */
+  discountByTerm: Record<Term, number>;
+  /** What you can compare yourself to — savings copy under the term cards. */
+  competitiveSavings: { competitor: string; theyChargeMonthly: number }[];
+}
+
+export const DIY_PLANS: Record<DiyPlanTier, DiyPlan> = {
+  starter: {
+    tier: 'starter',
+    label: 'Starter',
+    description: 'For owner-operators getting their first 3 channels humming.',
+    // Matches the pricing card screenshot in spec: $79 / $67 / $64 / $60 / $56
+    monthlyByTerm: { 1: 79, 3: 67, 6: 64, 12: 60, 18: 56 },
+    discountByTerm: { 1: 0, 3: 15, 6: 20, 12: 25, 18: 30 },
+    competitiveSavings: [
+      { competitor: 'Hootsuite + Canva Pro', theyChargeMonthly: 119 },
+      { competitor: 'A part-time social freelancer', theyChargeMonthly: 1200 },
+      { competitor: 'Surfer SEO + Buffer', theyChargeMonthly: 168 },
+    ],
+  },
+  growth: {
+    tier: 'growth',
+    label: 'Growth',
+    description: 'For teams running 4+ channels and ready to scale paid + outbound.',
+    // User spec: Monthly $149 → 12mo $105. The intermediates and 18mo are
+    // interpolated to mirror Starter's discount curve (15 / 20 / 30 / 35).
+    monthlyByTerm: { 1: 149, 3: 127, 6: 119, 12: 105, 18: 97 },
+    discountByTerm: { 1: 0, 3: 15, 6: 20, 12: 30, 18: 35 },
+    competitiveSavings: [
+      { competitor: 'A marketing agency retainer', theyChargeMonthly: 3500 },
+      { competitor: 'In-house marketing hire', theyChargeMonthly: 6500 },
+      { competitor: 'Hootsuite Enterprise + HubSpot Starter', theyChargeMonthly: 549 },
+    ],
+  },
+};
+
+/** Pick a plan tier from the number of features the user kept. */
+export function pickDiyPlan(featureCount: number): DiyPlanTier {
+  return featureCount <= 3 ? 'starter' : 'growth';
+}
+
+/** Terms exposed in the DIY pricing UI, in card-display order (left → right). */
+export const DIY_TERMS: Term[] = [1, 3, 6, 12, 18];
+
+/** Terms exposed in the DFY pricing UI — keeps DFY scoped to what it always rendered. */
+export const DFY_TERMS: Term[] = [12, 6, 3];
+
+/** Shorter labels for the term cards on DIY's pricing step. */
+export const DIY_TERM_CARD_LABEL: Record<Term, string> = {
+  1: 'Monthly',
+  3: '3 months',
+  6: '6 months',
+  12: '12 months',
+  18: '18 months',
+};
+
+/** Marketing-rounded discount % vs the Monthly price for each plan/term combo. */
+export function diyDiscountPct(plan: DiyPlan, term: Term): number {
+  return plan.discountByTerm[term];
 }

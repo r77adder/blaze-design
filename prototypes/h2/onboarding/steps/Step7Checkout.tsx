@@ -5,13 +5,17 @@ import Lock3 from '@/icons/20/Lock3';
 import ShieldChecked from '@/icons/20/ShieldChecked';
 import Check2 from '@/icons/20/Check2';
 import Card from '@/icons/20/Card';
+import { TOOL_LABEL } from '../../tools-context';
 import { useDevState } from '../../dev-state-context';
 import { useBrandKit } from '../../brand-kit/brand-kit-context';
 import { useOnboarding } from '../onboarding-context';
 import {
+  DIY_PLANS,
+  DIY_TERM_CARD_LABEL,
   TERM_LABEL,
   computePricing,
   fmtUsd,
+  pickDiyPlan,
   visibleLines,
 } from '../pricing-data';
 
@@ -23,7 +27,7 @@ type CheckoutPhase = 'form' | 'processing' | 'success';
  * proper empty states everywhere the user might navigate first — not just
  * on Home.
  */
-const COLD_ON_FINISH = [
+export const COLD_ON_FINISH = [
   '/h2',
   '/h2/organic-social',
   '/h2/seo-aeo',
@@ -38,12 +42,31 @@ const COLD_ON_FINISH = [
 ];
 
 export function Step7Checkout() {
-  const { selectedTools, term, profile, back, finish } = useOnboarding();
+  const { selectedTools, term, profile, track, back, finish } = useOnboarding();
   const { setState: setDevState } = useDevState();
   const { reset: resetBrandKit } = useBrandKit();
   const navigate = useNavigate();
+  const isDiy = track === 'diy';
+
+  // DFY = per-feature pricing with term multiplier (existing model).
+  // DIY = flat plan-tier pricing for the selected term (Starter or Growth).
   const lines = visibleLines(selectedTools);
-  const totals = computePricing(lines, term);
+  const dfyTotals = computePricing(lines, term);
+  const diyPlan = DIY_PLANS[pickDiyPlan(selectedTools.length)];
+  const diyMonthly = diyPlan.monthlyByTerm[term];
+  const diyTermMonths = term === 1 ? 1 : term;
+  const diyTermTotal = diyMonthly * diyTermMonths;
+
+  // Numbers the rest of the screen uses — pulled from whichever model applies.
+  const summaryMonthly = isDiy ? diyMonthly : dfyTotals.monthly;
+  const summaryTermTotal = isDiy ? diyTermTotal : dfyTotals.termTotal;
+  const summaryTermLabel = isDiy
+    ? term === 1
+      ? 'Monthly plan'
+      : TERM_LABEL[term]
+    : TERM_LABEL[term];
+  const summaryTermBadge = isDiy ? DIY_TERM_CARD_LABEL[term] : `${term}-month term`;
+
   const [phase, setPhase] = useState<CheckoutPhase>('form');
 
   // Pre-filled, plausibly-real-looking values. The user just presses Pay.
@@ -130,11 +153,11 @@ export function Step7Checkout() {
             Blaze
           </div>
           <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 13, marginBottom: 6 }}>
-            Subscribe to {TERM_LABEL[term]}
+            Subscribe to {isDiy ? `${diyPlan.label} plan — ${summaryTermBadge}` : summaryTermLabel}
           </Text>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
             <span style={{ fontSize: 36, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.5px' }}>
-              {fmtUsd(totals.monthly)}
+              {fmtUsd(summaryMonthly)}
             </span>
             <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>per month</span>
           </div>
@@ -148,26 +171,45 @@ export function Step7Checkout() {
               marginBottom: 16,
             }}
           >
-            {lines.map((l, i) => (
-              <div
-                key={l.key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  padding: '8px 0',
-                  borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
-                }}
-              >
-                <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
-                  {l.label}
-                </Text>
-                <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
-                  {l.isPack ? `${fmtUsd(l.packPrice ?? 0)} / pack` : `${fmtUsd(l.monthlyBase)} / mo`}
-                </Text>
-              </div>
-            ))}
+            {isDiy
+              ? // DIY: flat plan — list what's included by tool, no per-line prices.
+                selectedTools.map((toolId, i) => (
+                  <div
+                    key={toolId}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '8px 0',
+                      borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
+                    }}
+                  >
+                    <Check2 size={14} color="#04af00" />
+                    <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
+                      {TOOL_LABEL[toolId]}
+                    </Text>
+                  </div>
+                ))
+              : lines.map((l, i) => (
+                  <div
+                    key={l.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: '8px 0',
+                      borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
+                    }}
+                  >
+                    <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
+                      {l.label}
+                    </Text>
+                    <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                      {l.isPack ? `${fmtUsd(l.packPrice ?? 0)} / pack` : `${fmtUsd(l.monthlyBase)} / mo`}
+                    </Text>
+                  </div>
+                ))}
           </div>
           <div
             style={{
@@ -180,12 +222,14 @@ export function Step7Checkout() {
               gap: 8,
             }}
           >
-            <Row label="Subtotal" value={fmtUsd(totals.monthly)} />
+            <Row label="Subtotal" value={fmtUsd(summaryMonthly)} />
             <Row label="Tax" value="—" />
             <div style={{ height: 1, background: 'var(--dark-8)', margin: '6px 0' }} />
-            <Row label="Total due today" value={fmtUsd(totals.monthly)} bold />
+            <Row label="Total due today" value={fmtUsd(summaryMonthly)} bold />
             <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 12, marginTop: 2 }}>
-              Charged monthly. {term}-month minimum term. Total over term: {fmtUsd(totals.termTotal)}.
+              {isDiy && term === 1
+                ? 'Charged monthly. Cancel any time.'
+                : `Charged monthly. ${term}-month minimum term. Total over term: ${fmtUsd(summaryTermTotal)}.`}
             </Text>
           </div>
 
@@ -318,7 +362,7 @@ export function Step7Checkout() {
             isDisabled={phase === 'processing'}
             frontIcon={phase === 'processing' ? undefined : Lock3}
           >
-            {phase === 'processing' ? 'Processing…' : `Pay ${fmtUsd(totals.monthly)}`}
+            {phase === 'processing' ? 'Processing…' : `Pay ${fmtUsd(summaryMonthly)}`}
           </Button>
 
           <Text
@@ -326,7 +370,8 @@ export function Step7Checkout() {
             style={{ display: 'block', color: 'var(--dark-60)', fontSize: 12, marginTop: 16, lineHeight: 1.55, textAlign: 'center' }}
           >
             By confirming, you agree to Blaze's Terms of Service and authorize a recurring monthly
-            charge of {fmtUsd(totals.monthly)} for {term} months.
+            charge of {fmtUsd(summaryMonthly)}
+            {isDiy && term === 1 ? ' until you cancel.' : ` for ${term} months.`}
           </Text>
         </div>
       </div>
