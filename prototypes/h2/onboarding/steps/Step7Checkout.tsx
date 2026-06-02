@@ -5,10 +5,10 @@ import Lock3 from '@/icons/20/Lock3';
 import ShieldChecked from '@/icons/20/ShieldChecked';
 import Check2 from '@/icons/20/Check2';
 import Card from '@/icons/20/Card';
-import { TOOL_LABEL } from '../../tools-context';
 import { useDevState } from '../../dev-state-context';
 import { useBrandKit } from '../../brand-kit/brand-kit-context';
 import { useOnboarding } from '../onboarding-context';
+import { diyFeatureById } from '../diy-features';
 import {
   DIY_PLANS,
   DIY_TERM_CARD_LABEL,
@@ -42,7 +42,7 @@ export const COLD_ON_FINISH = [
 ];
 
 export function Step7Checkout() {
-  const { selectedTools, term, profile, track, back, finish } = useOnboarding();
+  const { selectedTools, diyFeatures, term, profile, track, back, finish } = useOnboarding();
   const { setState: setDevState } = useDevState();
   const { reset: resetBrandKit } = useBrandKit();
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ export function Step7Checkout() {
   // DIY = flat plan-tier pricing for the selected term (Starter or Growth).
   const lines = visibleLines(selectedTools);
   const dfyTotals = computePricing(lines, term);
-  const diyPlan = DIY_PLANS[pickDiyPlan(selectedTools.length)];
+  const diyPlan = DIY_PLANS[pickDiyPlan(diyFeatures.length)];
   const diyMonthly = diyPlan.monthlyByTerm[term];
   const diyTermMonths = term === 1 ? 1 : term;
   const diyTermTotal = diyMonthly * diyTermMonths;
@@ -172,24 +172,28 @@ export function Step7Checkout() {
             }}
           >
             {isDiy
-              ? // DIY: flat plan — list what's included by tool, no per-line prices.
-                selectedTools.map((toolId, i) => (
-                  <div
-                    key={toolId}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: '8px 0',
-                      borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
-                    }}
-                  >
-                    <Check2 size={14} color="#04af00" />
-                    <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
-                      {TOOL_LABEL[toolId]}
-                    </Text>
-                  </div>
-                ))
+              ? // DIY: flat plan — list the selected DIY features, no per-line prices.
+                diyFeatures.map((id, i) => {
+                  const feature = diyFeatureById(id);
+                  if (!feature) return null;
+                  return (
+                    <div
+                      key={id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '8px 0',
+                        borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
+                      }}
+                    >
+                      <Check2 size={14} color="#04af00" />
+                      <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
+                        {feature.label}
+                      </Text>
+                    </div>
+                  );
+                })
               : lines.map((l, i) => (
                   <div
                     key={l.key}

@@ -8,6 +8,11 @@ import {
   type ReactNode,
 } from 'react';
 import { BUSINESS_TYPES, ALL_TOOLS, type BusinessType, type ToolId } from '../tools-context';
+import {
+  DEFAULT_DIY_FEATURES,
+  diyFeatureToolIds,
+  type DiyFeatureId,
+} from './diy-features';
 
 /**
  * OnboardingProvider — owns the prototype's first-run onboarding state for
@@ -133,23 +138,21 @@ interface OnboardingState {
   profile: BusinessProfile;
   /** DFY step 5 starts with everything on; user opts OUT of unwanted tools. */
   dfySelectedTools: ToolId[];
-  /** DIY step 5 starts with 3 tools (Starter sweet-spot); user adds more to
-   *  jump to Growth. The default trio is the canonical Starter combo. */
-  diySelectedTools: ToolId[];
+  /** DIY step 5 selection — uses the DIY feature catalog (diy-features.ts),
+   *  NOT the global ToolId set, because DIY introduces Local SEO + Competitor
+   *  Ranking which aren't billed ToolIds. Starts with 3 (Starter sweet-spot);
+   *  adding a 4th jumps the user to Growth. */
+  diyFeatures: DiyFeatureId[];
   term: Term;
 }
 
-// v4: removed the 'diy-bk' track (brand-kit-in-onboarding was reverted).
-// Bumping the key invalidates any persisted `track: 'diy-bk'` cleanly
-// instead of needing a migration shim — fine for prototype storage.
-const STORAGE_KEY = 'h2-onboarding-v4';
+// v5: DIY selection moved from ToolId[] to the DIY feature catalog
+// (diyFeatures: DiyFeatureId[]). Bumping the key invalidates v4 entries that
+// still carry `diySelectedTools` cleanly — fine for prototype storage.
+const STORAGE_KEY = 'h2-onboarding-v5';
 
 // DFY default: every tool on. User opts OUT of unwanted features.
 const DFY_DEFAULT_SELECTED: ToolId[] = [...ALL_TOOLS];
-
-// DIY default: 3 tools = Starter plan, which is the entry-point we want
-// designers to land on by default.
-const DIY_DEFAULT_SELECTED: ToolId[] = ['Organic Campaigns', 'SEO/AEO', 'Paid Social'];
 
 const INITIAL_STATE: OnboardingState = {
   active: true,
@@ -160,7 +163,7 @@ const INITIAL_STATE: OnboardingState = {
   contentLanguage: 'English (US)',
   profile: DEFAULT_PROFILE,
   dfySelectedTools: DFY_DEFAULT_SELECTED,
-  diySelectedTools: DIY_DEFAULT_SELECTED,
+  diyFeatures: DEFAULT_DIY_FEATURES,
   term: 12,
 };
 
@@ -182,8 +185,10 @@ function loadStored(): OnboardingState | null {
 }
 
 interface OnboardingContextValue extends OnboardingState {
-  /** Convenience accessor for the current track's selection. Components
-   *  almost always want this rather than the per-track arrays directly. */
+  /** ToolId[] view of the current track's selection — for DFY it's the raw
+   *  list; for DIY it's the addable features mapped to their ToolIds (drops
+   *  Local SEO / Competitor Ranking, which have no billed ToolId). Used by the
+   *  post-onboarding Home cold state. */
   selectedTools: ToolId[];
   /** The step ID for the current `(track, step)` pair — drives routing. */
   stepId: StepId;
@@ -197,7 +202,10 @@ interface OnboardingContextValue extends OnboardingState {
   setContentLanguage: (lang: string) => void;
   updateProfile: (patch: Partial<BusinessProfile>) => void;
   setBusinessType: (type: BusinessType) => void;
+  /** DFY feature toggle (operates on the ToolId list). */
   toggleTool: (id: ToolId) => void;
+  /** DIY addable-feature toggle (operates on the DIY feature catalog). */
+  toggleDiyFeature: (id: DiyFeatureId) => void;
   setTerm: (term: Term) => void;
   /** Mark complete + close the takeover. */
   finish: () => void;
@@ -282,12 +290,24 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const toggleTool = useCallback((id: ToolId) => {
     setState((s) => {
-      const key = s.track === 'diy' ? 'diySelectedTools' : 'dfySelectedTools';
-      const arr = s[key];
-      const has = arr.includes(id);
+      const has = s.dfySelectedTools.includes(id);
       return {
         ...s,
-        [key]: has ? arr.filter((t) => t !== id) : [...arr, id],
+        dfySelectedTools: has
+          ? s.dfySelectedTools.filter((t) => t !== id)
+          : [...s.dfySelectedTools, id],
+      };
+    });
+  }, []);
+
+  const toggleDiyFeature = useCallback((id: DiyFeatureId) => {
+    setState((s) => {
+      const has = s.diyFeatures.includes(id);
+      return {
+        ...s,
+        diyFeatures: has
+          ? s.diyFeatures.filter((f) => f !== id)
+          : [...s.diyFeatures, id],
       };
     });
   }, []);
@@ -326,10 +346,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     [state.profile.type],
   );
 
-  // DIY and DIY+BK both run off the DIY selection list — they're the same
-  // self-serve product; brand-kit insertion doesn't change the picker.
+  // ToolId[] view of the selection: DFY uses its raw list; DIY maps its
+  // addable feature catalog down to ToolIds (Local SEO / Competitor Ranking
+  // drop out — they have no billed ToolId). This feeds Home cold post-trial.
   const selectedTools =
-    state.track === 'dfy' ? state.dfySelectedTools : state.diySelectedTools;
+    state.track === 'dfy' ? state.dfySelectedTools : diyFeatureToolIds(state.diyFeatures);
 
   const sequence = TRACK_SEQUENCES[state.track];
   const totalSteps = sequence.length;
@@ -350,6 +371,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       updateProfile,
       setBusinessType,
       toggleTool,
+      toggleDiyFeature,
       setTerm,
       finish,
       skip,
@@ -371,6 +393,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       updateProfile,
       setBusinessType,
       toggleTool,
+      toggleDiyFeature,
       setTerm,
       finish,
       skip,

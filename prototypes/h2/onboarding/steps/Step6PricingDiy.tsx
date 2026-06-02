@@ -2,12 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Heading, Text } from '@/components';
 import ArrowRight from '@/icons/20/ArrowRight';
 import Check2 from '@/icons/20/Check2';
-import { TOOL_LABEL, TOOL_DESCRIPTIONS, type ToolId } from '../../tools-context';
 import { useDevState } from '../../dev-state-context';
 import { useBrandKit } from '../../brand-kit/brand-kit-context';
 import { ExpertUpsellBanner } from '../../pages/ExpertUpsellBanner';
 import { StatusPill, useToast } from '@/staging';
 import { useOnboarding, type Term } from '../onboarding-context';
+import { diyFeatureById, type DiyFeatureId } from '../diy-features';
 import {
   DIY_PLANS,
   DIY_TERMS,
@@ -29,13 +29,13 @@ import { COLD_ON_FINISH } from './Step7Checkout';
  *   - Secondary → "Continue to checkout" → step 7 (DIY checkout variant).
  */
 export function Step6PricingDiy() {
-  const { selectedTools, term, setTerm, next, back, finish } = useOnboarding();
+  const { diyFeatures, term, setTerm, next, back, finish } = useOnboarding();
   const { setState: setDevState } = useDevState();
   const { reset: resetBrandKit } = useBrandKit();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const tier = pickDiyPlan(selectedTools.length);
+  const tier = pickDiyPlan(diyFeatures.length);
   const plan = DIY_PLANS[tier];
   const monthly = plan.monthlyByTerm[term];
   const termMonths = term === 1 ? 1 : term;
@@ -111,7 +111,7 @@ export function Step6PricingDiy() {
           <div>
             <Heading level={4}>What's included</Heading>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>
-              {selectedTools.length} feature{selectedTools.length === 1 ? '' : 's'} on the {plan.label} plan
+              {diyFeatures.length} feature{diyFeatures.length === 1 ? '' : 's'} on the {plan.label} plan
             </Text>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -129,8 +129,8 @@ export function Step6PricingDiy() {
           </div>
         </div>
         <div>
-          {selectedTools.map((toolId) => (
-            <IncludedRow key={toolId} toolId={toolId} />
+          {diyFeatures.map((id) => (
+            <IncludedRow key={id} featureId={id} />
           ))}
         </div>
       </div>
@@ -322,7 +322,9 @@ function TermCard({
   );
 }
 
-function IncludedRow({ toolId }: { toolId: ToolId }) {
+function IncludedRow({ featureId }: { featureId: DiyFeatureId }) {
+  const feature = diyFeatureById(featureId);
+  if (!feature) return null;
   return (
     <div
       style={{
@@ -352,10 +354,10 @@ function IncludedRow({ toolId }: { toolId: ToolId }) {
       </span>
       <div style={{ minWidth: 0 }}>
         <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-          {TOOL_LABEL[toolId]}
+          {feature.label}
         </Text>
         <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
-          {TOOL_DESCRIPTIONS[toolId]}
+          {feature.description}
         </Text>
       </div>
     </div>
