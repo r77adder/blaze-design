@@ -1075,6 +1075,99 @@ function InternalCard({
   );
 }
 
+// ── Internal campaign section (proper component so useState works) ───────────
+function InternalCampaignSection({
+  campaign, internalStatuses, today, isPast: isPastProp,
+  onMarkReady, onUndo, onMarkAllReady, onReview,
+  defaultCollapsed,
+}: {
+  campaign: Campaign;
+  internalStatuses: Record<number, InternalStatus>;
+  today: string;
+  isPast?: boolean;
+  onMarkReady: (id: number) => void;
+  onUndo: (id: number) => void;
+  onMarkAllReady: () => void;
+  onReview: (post: Post) => void;
+  defaultCollapsed?: boolean;
+}) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
+
+  const posts       = campaign.posts;
+  const readyCount  = posts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
+  const totalCount  = posts.length;
+  const allReady    = readyCount === totalCount;
+  const isPastCamp  = isPastProp ?? campaign.endDate < today;
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      {/* Campaign header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {/* Collapse chevron */}
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            style={{ display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20, border:'none', background:'transparent', cursor:'pointer', padding:0, flexShrink:0 }}
+            aria-label={collapsed ? 'Expand campaign' : 'Collapse campaign'}
+          >
+            {collapsed ? <ChevronRight size={16} color={dark40} /> : <ChevronDown size={16} color={dark40} />}
+          </button>
+          <span style={{ fontSize:18, fontWeight:400, color:dark80, fontFamily:F, letterSpacing:'-0.36px' }}>{campaign.name}</span>
+          <span style={{ fontSize:14, color:dark60, fontFamily:F }}>{campaign.dateRange}</span>
+          <span style={{ display:'inline-flex', alignItems:'center', gap:4, background:dark2, borderRadius:4, padding:'2px 6px', fontSize:12, color:dark90, fontFamily:F }}>
+            {campaign.badge === 'SEO' ? <Globe size={12} color={dark60} /> : <Layers5 size={12} color={dark60} />}
+            {campaign.badge}
+          </span>
+          <button style={{ width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', padding:0 }}>
+            <ArrowRight size={16} color={dark60} />
+          </button>
+        </div>
+
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {isPastCamp ? (
+            <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{totalCount} posts</span>
+          ) : (
+            <>
+              <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
+                {allReady
+                  ? <span style={{ color:green, display:'flex', alignItems:'center', gap:4 }}><ApprovalsIcon size={13} color={green} />{totalCount} ready for client</span>
+                  : `${totalCount - readyCount} to review`}
+              </span>
+              {!allReady && (
+                <>
+                  <div style={{ width:1, height:16, background:dark8 }} />
+                  <button onClick={onMarkAllReady}
+                    style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 8px', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:400, color:dark90, fontFamily:F }}>
+                    <ApprovalsIcon size={15} color={dark90} />
+                    All Ready for Client
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Cards grid */}
+      {!collapsed && (
+        <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+          {posts.map(post => (
+            <InternalCard
+              key={post.id}
+              post={post}
+              internalStatus={internalStatuses[post.id]}
+              isPast={isPastCamp}
+              onMarkReady={() => onMarkReady(post.id)}
+              onUndo={() => onUndo(post.id)}
+              onReview={() => onReview(post)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Inner app (needs ModalStack context) ─────────────────────────────────────
 function ApprovalV2Inner() {
   const allPosts = CAMPAIGNS.flatMap(c => c.posts);
@@ -1225,84 +1318,37 @@ function ApprovalV2Inner() {
           const activeCampaigns = CAMPAIGNS.filter(c => c.endDate >= today);
           const pastCampaigns   = CAMPAIGNS.filter(c => c.endDate < today);
 
-          const renderInternalCampaign = (campaign: Campaign, defaultCollapsed = false) => {
-            const posts = campaign.posts;
-            const readyCount = posts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
-            const totalCount = posts.length;
-            const allReady   = readyCount === totalCount;
-            const isPastCamp = campaign.endDate < today;
-
-            return (
-              <div key={campaign.id} style={{ display:'flex', flexDirection:'column', gap:20 }}>
-                {/* Campaign header */}
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <span style={{ fontSize:18, fontWeight:400, color:dark80, fontFamily:F, letterSpacing:'-0.36px' }}>{campaign.name}</span>
-                    <span style={{ fontSize:14, color:dark60, fontFamily:F }}>{campaign.dateRange}</span>
-                    <span style={{ display:'inline-flex', alignItems:'center', gap:4, background:dark2, borderRadius:4, padding:'2px 6px', fontSize:12, color:dark90, fontFamily:F }}>
-                      {campaign.badge === 'SEO' ? <Globe size={12} color={dark60} /> : <Layers5 size={12} color={dark60} />}
-                      {campaign.badge}
-                    </span>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    {isPastCamp ? (
-                      <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{totalCount} posts</span>
-                    ) : (
-                      <>
-                        <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
-                          {allReady
-                            ? <span style={{ color:green, display:'flex', alignItems:'center', gap:4 }}><ApprovalsIcon size={13} color={green} />{totalCount} ready for client</span>
-                            : `${readyCount === 0 ? totalCount - readyCount : totalCount - readyCount} to review`}
-                        </span>
-                        {!allReady && (
-                          <>
-                            <div style={{ width:1, height:16, background:dark8 }} />
-                            <button onClick={() => markAllReadyForClient(campaign)}
-                              style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 8px', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:400, color:dark90, fontFamily:F }}>
-                              <ApprovalsIcon size={15} color={dark90} />
-                              All Ready for Client
-                            </button>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Cards grid */}
-                <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-                  {posts.map(post => (
-                    <InternalCard
-                      key={post.id}
-                      post={post}
-                      internalStatus={internalStatuses[post.id]}
-                      isPast={isPastCamp}
-                      onMarkReady={() => markReadyForClient(post.id)}
-                      onUndo={() => undoReady(post.id)}
-                      onReview={() => setReviewPost(post)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          };
+          const renderIC = (c: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => (
+            <InternalCampaignSection
+              key={c.id}
+              campaign={c}
+              internalStatuses={internalStatuses}
+              today={today}
+              isPast={opts?.isPast}
+              defaultCollapsed={opts?.defaultCollapsed}
+              onMarkReady={markReadyForClient}
+              onUndo={undoReady}
+              onMarkAllReady={() => markAllReadyForClient(c)}
+              onReview={setReviewPost}
+            />
+          );
 
           const readyCampaigns = activeCampaigns.filter(isAllReady);
           const activePending  = activeCampaigns.filter(c => !isAllReady(c));
 
           return (
             <div style={{ display:'flex', flexDirection:'column', gap:40 }}>
-              {activePending.map(c => renderInternalCampaign(c))}
+              {activePending.map(c => renderIC(c))}
               {readyCampaigns.length > 0 && (
                 <>
                   <SectionHeader label="Ready for Client" count={readyCampaigns.length} />
-                  {readyCampaigns.map(c => renderInternalCampaign(c))}
+                  {readyCampaigns.map(c => renderIC(c))}
                 </>
               )}
               {pastCampaigns.length > 0 && (
                 <>
                   <SectionHeader label="Past campaigns" count={pastCampaigns.length} />
-                  {pastCampaigns.map(c => renderInternalCampaign(c, true))}
+                  {pastCampaigns.map(c => renderIC(c, { defaultCollapsed: true, isPast: true }))}
                 </>
               )}
             </div>
