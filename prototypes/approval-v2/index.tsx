@@ -1116,11 +1116,12 @@ function InternalStatusPill({ status }: { status: InternalStatus }) {
 // ── Internal content card ─────────────────────────────────────────────────────
 function InternalCard({
   post, internalStatus, onMarkReady, onUndo, onReview, isPast,
-  returnedByClient, dontPostReasons, onResubmit,
+  returnedByClient, approvedByClient, dontPostReasons, onResubmit,
 }: {
   post: Post; internalStatus: InternalStatus; isPast?: boolean;
   onMarkReady: () => void; onUndo: () => void; onReview: () => void;
   returnedByClient?: boolean;
+  approvedByClient?: boolean;
   dontPostReasons?: string[];
   onResubmit?: () => void;
 }) {
@@ -1212,9 +1213,11 @@ function InternalCard({
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
         {returnedByClient
           ? <StatusPill status="rejected" dontPostReasons={dontPostReasons} />
-          : isPast && !isReady
-            ? <StatusPill status="rejected" />
-            : <InternalStatusPill status={internalStatus} />}
+          : approvedByClient
+            ? <StatusPill status="approved" />
+            : isPast && !isReady
+              ? <StatusPill status="rejected" />
+              : <InternalStatusPill status={internalStatus} />}
       </div>
 
       {/* Hover overlay */}
@@ -1424,6 +1427,7 @@ function InternalCampaignSection({
                     <InternalCard
                       key={post.id} post={post}
                       internalStatus={internalStatuses[post.id]}
+                      approvedByClient
                       onMarkReady={() => onMarkReady(post.id)}
                       onUndo={() => onUndo(post.id)}
                       onReview={() => onReview(post)}
