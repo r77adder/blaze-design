@@ -161,7 +161,7 @@ function StatusPill({ status, dontPostReasons }: { status: Status; dontPostReaso
           cursor: hasReasons ? 'default' : 'inherit',
         }}>
           {cfg.label}
-          {hasReasons && (
+          {isDontPost && (
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
               <path d="M6.5 6C6.5 5.17 7.17 4.5 8 4.5C8.83 4.5 9.5 5.17 9.5 6C9.5 6.83 8 7.5 8 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -1225,10 +1225,12 @@ function InternalCard({
         <div style={{ transform:hovered?'scale(1) translateY(0)':'scale(0.9) translateY(4px)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
           {returnedByClient ? (
             <>
-              <Button variant="green" size="sm" frontIcon={Check2}
-                onClick={(e) => { e.stopPropagation(); onResubmit?.(); }}>
-                Resubmit to Client
-              </Button>
+              {!isPast && (
+                <Button variant="green" size="sm" frontIcon={Check2}
+                  onClick={(e) => { e.stopPropagation(); onResubmit?.(); }}>
+                  Resubmit to Client
+                </Button>
+              )}
               <Button variant="secondary" size="sm" frontIcon={EyeOpen}
                 onClick={(e) => { e.stopPropagation(); onReview(); }}>
                 Review
@@ -1420,7 +1422,7 @@ function InternalCampaignSection({
                     <InternalCard
                       key={post.id} post={post}
                       internalStatus={internalStatuses[post.id]}
-                      returnedByClient dontPostReasons={dontPostReasons[post.id]}
+                      returnedByClient isPast={isPastCamp} dontPostReasons={dontPostReasons[post.id]}
                       onMarkReady={() => onMarkReady(post.id)}
                       onUndo={() => onUndo(post.id)}
                       onReview={() => onReview(post)}
