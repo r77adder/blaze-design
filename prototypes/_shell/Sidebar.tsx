@@ -6,6 +6,7 @@ import {
   AudioSettings,
   BarChartSquare,
   Brand,
+  Brainstorm,
   Calendar1 as Calendar1Sm,
   ClockBackward,
   Cursor04,
@@ -133,7 +134,9 @@ const DEFAULT_SECTIONS: SidebarSection[] = [
  */
 export const H2_SECTIONS: SidebarSection[] = [
   {
-    items: [{ label: 'Home', icon: Home2, href: '/h2' }],
+    // Home is the Living Doc — the shared client doc is the account's
+    // center of gravity. The old dashboard home lives on under WIP.
+    items: [{ label: 'Home', icon: Home2, href: '/h2/living-doc' }],
   },
   {
     label: 'Awareness',
@@ -162,6 +165,8 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Ranking', icon: LineChartUp02, href: '/h2/ranking' },
+      { label: 'DFY Campaign', icon: Brainstorm, href: '/h2/dfy-campaigns' },
+      { label: 'Home (old)', icon: Home2, href: '/h2' },
     ],
   },
   {
