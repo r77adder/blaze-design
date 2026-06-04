@@ -1,9 +1,16 @@
-export const ASSETS = {
-  workspaceAvatar: 'https://www.figma.com/api/mcp/asset/0f869b73-cf9d-49a4-b336-388505b29733',
+// Unsplash coffee photos — durable placeholders for missing Figma assets.
+const latte    = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80';
+const beans    = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80';
+const cafe     = 'https://images.unsplash.com/photo-1504124365819-84e2b5b17f3f?w=600&auto=format&fit=crop&q=80';
+const pourOver = 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&auto=format&fit=crop&q=80';
+const cupTop   = 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=600&auto=format&fit=crop&q=80';
+const portrait = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80';
 
-  stillImage:   'https://www.figma.com/api/mcp/asset/7c9efa07-f42f-4f35-beb4-6b9e5a1a3d09',
-  videoPreview: 'https://www.figma.com/api/mcp/asset/a43f3c3a-f9f2-4a88-a966-ac51d2bea8ae',
-  carouselImg:  'https://www.figma.com/api/mcp/asset/34717d6e-4d5b-4d66-bba6-4eb0e005d4bd',
-  blogCover:    'https://www.figma.com/api/mcp/asset/b693d90f-f3bd-482d-8484-2b454df5bf26',
-  emailPreview: 'https://www.figma.com/api/mcp/asset/aebffa9b-ad97-42de-bb0c-fbbcfdc2b567',
+export const ASSETS = {
+  workspaceAvatar: portrait,
+  stillImage:      latte,
+  videoPreview:    cafe,
+  carouselImg:     beans,
+  blogCover:       pourOver,
+  emailPreview:    cupTop,
 } as const;

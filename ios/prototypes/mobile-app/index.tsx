@@ -212,16 +212,7 @@ export default function MobileApp() {
 
   return (
     <StatePicker states={TABS} defaultState="home">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', gap: 12, background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
-        {/* Learning Loop data-state picker */}
-        <LLStatePicker
-          state={llState}
-          onChange={(s) => {
-            setLLState(s);
-            if (s === 'no-account') setNotifAccepted(false);
-            if (s === 'active')     setNotifAccepted(true);
-          }}
-        />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
         <PhoneFrame
           footer={llTabBarReplaced}
           overlay={
