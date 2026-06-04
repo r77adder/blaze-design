@@ -1338,7 +1338,23 @@ function InternalCampaignSection({
       {!collapsed && (
         <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
-          {/* 1 — Returned by Client (top, full opacity) */}
+          {/* 1 — Active posts */}
+          {activePosts.length > 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+              {activePosts.map(post => (
+                <InternalCard
+                  key={post.id} post={post}
+                  internalStatus={internalStatuses[post.id]}
+                  isPast={isPastCamp}
+                  onMarkReady={() => onMarkReady(post.id)}
+                  onUndo={() => onUndo(post.id)}
+                  onReview={() => onReview(post)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* 2 — Returned by Client (below active, full opacity) */}
           {returnedPosts.length > 0 && (
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -1376,22 +1392,6 @@ function InternalCampaignSection({
                   ))}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* 2 — Active posts (middle) */}
-          {activePosts.length > 0 && (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-              {activePosts.map(post => (
-                <InternalCard
-                  key={post.id} post={post}
-                  internalStatus={internalStatuses[post.id]}
-                  isPast={isPastCamp}
-                  onMarkReady={() => onMarkReady(post.id)}
-                  onUndo={() => onUndo(post.id)}
-                  onReview={() => onReview(post)}
-                />
-              ))}
             </div>
           )}
 
