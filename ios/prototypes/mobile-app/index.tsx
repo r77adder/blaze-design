@@ -3,6 +3,7 @@ import { StatePicker, useStateContext, PhoneFrame } from '../_shell';
 import { TabBar, Sheet, Stepper } from '@ios/components';
 import type { TabItem } from '@ios/components';
 import { HomeScreen } from './HomeScreen';
+import type { LLDataState } from './HomeScreen';
 import { CalendarScreen, CAL_POSTS } from './CalendarScreen';
 import { CampaignsScreen } from './CampaignsScreen';
 import { BrandKitScreen } from './BrandKitScreen';
@@ -10,6 +11,14 @@ import { MoreScreen } from './MoreScreen';
 import { ContentPreviewSheet } from './ContentPreviewSheet';
 import { CampaignSettingsOverlay } from './CampaignSettingsOverlay';
 import { ASSETS } from './assets';
+
+// Learning Loop feature module (lives in ../learning-loop/)
+import { LandingScreen as LLLandingScreen } from '../learning-loop/LandingScreen';
+import { LearningsScreen } from '../learning-loop/LearningsScreen';
+import { NotifyMeModal } from '../learning-loop/NotifyMeModal';
+import { IOSAlert } from '../learning-loop/IOSAlert';
+import { LockScreen } from '../learning-loop/LockScreen';
+import linkIcon from '@ios/icons/link-external.svg';
 
 import plusIcon from '@ios/icons/plus-01.svg';
 import checkBrokenIcon from '@ios/icons/lighter_weight/check-broken.svg';
@@ -35,15 +44,15 @@ const TAB_ITEMS: TabItem[] = [
   { id: 'more',       label: 'More',      icon: moreIcon },
 ];
 
-function AppScreens({ onCalendarPostClick, onCampaignsSettings, showSkeleton }: { onCalendarPostClick: (idx: number) => void; onCampaignsSettings: () => void; showSkeleton?: boolean }) {
+function AppScreens({ onCalendarPostClick, onCampaignsSettings, showSkeleton, llState, onOpenLearningLoop }: { onCalendarPostClick: (idx: number) => void; onCampaignsSettings: () => void; showSkeleton?: boolean; llState: LLDataState; onOpenLearningLoop: () => void }) {
   const { state } = useStateContext();
   return (
     <>
-      {state === 'home'      && <HomeScreen />}
+      {state === 'home'      && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} />}
       {state === 'calendar'  && <CalendarScreen onPostClick={onCalendarPostClick} />}
       {state === 'campaigns' && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} />}
       {state === 'brand-kit' && <BrandKitScreen />}
-      {state === 'more'      && <MoreScreen />}
+      {state === 'more'      && <MoreScreen onOpenLearningLoop={onOpenLearningLoop} />}
       <div style={{ height: 126 }} />
     </>
   );
@@ -76,6 +85,18 @@ export default function MobileApp() {
   const [strategyView, setStrategyView]         = useState<StrategyView>(null);
   const [showStrategyToast, setShowStrategyToast] = useState(false);
   const [showSkeleton, setShowSkeleton]         = useState(false);
+
+  // Learning Loop state ------------------------------------------------------
+  const [llState, setLLState]                   = useState<LLDataState>('no-account');
+  const [llView, setLLView]                     = useState<'tabs' | 'll' | 'lock'>('tabs');
+  const [notifAccepted, setNotifAccepted]       = useState(false);
+  const [llModal, setLLModal]                   = useState<null | 'notify-me' | 'ios-alert'>(null);
+
+  function acceptNotifications() {
+    setNotifAccepted(true);
+    setLLModal(null);
+    setTimeout(() => setLLView('lock'), 1800);
+  }
 
   // campaign settings confirmed — show "Changes applied" toast
   function handleCampConfirm() {
@@ -137,28 +158,142 @@ export default function MobileApp() {
     />
   ) : null;
 
+  // Learning Loop overlays + push views -------------------------------------
+  const llOverlay = (
+    <>
+      {llModal === 'notify-me' && (
+        <NotifyMeModal onDismiss={() => setLLModal(null)} onAccept={() => setLLModal('ios-alert')} />
+      )}
+      {llModal === 'ios-alert' && (
+        <IOSAlert onDeny={() => setLLModal(null)} onAllow={acceptNotifications} />
+      )}
+    </>
+  );
+
+  // Footer slot — tab bar by default, sticky Connect when on LL empty
+  const llTabBarReplaced =
+    llView === 'll' && llState === 'no-account'
+      ? <LLConnectFooter onConnect={() => setLLState('collecting')} />
+      : llView === 'll' || llView === 'lock'
+        ? undefined
+        : <AppTabBar onPlusClick={() => setPlusPopoverOpen(v => !v)} />;
+
   return (
     <StatePicker states={TABS} defaultState="home">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', gap: 12, background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
+        {/* Learning Loop data-state picker */}
+        <LLStatePicker
+          state={llState}
+          onChange={(s) => {
+            setLLState(s);
+            if (s === 'no-account') setNotifAccepted(false);
+            if (s === 'active')     setNotifAccepted(true);
+          }}
+        />
         <PhoneFrame
-          footer={<AppTabBar onPlusClick={() => setPlusPopoverOpen(v => !v)} />}
+          footer={llTabBarReplaced}
           overlay={
             <>
               {calOverlay ?? campOverlay ?? strategyOverlay ?? plusPopover ?? null}
+              {llOverlay}
               <CampToast show={showCampToast} />
               <DefaultsToast show={showDefaultsToast} />
               <StrategyToast show={showStrategyToast} />
             </>
           }
         >
-          <AppScreens
-            onCalendarPostClick={setCalPreviewIdx}
-            onCampaignsSettings={() => setCampSettingsOpen(true)}
-            showSkeleton={showSkeleton}
-          />
+          {llView === 'tabs' && (
+            <AppScreens
+              onCalendarPostClick={setCalPreviewIdx}
+              onCampaignsSettings={() => setCampSettingsOpen(true)}
+              showSkeleton={showSkeleton}
+              llState={llState}
+              onOpenLearningLoop={() => setLLView('ll')}
+            />
+          )}
+          {llView === 'll' && llState === 'no-account' && (
+            <LLLandingScreen onBack={() => setLLView('tabs')} />
+          )}
+          {llView === 'll' && llState !== 'no-account' && (
+            <LearningsScreen
+              state={llState as 'collecting' | 'active'}
+              onBack={() => setLLView('tabs')}
+              notifAccepted={notifAccepted}
+              onOpenNotifyMe={() => setLLModal('notify-me')}
+            />
+          )}
+          {llView === 'lock' && (
+            <LockScreen
+              onOpenNotification={() => { setLLState('active'); setLLView('ll'); }}
+            />
+          )}
         </PhoneFrame>
       </div>
     </StatePicker>
+  );
+}
+
+// ─── Learning Loop helpers ──────────────────────────────────────────────────
+
+function LLStatePicker({ state, onChange }: { state: LLDataState; onChange: (s: LLDataState) => void }) {
+  const opts: Array<{ key: LLDataState; label: string }> = [
+    { key: 'no-account', label: 'No connected' },
+    { key: 'collecting', label: 'Data waiting' },
+    { key: 'active',     label: 'Steady' },
+  ];
+  return (
+    <div style={{ display: 'flex', gap: 4, padding: 5, borderRadius: 99, background: 'rgba(255,255,255,0.92)', boxShadow: '0 2px 16px rgba(0,0,0,0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+      <span style={{ display: 'flex', alignItems: 'center', padding: '0 8px', fontFamily: 'var(--ios-font)', fontSize: 11, color: 'rgba(0,0,0,0.4)', letterSpacing: '0.11px' }}>LL</span>
+      {opts.map(({ key, label }) => (
+        <button
+          key={key}
+          type="button"
+          onClick={() => onChange(key)}
+          style={{
+            padding: '6px 12px', borderRadius: 99, border: 'none', cursor: 'pointer',
+            background: state === key ? 'rgba(0,0,0,0.9)' : 'transparent',
+            fontFamily: 'var(--ios-font)', fontSize: 12,
+            fontWeight: state === key ? 500 : 400,
+            color: state === key ? '#fff' : 'rgba(0,0,0,0.6)',
+            WebkitAppearance: 'none', transition: 'all 0.15s ease',
+          }}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function LLConnectFooter({ onConnect }: { onConnect: () => void }) {
+  return (
+    <div style={{
+      position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 30px',
+      background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.98) 36%)',
+      pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+    }}>
+      <button
+        type="button"
+        onClick={onConnect}
+        style={{
+          pointerEvents: 'all', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          padding: '16px 20px', borderRadius: 99, background: 'rgba(0,0,0,0.9)',
+          border: 'none', cursor: 'pointer', WebkitAppearance: 'none',
+        }}
+      >
+        <img src={linkIcon} alt="" aria-hidden="true" style={{ width: 18, height: 18, filter: 'invert(1)' }} />
+        <span style={{ fontFamily: 'var(--ios-font)', fontSize: 16, fontWeight: 500, color: '#fff' }}>Connect Accounts</span>
+      </button>
+      <button
+        type="button"
+        style={{
+          pointerEvents: 'all', background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+          fontFamily: 'var(--ios-font)', fontSize: 14, color: 'rgba(0,0,0,0.9)',
+        }}
+      >
+        How Learning Loop works →
+      </button>
+    </div>
   );
 }
 

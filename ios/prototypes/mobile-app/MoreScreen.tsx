@@ -3,6 +3,7 @@ import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import folderIcon from '@ios/icons/folder.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
+import lineChartIcon from '@ios/icons/line-chart-up-01.svg';
 import userProfileIcon from '@ios/icons/user-profile-circle.svg';
 import settingsIcon from '@ios/icons/settings.svg';
 import cardIcon from '@ios/icons/card.svg';
@@ -33,12 +34,12 @@ function SectionGroup({ label, children }: { label?: string; children: React.Rea
 }
 
 function Row({
-  icon, label, rightDetail, separator = false,
+  icon, label, rightDetail, separator = false, onClick,
 }: {
-  icon: string; label: string; rightDetail?: string; separator?: boolean;
+  icon: string; label: string; rightDetail?: string; separator?: boolean; onClick?: () => void;
 }) {
   return (
-    <div style={{
+    <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 12,
       padding: '0 20px', height: 52,
       borderBottom: separator ? '1px solid var(--ios-dark-4)' : 'none',
@@ -58,7 +59,7 @@ function Row({
   );
 }
 
-export function MoreScreen() {
+export function MoreScreen({ onOpenLearningLoop = () => {} }: { onOpenLearningLoop?: () => void } = {}) {
   return (
     <div style={{ fontFamily: font, background: '#f8f8f9', minHeight: '100%', paddingBottom: 16 }}>
 
@@ -76,8 +77,9 @@ export function MoreScreen() {
         {/* tools — no section label */}
         <div style={CARD_STYLE}>
           <Row icon={lightningIcon} label="Integrations" separator />
-          <Row icon={folderIcon}    label="My Files"     separator />
-          <Row icon={barGroupIcon}  label="Insights" />
+          <Row icon={barGroupIcon}  label="Insights"     separator />
+          <Row icon={lineChartIcon} label="Learning Loop" separator onClick={onOpenLearningLoop} />
+          <Row icon={folderIcon}    label="My Files" />
         </div>
 
         {/* account */}
