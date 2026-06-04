@@ -668,7 +668,7 @@ function ResubmitModal({ close, onConfirm, onReviewFirst }: {
     <Modal.Root size="sm" onClose={close}>
       <Modal.Header onClose={close}>
         <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
-          Resubmit to Client?
+          Revise & Resubmit?
         </span>
       </Modal.Header>
       <Modal.Content>
@@ -1312,7 +1312,7 @@ function InternalCard({
           ) : returnedByClient ? (
             <>
               <Button variant="green" size="sm" frontIcon={Check2} onClick={handleResubmit}>
-                Resubmit to Client
+                Revise & Resubmit
               </Button>
               <Button variant="secondary" size="sm" frontIcon={EyeOpen}
                 onClick={(e) => { e.stopPropagation(); onReview(); }}>
