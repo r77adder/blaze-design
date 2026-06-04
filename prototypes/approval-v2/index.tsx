@@ -394,15 +394,17 @@ function ContentCard({
           transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
           display:'flex', flexDirection:'column', alignItems:'center', gap:8,
         }}>
-          <Button
-            variant={isApproved ? 'secondary' : isDraft ? 'secondary' : 'green'}
-            size="sm"
-            frontIcon={isApproved ? ApprovalsIcon : isDraft ? CalendarEdit : Check2}
-            onPress={(e) => { (e as any).continuePropagation?.(); }}
-            onClick={(e) => { e.stopPropagation(); isApproved ? onRemoveApproval() : onApprove(); }}
-          >
-            {isApproved ? 'Remove approval' : isDraft ? 'Reschedule' : 'Approve'}
-          </Button>
+          {!isPast && (
+            <Button
+              variant={isApproved ? 'secondary' : isDraft ? 'secondary' : 'green'}
+              size="sm"
+              frontIcon={isApproved ? ApprovalsIcon : isDraft ? CalendarEdit : Check2}
+              onPress={(e) => { (e as any).continuePropagation?.(); }}
+              onClick={(e) => { e.stopPropagation(); isApproved ? onRemoveApproval() : onApprove(); }}
+            >
+              {isApproved ? 'Remove approval' : isDraft ? 'Reschedule' : 'Approve'}
+            </Button>
+          )}
           <Button variant="secondary" size="sm" frontIcon={EyeOpen}
             onClick={(e) => { e.stopPropagation(); onReview(); }}>
             Review
@@ -1251,14 +1253,16 @@ function InternalCard({
       {/* Hover overlay */}
       <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)', opacity:hovered?1:0, transition:'opacity 0.18s', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, pointerEvents:hovered?'all':'none' }}>
         <div style={{ transform:hovered?'scale(1) translateY(0)':'scale(0.9) translateY(4px)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-          {returnedByClient ? (
+          {isPast ? (
+            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+              Review
+            </Button>
+          ) : returnedByClient ? (
             <>
-              {!isPast && (
-                <Button variant="green" size="sm" frontIcon={Check2}
-                  onClick={(e) => { e.stopPropagation(); onResubmit?.(); }}>
-                  Resubmit to Client
-                </Button>
-              )}
+              <Button variant="green" size="sm" frontIcon={Check2}
+                onClick={(e) => { e.stopPropagation(); onResubmit?.(); }}>
+                Resubmit to Client
+              </Button>
               <Button variant="secondary" size="sm" frontIcon={EyeOpen}
                 onClick={(e) => { e.stopPropagation(); onReview(); }}>
                 Review
