@@ -1234,6 +1234,10 @@ function InternalCard({
                 Review
               </Button>
             </>
+          ) : approvedByClient ? (
+            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+              Review
+            </Button>
           ) : (
             <>
               <Button
