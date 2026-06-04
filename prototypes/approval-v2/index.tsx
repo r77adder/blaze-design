@@ -588,58 +588,13 @@ const DONT_POST_OPTIONS = [
 function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [otherText, setOtherText] = useState('');
-  const [showOther, setShowOther] = useState(false);
+  const otherSelected = selected.has('Other');
 
-  const toggle = (opt: string) => {
-    if (opt === 'Other') {
-      setShowOther(true);
-      return;
-    }
-    setSelected(prev => {
-      const next = new Set(prev);
-      next.has(opt) ? next.delete(opt) : next.add(opt);
-      return next;
-    });
-  };
-
-  if (showOther) {
-    return (
-      <Modal.Root size="sm" onClose={close}>
-        <Modal.Header onClose={close}>
-          <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
-            What could be improved?
-          </span>
-        </Modal.Header>
-        <Modal.Content>
-          <textarea
-            value={otherText}
-            onChange={e => setOtherText(e.target.value)}
-            placeholder="Tell us more"
-            style={{
-              width: '100%', minHeight: 96, resize: 'vertical',
-              border: `1px solid ${dark15}`, borderRadius: 8,
-              padding: '10px 12px', fontSize: 13, color: dark90,
-              fontFamily: F, lineHeight: 1.5, outline: 'none',
-              boxSizing: 'border-box',
-            }}
-            autoFocus
-          />
-        </Modal.Content>
-        <Modal.Footer>
-          <Modal.FooterContent slot="left">
-            <Modal.FooterButton variant="secondary" onPress={() => setShowOther(false)}>
-              Back
-            </Modal.FooterButton>
-          </Modal.FooterContent>
-          <Modal.FooterContent slot="right">
-            <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>
-              Send Feedback
-            </Modal.FooterButton>
-          </Modal.FooterContent>
-        </Modal.Footer>
-      </Modal.Root>
-    );
-  }
+  const toggle = (opt: string) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(opt) ? next.delete(opt) : next.add(opt);
+    return next;
+  });
 
   return (
     <Modal.Root size="sm" onClose={close}>
@@ -649,26 +604,43 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () 
         </span>
       </Modal.Header>
       <Modal.Content>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {DONT_POST_OPTIONS.map(opt => {
-            const active = opt !== 'Other' && selected.has(opt);
-            return (
-              <button
-                key={opt}
-                onClick={() => toggle(opt)}
-                style={{
-                  padding: '6px 12px', borderRadius: 99,
-                  border: `1.5px solid ${active ? dark90 : dark15}`,
-                  background: active ? dark4 : white,
-                  fontSize: 13, fontWeight: active ? 500 : 400,
-                  color: dark90, fontFamily: F, cursor: 'pointer',
-                  transition: 'border-color 0.15s, background 0.15s',
-                }}
-              >
-                {opt}
-              </button>
-            );
-          })}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {DONT_POST_OPTIONS.map(opt => {
+              const active = selected.has(opt);
+              return (
+                <button
+                  key={opt}
+                  onClick={() => toggle(opt)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 99,
+                    border: `1.5px solid ${active ? dark90 : dark15}`,
+                    background: active ? dark4 : white,
+                    fontSize: 13, fontWeight: active ? 500 : 400,
+                    color: dark90, fontFamily: F, cursor: 'pointer',
+                    transition: 'border-color 0.15s, background 0.15s',
+                  }}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+          {otherSelected && (
+            <textarea
+              value={otherText}
+              onChange={e => setOtherText(e.target.value)}
+              placeholder="Tell us more"
+              style={{
+                width: '100%', minHeight: 88, resize: 'vertical',
+                border: `1px solid ${dark15}`, borderRadius: 8,
+                padding: '10px 12px', fontSize: 13, color: dark90,
+                fontFamily: F, lineHeight: 1.5, outline: 'none',
+                boxSizing: 'border-box',
+              }}
+              autoFocus
+            />
+          )}
         </div>
       </Modal.Content>
       <Modal.Footer>
