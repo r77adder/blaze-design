@@ -407,7 +407,7 @@ function ContentCard({
           )}
           <Button variant="secondary" size="sm" frontIcon={EyeOpen}
             onClick={(e) => { e.stopPropagation(); onReview(); }}>
-            Review
+            {isPast ? 'View' : 'Review'}
           </Button>
         </div>
       </div>
@@ -1307,7 +1307,7 @@ function InternalCard({
         <div style={{ transform:hovered?'scale(1) translateY(0)':'scale(0.9) translateY(4px)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
           {isPast ? (
             <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              Review
+              View
             </Button>
           ) : returnedByClient ? (
             <>
