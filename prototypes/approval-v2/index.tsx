@@ -578,6 +578,62 @@ const SocialIcon = ({ platform, active }: { platform: string; active?: boolean }
   return <span style={{ opacity: s, cursor: 'pointer', color: dark80 }}>{icons[platform]}</span>;
 };
 
+// ── Don't Post feedback modal ─────────────────────────────────────────────────
+const DONT_POST_OPTIONS = [
+  'Image', 'Wrong language', 'Amount of text', 'Caption text',
+  'Layout', 'Writing quality', 'Inaccurate', 'Missing text',
+  'Colors and fonts', 'Other',
+];
+
+function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const toggle = (opt: string) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(opt) ? next.delete(opt) : next.add(opt);
+    return next;
+  });
+
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
+          What could be improved?
+        </span>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {DONT_POST_OPTIONS.map(opt => {
+            const active = selected.has(opt);
+            return (
+              <button
+                key={opt}
+                onClick={() => toggle(opt)}
+                style={{
+                  padding: '6px 12px', borderRadius: 99,
+                  border: `1.5px solid ${active ? dark90 : dark15}`,
+                  background: active ? dark4 : white,
+                  fontSize: 13, fontWeight: active ? 500 : 400,
+                  color: dark90, fontFamily: F, cursor: 'pointer',
+                  transition: 'border-color 0.15s, background 0.15s',
+                }}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>
+            Send Feedback
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
 // ── Content review page (full-page overlay) ───────────────────────────────────
 function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate }: {
   post: Post; status: Status;
@@ -586,6 +642,8 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   onDontPost: () => void; onNavigate: (id: number) => void;
 }) {
   const [chatInput, setChatInput] = useState('');
+  const { openModal } = useModals();
+  const handleDontPost = () => openModal(DontPostModal, { onConfirm: onDontPost });
   const isApproved = status === 'approved';
   const currentIdx = allPosts.findIndex(p => p.id === post.id);
   const prevPost = allPosts[currentIdx - 1];
@@ -632,7 +690,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           >
             Previous
           </Button>
-          <Button variant="secondary" size="sm" onPress={() => { onDontPost(); }}>
+          <Button variant="secondary" size="sm" onPress={handleDontPost}>
             Don't Post
           </Button>
           {isApproved ? (
@@ -723,62 +781,64 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24,
           overflowY: 'auto',
         }}>
-          {/* View as label + social icons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, color: dark40, fontFamily: F }}>View as</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-            {(['instagram','facebook','linkedin','x','google'] as const).map((p, i) => (
-              <SocialIcon key={p} platform={p} active={i === 0} />
-            ))}
-          </div>
-
-          {/* Post card */}
-          <div style={{
-            width: 320, background: white, borderRadius: 12,
-            boxShadow: '0 4px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
-          }}>
-            {/* Account not connected banner */}
+          {/* Post card + result bar — relative wrapper so "View as" can sit to the left */}
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            {/* View as label + social icons — pinned left of post card */}
+            <div style={{ position: 'absolute', right: '100%', top: 0, marginRight: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12, color: dark40, fontFamily: F }}>View as</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                {(['instagram','facebook','linkedin','x','google'] as const).map((p, i) => (
+                  <SocialIcon key={p} platform={p} active={i === 0} />
+                ))}
+              </div>
+            </div>
+            {/* Post card */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 14px', borderBottom: `1px solid ${dark8}`,
+              width: 320, background: white, borderRadius: 12,
+              boxShadow: '0 4px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
             }}>
-              <div style={{ width: 24, height: 24, borderRadius: 99, background: dark8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke={dark40} strokeWidth="1.5"/><circle cx="12" cy="12" r="4" stroke={dark40} strokeWidth="1.5"/></svg>
+              {/* Account not connected banner */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px', borderBottom: `1px solid ${dark8}`,
+              }}>
+                <div style={{ width: 24, height: 24, borderRadius: 99, background: dark8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke={dark40} strokeWidth="1.5"/><circle cx="12" cy="12" r="4" stroke={dark40} strokeWidth="1.5"/></svg>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 500, color: dark80, fontFamily: F }}>Account Not Connected</span>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: dark80, fontFamily: F }}>Account Not Connected</span>
-            </div>
-            {/* Image */}
-            <div style={{ aspectRatio: '1/1', background: '#c8c0b4', overflow: 'hidden' }}>
-              {post.img && <img src={post.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-            </div>
-            {/* Actions row */}
-            <div style={{ padding: '10px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', gap: 14 }}>
-                {['♡', '○', '⬆'].map(ic => <span key={ic} style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>{ic}</span>)}
+              {/* Image */}
+              <div style={{ aspectRatio: '1/1', background: '#c8c0b4', overflow: 'hidden' }}>
+                {post.img && <img src={post.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
               </div>
-              <span style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>⊡</span>
+              {/* Actions row */}
+              <div style={{ padding: '10px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  {['♡', '○', '⬆'].map(ic => <span key={ic} style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>{ic}</span>)}
+                </div>
+                <span style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>⊡</span>
+              </div>
+              {/* Caption */}
+              <div style={{ padding: '0 14px 14px' }}>
+                <p style={{ margin: 0, fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
+                  <strong>Account Not Connected</strong>{' '}
+                  <span style={{ color: dark80 }}>{post.caption}</span>
+                  {' '}<span style={{ color: dark40 }}>see more</span>
+                </p>
+              </div>
             </div>
-            {/* Caption */}
-            <div style={{ padding: '0 14px 14px' }}>
-              <p style={{ margin: 0, fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
-                <strong>Account Not Connected</strong>{' '}
-                <span style={{ color: dark80 }}>{post.caption}</span>
-                {' '}<span style={{ color: dark40 }}>see more</span>
-              </p>
-            </div>
-          </div>
 
-          {/* Do you like the result bar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '10px 20px', background: white, borderRadius: 99,
-            boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: `1px solid ${dark8}`,
-          }}>
-            <span style={{ fontSize: 13, color: dark80, fontFamily: F }}>Do you like the result?</span>
-            <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👎</button>
-            <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👍</button>
-            <Button variant="secondary" size="sm" onPress={onClose}>Close</Button>
+            {/* Do you like the result bar */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 20px', background: white, borderRadius: 99,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: `1px solid ${dark8}`,
+            }}>
+              <span style={{ fontSize: 13, color: dark80, fontFamily: F }}>Do you like the result?</span>
+              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👎</button>
+              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👍</button>
+              <Button variant="secondary" size="sm" onPress={onClose}>Close</Button>
+            </div>
           </div>
         </div>
 
