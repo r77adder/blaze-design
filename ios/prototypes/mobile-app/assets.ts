@@ -33,13 +33,15 @@ const U = {
 };
 
 export const ASSETS = {
-  // ─── avatars / portraits ────────────────────────────────────────────────
+  // ─── avatars / logos ────────────────────────────────────────────────────
+  // Brand/workspace avatars use ui-avatars (initials on a colored tile) so
+  // they read as a logo, not a person. Personal avatars stay as portraits.
+  workspaceAvatar:    'https://ui-avatars.com/api/?name=Radiant+Health&background=45164a&color=fff&bold=true&size=200&font-size=0.4',
+  brandAvatar:        'https://ui-avatars.com/api/?name=Radiant+Health&background=45164a&color=fff&bold=true&size=200&font-size=0.4',
+  brandProfileAvatar: 'https://ui-avatars.com/api/?name=Radiant+Health&background=45164a&color=fff&bold=true&size=200&font-size=0.4',
+  nikeAvatar:         'https://ui-avatars.com/api/?name=Nike&background=000&color=fff&bold=true&size=200&font-size=0.5',
   userAvatar:         U.portraitA,
-  brandAvatar:        U.portraitA,
-  brandProfileAvatar: U.portraitA,
   adamAvatar:         U.portraitB,
-  workspaceAvatar:    U.portraitA,
-  nikeAvatar:         U.portraitC,
 
   // ─── icons (no longer used after the merge — kept for back-compat) ─────
   // These were photo-icons in the Figma source. Point them at the latte
