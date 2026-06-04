@@ -89,9 +89,11 @@ export type LLDataState = 'no-account' | 'collecting' | 'active';
 export function HomeScreen({
   llState = 'no-account',
   onOpenLearningLoop = () => {},
+  onApproveCampaign = () => {},
 }: {
   llState?: LLDataState;
   onOpenLearningLoop?: () => void;
+  onApproveCampaign?: () => void;
 } = {}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const llSub =
@@ -153,6 +155,7 @@ export function HomeScreen({
             {UP_NEXT.map((card) => (
               <div
                 key={card.id}
+                onClick={card.title === 'Approve your next campaign' ? onApproveCampaign : undefined}
                 style={{
                   border: '1px solid var(--ios-dark-8)',
                   borderRadius: 12, padding: 16,

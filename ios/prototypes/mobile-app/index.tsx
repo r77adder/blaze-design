@@ -4,11 +4,9 @@ import { TabBar, Sheet, Stepper } from '@ios/components';
 import type { TabItem } from '@ios/components';
 import { HomeScreen } from './HomeScreen';
 import type { LLDataState } from './HomeScreen';
-import { CalendarScreen, CAL_POSTS } from './CalendarScreen';
 import { CampaignsScreen } from './CampaignsScreen';
 import { BrandKitScreen } from './BrandKitScreen';
 import { MoreScreen } from './MoreScreen';
-import { ContentPreviewSheet } from './ContentPreviewSheet';
 import { CampaignSettingsOverlay } from './CampaignSettingsOverlay';
 import { ASSETS } from './assets';
 
@@ -19,6 +17,16 @@ import { NotifyMeModal } from '../learning-loop/NotifyMeModal';
 import { IOSAlert } from '../learning-loop/IOSAlert';
 import { LockScreen } from '../learning-loop/LockScreen';
 import linkIcon from '@ios/icons/link-external.svg';
+
+// Unscheduled posts feature module (the latest Calendar lives here)
+import { CalendarScreen } from '../unscheduled-posts/CalendarScreen';
+import { UnscheduledDrawer, INITIAL_UNSCHEDULED_POSTS } from '../unscheduled-posts/UnscheduledDrawer';
+import type { UnscheduledPost } from '../unscheduled-posts/UnscheduledDrawer';
+import { RescheduleSheet } from '../unscheduled-posts/RescheduleSheet';
+import { ContentPreviewScreen } from '../unscheduled-posts/ContentPreviewScreen';
+
+// Campaign approval feature module
+import { CampaignApprovalFlow } from '../campaign-approval';
 
 import plusIcon from '@ios/icons/plus-01.svg';
 import checkBrokenIcon from '@ios/icons/lighter_weight/check-broken.svg';
@@ -44,13 +52,13 @@ const TAB_ITEMS: TabItem[] = [
   { id: 'more',       label: 'More',      icon: moreIcon },
 ];
 
-function AppScreens({ onCalendarPostClick, onCampaignsSettings, showSkeleton, llState, onOpenLearningLoop }: { onCalendarPostClick: (idx: number) => void; onCampaignsSettings: () => void; showSkeleton?: boolean; llState: LLDataState; onOpenLearningLoop: () => void }) {
+function AppScreens({ onCampaignsSettings, showSkeleton, llState, onOpenLearningLoop, onApproveCampaign, unscheduledCount, onUnscheduled }: { onCampaignsSettings: () => void; showSkeleton?: boolean; llState: LLDataState; onOpenLearningLoop: () => void; onApproveCampaign: () => void; unscheduledCount: number; onUnscheduled: () => void }) {
   const { state } = useStateContext();
   return (
     <>
-      {state === 'home'      && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} />}
-      {state === 'calendar'  && <CalendarScreen onPostClick={onCalendarPostClick} />}
-      {state === 'campaigns' && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} />}
+      {state === 'home'      && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} onApproveCampaign={onApproveCampaign} />}
+      {state === 'calendar'  && <CalendarScreen unscheduledCount={unscheduledCount} onUnscheduled={onUnscheduled} />}
+      {state === 'campaigns' && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} onCampaignClick={onApproveCampaign} />}
       {state === 'brand-kit' && <BrandKitScreen />}
       {state === 'more'      && <MoreScreen onOpenLearningLoop={onOpenLearningLoop} />}
       <div style={{ height: 126 }} />
@@ -76,8 +84,9 @@ function AppTabBar({ onPlusClick }: { onPlusClick: () => void }) {
 
 type StrategyView = 'add-strategies' | 'content-qty' | null;
 
+type UnschedView = 'none' | 'drawer' | 'reschedule' | 'preview';
+
 export default function MobileApp() {
-  const [calPreviewIdx, setCalPreviewIdx]       = useState<number | null>(null);
   const [campSettingsOpen, setCampSettingsOpen] = useState(false);
   const [showCampToast, setShowCampToast]       = useState(false);
   const [showDefaultsToast, setShowDefaultsToast] = useState(false);
@@ -97,6 +106,17 @@ export default function MobileApp() {
     setLLModal(null);
     setTimeout(() => setLLView('lock'), 1800);
   }
+
+  // Unscheduled posts state --------------------------------------------------
+  const [unschedView,  setUnschedView]  = useState<UnschedView>('none');
+  const [unschedPosts, setUnschedPosts] = useState<UnscheduledPost[]>(INITIAL_UNSCHEDULED_POSTS);
+  function scheduleUnscheduled(id: number) {
+    setUnschedPosts(prev => prev.filter(p => p.id !== id));
+    setUnschedView('reschedule');
+  }
+
+  // Campaign approval state --------------------------------------------------
+  const [campaignFlowOpen, setCampaignFlowOpen] = useState(false);
 
   // campaign settings confirmed — show "Changes applied" toast
   function handleCampConfirm() {
@@ -122,17 +142,28 @@ export default function MobileApp() {
     }, 4000);
   }
 
-  const calOverlay = calPreviewIdx !== null ? (
-    <ContentPreviewSheet
-      key={calPreviewIdx}
-      post={CAL_POSTS[calPreviewIdx]}
-      hasPrev={calPreviewIdx > 0}
-      hasNext={calPreviewIdx < CAL_POSTS.length - 1}
-      onClose={() => setCalPreviewIdx(null)}
-      onPrev={() => setCalPreviewIdx(i => (i !== null && i > 0 ? i - 1 : i))}
-      onNext={() => setCalPreviewIdx(i => (i !== null && i < CAL_POSTS.length - 1 ? i + 1 : i))}
-    />
-  ) : null;
+  // Unscheduled posts overlays (drawer / reschedule sheet / preview)
+  const calOverlay = (
+    <>
+      {unschedView === 'drawer' && (
+        <UnscheduledDrawer
+          posts={unschedPosts}
+          onClose={() => setUnschedView('none')}
+          onSchedule={scheduleUnscheduled}
+        />
+      )}
+      {unschedView === 'reschedule' && (
+        <RescheduleSheet
+          onBack={() => setUnschedView('drawer')}
+          onClose={() => setUnschedView('none')}
+          onConfirm={() => setUnschedView('preview')}
+        />
+      )}
+      {unschedView === 'preview' && (
+        <ContentPreviewScreen onClose={() => setUnschedView('none')} />
+      )}
+    </>
+  );
 
   const campOverlay = campSettingsOpen ? (
     <CampaignSettingsOverlay
@@ -170,11 +201,12 @@ export default function MobileApp() {
     </>
   );
 
-  // Footer slot — tab bar by default, sticky Connect when on LL empty
+  // Footer slot — tab bar by default, sticky Connect when on LL empty,
+  // hidden during LL push view / lock screen / campaign approval flow
   const llTabBarReplaced =
     llView === 'll' && llState === 'no-account'
       ? <LLConnectFooter onConnect={() => setLLState('collecting')} />
-      : llView === 'll' || llView === 'lock'
+      : llView === 'll' || llView === 'lock' || campaignFlowOpen
         ? undefined
         : <AppTabBar onPlusClick={() => setPlusPopoverOpen(v => !v)} />;
 
@@ -202,11 +234,13 @@ export default function MobileApp() {
             </>
           }
         >
-          {llView === 'tabs' && (
+          {llView === 'tabs' && !campaignFlowOpen && (
             <AppScreens
-              onCalendarPostClick={setCalPreviewIdx}
               onCampaignsSettings={() => setCampSettingsOpen(true)}
               showSkeleton={showSkeleton}
+              onApproveCampaign={() => setCampaignFlowOpen(true)}
+              unscheduledCount={unschedPosts.length}
+              onUnscheduled={() => setUnschedView('drawer')}
               llState={llState}
               onOpenLearningLoop={() => setLLView('ll')}
             />
@@ -226,6 +260,9 @@ export default function MobileApp() {
             <LockScreen
               onOpenNotification={() => { setLLState('active'); setLLView('ll'); }}
             />
+          )}
+          {campaignFlowOpen && (
+            <CampaignApprovalFlow onClose={() => setCampaignFlowOpen(false)} />
           )}
         </PhoneFrame>
       </div>

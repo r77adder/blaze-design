@@ -689,3 +689,90 @@ export default function CampaignApproval() {
     </div>
   );
 }
+
+// ─── Embeddable flow ────────────────────────────────────────────────────────
+// Renders just the campaign review screen + sheets (no Home), suitable for
+// embedding inside another prototype (e.g. the unified mobile-app shell).
+// The overlay sheets position themselves absolute relative to this wrapper,
+// so it must be rendered inside an element with `position: relative`.
+
+export function CampaignApprovalFlow({ onClose }: { onClose: () => void }) {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [cur, setCur] = useState(0);
+  const [postStates, setPostStates] = useState<PostStatus[]>(Array(TOTAL).fill('pending'));
+  const [campaignApproved, setCampaignApproved] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [approveAnim, setApproveAnim] = useState<'idle' | 's1' | 's2'>('idle');
+  const [cardAnim, setCardAnim] = useState<'idle' | 'exit' | 'enter'>('idle');
+
+  const openSheet = useCallback((startIndex?: number) => {
+    setPostStates(prev => {
+      if (startIndex !== undefined) setCur(startIndex);
+      else { const firstPending = prev.findIndex(s => s === 'pending'); setCur(firstPending !== -1 ? firstPending : 0); }
+      return prev;
+    });
+    setSheetOpen(true);
+  }, []);
+
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
+
+  const advanceToNext = useCallback((states: PostStatus[], afterCur: number) => {
+    const next = states.findIndex((s, i) => i > afterCur && s === 'pending');
+    if (next !== -1) {
+      setCur(next);
+    } else if (states.every(s => s !== 'pending')) {
+      setTimeout(() => {
+        setSheetOpen(false);
+        setTimeout(() => setCampaignApproved(true), 420);
+      }, 500);
+    }
+  }, []);
+
+  const handleApprove = useCallback(() => {
+    setApproveAnim('s1');
+    setTimeout(() => setApproveAnim('s2'), 420);
+    setTimeout(() => {
+      let updatedStates: PostStatus[] = [];
+      setPostStates(prev => { updatedStates = [...prev]; updatedStates[cur] = 'approved'; return updatedStates; });
+      setApproveAnim('idle');
+      setTimeout(() => setCardAnim('exit'), 120);
+      setTimeout(() => { setCardAnim('enter'); advanceToNext(updatedStates, cur); }, 120 + 380);
+      setTimeout(() => setCardAnim('idle'), 120 + 380 + 40);
+    }, 950);
+  }, [cur, advanceToNext]);
+
+  const handleDontPost = useCallback(() => {
+    let updatedStates: PostStatus[] = [];
+    setPostStates(prev => { updatedStates = [...prev]; updatedStates[cur] = 'rejected'; return updatedStates; });
+    setTimeout(() => setCardAnim('exit'), 60);
+    setTimeout(() => { setCardAnim('enter'); advanceToNext(updatedStates, cur); }, 60 + 380);
+    setTimeout(() => setCardAnim('idle'), 60 + 380 + 40);
+  }, [cur, advanceToNext]);
+
+  const handleRemoveApproval = useCallback(() => {
+    setActionsOpen(false);
+    setTimeout(() => { setPostStates(prev => { const n = [...prev]; n[cur] = 'pending'; return n; }); }, 280);
+  }, [cur]);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#fff' }}>
+      <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+        <CampaignScreen onBack={onClose} onReview={(i) => openSheet(i)} campaignApproved={campaignApproved} />
+      </div>
+      <ReviewSheet
+        open={sheetOpen} cur={cur} postStates={postStates}
+        onClose={closeSheet}
+        onPrev={() => setCur(c => Math.max(0, c - 1))}
+        onNext={() => setCur(c => Math.min(TOTAL - 1, c + 1))}
+        onApprove={handleApprove} onDontPost={handleDontPost}
+        onActions={() => setActionsOpen(true)}
+        approveAnim={approveAnim} cardAnim={cardAnim}
+      />
+      <ActionsDrawer
+        open={actionsOpen} isApproved={postStates[cur] === 'approved'}
+        postDate={POSTS[cur].date} onClose={() => setActionsOpen(false)}
+        onRemoveApproval={handleRemoveApproval}
+      />
+    </div>
+  );
+}
