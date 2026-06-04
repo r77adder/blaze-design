@@ -700,9 +700,11 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           >
             Previous
           </Button>
-          <Button variant="secondary" size="sm" onPress={handleDontPost}>
-            Don't Post
-          </Button>
+          {!(isInternal && isReadyForClient) && (
+            <Button variant="secondary" size="sm" onPress={handleDontPost}>
+              Don't Post
+            </Button>
+          )}
           {isInternal ? (
             isReadyForClient ? (
               <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onUndoReady?.(); }}>
