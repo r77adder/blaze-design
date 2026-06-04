@@ -1783,8 +1783,38 @@ function ApprovalV2Inner() {
           </div>
         );
 
+        // Nothing to approve = no active campaign has any readyForClient+pending post
+        const hasAnythingToApprove = active.some(c =>
+          c.posts.some(p => internalStatuses[p.id] === 'readyForClient' && statuses[p.id] === 'pending')
+        );
+
         return (
           <div style={{ display:'flex', flexDirection:'column', gap:40 }}>
+            {/* ── Empty state ── */}
+            {!hasAnythingToApprove && (
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, padding:'40px 0 20px' }}>
+                <div style={{ width:56, height:56, borderRadius:99, background:'rgba(32,161,79,0.1)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" stroke={green} strokeWidth="1.5"/>
+                    <path d="M8 12.5l2.5 2.5 5.5-5.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p style={{ margin:0, fontSize:22, fontWeight:500, color:dark90, fontFamily:F, textAlign:'center' }}>
+                  All Set! Nothing to Approve just yet.
+                </p>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', border:`1px solid ${dark15}`, borderRadius:8, background:white, fontSize:13, color:dark90, fontFamily:F, cursor:'pointer' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h10" stroke={dark60} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    Open Campaigns
+                  </button>
+                  <button style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', border:`1px solid ${dark15}`, borderRadius:8, background:white, fontSize:13, color:dark90, fontFamily:F, cursor:'pointer' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke={dark60} strokeWidth="1.5"/><path d="M16 2v4M8 2v4M3 10h18" stroke={dark60} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    Go to Calendar
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* ── Active campaigns ── */}
             {active.map(renderCampaign)}
 
