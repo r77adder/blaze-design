@@ -1139,7 +1139,7 @@ function InternalCard({
         position:'relative', width:245, height:CARD_H, flexShrink:0,
         background:dark2, border:`1px solid ${dark4}`, borderRadius:10,
         overflow:'hidden', cursor:'pointer',
-        opacity: isReady ? 0.65 : 1, transition:'opacity 0.2s',
+        opacity: returnedByClient ? 1 : isReady ? 0.65 : 1, transition:'opacity 0.2s',
         display:'flex', flexDirection:'column',
       }}
       onMouseEnter={() => setHovered(true)}
@@ -1273,10 +1273,14 @@ function InternalCampaignSection({
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
   const [returnedCollapsed, setReturnedCollapsed] = useState(false);
+  const [approvedCollapsed, setApprovedCollapsed] = useState(false);
 
-  const posts       = campaign.posts;
-  const returnedPosts = posts.filter(p => statuses[p.id] === 'rejected' && internalStatuses[p.id] === 'readyForClient');
-  const activePosts   = posts.filter(p => !(statuses[p.id] === 'rejected' && internalStatuses[p.id] === 'readyForClient'));
+  const posts = campaign.posts;
+  const isReturned    = (p: Post) => statuses[p.id] === 'rejected'  && internalStatuses[p.id] === 'readyForClient';
+  const isApproved    = (p: Post) => statuses[p.id] === 'approved'  && internalStatuses[p.id] === 'readyForClient';
+  const returnedPosts      = posts.filter(isReturned);
+  const approvedByClient   = posts.filter(isApproved);
+  const activePosts        = posts.filter(p => !isReturned(p) && !isApproved(p));
   const readyCount  = activePosts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
   const totalCount  = activePosts.length;
   const allReady    = totalCount > 0 && readyCount === totalCount;
@@ -1333,27 +1337,11 @@ function InternalCampaignSection({
       {/* Cards grid */}
       {!collapsed && (
         <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
-          {/* Active posts */}
-          {activePosts.length > 0 && (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-              {activePosts.map(post => (
-                <InternalCard
-                  key={post.id}
-                  post={post}
-                  internalStatus={internalStatuses[post.id]}
-                  isPast={isPastCamp}
-                  onMarkReady={() => onMarkReady(post.id)}
-                  onUndo={() => onUndo(post.id)}
-                  onReview={() => onReview(post)}
-                />
-              ))}
-            </div>
-          )}
 
-          {/* Returned by Client subsection */}
+          {/* 1 — Returned by Client (top, full opacity) */}
           {returnedPosts.length > 0 && (
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop: activePosts.length > 0 ? 4 : 0 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <div style={{ flex:1, height:1, background:dark8 }} />
                 <button
                   onClick={() => setReturnedCollapsed(c => !c)}
@@ -1377,15 +1365,68 @@ function InternalCampaignSection({
                 <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
                   {returnedPosts.map(post => (
                     <InternalCard
-                      key={post.id}
-                      post={post}
+                      key={post.id} post={post}
                       internalStatus={internalStatuses[post.id]}
-                      returnedByClient
-                      dontPostReasons={dontPostReasons[post.id]}
+                      returnedByClient dontPostReasons={dontPostReasons[post.id]}
                       onMarkReady={() => onMarkReady(post.id)}
                       onUndo={() => onUndo(post.id)}
                       onReview={() => onReview(post)}
                       onResubmit={() => onResubmit(post.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 2 — Active posts (middle) */}
+          {activePosts.length > 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+              {activePosts.map(post => (
+                <InternalCard
+                  key={post.id} post={post}
+                  internalStatus={internalStatuses[post.id]}
+                  isPast={isPastCamp}
+                  onMarkReady={() => onMarkReady(post.id)}
+                  onUndo={() => onUndo(post.id)}
+                  onReview={() => onReview(post)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* 3 — Approved by Client (bottom, dimmed, collapsible) */}
+          {approvedByClient.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+                <button
+                  onClick={() => setApprovedCollapsed(c => !c)}
+                  style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                    <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
+                    <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
+                    Approved by Client ({approvedByClient.length})
+                  </span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    style={{ transform: approvedCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
+                    <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+              </div>
+              {!approvedCollapsed && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                  {approvedByClient.map(post => (
+                    <InternalCard
+                      key={post.id} post={post}
+                      internalStatus={internalStatuses[post.id]}
+                      onMarkReady={() => onMarkReady(post.id)}
+                      onUndo={() => onUndo(post.id)}
+                      onReview={() => onReview(post)}
                     />
                   ))}
                 </div>
