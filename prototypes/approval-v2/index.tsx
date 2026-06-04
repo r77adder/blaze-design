@@ -1743,21 +1743,27 @@ function ApprovalV2Inner() {
         const approved = CAMPAIGNS.filter(isAllApproved);
         const past     = CAMPAIGNS.filter(isPast);
 
-        const renderCampaign = (campaign: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => (
-          <CampaignSection
-            key={campaign.id}
-            campaign={campaign}
-            statuses={statuses}
-            dontPostReasons={dontPostReasons}
-            onApprove={(id) => approve(id, campaign.id)}
-            onRemoveApproval={removeApproval}
-            onReview={(id) => { setReviewPost(campaign.posts.find(p => p.id === id)!); }}
-            onApproveAll={() => approveAll(campaign)}
-            justCompleted={completingCampaignId === campaign.id}
-            defaultCollapsed={opts?.defaultCollapsed}
-            isPast={opts?.isPast}
-          />
-        );
+        const renderCampaign = (campaign: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => {
+          // Only expose posts the internal team has marked Ready for Client
+          const visiblePosts = campaign.posts.filter(p => internalStatuses[p.id] === 'readyForClient');
+          if (visiblePosts.length === 0) return null;
+          const clientCampaign = { ...campaign, posts: visiblePosts };
+          return (
+            <CampaignSection
+              key={campaign.id}
+              campaign={clientCampaign}
+              statuses={statuses}
+              dontPostReasons={dontPostReasons}
+              onApprove={(id) => approve(id, campaign.id)}
+              onRemoveApproval={removeApproval}
+              onReview={(id) => { setReviewPost(campaign.posts.find(p => p.id === id)!); }}
+              onApproveAll={() => approveAll(clientCampaign)}
+              justCompleted={completingCampaignId === campaign.id}
+              defaultCollapsed={opts?.defaultCollapsed}
+              isPast={opts?.isPast}
+            />
+          );
+        };
 
         const SectionHeader = ({ label, count }: { label: string; count: number }) => (
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
