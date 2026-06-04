@@ -826,6 +826,10 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
                 Remove approval
               </Button>
+            ) : status === 'rejected' ? (
+              <Button variant="secondary" size="sm" frontIcon={CalendarEdit} onPress={() => { onRemoveApproval(); }}>
+                Reschedule
+              </Button>
             ) : (
               <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
                 Approve
