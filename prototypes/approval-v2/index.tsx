@@ -587,11 +587,59 @@ const DONT_POST_OPTIONS = [
 
 function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const toggle = (opt: string) => setSelected(prev => {
-    const next = new Set(prev);
-    next.has(opt) ? next.delete(opt) : next.add(opt);
-    return next;
-  });
+  const [otherText, setOtherText] = useState('');
+  const [showOther, setShowOther] = useState(false);
+
+  const toggle = (opt: string) => {
+    if (opt === 'Other') {
+      setShowOther(true);
+      return;
+    }
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(opt) ? next.delete(opt) : next.add(opt);
+      return next;
+    });
+  };
+
+  if (showOther) {
+    return (
+      <Modal.Root size="sm" onClose={close}>
+        <Modal.Header onClose={close}>
+          <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
+            What could be improved?
+          </span>
+        </Modal.Header>
+        <Modal.Content>
+          <textarea
+            value={otherText}
+            onChange={e => setOtherText(e.target.value)}
+            placeholder="Tell us more"
+            style={{
+              width: '100%', minHeight: 96, resize: 'vertical',
+              border: `1px solid ${dark15}`, borderRadius: 8,
+              padding: '10px 12px', fontSize: 13, color: dark90,
+              fontFamily: F, lineHeight: 1.5, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+            autoFocus
+          />
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.FooterContent slot="left">
+            <Modal.FooterButton variant="secondary" onPress={() => setShowOther(false)}>
+              Back
+            </Modal.FooterButton>
+          </Modal.FooterContent>
+          <Modal.FooterContent slot="right">
+            <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>
+              Send Feedback
+            </Modal.FooterButton>
+          </Modal.FooterContent>
+        </Modal.Footer>
+      </Modal.Root>
+    );
+  }
 
   return (
     <Modal.Root size="sm" onClose={close}>
@@ -603,7 +651,7 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () 
       <Modal.Content>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {DONT_POST_OPTIONS.map(opt => {
-            const active = selected.has(opt);
+            const active = opt !== 'Other' && selected.has(opt);
             return (
               <button
                 key={opt}
