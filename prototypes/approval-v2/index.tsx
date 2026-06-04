@@ -1312,28 +1312,58 @@ function InternalCampaignSection({
           </button>
         </div>
 
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           {isPastCamp ? (
             <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{posts.length} posts</span>
-          ) : (
-            <>
-              <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
-                {allReady
-                  ? <span style={{ color:green, display:'flex', alignItems:'center', gap:4 }}><ApprovalsIcon size={13} color={green} />{totalCount} ready for client</span>
-                  : `${totalCount - readyCount} to review`}
-              </span>
-              {!allReady && totalCount > 0 && (
-                <>
-                  <div style={{ width:1, height:16, background:dark8 }} />
-                  <button onClick={onMarkAllReady}
-                    style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 8px', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:400, color:dark90, fontFamily:F }}>
-                    <ApprovalsIcon size={15} color={dark90} />
-                    All Ready for Client
-                  </button>
-                </>
-              )}
-            </>
-          )}
+          ) : (() => {
+            const clientRejectedCount = posts.filter(p => statuses[p.id] === 'rejected').length;
+            const clientApprovedCount = posts.filter(p => statuses[p.id] === 'approved').length;
+            const hasClientFeedback = clientRejectedCount > 0 || clientApprovedCount > 0;
+            return (
+              <>
+                {/* Total count */}
+                <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
+                  {posts.length} posts
+                </span>
+
+                {/* Client feedback counters */}
+                {hasClientFeedback && (
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    {clientRejectedCount > 0 && (
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, color:red, fontFamily:F, fontWeight:500 }}>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke={red} strokeWidth="1.4"/>
+                          <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke={red} strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                        {clientRejectedCount}
+                      </span>
+                    )}
+                    {clientApprovedCount > 0 && (
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, color:green, fontFamily:F, fontWeight:500 }}>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke={green} strokeWidth="1.4"/>
+                          <path d="M5 8.5l2 2 4-4" stroke={green} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        {clientApprovedCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* All Ready for Client */}
+                {!allReady && totalCount > 0 && (
+                  <>
+                    <div style={{ width:1, height:16, background:dark8 }} />
+                    <button onClick={onMarkAllReady}
+                      style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 8px', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:400, color:dark90, fontFamily:F }}>
+                      <ApprovalsIcon size={15} color={dark90} />
+                      All Ready for Client
+                    </button>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
