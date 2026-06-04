@@ -658,6 +658,40 @@ const DONT_POST_OPTIONS = [
   'Colors and fonts', 'Other',
 ];
 
+// ── Resubmit confirmation modal ───────────────────────────────────────────────
+function ResubmitModal({ close, onConfirm, onReviewFirst }: {
+  close: () => void;
+  onConfirm: () => void;
+  onReviewFirst: () => void;
+}) {
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
+          Resubmit to Client?
+        </span>
+      </Modal.Header>
+      <Modal.Content>
+        <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
+          Have you revised this post? The client will be notified to review it again.
+        </p>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="secondary" onPress={() => { close(); onReviewFirst(); }}>
+            Review Post First
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>
+            Yes, Resubmit
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
 function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (reasons: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [otherText, setOtherText] = useState('');
@@ -1165,7 +1199,16 @@ function InternalCard({
   pastClientStatus?: Status;
 }) {
   const [hovered, setHovered] = useState(false);
+  const { openModal } = useModals();
   const isReady = internalStatus === 'readyForClient';
+
+  const handleResubmit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openModal(ResubmitModal, {
+      onConfirm: () => onResubmit?.(),
+      onReviewFirst: () => onReview(),
+    });
+  };
   const isBlog  = post.type === 'blog';
   const isPortrait = post.type === 'story' || post.type === 'short' || post.type === 'feed-video';
   const isLandscape = post.type === 'still' || post.type === 'carousel';
@@ -1268,8 +1311,7 @@ function InternalCard({
             </Button>
           ) : returnedByClient ? (
             <>
-              <Button variant="green" size="sm" frontIcon={Check2}
-                onClick={(e) => { e.stopPropagation(); onResubmit?.(); }}>
+              <Button variant="green" size="sm" frontIcon={Check2} onClick={handleResubmit}>
                 Resubmit to Client
               </Button>
               <Button variant="secondary" size="sm" frontIcon={EyeOpen}
