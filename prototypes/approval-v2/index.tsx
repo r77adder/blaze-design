@@ -736,7 +736,7 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (re
 
 // ── Content review page (full-page overlay) ───────────────────────────────────
 function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
-  mode, internalStatus, onMarkReady, onUndoReady, dontPostReasons,
+  mode, internalStatus, onMarkReady, onUndoReady, dontPostReasons, isPast,
 }: {
   post: Post; status: Status;
   allPosts: Post[]; allStatuses: Record<number, Status>;
@@ -747,6 +747,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   onMarkReady?: () => void;
   onUndoReady?: () => void;
   dontPostReasons?: Record<number, string[]>;
+  isPast?: boolean;
 }) {
   const [chatInput, setChatInput] = useState('');
   const { openModal } = useModals();
@@ -784,9 +785,13 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           <span style={{ fontSize: 14, fontWeight: 400, color: dark80, fontFamily: F, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
             {post.caption.slice(0, 48)}{post.caption.length > 48 ? '…' : ''}
           </span>
-          {isInternal
-            ? <InternalStatusPill status={internalStatus ?? 'internalReview'} />
-            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} />}
+          {isInternal ? (() => {
+              if (isPast) return <StatusPill status={status} isPast dontPostReasons={dontPostReasons?.[post.id]} />;
+              if (status === 'rejected' && isReadyForClient) return <StatusPill status="rejected" dontPostReasons={dontPostReasons?.[post.id]} />;
+              if (status === 'approved' && isReadyForClient) return <StatusPill status="approved" />;
+              return <InternalStatusPill status={internalStatus ?? 'internalReview'} />;
+            })()
+            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} isPast={isPast} />}
           <Button variant="ghost" size="sm" square>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
           </Button>
@@ -1819,6 +1824,7 @@ function ApprovalV2Inner() {
           onMarkReady={() => markReadyForClient(reviewPost.id)}
           onUndoReady={() => undoReady(reviewPost.id)}
           dontPostReasons={dontPostReasons}
+          isPast={CAMPAIGNS.find(c => c.posts.some(p => p.id === reviewPost.id))?.endDate < today}
         />
       )}
     </PrototypeShell>
