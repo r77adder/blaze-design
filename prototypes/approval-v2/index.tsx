@@ -1116,9 +1116,13 @@ function InternalStatusPill({ status }: { status: InternalStatus }) {
 // ── Internal content card ─────────────────────────────────────────────────────
 function InternalCard({
   post, internalStatus, onMarkReady, onUndo, onReview, isPast,
+  returnedByClient, dontPostReasons, onResubmit,
 }: {
   post: Post; internalStatus: InternalStatus; isPast?: boolean;
   onMarkReady: () => void; onUndo: () => void; onReview: () => void;
+  returnedByClient?: boolean;
+  dontPostReasons?: string[];
+  onResubmit?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isReady = internalStatus === 'readyForClient';
@@ -1206,25 +1210,42 @@ function InternalCard({
 
       {/* Status pill */}
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        {isPast && !isReady
-          ? <StatusPill status="rejected" />
-          : <InternalStatusPill status={internalStatus} />}
+        {returnedByClient
+          ? <StatusPill status="rejected" dontPostReasons={dontPostReasons} />
+          : isPast && !isReady
+            ? <StatusPill status="rejected" />
+            : <InternalStatusPill status={internalStatus} />}
       </div>
 
       {/* Hover overlay */}
       <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)', opacity:hovered?1:0, transition:'opacity 0.18s', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, pointerEvents:hovered?'all':'none' }}>
         <div style={{ transform:hovered?'scale(1) translateY(0)':'scale(0.9) translateY(4px)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-          <Button
-            variant={isReady ? 'secondary' : 'green'}
-            size="sm"
-            frontIcon={isReady ? ApprovalsIcon : Check2}
-            onClick={(e) => { e.stopPropagation(); isReady ? onUndo() : onMarkReady(); }}
-          >
-            {isReady ? 'Undo' : 'Ready for Client'}
-          </Button>
-          <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-            Review
-          </Button>
+          {returnedByClient ? (
+            <>
+              <Button variant="green" size="sm" frontIcon={Check2}
+                onClick={(e) => { e.stopPropagation(); onResubmit?.(); }}>
+                Resubmit to Client
+              </Button>
+              <Button variant="secondary" size="sm" frontIcon={EyeOpen}
+                onClick={(e) => { e.stopPropagation(); onReview(); }}>
+                Review
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant={isReady ? 'secondary' : 'green'}
+                size="sm"
+                frontIcon={isReady ? ApprovalsIcon : Check2}
+                onClick={(e) => { e.stopPropagation(); isReady ? onUndo() : onMarkReady(); }}
+              >
+                {isReady ? 'Undo' : 'Ready for Client'}
+              </Button>
+              <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+                Review
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1233,26 +1254,32 @@ function InternalCard({
 
 // ── Internal campaign section (proper component so useState works) ───────────
 function InternalCampaignSection({
-  campaign, internalStatuses, today, isPast: isPastProp,
-  onMarkReady, onUndo, onMarkAllReady, onReview,
+  campaign, internalStatuses, statuses, dontPostReasons, today, isPast: isPastProp,
+  onMarkReady, onUndo, onMarkAllReady, onReview, onResubmit,
   defaultCollapsed,
 }: {
   campaign: Campaign;
   internalStatuses: Record<number, InternalStatus>;
+  statuses: Record<number, Status>;
+  dontPostReasons: Record<number, string[]>;
   today: string;
   isPast?: boolean;
   onMarkReady: (id: number) => void;
   onUndo: (id: number) => void;
   onMarkAllReady: () => void;
   onReview: (post: Post) => void;
+  onResubmit: (id: number) => void;
   defaultCollapsed?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
+  const [returnedCollapsed, setReturnedCollapsed] = useState(false);
 
   const posts       = campaign.posts;
-  const readyCount  = posts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
-  const totalCount  = posts.length;
-  const allReady    = readyCount === totalCount;
+  const returnedPosts = posts.filter(p => statuses[p.id] === 'rejected');
+  const activePosts   = posts.filter(p => statuses[p.id] !== 'rejected');
+  const readyCount  = activePosts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
+  const totalCount  = activePosts.length;
+  const allReady    = totalCount > 0 && readyCount === totalCount;
   const isPastCamp  = isPastProp ?? campaign.endDate < today;
 
   return (
@@ -1260,7 +1287,6 @@ function InternalCampaignSection({
       {/* Campaign header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {/* Collapse chevron */}
           <button
             onClick={() => setCollapsed(c => !c)}
             style={{ display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20, border:'none', background:'transparent', cursor:'pointer', padding:0, flexShrink:0 }}
@@ -1281,7 +1307,7 @@ function InternalCampaignSection({
 
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           {isPastCamp ? (
-            <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{totalCount} posts</span>
+            <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{posts.length} posts</span>
           ) : (
             <>
               <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
@@ -1289,7 +1315,7 @@ function InternalCampaignSection({
                   ? <span style={{ color:green, display:'flex', alignItems:'center', gap:4 }}><ApprovalsIcon size={13} color={green} />{totalCount} ready for client</span>
                   : `${totalCount - readyCount} to review`}
               </span>
-              {!allReady && (
+              {!allReady && totalCount > 0 && (
                 <>
                   <div style={{ width:1, height:16, background:dark8 }} />
                   <button onClick={onMarkAllReady}
@@ -1306,18 +1332,66 @@ function InternalCampaignSection({
 
       {/* Cards grid */}
       {!collapsed && (
-        <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-          {posts.map(post => (
-            <InternalCard
-              key={post.id}
-              post={post}
-              internalStatus={internalStatuses[post.id]}
-              isPast={isPastCamp}
-              onMarkReady={() => onMarkReady(post.id)}
-              onUndo={() => onUndo(post.id)}
-              onReview={() => onReview(post)}
-            />
-          ))}
+        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+          {/* Active posts */}
+          {activePosts.length > 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+              {activePosts.map(post => (
+                <InternalCard
+                  key={post.id}
+                  post={post}
+                  internalStatus={internalStatuses[post.id]}
+                  isPast={isPastCamp}
+                  onMarkReady={() => onMarkReady(post.id)}
+                  onUndo={() => onUndo(post.id)}
+                  onReview={() => onReview(post)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Returned by Client subsection */}
+          {returnedPosts.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop: activePosts.length > 0 ? 4 : 0 }}>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+                <button
+                  onClick={() => setReturnedCollapsed(c => !c)}
+                  style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                    <circle cx="12" cy="12" r="9" stroke={red} strokeWidth="1.5"/>
+                    <path d="M8 12h8M12 8v8" stroke={red} strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <span style={{ fontSize:12, fontWeight:500, color:red, fontFamily:F, whiteSpace:'nowrap' }}>
+                    Returned by Client ({returnedPosts.length})
+                  </span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    style={{ transform: returnedCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
+                    <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+              </div>
+              {!returnedCollapsed && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                  {returnedPosts.map(post => (
+                    <InternalCard
+                      key={post.id}
+                      post={post}
+                      internalStatus={internalStatuses[post.id]}
+                      returnedByClient
+                      dontPostReasons={dontPostReasons[post.id]}
+                      onMarkReady={() => onMarkReady(post.id)}
+                      onUndo={() => onUndo(post.id)}
+                      onReview={() => onReview(post)}
+                      onResubmit={() => onResubmit(post.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1388,6 +1462,11 @@ function ApprovalV2Inner() {
     setStatuses(prev => ({ ...prev, [id]: 'rejected' }));
   };
 
+  const resubmitPost = (id: number) => {
+    setStatuses(prev => ({ ...prev, [id]: 'pending' }));
+    setDontPostReasons(prev => { const n = { ...prev }; delete n[id]; return n; });
+  };
+
   // Internal handlers
   const markReadyForClient = (id: number) => {
     setInternalStatuses(prev => ({ ...prev, [id]: 'readyForClient' }));
@@ -1444,9 +1523,15 @@ function ApprovalV2Inner() {
           fontSize:13, fontWeight: tab === t ? 500 : 400, fontFamily:F,
           cursor:'pointer', transition:'background 0.15s, color 0.15s',
           boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-          whiteSpace:'nowrap',
+          whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5,
         }}>
           {t === 'internal' ? 'Internal Review' : 'Client Approval'}
+          {t === 'internal' && (() => {
+            const n = CAMPAIGNS.filter(c => c.endDate >= today).flatMap(c => c.posts).filter(p => statuses[p.id] === 'rejected').length;
+            return n > 0 ? (
+              <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:16, height:16, borderRadius:99, background:red, color:white, fontSize:10, fontWeight:600, padding:'0 4px', lineHeight:1 }}>{n}</span>
+            ) : null;
+          })()}
         </button>
       ))}
     </div>
@@ -1480,6 +1565,8 @@ function ApprovalV2Inner() {
               key={c.id}
               campaign={c}
               internalStatuses={internalStatuses}
+              statuses={statuses}
+              dontPostReasons={dontPostReasons}
               today={today}
               isPast={opts?.isPast}
               defaultCollapsed={opts?.defaultCollapsed}
@@ -1487,6 +1574,7 @@ function ApprovalV2Inner() {
               onUndo={undoReady}
               onMarkAllReady={() => markAllReadyForClient(c)}
               onReview={setReviewPost}
+              onResubmit={resubmitPost}
             />
           );
 
