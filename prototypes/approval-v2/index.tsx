@@ -120,30 +120,70 @@ const TYPE_LABEL: Record<ContentType, string> = {
 };
 
 // ── Status pill ───────────────────────────────────────────────────────────────
-function StatusPill({ status }: { status: Status }) {
-  // Each pill: white base + semi-transparent color layer on top (via backgroundImage)
+function StatusPill({ status, dontPostReasons }: { status: Status; dontPostReasons?: string[] }) {
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const isDontPost = status === 'rejected';
   const cfg =
     status === 'approved' ? {
       bg: white, overlay: 'rgba(32,161,79,0.1)',
       border: 'rgba(32,161,79,0.25)', color: green, label: 'Approved',
     } :
-    status === 'rejected' ? {
-      bg: white, overlay: dark4,
-      border: dark15, color: dark60, label: 'Draft',
+    isDontPost ? {
+      bg: white, overlay: 'rgba(174,34,34,0.08)',
+      border: 'rgba(174,34,34,0.3)', color: '#ae2222', label: "Don't Post",
     } : {
       bg: white, overlay: 'rgba(255,174,0,0.3)',
       border: 'rgba(255,174,0,0.45)', color: '#7a4800', label: 'Review',
     };
+
+  const hasReasons = isDontPost && dontPostReasons && dontPostReasons.length > 0;
+
   return (
-    <span style={{
-      display:'inline-flex', alignItems:'center',
-      padding:'2px 6px', borderRadius:4,
-      backgroundColor: cfg.bg,
-      backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
-      border:`1px solid ${cfg.border}`,
-      fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
-      letterSpacing:'0.22px', whiteSpace:'nowrap',
-    }}>{cfg.label}</span>
+    <>
+      <span
+        style={{ display: 'inline-flex', alignItems: 'center' }}
+        onMouseEnter={e => {
+          if (!hasReasons) return;
+          const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+          setTooltipPos({ x: r.left, y: r.top - 6 });
+        }}
+        onMouseLeave={() => setTooltipPos(null)}
+      >
+        <span style={{
+          display:'inline-flex', alignItems:'center', gap: 4,
+          padding:'2px 6px', borderRadius:4,
+          backgroundColor: cfg.bg,
+          backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
+          border:`1px solid ${cfg.border}`,
+          fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
+          letterSpacing:'0.22px', whiteSpace:'nowrap',
+          cursor: hasReasons ? 'default' : 'inherit',
+        }}>
+          {cfg.label}
+          {hasReasons && (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
+              <path d="M6.5 6C6.5 5.17 7.17 4.5 8 4.5C8.83 4.5 9.5 5.17 9.5 6C9.5 6.83 8 7.5 8 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <circle cx="8" cy="11" r="0.75" fill="currentColor"/>
+            </svg>
+          )}
+        </span>
+      </span>
+      {tooltipPos && hasReasons && (
+        <div style={{
+          position: 'fixed', left: tooltipPos.x, top: tooltipPos.y,
+          transform: 'translateY(-100%)',
+          background: dark90, color: white, borderRadius: 6,
+          padding: '8px 10px', fontSize: 11, fontFamily: F, lineHeight: 1.6,
+          whiteSpace: 'nowrap', zIndex: 9999,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ fontWeight: 500, marginBottom: 4, opacity: 0.7, fontSize: 10, letterSpacing: '0.2px', textTransform: 'uppercase' }}>Reason</div>
+          {dontPostReasons!.map(r => <div key={r}>• {r}</div>)}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -191,9 +231,9 @@ function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
 
 // ── Content card — 245×378px, dark-2 bg, Figma spec ─────────────────────────
 function ContentCard({
-  post, status, onApprove, onRemoveApproval, onReview,
+  post, status, dontPostReasons, onApprove, onRemoveApproval, onReview,
 }: {
-  post: Post; status: Status;
+  post: Post; status: Status; dontPostReasons?: string[];
   onApprove: () => void; onRemoveApproval: () => void; onReview: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -324,7 +364,7 @@ function ContentCard({
 
       {/* ── Status pill — always anchored bottom-left 10px ── */}
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        <StatusPill status={status} />
+        <StatusPill status={status} dontPostReasons={dontPostReasons} />
       </div>
 
       {/* ── Hover overlay ── */}
@@ -361,10 +401,11 @@ function ContentCard({
 
 // ── Campaign section ──────────────────────────────────────────────────────────
 function CampaignSection({
-  campaign, statuses, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast,
+  campaign, statuses, dontPostReasons, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast,
 }: {
   campaign: Campaign;
   statuses: Record<number, Status>;
+  dontPostReasons: Record<number, string[]>;
   onApprove: (id: number) => void;
   onRemoveApproval: (id: number) => void;
   onReview: (id: number) => void;
@@ -495,6 +536,7 @@ function CampaignSection({
                   key={post.id}
                   post={post}
                   status={statuses[post.id]}
+                  dontPostReasons={dontPostReasons[post.id]}
                   onApprove={() => onApprove(post.id)}
                   onRemoveApproval={() => onRemoveApproval(post.id)}
                   onReview={() => onReview(post.id)}
@@ -585,7 +627,7 @@ const DONT_POST_OPTIONS = [
   'Colors and fonts', 'Other',
 ];
 
-function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
+function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (reasons: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [otherText, setOtherText] = useState('');
   const otherSelected = selected.has('Other');
@@ -595,6 +637,13 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () 
     next.has(opt) ? next.delete(opt) : next.add(opt);
     return next;
   });
+
+  const buildReasons = () => {
+    const reasons = Array.from(selected).filter(r => r !== 'Other');
+    if (otherSelected && otherText.trim()) reasons.push(otherText.trim());
+    else if (otherSelected) reasons.push('Other');
+    return reasons;
+  };
 
   return (
     <Modal.Root size="sm" onClose={close}>
@@ -645,7 +694,7 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () 
       </Modal.Content>
       <Modal.Footer>
         <Modal.FooterContent slot="right">
-          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(buildReasons()); close(); }}>
             Send Feedback
           </Modal.FooterButton>
         </Modal.FooterContent>
@@ -656,20 +705,21 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () 
 
 // ── Content review page (full-page overlay) ───────────────────────────────────
 function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
-  mode, internalStatus, onMarkReady, onUndoReady,
+  mode, internalStatus, onMarkReady, onUndoReady, dontPostReasons,
 }: {
   post: Post; status: Status;
   allPosts: Post[]; allStatuses: Record<number, Status>;
   onClose: () => void; onApprove: () => void; onRemoveApproval: () => void;
-  onDontPost: () => void; onNavigate: (id: number) => void;
+  onDontPost: (reasons: string[]) => void; onNavigate: (id: number) => void;
   mode?: 'internal' | 'client';
   internalStatus?: InternalStatus;
   onMarkReady?: () => void;
   onUndoReady?: () => void;
+  dontPostReasons?: Record<number, string[]>;
 }) {
   const [chatInput, setChatInput] = useState('');
   const { openModal } = useModals();
-  const handleDontPost = () => openModal(DontPostModal, { onConfirm: onDontPost });
+  const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
   const isApproved = status === 'approved';
   const isInternal = mode === 'internal';
   const isReadyForClient = internalStatus === 'readyForClient';
@@ -705,7 +755,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           </span>
           {isInternal
             ? <InternalStatusPill status={internalStatus ?? 'internalReview'} />
-            : <StatusPill status={status} />}
+            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} />}
           <Button variant="ghost" size="sm" square>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
           </Button>
@@ -1304,6 +1354,7 @@ function ApprovalV2Inner() {
 
   const [reviewPost, setReviewPost] = useState<Post | null>(null);
   const [completingCampaignId, setCompletingCampaignId] = useState<number | null>(null);
+  const [dontPostReasons, setDontPostReasons] = useState<Record<number, string[]>>({});
 
   const { openModal } = useModals();
 
@@ -1475,6 +1526,7 @@ function ApprovalV2Inner() {
             key={campaign.id}
             campaign={campaign}
             statuses={statuses}
+            dontPostReasons={dontPostReasons}
             onApprove={(id) => approve(id, campaign.id)}
             onRemoveApproval={removeApproval}
             onReview={(id) => { setReviewPost(campaign.posts.find(p => p.id === id)!); }}
@@ -1532,12 +1584,13 @@ function ApprovalV2Inner() {
             approve(reviewPost.id, c.id);
           }}
           onRemoveApproval={() => removeApproval(reviewPost.id)}
-          onDontPost={() => { rejectPost(reviewPost.id); setReviewPost(null); }}
+          onDontPost={(reasons) => { rejectPost(reviewPost.id); setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: reasons })); setReviewPost(null); }}
           onNavigate={(id) => setReviewPost(CAMPAIGNS.flatMap(c => c.posts).find(p => p.id === id) ?? null)}
           mode={tab}
           internalStatus={internalStatuses[reviewPost.id]}
           onMarkReady={() => markReadyForClient(reviewPost.id)}
           onUndoReady={() => undoReady(reviewPost.id)}
+          dontPostReasons={dontPostReasons}
         />
       )}
     </PrototypeShell>
