@@ -635,16 +635,24 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: () 
 }
 
 // ── Content review page (full-page overlay) ───────────────────────────────────
-function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate }: {
+function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
+  mode, internalStatus, onMarkReady, onUndoReady,
+}: {
   post: Post; status: Status;
   allPosts: Post[]; allStatuses: Record<number, Status>;
   onClose: () => void; onApprove: () => void; onRemoveApproval: () => void;
   onDontPost: () => void; onNavigate: (id: number) => void;
+  mode?: 'internal' | 'client';
+  internalStatus?: InternalStatus;
+  onMarkReady?: () => void;
+  onUndoReady?: () => void;
 }) {
   const [chatInput, setChatInput] = useState('');
   const { openModal } = useModals();
   const handleDontPost = () => openModal(DontPostModal, { onConfirm: onDontPost });
   const isApproved = status === 'approved';
+  const isInternal = mode === 'internal';
+  const isReadyForClient = internalStatus === 'readyForClient';
   const currentIdx = allPosts.findIndex(p => p.id === post.id);
   const prevPost = allPosts[currentIdx - 1];
   const nextPost = allPosts[currentIdx + 1];
@@ -675,13 +683,15 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           <span style={{ fontSize: 14, fontWeight: 400, color: dark80, fontFamily: F, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
             {post.caption.slice(0, 48)}{post.caption.length > 48 ? '…' : ''}
           </span>
-          <StatusPill status={status} />
+          {isInternal
+            ? <InternalStatusPill status={internalStatus ?? 'internalReview'} />
+            : <StatusPill status={status} />}
           <Button variant="ghost" size="sm" square>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
           </Button>
         </div>
 
-        {/* Center: Prev / Don't Post / Approve / Next */}
+        {/* Center: Prev / Don't Post / primary CTA / Next */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <Button
             variant="ghost" size="sm" frontIcon={ArrowLeft}
@@ -693,14 +703,26 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           <Button variant="secondary" size="sm" onPress={handleDontPost}>
             Don't Post
           </Button>
-          {isApproved ? (
-            <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
-              Remove approval
-            </Button>
+          {isInternal ? (
+            isReadyForClient ? (
+              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onUndoReady?.(); }}>
+                Remove Approval
+              </Button>
+            ) : (
+              <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onMarkReady?.(); }}>
+                Ready for Client
+              </Button>
+            )
           ) : (
-            <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
-              Approve
-            </Button>
+            isApproved ? (
+              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
+                Remove approval
+              </Button>
+            ) : (
+              <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
+                Approve
+              </Button>
+            )
           )}
           <Button
             variant="ghost" size="sm" endIcon={ArrowRight}
@@ -1490,6 +1512,10 @@ function ApprovalV2Inner() {
           onRemoveApproval={() => removeApproval(reviewPost.id)}
           onDontPost={() => { rejectPost(reviewPost.id); setReviewPost(null); }}
           onNavigate={(id) => setReviewPost(CAMPAIGNS.flatMap(c => c.posts).find(p => p.id === id) ?? null)}
+          mode={tab}
+          internalStatus={internalStatuses[reviewPost.id]}
+          onMarkReady={() => markReadyForClient(reviewPost.id)}
+          onUndoReady={() => undoReady(reviewPost.id)}
         />
       )}
     </PrototypeShell>
