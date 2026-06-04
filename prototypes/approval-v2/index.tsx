@@ -1803,14 +1803,8 @@ function ApprovalV2Inner() {
                   All Set! Nothing to Approve just yet.
                 </p>
                 <div style={{ display:'flex', gap:10 }}>
-                  <button style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', border:`1px solid ${dark15}`, borderRadius:8, background:white, fontSize:13, color:dark90, fontFamily:F, cursor:'pointer' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h10" stroke={dark60} strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    Open Campaigns
-                  </button>
-                  <button style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', border:`1px solid ${dark15}`, borderRadius:8, background:white, fontSize:13, color:dark90, fontFamily:F, cursor:'pointer' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke={dark60} strokeWidth="1.5"/><path d="M16 2v4M8 2v4M3 10h18" stroke={dark60} strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    Go to Calendar
-                  </button>
+                  <Button variant="secondary" size="sm" frontIcon={Layers5}>Open Campaigns</Button>
+                  <Button variant="secondary" size="sm" frontIcon={CalendarEdit}>Go to Calendar</Button>
                 </div>
               </div>
             )}
