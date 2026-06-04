@@ -806,7 +806,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           >
             Previous
           </Button>
-          {!(isInternal && isReadyForClient) && (
+          {!(isInternal && isReadyForClient) && status !== 'rejected' && (
             <Button variant="secondary" size="sm" onPress={handleDontPost}>
               Don't Post
             </Button>
