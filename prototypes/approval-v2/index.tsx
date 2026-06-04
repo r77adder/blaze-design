@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { PrototypeShell } from '../_shell';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit } from '@/icons/20';
@@ -145,7 +146,7 @@ function StatusPill({ status, dontPostReasons }: { status: Status; dontPostReaso
         onMouseEnter={e => {
           if (!hasReasons) return;
           const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-          setTooltipPos({ x: r.left, y: r.top - 6 });
+          setTooltipPos({ x: r.left, y: r.top });
         }}
         onMouseLeave={() => setTooltipPos(null)}
       >
@@ -169,10 +170,10 @@ function StatusPill({ status, dontPostReasons }: { status: Status; dontPostReaso
           )}
         </span>
       </span>
-      {tooltipPos && hasReasons && (
+      {tooltipPos && hasReasons && createPortal(
         <div style={{
           position: 'fixed', left: tooltipPos.x, top: tooltipPos.y,
-          transform: 'translateY(-100%)',
+          transform: 'translateY(calc(-100% - 8px))',
           background: dark90, color: white, borderRadius: 6,
           padding: '8px 10px', fontSize: 11, fontFamily: F, lineHeight: 1.6,
           whiteSpace: 'nowrap', zIndex: 9999,
@@ -181,7 +182,8 @@ function StatusPill({ status, dontPostReasons }: { status: Status; dontPostReaso
         }}>
           <div style={{ fontWeight: 500, marginBottom: 4, opacity: 0.7, fontSize: 10, letterSpacing: '0.2px', textTransform: 'uppercase' }}>Reason</div>
           {dontPostReasons!.map(r => <div key={r}>• {r}</div>)}
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
