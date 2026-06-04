@@ -121,10 +121,22 @@ const TYPE_LABEL: Record<ContentType, string> = {
 };
 
 // ── Status pill ───────────────────────────────────────────────────────────────
-function StatusPill({ status, dontPostReasons }: { status: Status; dontPostReasons?: string[] }) {
+const purple = '#7f24b7';
+
+function StatusPill({ status, dontPostReasons, isPast }: { status: Status; dontPostReasons?: string[]; isPast?: boolean }) {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const isDontPost = status === 'rejected';
+  const isPosted  = isPast && status === 'approved';
+  const isFailed  = isPast && status === 'pending';
   const cfg =
+    isPosted ? {
+      bg: white, overlay: 'rgba(127,36,183,0.08)',
+      border: 'rgba(127,36,183,0.25)', color: purple, label: 'Posted',
+    } :
+    isFailed ? {
+      bg: white, overlay: dark4,
+      border: dark15, color: dark60, label: 'Failed',
+    } :
     status === 'approved' ? {
       bg: white, overlay: 'rgba(32,161,79,0.1)',
       border: 'rgba(32,161,79,0.25)', color: green, label: 'Approved',
@@ -233,9 +245,9 @@ function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
 
 // ── Content card — 245×378px, dark-2 bg, Figma spec ─────────────────────────
 function ContentCard({
-  post, status, dontPostReasons, onApprove, onRemoveApproval, onReview,
+  post, status, dontPostReasons, isPast, onApprove, onRemoveApproval, onReview,
 }: {
-  post: Post; status: Status; dontPostReasons?: string[];
+  post: Post; status: Status; dontPostReasons?: string[]; isPast?: boolean;
   onApprove: () => void; onRemoveApproval: () => void; onReview: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -366,7 +378,7 @@ function ContentCard({
 
       {/* ── Status pill — always anchored bottom-left 10px ── */}
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        <StatusPill status={status} dontPostReasons={dontPostReasons} />
+        <StatusPill status={status} dontPostReasons={dontPostReasons} isPast={isPast} />
       </div>
 
       {/* ── Hover overlay ── */}
@@ -518,7 +530,7 @@ function CampaignSection({
         </div>
       </div>
 
-      {/* ── Pending / review / draft cards ── */}
+      {/* ── Cards ── */}
       {!collapsed && (
         <div style={{
           display:'flex', flexDirection:'column', gap:18,
@@ -530,79 +542,94 @@ function CampaignSection({
             ? 'opacity 0.45s ease, transform 0.45s cubic-bezier(0.4,0,1,1), max-height 0.55s ease'
             : 'none',
         }}>
-          {/* Pending grid */}
-          {pending.length > 0 && (
+          {isPast ? (
+            /* Past campaigns — flat grid with Posted/Don't Post/Failed pills */
             <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-              {pending.map(post => (
+              {campaign.posts.map(post => (
                 <ContentCard
-                  key={post.id}
-                  post={post}
+                  key={post.id} post={post}
                   status={statuses[post.id]}
                   dontPostReasons={dontPostReasons[post.id]}
+                  isPast
                   onApprove={() => onApprove(post.id)}
                   onRemoveApproval={() => onRemoveApproval(post.id)}
                   onReview={() => onReview(post.id)}
                 />
               ))}
             </div>
-          )}
-
-          {/* Approved section */}
-          {approved.length > 0 && (() => {
-            const allDone = pending.length === 0; // every post in campaign is approved
-            if (allDone) {
-              // Campaign fully approved — no divider, just the grid
-              return (
+          ) : (
+            <>
+              {/* Pending grid */}
+              {pending.length > 0 && (
                 <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-                  {approved.map(post => (
+                  {pending.map(post => (
                     <ContentCard
-                      key={post.id} post={post} status={statuses[post.id]}
+                      key={post.id} post={post}
+                      status={statuses[post.id]}
+                      dontPostReasons={dontPostReasons[post.id]}
                       onApprove={() => onApprove(post.id)}
                       onRemoveApproval={() => onRemoveApproval(post.id)}
                       onReview={() => onReview(post.id)}
                     />
                   ))}
                 </div>
-              );
-            }
-            // Partially approved — show collapsible section with divider
-            return (
-              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:4 }}>
-                  <div style={{ flex:1, height:1, background:dark8 }} />
-                  <button
-                    onClick={() => setApprovedSectionCollapsed(c => !c)}
-                    style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
-                      <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
-                      <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
-                      Approved ({approved.length})
-                    </span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                      style={{ transform: approvedSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
-                      <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  <div style={{ flex:1, height:1, background:dark8 }} />
-                </div>
-                {!approvedSectionCollapsed && (
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-                    {approved.map(post => (
-                      <ContentCard
-                        key={post.id} post={post} status={statuses[post.id]}
-                        onApprove={() => onApprove(post.id)}
-                        onRemoveApproval={() => onRemoveApproval(post.id)}
-                        onReview={() => onReview(post.id)}
-                      />
-                    ))}
+              )}
+              {/* Approved section */}
+              {approved.length > 0 && (() => {
+                const allDone = pending.length === 0;
+                if (allDone) {
+                  return (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                      {approved.map(post => (
+                        <ContentCard
+                          key={post.id} post={post} status={statuses[post.id]}
+                          onApprove={() => onApprove(post.id)}
+                          onRemoveApproval={() => onRemoveApproval(post.id)}
+                          onReview={() => onReview(post.id)}
+                        />
+                      ))}
+                    </div>
+                  );
+                }
+                return (
+                  <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:4 }}>
+                      <div style={{ flex:1, height:1, background:dark8 }} />
+                      <button
+                        onClick={() => setApprovedSectionCollapsed(c => !c)}
+                        style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                          <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
+                          <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
+                          Approved ({approved.length})
+                        </span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          style={{ transform: approvedSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
+                          <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                      <div style={{ flex:1, height:1, background:dark8 }} />
+                    </div>
+                    {!approvedSectionCollapsed && (
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                        {approved.map(post => (
+                          <ContentCard
+                            key={post.id} post={post} status={statuses[post.id]}
+                            onApprove={() => onApprove(post.id)}
+                            onRemoveApproval={() => onRemoveApproval(post.id)}
+                            onReview={() => onReview(post.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })()}
+                );
+              })()}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -1116,7 +1143,7 @@ function InternalStatusPill({ status }: { status: InternalStatus }) {
 // ── Internal content card ─────────────────────────────────────────────────────
 function InternalCard({
   post, internalStatus, onMarkReady, onUndo, onReview, isPast,
-  returnedByClient, approvedByClient, dontPostReasons, onResubmit,
+  returnedByClient, approvedByClient, dontPostReasons, onResubmit, pastClientStatus,
 }: {
   post: Post; internalStatus: InternalStatus; isPast?: boolean;
   onMarkReady: () => void; onUndo: () => void; onReview: () => void;
@@ -1124,6 +1151,7 @@ function InternalCard({
   approvedByClient?: boolean;
   dontPostReasons?: string[];
   onResubmit?: () => void;
+  pastClientStatus?: Status;
 }) {
   const [hovered, setHovered] = useState(false);
   const isReady = internalStatus === 'readyForClient';
@@ -1211,12 +1239,12 @@ function InternalCard({
 
       {/* Status pill */}
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        {returnedByClient
-          ? <StatusPill status="rejected" dontPostReasons={dontPostReasons} />
-          : approvedByClient
-            ? <StatusPill status="approved" />
-            : isPast && !isReady
-              ? <StatusPill status="rejected" />
+        {isPast && pastClientStatus !== undefined
+          ? <StatusPill status={pastClientStatus} dontPostReasons={dontPostReasons} isPast />
+          : returnedByClient
+            ? <StatusPill status="rejected" dontPostReasons={dontPostReasons} />
+            : approvedByClient
+              ? <StatusPill status="approved" />
               : <InternalStatusPill status={internalStatus} />}
       </div>
 
@@ -1377,6 +1405,24 @@ function InternalCampaignSection({
       {!collapsed && (
         <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
+          {/* Past campaigns — flat grid with Posted/Don't Post/Failed */}
+          {isPastCamp ? (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+              {posts.map(post => (
+                <InternalCard
+                  key={post.id} post={post}
+                  internalStatus={internalStatuses[post.id]}
+                  isPast
+                  pastClientStatus={statuses[post.id]}
+                  dontPostReasons={dontPostReasons[post.id]}
+                  onMarkReady={() => onMarkReady(post.id)}
+                  onUndo={() => onUndo(post.id)}
+                  onReview={() => onReview(post)}
+                />
+              ))}
+            </div>
+          ) : (
+          <>
           {/* 1 — Active posts */}
           {activePosts.length > 0 && (
             <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
@@ -1384,7 +1430,6 @@ function InternalCampaignSection({
                 <InternalCard
                   key={post.id} post={post}
                   internalStatus={internalStatuses[post.id]}
-                  isPast={isPastCamp}
                   onMarkReady={() => onMarkReady(post.id)}
                   onUndo={() => onUndo(post.id)}
                   onReview={() => onReview(post)}
@@ -1472,6 +1517,8 @@ function InternalCampaignSection({
                 </div>
               )}
             </div>
+          )}
+          </>
           )}
         </div>
       )}
