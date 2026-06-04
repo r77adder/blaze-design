@@ -14,7 +14,7 @@ const LABEL_TO_TOOL_ID: Record<string, ToolId> = Object.fromEntries(
 ) as Record<string, ToolId>;
 
 const PAGE_TITLES: Record<string, string> = {
-  '/h2': 'Home',
+  '/h2': 'Home (old)',
   '/h2/organic-social': 'Organic Campaigns',
   '/h2/organic-profile': 'Local SEO',
   '/h2/ranking': 'Ranking',
@@ -30,6 +30,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/h2/multi-change': 'Multi-Change',
   '/h2/content-settings': 'Content Preferences',
   '/h2/tools': 'Meta Strategy',
+  '/h2/dfy-campaigns': 'DFY Campaign',
+  '/h2/living-doc': 'Home',
+  '/h2/approvals': 'Approvals',
 };
 
 /** Filter Demand Gen + Conversion sections down to the user's enabled tools.

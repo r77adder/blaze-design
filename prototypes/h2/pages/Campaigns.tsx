@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { StatusPill, TabChip, useToast } from '@/staging';
@@ -58,6 +58,7 @@ const HERO_IMG: Record<string, string> = {
   tt1: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=600&fit=crop',
   ss1: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&h=600&fit=crop',
   ss2: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&h=600&fit=crop',
+  jw: 'https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=1600&h=600&fit=crop',
   pu: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=1600&h=600&fit=crop',
   tt2: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=1600&h=600&fit=crop',
 };
@@ -69,6 +70,9 @@ const SEED_CAMPAIGNS: Campaign[] = [
   { id: 'tt1', name: 'Color Tips — March', type: 'Lifestyle Content', thumb: PHOTO_A, start: '2026-02-17', end: '2026-03-24', status: 'review', statusLabel: '15 posts to review', sections: ['organic', 'aeo'] },
   { id: 'ss1', name: 'Spring Exterior Push 2026', type: 'Lifestyle Content', thumb: PHOTO_B, start: '2026-02-25', end: '2026-03-14', status: 'review', statusLabel: '2 posts to review', sections: ['organic', 'meta', 'search', 'landing'] },
   { id: 'ss2', name: 'Spring Exterior — Wave 2', type: 'Lifestyle Content', thumb: PHOTO_C, start: '2026-03-01', end: '2026-03-28', status: 'generating', statusLabel: 'Generating in 3 days', sections: ['organic', 'meta', 'search'] },
+  // Agent-drafted from the Jun 3 check-in — deep-linked from the Living Doc
+  // campaign draft card via /h2/campaigns?campaign=jw.
+  { id: 'jw', name: 'June Wave — Team & Interiors', type: 'Lifestyle Content', thumb: PHOTO_A, start: '2026-06-16', end: '2026-07-04', status: 'generating', statusLabel: 'Draft — agent generating', sections: ['organic', 'meta'] },
   { id: 'pu', name: 'New Service — Stucco Repair', type: 'Lifestyle Content', thumb: PHOTO_D, start: '2026-03-03', end: '2026-04-14', status: 'generating', statusLabel: 'Generating in 10 days', sections: ['organic', 'landing', 'aeo'] },
   { id: 'tt2', name: 'Color Tips — April', type: 'Lifestyle Content', thumb: PHOTO_A, start: '2026-03-03', end: '2026-04-04', status: 'generating', statusLabel: 'Generating on Apr 30', sections: ['organic', 'influencer'] },
   { id: 'pe', name: 'Pre-Summer Exterior Series', type: 'Seasonal · proposed', thumb: PHOTO_B, start: '2026-03-30', end: '2026-04-12', status: 'proposed', statusLabel: 'Proposed — review to accept', proposed: true, sections: ['organic', 'meta'] },
@@ -197,7 +201,10 @@ const SECTION_META: Record<SectionId, SectionMeta> = {
 
 const TODAY = new Date(2026, 1, 11);
 const RANGE_START = new Date(2026, 1, 1);
-const RANGE_END = new Date(2026, 3, 30);
+// Extended through July so the agent-drafted June Wave ('jw') renders on
+// the chart — the gantt scrolls horizontally, so the extra months just add
+// scroll area (DAY_W is fixed; nothing compresses).
+const RANGE_END = new Date(2026, 6, 31);
 const DAY_W = 14;
 const ROW_H = 84;
 
@@ -1796,6 +1803,17 @@ function CampaignsRouteInner() {
     setView({ kind: 'detail', campaignId: id });
   };
   const backToGantt = () => setView({ kind: 'gantt' });
+
+  // Deep-link support: /h2/campaigns?campaign=<id> opens that campaign's
+  // detail view directly (used by the Living Doc's agent campaign draft card).
+  const { search } = useLocation();
+  useEffect(() => {
+    const id = new URLSearchParams(search).get('campaign');
+    if (id && SEED_CAMPAIGNS.some((c) => c.id === id)) {
+      setDetailScrolled(false);
+      setView({ kind: 'detail', campaignId: id });
+    }
+  }, [search]);
 
   const openWizard = () => {
     openModal(NewCampaignWizardModal, {

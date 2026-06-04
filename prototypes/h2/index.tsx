@@ -23,8 +23,12 @@ import { SeoAeoRoute } from './pages/SeoAeo';
 import { OrganicProfileRoute } from './pages/OrganicProfile';
 import { Placeholder } from './pages/Placeholder';
 import { DevStateProvider, useDevState } from './dev-state-context';
+import { ClientViewProvider } from './client-view-context';
 import { DevStatePanel } from './DevStatePanel';
 import { PaidAdsColdView } from './pages/ColdViews';
+import { DfyCampaignsRoute } from './pages/DfyCampaigns';
+import { LivingDocRoute } from './pages/LivingDoc';
+import { ClientApprovalsRoute } from './pages/ApprovalsV2';
 import { OnboardingProvider, useOnboarding } from './onboarding/onboarding-context';
 import { Onboarding } from './onboarding/Onboarding';
 import { BrandKitProvider } from './brand-kit/brand-kit-context';
@@ -57,7 +61,9 @@ export default function H2() {
           <ToasterProvider>
             <ModalStack>
               <DevStateProvider>
-                <H2RoutedShell />
+                <ClientViewProvider>
+                  <H2RoutedShell />
+                </ClientViewProvider>
                 <DevStatePanel />
               </DevStateProvider>
               <Toaster />
@@ -112,6 +118,9 @@ function H2RoutedShell() {
       <Route path="/sdr" element={<SdrRoute />} />
       <Route path="/tools" element={<ToolsRoute />} />
       <Route path="/brand-kit" element={<BrandKitFlow />} />
+      <Route path="/dfy-campaigns" element={<DfyCampaignsRoute />} />
+      <Route path="/living-doc" element={<LivingDocRoute />} />
+      <Route path="/approvals" element={<ClientApprovalsRoute />} />
       <Route path="/scorecard/*" element={<ScorecardPrototype />} />
     </Routes>
   );
