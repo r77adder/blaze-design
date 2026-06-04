@@ -61,11 +61,11 @@ function slugToTitle(slug: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-function Card({ route }: { route: PrototypeRoute }) {
+function Card({ route, prefix = '' }: { route: PrototypeRoute; prefix?: string }) {
   const title = route.title ?? slugToTitle(route.slug);
   return (
     <Link
-      to={`/${route.slug}`}
+      to={`${prefix}/${route.slug}`}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -130,7 +130,7 @@ function Card({ route }: { route: PrototypeRoute }) {
           }}
         >
           <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
-            /{route.slug}
+            {prefix}/{route.slug}
           </span>
           {route.lastModified && (
             <span title={new Date(route.lastModified).toLocaleString()}>
@@ -216,7 +216,24 @@ function Index() {
           </>
         )}
         {iosPrototypeRoutes.length > 0 && (
-          <Section title="iOS" routes={iosPrototypeRoutes} prefix="/ios" />
+          <>
+            <div style={{ fontFamily: FONT_STACK, fontSize: 11, fontWeight: 500, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 16 }}>iOS</div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: 20,
+                marginBottom: 40,
+              }}
+            >
+              {/* Sort so 'mobile-app' (the unified prototype) is first */}
+              {[...iosPrototypeRoutes]
+                .sort((a, b) => (a.slug === 'mobile-app' ? -1 : b.slug === 'mobile-app' ? 1 : a.slug.localeCompare(b.slug)))
+                .map((r) => (
+                  <Card key={r.slug} route={r} prefix="/ios" />
+                ))}
+            </div>
+          </>
         )}
       </div>
     </main>

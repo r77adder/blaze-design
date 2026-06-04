@@ -1498,48 +1498,52 @@ function GoogleMapsPackPreview() {
       <div style={{ display: 'flex' }}>
         {/* Listings */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--dark-60)', padding: '7px 12px 5px', borderBottom: '1px solid var(--dark-4)' }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-60)', padding: '10px 14px 8px', borderBottom: '1px solid var(--dark-4)' }}>
             Businesses
           </div>
           {organic.map((b, i) => (
             <div
               key={b.name}
               style={{
-                padding: '10px 12px',
+                padding: '12px 14px',
                 borderBottom: i < organic.length - 1 ? '1px solid var(--dark-4)' : 'none',
                 background: b.isYou ? 'rgba(26,115,232,0.04)' : 'transparent',
                 borderLeft: `2px solid ${b.isYou ? '#1A73E8' : 'transparent'}`,
                 display: 'flex',
-                gap: 8,
+                gap: 10,
                 alignItems: 'flex-start',
               }}
             >
-              <span style={{ fontSize: 12, color: b.isYou ? '#1A73E8' : 'var(--dark-40)', fontWeight: 500, minWidth: 16, flexShrink: 0, lineHeight: 1.5, fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: 14, color: b.isYou ? '#1A73E8' : 'var(--dark-40)', fontWeight: 500, minWidth: 18, flexShrink: 0, lineHeight: 1.5, fontVariantNumeric: 'tabular-nums' }}>
                 {i + 1}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: b.isYou ? 500 : 400, color: 'var(--dark-90)', fontSize: 13, lineHeight: 1.3, marginBottom: 3 }}>
-                {b.name}
-                {b.isYou && <span style={{ fontSize: 11, color: '#1A73E8', fontWeight: 400, marginLeft: 5 }}>You</span>}
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                <div style={{ fontWeight: b.isYou ? 500 : 400, color: 'var(--dark-90)', fontSize: 15, lineHeight: 1.3 }}>
+                  {b.name}
+                  {b.isYou && <span style={{ fontSize: 13, color: '#1A73E8', fontWeight: 400, marginLeft: 6 }}>You</span>}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                  {b.years} years in business
+                </div>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--dark-60)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 13, color: 'var(--dark-60)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                 <span style={{ color: '#F5B400' }}>★</span>
                 <span>{b.rating}</span>
                 <span style={{ color: 'var(--dark-40)' }}>({b.reviews})</span>
                 <span style={{ color: 'var(--dark-40)' }}>·</span>
                 <span style={{ color: b.open.startsWith('Open') ? 'var(--status-approved)' : 'var(--dark-60)' }}>{b.open}</span>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--dark-60)', marginTop: 2 }}>{b.years} years in business</div>
-              <div style={{ display: 'flex', gap: 5, marginTop: 6 }}>
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                 {(['Website', 'Directions'] as const).map((a) => (
-                  <button key={a} style={{ fontSize: 11, padding: '3px 7px', background: 'var(--dark-4)', border: '1px solid var(--dark-8)', borderRadius: 12, color: 'var(--dark-80)', cursor: 'pointer', fontFamily: 'inherit' }}>{a}</button>
+                  <button key={a} style={{ fontSize: 12, padding: '4px 10px', background: 'var(--dark-4)', border: '1px solid var(--dark-8)', borderRadius: 14, color: 'var(--dark-80)', cursor: 'pointer', fontFamily: 'inherit' }}>{a}</button>
                 ))}
               </div>
               </div>
             </div>
           ))}
-          <div style={{ padding: '8px 12px', borderTop: '1px solid var(--dark-4)' }}>
-            <button style={{ fontSize: 12, color: '#1A73E8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--dark-4)' }}>
+            <button style={{ fontSize: 13, color: '#1A73E8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
               View on Google →
             </button>
           </div>
@@ -1552,49 +1556,196 @@ function GoogleMapsPackPreview() {
             preserveAspectRatio="xMidYMid slice"
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
           >
-            {/* Land */}
-            <rect width="156" height="360" fill="#e8efdb"/>
-            {/* Block fills */}
-            <rect x="0"  y="0"   width="46" height="70" fill="#d5e8c8"/>
-            <rect x="56" y="0"   width="42" height="52" fill="#d5e8c8"/>
-            <rect x="108" y="0"  width="48" height="78" fill="#d5e8c8"/>
-            <rect x="0"  y="80"  width="40" height="58" fill="#d5e8c8"/>
-            <rect x="56" y="62"  width="42" height="48" fill="#d5e8c8"/>
-            <rect x="0"  y="155" width="46" height="62" fill="#d5e8c8"/>
-            <rect x="58" y="126" width="40" height="52" fill="#d5e8c8"/>
-            <rect x="108" y="96" width="48" height="68" fill="#d5e8c8"/>
-            <rect x="0"  y="228" width="60" height="55" fill="#d5e8c8"/>
-            <rect x="80" y="210" width="76" height="80" fill="#d5e8c8"/>
-            {/* Water (Town Lake) */}
-            <path d="M0,255 Q38,242 78,255 Q118,268 156,252 L156,276 Q118,264 78,276 Q38,288 0,274Z" fill="#b4d0e0" opacity="0.8"/>
-            {/* Major N-S roads */}
-            <rect x="48" y="0"  width="8" height="360" fill="white"/>
-            <rect x="106" y="0" width="8" height="360" fill="white"/>
-            {/* Major E-W roads */}
-            <rect x="0" y="73"  width="156" height="7" fill="white"/>
-            <rect x="0" y="145" width="156" height="7" fill="white"/>
-            {/* Secondary N-S */}
-            <rect x="20" y="0"   width="3" height="360" fill="white"/>
-            <rect x="78" y="0"   width="3" height="360" fill="white"/>
-            <rect x="134" y="0"  width="3" height="360" fill="white"/>
-            {/* Secondary E-W */}
-            <rect x="0" y="30"  width="156" height="3" fill="white"/>
-            <rect x="0" y="110" width="156" height="3" fill="white"/>
-            <rect x="0" y="192" width="156" height="3" fill="white"/>
-            {/* Diagonal (Congress Ave style) */}
-            <path d="M142,0 L128,76 L116,147 L106,218 L96,290 L88,360" stroke="white" strokeWidth="5" fill="none"/>
+            {/* Land background */}
+            <rect width="156" height="360" fill="#F5F1E8"/>
+
+            {/* ─── Block / parcel fills (irregular, varied tones) ─── */}
+            {/* Top-left quadrant */}
+            <polygon points="0,0 44,0 46,32 42,68 0,72" fill="#EBE4D1"/>
+            <polygon points="52,0 96,0 98,28 94,54 50,52" fill="#E6DFC9"/>
+            <polygon points="102,0 156,0 156,38 130,46 104,42" fill="#EBE4D1"/>
+            <polygon points="104,46 156,42 156,82 132,86 102,76" fill="#E2DCC2"/>
+            {/* Mid-upper */}
+            <polygon points="0,82 38,80 44,118 38,140 0,142" fill="#E6DFC9"/>
+            <polygon points="52,80 96,82 96,118 78,124 52,120" fill="#EBE4D1"/>
+            <polygon points="80,122 96,120 98,160 82,162 78,142" fill="#E2DCC2"/>
+            {/* Mid */}
+            <polygon points="102,90 156,84 156,140 134,148 104,142" fill="#EBE4D1"/>
+            <polygon points="0,150 42,148 46,196 40,222 0,224" fill="#E6DFC9"/>
+            <polygon points="52,148 96,150 98,196 80,210 52,200" fill="#E2DCC2"/>
+            <polygon points="104,150 156,148 156,200 130,210 104,196" fill="#EBE4D1"/>
+            {/* Lower */}
+            <polygon points="0,234 56,232 60,250 4,252" fill="#E6DFC9"/>
+            <polygon points="78,232 156,236 156,250 80,250" fill="#EBE4D1"/>
+            {/* Below river */}
+            <polygon points="0,286 48,284 52,330 0,332" fill="#E6DFC9"/>
+            <polygon points="56,286 98,288 100,330 58,330" fill="#EBE4D1"/>
+            <polygon points="104,284 156,286 156,332 108,332" fill="#E2DCC2"/>
+            <polygon points="0,338 52,336 56,360 0,360" fill="#EBE4D1"/>
+            <polygon points="58,336 100,338 102,360 60,360" fill="#E6DFC9"/>
+            <polygon points="106,336 156,338 156,360 108,360" fill="#EBE4D1"/>
+
+            {/* Parks — richer greens */}
+            <polygon points="14,18 32,16 36,30 30,46 12,44" fill="#C5E1A5"/>
+            <polygon points="62,160 78,158 80,178 64,180" fill="#A5D6A7"/>
+            <polygon points="120,168 142,166 144,188 122,190" fill="#C5E1A5"/>
+            <polygon points="10,302 28,300 32,322 12,324" fill="#A5D6A7"/>
+            <polygon points="124,300 146,302 146,326 126,324" fill="#C5E1A5"/>
+
+            {/* ─── Water: Lady Bird Lake — organic curving river ─── */}
+            <path
+              d="M0,258 C20,250 32,266 50,260 C68,254 82,272 100,266 C118,260 134,274 156,262 L156,284 C134,296 118,282 100,288 C82,294 68,278 50,284 C32,290 20,272 0,280 Z"
+              fill="#A8C9E0"
+            />
+            {/* River subtle inner highlight */}
+            <path
+              d="M0,266 C20,260 32,274 50,268 C68,262 82,280 100,274 C118,268 134,282 156,270"
+              stroke="#BDD6E6"
+              strokeWidth="1"
+              fill="none"
+              opacity="0.7"
+            />
+
+            {/* ─── Road shadow/border layer (gray under whites) ─── */}
+            {/* Primary N-S */}
+            <rect x="100" y="0" width="14" height="360" fill="#D8D2BF" opacity="0.6"/>
+            {/* Primary E-W */}
+            <rect x="0" y="74" width="156" height="12" fill="#D8D2BF" opacity="0.6"/>
+            <rect x="0" y="142" width="156" height="11" fill="#D8D2BF" opacity="0.6"/>
+            {/* Other major N-S shadow */}
+            <rect x="46" y="0" width="10" height="360" fill="#D8D2BF" opacity="0.6"/>
+
+            {/* ─── Major roads (white) ─── */}
+            {/* Primary highway (I-35 style) — bolder vertical */}
+            <rect x="102" y="0" width="10" height="360" fill="#FFFFFF"/>
+            {/* Secondary major N-S (Lamar style) */}
+            <rect x="47" y="0" width="8" height="360" fill="#FFFFFF"/>
+            {/* Primary E-W (MLK style) */}
+            <rect x="0" y="75" width="156" height="9" fill="#FFFFFF"/>
+            {/* Primary E-W (Cesar Chavez style) */}
+            <rect x="0" y="143" width="156" height="8" fill="#FFFFFF"/>
+
+            {/* ─── Diagonal artery (Congress Ave) ─── */}
+            <path
+              d="M140,0 C134,40 128,80 122,124 C118,160 114,200 108,244 C102,288 96,328 90,360"
+              stroke="#E5DFCB"
+              strokeWidth="6"
+              fill="none"
+              opacity="0.7"
+            />
+            <path
+              d="M140,0 C134,40 128,80 122,124 C118,160 114,200 108,244 C102,288 96,328 90,360"
+              stroke="#FFFFFF"
+              strokeWidth="4"
+              fill="none"
+            />
+
+            {/* ─── Secondary streets (thin white grid) ─── */}
+            {/* N-S secondaries */}
+            <rect x="8"   y="0" width="1.5" height="360" fill="#FFFFFF"/>
+            <rect x="20"  y="0" width="1.8" height="360" fill="#FFFFFF"/>
+            <rect x="32"  y="0" width="1.5" height="360" fill="#FFFFFF"/>
+            <rect x="64"  y="0" width="1.8" height="360" fill="#FFFFFF"/>
+            <rect x="78"  y="0" width="2"   height="360" fill="#FFFFFF"/>
+            <rect x="90"  y="0" width="1.5" height="360" fill="#FFFFFF"/>
+            <rect x="120" y="0" width="1.8" height="360" fill="#FFFFFF"/>
+            <rect x="132" y="0" width="2"   height="360" fill="#FFFFFF"/>
+            <rect x="146" y="0" width="1.5" height="360" fill="#FFFFFF"/>
+            {/* E-W secondaries */}
+            <rect x="0" y="16"  width="156" height="1.5" fill="#FFFFFF"/>
+            <rect x="0" y="32"  width="156" height="1.8" fill="#FFFFFF"/>
+            <rect x="0" y="50"  width="156" height="1.5" fill="#FFFFFF"/>
+            <rect x="0" y="62"  width="156" height="1.8" fill="#FFFFFF"/>
+            <rect x="0" y="98"  width="156" height="1.8" fill="#FFFFFF"/>
+            <rect x="0" y="112" width="156" height="2"   fill="#FFFFFF"/>
+            <rect x="0" y="126" width="156" height="1.5" fill="#FFFFFF"/>
+            <rect x="0" y="164" width="156" height="1.8" fill="#FFFFFF"/>
+            <rect x="0" y="180" width="156" height="1.5" fill="#FFFFFF"/>
+            <rect x="0" y="196" width="156" height="2"   fill="#FFFFFF"/>
+            <rect x="0" y="214" width="156" height="1.5" fill="#FFFFFF"/>
+            <rect x="0" y="298" width="156" height="1.8" fill="#FFFFFF"/>
+            <rect x="0" y="316" width="156" height="1.5" fill="#FFFFFF"/>
+            <rect x="0" y="338" width="156" height="1.8" fill="#FFFFFF"/>
+
+            {/* ─── Building footprints (tiny cream rects) ─── */}
+            <rect x="4"   y="6"   width="6" height="4" fill="#EFE9D8"/>
+            <rect x="14"  y="6"   width="4" height="6" fill="#EFE9D8"/>
+            <rect x="26"  y="8"   width="5" height="5" fill="#EFE9D8"/>
+            <rect x="38"  y="6"   width="6" height="7" fill="#EFE9D8"/>
+            <rect x="58"  y="6"   width="4" height="5" fill="#EFE9D8"/>
+            <rect x="68"  y="8"   width="6" height="5" fill="#EFE9D8"/>
+            <rect x="82"  y="6"   width="5" height="6" fill="#EFE9D8"/>
+            <rect x="106" y="6"   width="4" height="4" fill="#EFE9D8"/>
+            <rect x="116" y="8"   width="5" height="5" fill="#EFE9D8"/>
+            <rect x="138" y="6"   width="6" height="6" fill="#EFE9D8"/>
+            <rect x="6"   y="36"  width="5" height="6" fill="#EFE9D8"/>
+            <rect x="24"  y="38"  width="6" height="5" fill="#EFE9D8"/>
+            <rect x="36"  y="36"  width="4" height="5" fill="#EFE9D8"/>
+            <rect x="58"  y="38"  width="5" height="5" fill="#EFE9D8"/>
+            <rect x="84"  y="36"  width="4" height="6" fill="#EFE9D8"/>
+            <rect x="124" y="38"  width="6" height="5" fill="#EFE9D8"/>
+            <rect x="140" y="36"  width="4" height="5" fill="#EFE9D8"/>
+            <rect x="6"   y="92"  width="5" height="4" fill="#EFE9D8"/>
+            <rect x="22"  y="90"  width="5" height="5" fill="#EFE9D8"/>
+            <rect x="34"  y="92"  width="4" height="4" fill="#EFE9D8"/>
+            <rect x="58"  y="90"  width="5" height="5" fill="#EFE9D8"/>
+            <rect x="84"  y="92"  width="4" height="4" fill="#EFE9D8"/>
+            <rect x="120" y="90"  width="6" height="5" fill="#EFE9D8"/>
+            <rect x="138" y="92"  width="5" height="4" fill="#EFE9D8"/>
+            <rect x="8"   y="172" width="5" height="5" fill="#EFE9D8"/>
+            <rect x="24"  y="170" width="4" height="5" fill="#EFE9D8"/>
+            <rect x="36"  y="172" width="5" height="4" fill="#EFE9D8"/>
+            <rect x="84"  y="172" width="4" height="5" fill="#EFE9D8"/>
+            <rect x="124" y="170" width="6" height="5" fill="#EFE9D8"/>
+            <rect x="140" y="172" width="4" height="4" fill="#EFE9D8"/>
+            <rect x="6"   y="306" width="5" height="5" fill="#EFE9D8"/>
+            <rect x="22"  y="308" width="4" height="4" fill="#EFE9D8"/>
+            <rect x="36"  y="306" width="5" height="5" fill="#EFE9D8"/>
+            <rect x="62"  y="306" width="4" height="5" fill="#EFE9D8"/>
+            <rect x="84"  y="308" width="5" height="4" fill="#EFE9D8"/>
+            <rect x="122" y="306" width="5" height="5" fill="#EFE9D8"/>
+            <rect x="138" y="308" width="4" height="4" fill="#EFE9D8"/>
+
+            {/* ─── Tiny intersection / transit dots ─── */}
+            <circle cx="20"  cy="32"  r="0.8" fill="#666"/>
+            <circle cx="78"  cy="75"  r="0.8" fill="#666"/>
+            <circle cx="106" cy="143" r="1"   fill="#666"/>
+            <circle cx="50"  cy="143" r="0.8" fill="#666"/>
+            <circle cx="132" cy="196" r="0.8" fill="#666"/>
+
+            {/* ─── Low-opacity labels ─── */}
+            <text x="56" y="276" fontSize="3.2" fill="#4A6B7E" opacity="0.65" fontFamily="sans-serif" fontStyle="italic">
+              Lady Bird Lake
+            </text>
+            <text
+              x="112"
+              y="200"
+              fontSize="3"
+              fill="#7A6F4F"
+              opacity="0.55"
+              fontFamily="sans-serif"
+              transform="rotate(82 112 200)"
+            >
+              Congress Ave
+            </text>
+
+            {/* ─── Pins (kept at original positions) ─── */}
             {/* Pin 1 — Five Star */}
-            <circle cx="63"  cy="50"  r="9"  fill="#EA4335"/>
-            <circle cx="63"  cy="50"  r="4"  fill="white"/>
+            <circle cx="63"  cy="50"  r="5.5" fill="#000" opacity="0.18"/>
+            <circle cx="63"  cy="50"  r="5"   fill="#EA4335"/>
+            <circle cx="63"  cy="50"  r="1.8" fill="white"/>
             {/* Pin 2 — CertaPro (you) — slightly larger */}
-            <circle cx="118" cy="96"  r="10" fill="#EA4335"/>
-            <circle cx="118" cy="96"  r="4.5" fill="white"/>
+            <circle cx="118" cy="96"  r="6.2" fill="#000" opacity="0.2"/>
+            <circle cx="118" cy="96"  r="5.6" fill="#EA4335"/>
+            <circle cx="118" cy="96"  r="2"   fill="white"/>
             {/* Pin 3 — Paper Moon */}
-            <circle cx="36"  cy="118" r="9"  fill="#EA4335"/>
-            <circle cx="36"  cy="118" r="4"  fill="white"/>
+            <circle cx="36"  cy="118" r="5.5" fill="#000" opacity="0.18"/>
+            <circle cx="36"  cy="118" r="5"   fill="#EA4335"/>
+            <circle cx="36"  cy="118" r="1.8" fill="white"/>
             {/* Pin 4 — WOW */}
-            <circle cx="88"  cy="172" r="9"  fill="#EA4335"/>
-            <circle cx="88"  cy="172" r="4"  fill="white"/>
+            <circle cx="88"  cy="172" r="5.5" fill="#000" opacity="0.18"/>
+            <circle cx="88"  cy="172" r="5"   fill="#EA4335"/>
+            <circle cx="88"  cy="172" r="1.8" fill="white"/>
           </svg>
           <button
             style={{
@@ -1754,7 +1905,7 @@ function ReviewCard({ review }: { review: PendingReview }) {
           <Check size={13} color="var(--status-approved)" /> Reply published
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           {editing ? (
             <>
               <Button variant="tertiary" size="sm" onPress={() => setEditing(false)}>Cancel</Button>
@@ -1783,7 +1934,7 @@ function ReviewsSection({ onViewAll }: { onViewAll: () => void }) {
           View all in Reputation →
         </Button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, alignItems: 'start' }}>
         {PENDING_REVIEWS.map((r) => (
           <ReviewCard key={r.id} review={r} />
         ))}

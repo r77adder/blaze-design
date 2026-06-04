@@ -21,6 +21,7 @@ import {
   Plus,
   Search,
   Star,
+  Target2,
   Templates,
   UserProfileAdd,
   UserProfileCircle,
@@ -147,6 +148,7 @@ export const H2_SECTIONS: SidebarSection[] = [
       { label: 'UGC Content', icon: UserProfileCircle, href: '/h2/influencer-content' },
       { label: 'Paid Social', icon: Cursor04, href: '/h2/paid-social' },
       { label: 'Paid Search', icon: BarChartSquare, href: '/h2/paid-search' },
+      { label: 'Competitor Tracking', icon: Target2, href: '/h2/competitor-tracking', trail: 'NEW' },
     ],
   },
   {
@@ -196,7 +198,7 @@ function NavItemEntry({ item, activeLabel, pathname, navigate }: {
   navigate: (to: string) => void;
 }) {
   const isActiveByHref = item.href !== undefined && pathname === item.href;
-  const isActiveByLabel = item.href === undefined && item.label === activeLabel;
+  const isActiveByLabel = item.label === activeLabel;
   const isActive = isActiveByHref || isActiveByLabel;
   const Icon = isActive && item.activeIcon ? item.activeIcon : item.icon;
   // Icon size 18 matches prod's `desktopIconSize` in NavMenuItem.tsx for the

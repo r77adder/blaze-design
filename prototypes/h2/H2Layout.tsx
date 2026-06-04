@@ -33,6 +33,11 @@ const PAGE_TITLES: Record<string, string> = {
   '/h2/dfy-campaigns': 'DFY Campaign',
   '/h2/living-doc': 'Home',
   '/h2/approvals': 'Approvals',
+  '/h2/competitor-tracking': 'Competitor Tracking',
+  '/h2/competitor-tracking/landscape': 'Competitive Landscape',
+  '/h2/competitor-tracking/alerts': 'Alerts',
+  '/h2/competitor-tracking/meta-ads': 'Meta Ads',
+  '/h2/competitor-tracking/google-ads': 'Google Ads',
 };
 
 /** Filter Demand Gen + Conversion sections down to the user's enabled tools.
@@ -87,10 +92,18 @@ export function H2Layout({ children, title, topbarRight, topbarCenter, fullBleed
     () => filterSectionsForEnabledTools(H2_SECTIONS, enabled),
     [enabled],
   );
+  // Competitor Tracking has a single sidebar entry but multiple sub-routes
+  // (/landscape, /alerts, /meta-ads, /google-ads, /competitor/:key). The
+  // sidebar's href-match is exact, so without this nudge the sub-routes
+  // would lose the active highlight.
+  const activeLabel = pathname.startsWith('/h2/competitor-tracking')
+    ? 'Competitor Tracking'
+    : undefined;
   return (
     <PrototypeShell
       title={title ?? derived}
       sidebarSections={sections}
+      sidebarActiveLabel={activeLabel}
       workspaceName="CertaPro Austin"
       topbarRight={topbarRight}
       topbarCenter={topbarCenter}

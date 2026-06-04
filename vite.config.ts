@@ -12,5 +12,5 @@ export default defineConfig({
       '@ios': path.resolve(__dirname, 'ios'),
     },
   },
-  server: { port: 5173 },
+  server: { port: 5173, open: '/' },
 });

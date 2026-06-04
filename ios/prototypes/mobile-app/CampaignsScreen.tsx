@@ -71,9 +71,10 @@ const CAMPAIGNS: Array<{
 interface Props {
   onSettingsClick?: () => void;
   showSkeleton?: boolean;
+  onCampaignClick?: () => void;
 }
 
-export function CampaignsScreen({ onSettingsClick, showSkeleton }: Props) {
+export function CampaignsScreen({ onSettingsClick, showSkeleton, onCampaignClick }: Props) {
   return (
     <div style={{ fontFamily: font, background: 'white', minHeight: '100%', paddingBottom: 120 }}>
 
@@ -92,8 +93,8 @@ export function CampaignsScreen({ onSettingsClick, showSkeleton }: Props) {
         {/* Skeleton placeholder — shown immediately after adding a strategy */}
         {showSkeleton && <SkeletonCampaignRow />}
         {CAMPAIGNS.map((c) => (
+          <div key={c.id} onClick={onCampaignClick} style={{ cursor: onCampaignClick ? 'pointer' : 'default' }}>
           <CampaignListItem
-            key={c.id}
             thumbnailSrc={c.img}
             dateStart={c.dateStart}
             dateEnd={c.dateEnd}
@@ -102,6 +103,7 @@ export function CampaignsScreen({ onSettingsClick, showSkeleton }: Props) {
             status={c.status}
             statusLabel={c.statusLabel}
           />
+          </div>
         ))}
       </div>
 

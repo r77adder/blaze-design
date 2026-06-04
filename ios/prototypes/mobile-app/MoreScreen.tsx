@@ -1,8 +1,9 @@
-import { MenuItem, ToolbarHeader, ToolbarButton } from '@ios/components';
+import { MenuItem, ToolbarButton } from '@ios/components';
 import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import folderIcon from '@ios/icons/folder.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
+import lineChartIcon from '@ios/icons/line-chart-up-01.svg';
 import userProfileIcon from '@ios/icons/user-profile-circle.svg';
 import settingsIcon from '@ios/icons/settings.svg';
 import cardIcon from '@ios/icons/card.svg';
@@ -33,12 +34,12 @@ function SectionGroup({ label, children }: { label?: string; children: React.Rea
 }
 
 function Row({
-  icon, label, rightDetail, separator = false,
+  icon, label, rightDetail, separator = false, onClick,
 }: {
-  icon: string; label: string; rightDetail?: string; separator?: boolean;
+  icon: string; label: string; rightDetail?: string; separator?: boolean; onClick?: () => void;
 }) {
   return (
-    <div style={{
+    <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 12,
       padding: '0 20px', height: 52,
       borderBottom: separator ? '1px solid var(--ios-dark-4)' : 'none',
@@ -58,17 +59,15 @@ function Row({
   );
 }
 
-export function MoreScreen() {
+export function MoreScreen({ onOpenLearningLoop = () => {} }: { onOpenLearningLoop?: () => void } = {}) {
   return (
     <div style={{ fontFamily: font, background: '#f8f8f9', minHeight: '100%', paddingBottom: 16 }}>
 
-      <ToolbarHeader
-        variant="screen"
-        title="More"
-        rightButtons={
-          <ToolbarButton variant="credits" credits={96} />
-        }
-      />
+      {/* Inline header — same background as content (no border, single shade) */}
+      <div style={{ height: 68, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '0 20px 12px', boxSizing: 'border-box' }}>
+        <span style={{ fontFamily: font, fontSize: 18, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>More</span>
+        <ToolbarButton variant="credits" credits={96} />
+      </div>
 
       {/* scrollable content */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '0 20px' }}>
@@ -76,8 +75,9 @@ export function MoreScreen() {
         {/* tools — no section label */}
         <div style={CARD_STYLE}>
           <Row icon={lightningIcon} label="Integrations" separator />
-          <Row icon={folderIcon}    label="My Files"     separator />
-          <Row icon={barGroupIcon}  label="Insights" />
+          <Row icon={barGroupIcon}  label="Insights"     separator />
+          <Row icon={lineChartIcon} label="Learning Loop" separator onClick={onOpenLearningLoop} />
+          <Row icon={folderIcon}    label="My Files" />
         </div>
 
         {/* account */}
