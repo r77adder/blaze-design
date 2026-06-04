@@ -1275,8 +1275,8 @@ function InternalCampaignSection({
   const [returnedCollapsed, setReturnedCollapsed] = useState(false);
 
   const posts       = campaign.posts;
-  const returnedPosts = posts.filter(p => statuses[p.id] === 'rejected');
-  const activePosts   = posts.filter(p => statuses[p.id] !== 'rejected');
+  const returnedPosts = posts.filter(p => statuses[p.id] === 'rejected' && internalStatuses[p.id] === 'readyForClient');
+  const activePosts   = posts.filter(p => !(statuses[p.id] === 'rejected' && internalStatuses[p.id] === 'readyForClient'));
   const readyCount  = activePosts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
   const totalCount  = activePosts.length;
   const allReady    = totalCount > 0 && readyCount === totalCount;
