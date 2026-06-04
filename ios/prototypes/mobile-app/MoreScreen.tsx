@@ -1,4 +1,4 @@
-import { MenuItem, ToolbarHeader, ToolbarButton } from '@ios/components';
+import { MenuItem, ToolbarButton } from '@ios/components';
 import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import folderIcon from '@ios/icons/folder.svg';
@@ -63,13 +63,11 @@ export function MoreScreen({ onOpenLearningLoop = () => {} }: { onOpenLearningLo
   return (
     <div style={{ fontFamily: font, background: '#f8f8f9', minHeight: '100%', paddingBottom: 16 }}>
 
-      <ToolbarHeader
-        variant="screen"
-        title="More"
-        rightButtons={
-          <ToolbarButton variant="credits" credits={96} />
-        }
-      />
+      {/* Inline header — same background as content (no border, single shade) */}
+      <div style={{ height: 68, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '0 20px 12px', boxSizing: 'border-box' }}>
+        <span style={{ fontFamily: font, fontSize: 18, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>More</span>
+        <ToolbarButton variant="credits" credits={96} />
+      </div>
 
       {/* scrollable content */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '0 20px' }}>
