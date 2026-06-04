@@ -87,7 +87,7 @@ const AI_POOL: Array<{ topic: string; image: string; contentType: FirstCampaignC
   },
   {
     topic: 'A morning ritual worth keeping',
-    image: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=320&q=80',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=320&q=80',
     contentType: 'still',
   },
 ];

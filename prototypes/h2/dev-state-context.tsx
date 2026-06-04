@@ -56,6 +56,7 @@ export function useDevState(): DevStateContextValue {
 export const DEV_STATE_PATHS = new Set<string>([
   '/h2',
   '/h2/organic-social',
+  '/h2/organic-profile',
   '/h2/ranking',
   '/h2/seo-aeo',
   '/h2/influencer-content',

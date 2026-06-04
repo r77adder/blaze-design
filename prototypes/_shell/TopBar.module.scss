@@ -12,6 +12,7 @@
   gap: 16px;
   background: var(--light-100);
   box-sizing: border-box;
+  position: relative;
 }
 
 .title {
@@ -21,16 +22,20 @@
   color: var(--dark-90);
 }
 
-.left,
-.center {
+.left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .center {
-  flex: 1;
-  justify-content: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .right {

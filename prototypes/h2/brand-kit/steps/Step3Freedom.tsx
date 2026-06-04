@@ -94,7 +94,7 @@ export function Step3Freedom() {
           }}
         >
           <img
-            src="https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=1200&q=85"
+            src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=1200&q=85"
             alt="Generated image preview"
             style={{
               width: '100%',
@@ -303,7 +303,7 @@ function OriginalImageInset() {
         }}
       >
         <img
-          src="https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=400&q=85"
+          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=85"
           alt="Original photo uploaded by the user"
           style={{
             width: '100%',

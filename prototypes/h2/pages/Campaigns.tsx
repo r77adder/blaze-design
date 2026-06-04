@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Modal, ModalStack, useModals } from '@/components';
+import { Button, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { StatusPill, TabChip, useToast } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import Settings from '@/icons/20/Settings';
+import StillImageIcon from '../StillImageIcon';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { CrosspostWarningModal } from '../CrosspostWarningModal';
+import { CreateChooserModal, NewPostModal, type NewPostDraft } from '../CreatePostFlow';
 
 /**
  * /h2/campaigns — deep port of Blaze H2 Features/campaigns.html.
@@ -50,10 +52,10 @@ const PHOTO_C = 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=
 const PHOTO_D = 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=200&h=200&fit=crop';
 
 const HERO_IMG: Record<string, string> = {
-  fj: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=1600&h=600&fit=crop',
+  fj: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=600&fit=crop',
   vpl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&h=600&fit=crop',
-  ss: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=1600&h=600&fit=crop',
-  tt1: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=1600&h=600&fit=crop',
+  ss: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=600&fit=crop',
+  tt1: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=600&fit=crop',
   ss1: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&h=600&fit=crop',
   ss2: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&h=600&fit=crop',
   pu: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=1600&h=600&fit=crop',
@@ -608,15 +610,17 @@ function DetailView({ campaign: c, onSectionClick, onTurnOffCrosspost, onScrolle
   const days = daysBetween(start, end) + 1;
   const heroImg = HERO_IMG[c.id] || c.thumb;
   const statusLabel = c.proposed ? 'Proposed' : c.status === 'posting' ? 'Live · Posting' : c.statusLabel;
-  const pillBg =
-    c.status === 'posting' ? 'rgba(0,131,226,0.95)' :
-    c.status === 'approved' ? 'rgba(32,161,79,0.95)' :
-    c.status === 'review' ? 'rgba(255,180,0,0.95)' :
-    c.proposed ? 'rgba(106,0,255,0.95)' : 'rgba(115,131,162,0.95)';
+  // Status tone is shared with the gantt rows via barStyleFor, so the detail
+  // hero pill matches its row exactly.
+  const statusTone = barStyleFor(c.status).pillTone;
   const genStatus =
     c.status === 'generating' ? 'Generating…' :
     c.status === 'review' ? 'Needs review' :
     c.status === 'proposed' ? 'Proposed by AI' : 'Ready';
+  const genStatusTone: StatusPillTone =
+    c.status === 'generating' ? 'neutral' :
+    c.status === 'review' ? 'warning' :
+    c.status === 'proposed' ? 'accent' : 'success';
   const genText = c.proposed
     ? 'Blaze proposed this campaign based on seasonal signals and your past performance. Review the brief and accept to start production.'
     : c.status === 'generating'
@@ -655,24 +659,10 @@ function DetailView({ campaign: c, onSectionClick, onTurnOffCrosspost, onScrolle
           }}
         />
         <div style={{ position: 'relative', zIndex: 1, flex: 1 }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '4px 10px',
-              borderRadius: 999,
-              background: pillBg,
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 500,
-              marginBottom: 10,
-            }}
-          >
-            {c.status === 'posting' && (
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />
-            )}
-            {statusLabel}
+          <span style={{ display: 'inline-flex', marginBottom: 10 }}>
+            <StatusPill tone={statusTone} size="md">
+              {statusLabel}
+            </StatusPill>
           </span>
           <h1
             style={{
@@ -729,20 +719,10 @@ function DetailView({ campaign: c, onSectionClick, onTurnOffCrosspost, onScrolle
             marginBottom: 32,
           }}
         >
-          <span
-            style={{
-              fontSize: 12,
-              padding: '5px 10px',
-              borderRadius: 6,
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              color: 'var(--dark-80)',
-              fontWeight: 500,
-            }}
-          >
+          <StatusPill tone={genStatusTone} size="md">
             {genStatus}
-          </span>
-          <span style={{ flex: 1, fontSize: 14, color: 'var(--dark-80)' }}>{genText}</span>
+          </StatusPill>
+          <Text variant="secondary" style={{ flex: 1, color: 'var(--dark-80)' }}>{genText}</Text>
         </div>
 
         {/* Campaign details */}
@@ -988,7 +968,11 @@ function PromptRow({ p }: { p: PromptItem }) {
         )}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <PromptSelect>
-            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="var(--red-70)" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+            {p.type === 'Still Image' ? (
+              <StillImageIcon size={14} color="var(--red-70)" />
+            ) : (
+              <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="var(--red-70)" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+            )}
             {p.type}
           </PromptSelect>
           <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>Posting to</span>
@@ -1064,8 +1048,12 @@ function ReviewCard({ r }: { r: ReviewItem }) {
   return (
     <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--dark-80)' }}>
-          <svg viewBox="0 0 24 24" width={15} height={15} fill="none" stroke={meta.color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">{meta.glyph}</svg>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 400, color: 'var(--dark-80)' }}>
+          {r.kind === 'still' ? (
+            <StillImageIcon size={15} color={meta.color} />
+          ) : (
+            <svg viewBox="0 0 24 24" width={15} height={15} fill="none" stroke={meta.color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">{meta.glyph}</svg>
+          )}
           {meta.label}
         </span>
         <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{r.date}</span>
@@ -1150,104 +1138,6 @@ function DetailRow({
       </span>
       <span style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5 }}>{children}</span>
     </div>
-  );
-}
-
-// ─── CHOOSER MODAL ─────────────────────────────────────────────────
-
-function ChooserCard({
-  icon,
-  label,
-  description,
-  onClick,
-}: {
-  icon: ReactNode;
-  label: string;
-  description: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        padding: 20,
-        gap: 10,
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
-        cursor: 'pointer',
-        textAlign: 'left',
-        fontFamily: 'inherit',
-        transition: 'border-color 0.12s, box-shadow 0.12s, transform 0.12s',
-      }}
-    >
-      <span
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 11,
-          background: '#fafafa',
-          border: '1px solid var(--dark-8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--dark-90)',
-        }}
-      >
-        {icon}
-      </span>
-      <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px' }}>{label}</span>
-      <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>{description}</span>
-    </button>
-  );
-}
-
-function CreateChooserModal({
-  close,
-  onPickCampaign,
-  onPickPost,
-}: StackModalProps & {
-  onPickCampaign: () => void;
-  onPickPost: () => void;
-}) {
-  return (
-    <Modal.Root size="md" aria-labelledby="cmp-chooser-title" data-testid="cmp-create-chooser">
-      <Modal.Header title="What do you want to create?" id="cmp-chooser-title" onClose={close} compact={false} />
-      <Modal.Content compact={false}>
-        <p style={{ margin: '0 0 16px 0', fontSize: 14, color: 'var(--dark-60)' }}>
-          Pick one — the agent takes it from there.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <ChooserCard
-            icon={
-              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="5" width="18" height="14" rx="2" />
-                <path d="M3 9h18M9 5v14" />
-              </svg>
-            }
-            label="Campaign"
-            description="A multi-channel marketing campaign — agent picks the strategy and channel mix."
-            onClick={onPickCampaign}
-          />
-          <ChooserCard
-            icon={
-              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-                <path d="m3 16 5-5 4 4 3-3 6 6" />
-                <circle cx="9" cy="9" r="1.5" />
-              </svg>
-            }
-            label="Post"
-            description="A single organic social post for Instagram, TikTok, LinkedIn, or X."
-            onClick={onPickPost}
-          />
-        </div>
-      </Modal.Content>
-    </Modal.Root>
   );
 }
 
@@ -1918,13 +1808,22 @@ function CampaignsRouteInner() {
 
   const openChooser = () => {
     openModal(CreateChooserModal, {
+      onPickPost: () => {
+        closeModal();
+        openModal(NewPostModal, {
+          onCreate: (drafts: NewPostDraft[]) => {
+            closeModal();
+            showToast({ message: `${drafts.length} post${drafts.length === 1 ? '' : 's'} added to the campaign` });
+          },
+        });
+      },
       onPickCampaign: () => {
         closeModal();
         openWizard();
       },
-      onPickPost: () => {
+      onPickStrategy: () => {
         closeModal();
-        showToast({ message: 'Posts live on the Calendar tab (Organic Social)' });
+        showToast({ message: 'Strategy builder coming soon' });
       },
     });
   };

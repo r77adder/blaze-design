@@ -2204,7 +2204,7 @@ const MARKET_INTEL_SEARCH: SearchMarketIntelCard[] = [
     peer: 'Five Star Painting of South Austin',
     peerDomain: 'fivestarpainting.com/austin',
     metric: '3.2x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    observedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
     adaptedImage: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
     observedHeadline: 'Austin Exterior Painters | 2-Year Warranty',
     observedDesc:
@@ -2259,7 +2259,7 @@ const MARKET_INTEL_SEARCH: SearchMarketIntelCard[] = [
     peerDomain: 'collegepro.com',
     metric: 'CTR 5.6%',
     observedImage: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
     observedHeadline: 'Skip the Handyman. Hire a Real Painting Crew.',
     observedDesc:
       'Professional crews, prepped surfaces, premium paint. Serving Austin homeowners since 1971.',
@@ -2294,8 +2294,8 @@ const MARKET_INTEL_SEARCH: SearchMarketIntelCard[] = [
     peer: 'Sherwin-Williams Pro Painters',
     peerDomain: 'sherwin-williams.com/pro',
     metric: 'CTR 4.1%',
-    observedImage: 'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=600&q=80',
+    observedImage: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
     observedHeadline: 'The Most Trusted Painting Brand in America',
     observedDesc:
       'Premium paint, certified contractors, lifetime warranty. Sherwin-Williams approved.',

@@ -456,12 +456,9 @@
   }
 }
 
-@media (min-width: $phoneMaxWidth) {
-  .secondary,
-  .secondary-bg-agnostic {
-    border: 1px solid var(--dark-15);
-  }
-}
+// Per Blaze design-system review (2026-05): secondary buttons keep the
+// default `--dark-8` border on every breakpoint. The previous desktop bump
+// to `--dark-15` flattened the contrast between default and hover.
 
 @mixin tertiary-styles {
   background: transparent;

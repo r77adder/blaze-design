@@ -130,7 +130,7 @@ const DEFAULT_DATA: FirstCampaignData = {
       topic: 'Brewing temperature matters',
       contentType: 'still',
       referenceImage:
-        'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=320&q=80',
+        'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=320&q=80',
     },
     {
       id: 'seed-2',

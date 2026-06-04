@@ -2,7 +2,6 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Button,
   Heading,
-  IconButton,
   Modal,
   ModalStack,
   Text,
@@ -10,18 +9,27 @@ import {
 } from '@/components';
 import type { StackModalProps } from '@/components';
 import { StatusPill } from '@/staging';
+import type { StatusPillTone } from '@/staging';
+import { AvatarCard } from './CreatePostFlow';
 import Plus from '@/icons/20/Plus';
-import PenEdit from '@/icons/16/PenEdit';
 import MetaBrand from '@/icons/20/MetaBrand';
 import Calendar1 from '@/icons/20/Calendar1';
+import Shuffle from '@/icons/20/Shuffle';
+import Help from '@/icons/16/Help';
+import ChevronDown from '@/icons/20/ChevronDown';
+import ChevronUp from '@/icons/20/ChevronUp';
+import Check from '@/icons/16/Check';
+import Upload from '@/icons/20/Upload';
+import SmileyHappyPlus from '@/icons/20/SmileyHappyPlus';
 
 /**
  * AvatarsTab — Content Preferences > Avatars.
  *
- * One unified grid of avatars (no preset/my split). Each avatar is a card
- * with a UGC-style image, name, short summary, and an edit IconButton.
- * Clicking the edit icon (or the card) opens a detail modal with the full
- * editable profile + enable toggle + delete action.
+ * One unified grid of avatars (no preset/my split), rendered with the shared
+ * tall AvatarCard from CreatePostFlow (the same portrait card used in the
+ * create-flow "My Avatars" picker): a 3 / 4 image plus name + short summary.
+ * Clicking a card opens a detail modal with the full editable profile +
+ * enable toggle + delete action. A dashed "Add avatar" tile closes the grid.
  *
  * Modal architecture:
  *  - Editing an existing avatar opens EditAvatarModal directly.
@@ -65,6 +73,8 @@ interface ExampleVideo {
   duration: string;
 }
 
+type LogoPlacement = 'bottom' | 'floating';
+
 interface AvatarProfile {
   id: string;
   name: string;
@@ -78,7 +88,59 @@ interface AvatarProfile {
   enabled: boolean;
   videos: AvatarVideo[];
   campaigns: AvatarCampaign[];
+  // --- Appearance / Behavior / Background settings (defaults applied via withDefaults) ---
+  gender?: string;
+  ageRange?: string;
+  appearanceEthnicity?: string;
+  outfit?: string;
+  moreDetails?: string;
+  behavior?: string;
+  guidanceScale?: number;
+  sceneType?: string;
+  brandLogoUploaded?: boolean;
+  logoPlacement?: LogoPlacement;
 }
+
+// Sensible defaults for the Appearance/Behavior/Background sections. Applied
+// when an avatar (seed or freshly-picked option) doesn't carry these yet.
+const SETTINGS_DEFAULTS = {
+  gender: 'Male',
+  ageRange: 'Young Adult',
+  appearanceEthnicity: 'Caucasian',
+  outfit: '',
+  moreDetails: '',
+  behavior: '',
+  guidanceScale: 1.0,
+  sceneType: '',
+  brandLogoUploaded: false,
+  logoPlacement: 'bottom' as LogoPlacement,
+};
+
+const withSettingsDefaults = (avatar: AvatarProfile): AvatarProfile => ({
+  ...SETTINGS_DEFAULTS,
+  ...avatar,
+});
+
+const GENDER_OPTIONS = ['Male', 'Female', 'Non-binary'];
+const AGE_OPTIONS = ['Teen', 'Young Adult', 'Adult', 'Senior'];
+const ETHNICITY_OPTIONS = [
+  'Caucasian',
+  'Black',
+  'Hispanic',
+  'Asian',
+  'Middle Eastern',
+  'South Asian',
+];
+const OUTFIT_PRESETS = [
+  'Casual',
+  'Formal',
+  'Sporty',
+  'Doctor',
+  'Nurse',
+  'Chef',
+  'Worker',
+  'Construction',
+];
 
 // ---------------------------------------------------------------------------
 // Stock thumbnail pools — varied wellness / lifestyle / beauty / outdoors
@@ -88,11 +150,11 @@ interface AvatarProfile {
 
 const THUMB_POOL = [
   // Interior painting work
-  'https://images.unsplash.com/photo-1562259949-a4c54b78b16d?w=400&q=80',
+  'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=400&q=80',
   'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=400&q=80',
   'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80',
   // Exteriors / home facades
-  'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=400&q=80',
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80',
   'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=400&q=80',
   'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&q=80',
   // Paint detail / process
@@ -102,10 +164,10 @@ const THUMB_POOL = [
   // Kitchens / cabinets
   'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80',
   'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=400&q=80',
-  'https://images.unsplash.com/photo-1556909114-44e3e9399a2d?w=400&q=80',
+  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80',
   // Crew in action
   'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=400&q=80',
-  'https://images.unsplash.com/photo-1574607383476-c8ee45a07f5e?w=400&q=80',
+  'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&q=80',
   'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80',
   // Modern interiors
   'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&q=80',
@@ -711,127 +773,80 @@ function AvatarsTabBody() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 16,
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gap: 14,
         }}
       >
         {avatars.map((avatar) => (
           <AvatarCard
             key={avatar.id}
-            avatar={avatar}
-            onEdit={() => openEdit(avatar)}
+            img={avatar.imageUrl}
+            name={avatar.name}
+            desc={avatar.summary}
+            onClick={() => openEdit(avatar)}
           />
         ))}
+        <AddAvatarTile onClick={openCreate} />
       </div>
     </section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Card
+// Add-avatar tile — a portrait-proportioned dashed tile that matches the
+// height of the shared AvatarCard and opens the CreateAvatarModal.
 // ---------------------------------------------------------------------------
 
-function AvatarCard({ avatar, onEdit }: { avatar: AvatarProfile; onEdit: () => void }) {
+function AddAvatarTile({ onClick }: { onClick: () => void }) {
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Add avatar"
       style={{
-        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
-        overflow: 'hidden',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        minHeight: '100%',
+        padding: 16,
+        background: 'var(--dark-2)',
+        border: '1px dashed var(--dark-15)',
+        borderRadius: 8,
         cursor: 'pointer',
-        opacity: avatar.enabled ? 1 : 0.6,
-        transition: 'opacity 160ms ease',
+        font: 'inherit',
+        color: 'inherit',
+        textAlign: 'center',
+        transition: 'border-color 160ms ease, background 160ms ease',
       }}
-      onClick={onEdit}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onEdit();
-        }
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--dark-40)';
+        e.currentTarget.style.background = 'var(--dark-4)';
       }}
-      aria-label={`Edit ${avatar.name}`}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--dark-15)';
+        e.currentTarget.style.background = 'var(--dark-2)';
+      }}
     >
       <div
         style={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '4 / 3',
-          background: 'var(--dark-4)',
-          overflow: 'hidden',
-        }}
-      >
-        <img
-          src={avatar.imageUrl}
-          alt={avatar.name}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            background: 'var(--light-100)',
-            borderRadius: 8,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <IconButton
-            variant="ghost"
-            size="sm"
-            icon={PenEdit}
-            title={`Edit ${avatar.name}`}
-            onPress={onEdit}
-          />
-        </div>
-        {!avatar.enabled && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-              padding: '4px 8px',
-              background: 'rgba(0, 0, 0, 0.6)',
-              color: 'var(--light-100)',
-              fontFamily: "'Sohne', sans-serif",
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              borderRadius: 6,
-            }}
-          >
-            Off
-          </div>
-        )}
-      </div>
-      <div
-        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: 'var(--light-100)',
+          border: '1px solid var(--dark-8)',
           display: 'flex',
-          flexDirection: 'column',
-          gap: 4,
-          padding: '16px 16px 20px',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <Heading level={5} style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
-          {avatar.name}
-        </Heading>
-        <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 14 }}>
-          {avatar.summary}
-        </Text>
+        <Plus size={20} color="var(--dark-80)" />
       </div>
-    </div>
+      <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
+        Add avatar
+      </Text>
+    </button>
   );
 }
 
@@ -851,20 +866,10 @@ function EditAvatarModal({
   onSave,
   onDelete,
 }: StackModalProps & EditAvatarModalProps) {
-  const [draft, setDraft] = useState<AvatarProfile>(avatar);
+  const [draft, setDraft] = useState<AvatarProfile>(() => withSettingsDefaults(avatar));
 
   const save = () => {
-    onSave({
-      name: draft.name,
-      imageUrl: draft.imageUrl,
-      summary: draft.summary,
-      ethnicity: draft.ethnicity,
-      toneOfVoice: draft.toneOfVoice,
-      accent: draft.accent,
-      visualDescription: draft.visualDescription,
-      personalCharacteristics: draft.personalCharacteristics,
-      enabled: draft.enabled,
-    });
+    onSave({ ...draft });
     close();
   };
 
@@ -907,15 +912,21 @@ function CreateAvatarModal({
   close,
   onAdd,
 }: StackModalProps & CreateAvatarModalProps) {
-  const [step, setStep] = useState<'select' | 'edit'>('select');
+  // entry  → pick a path (browse our avatars vs. start blank / upload your own)
+  // select → grid of pre-made avatars to choose from
+  // edit   → the shared AvatarEditor
+  const [step, setStep] = useState<'entry' | 'select' | 'edit'>('entry');
   const [draft, setDraft] = useState<AvatarProfile | null>(null);
+  // Tracks how the user reached the edit step, so "Back" returns to the right
+  // place (the entry chooser for an uploaded blank, the grid for a picked one).
+  const [origin, setOrigin] = useState<'entry' | 'select'>('entry');
   // Hold the picked option's example videos so the edit step can show them
   // below the sticky image. New avatars start with empty videos/campaigns —
   // the example videos are samples, not real generated content.
   const [exampleVideos, setExampleVideos] = useState<ExampleVideo[]>([]);
 
   const handleSelect = (option: AvatarOption) => {
-    const next: AvatarProfile = {
+    const next = withSettingsDefaults({
       id: `avatar-${Date.now()}`,
       name: option.name,
       imageUrl: option.imageUrl,
@@ -928,14 +939,38 @@ function CreateAvatarModal({
       enabled: true,
       videos: [],
       campaigns: [],
-    };
+    });
     setDraft(next);
     setExampleVideos(option.exampleVideos);
+    setOrigin('select');
+    setStep('edit');
+  };
+
+  // Start-blank path: a fresh, empty avatar the user uploads their own
+  // video/photo for. No example videos — they bring their own footage.
+  const handleStartBlank = () => {
+    const next = withSettingsDefaults({
+      id: `avatar-${Date.now()}`,
+      name: '',
+      imageUrl: '',
+      summary: '',
+      ethnicity: '',
+      toneOfVoice: '',
+      accent: '',
+      visualDescription: '',
+      personalCharacteristics: '',
+      enabled: true,
+      videos: [],
+      campaigns: [],
+    });
+    setDraft(next);
+    setExampleVideos([]);
+    setOrigin('entry');
     setStep('edit');
   };
 
   const handleBack = () => {
-    setStep('select');
+    setStep(origin);
   };
 
   const handleAdd = () => {
@@ -943,6 +978,35 @@ function CreateAvatarModal({
     onAdd(draft);
     close();
   };
+
+  if (step === 'entry') {
+    return (
+      <Modal.Root
+        size="lg"
+        aria-labelledby="create-avatar-entry-title"
+        data-testid="create-avatar-modal"
+      >
+        <Modal.Header
+          title="Add an avatar"
+          id="create-avatar-entry-title"
+          onClose={close}
+        />
+        <Modal.Content>
+          <EntryChooser
+            onBrowse={() => setStep('select')}
+            onStartBlank={handleStartBlank}
+          />
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.FooterContent slot="right">
+            <Modal.FooterButton variant="ghost" onPress={close}>
+              Cancel
+            </Modal.FooterButton>
+          </Modal.FooterContent>
+        </Modal.Footer>
+      </Modal.Root>
+    );
+  }
 
   if (step === 'select') {
     return (
@@ -960,6 +1024,11 @@ function CreateAvatarModal({
           <SelectionGrid options={AVATAR_OPTIONS} onSelect={handleSelect} />
         </Modal.Content>
         <Modal.Footer>
+          <Modal.FooterContent slot="left">
+            <Modal.FooterButton variant="ghost" onPress={() => setStep('entry')}>
+              Back
+            </Modal.FooterButton>
+          </Modal.FooterContent>
           <Modal.FooterContent slot="right">
             <Modal.FooterButton variant="ghost" onPress={close}>
               Cancel
@@ -978,7 +1047,7 @@ function CreateAvatarModal({
       data-testid="create-avatar-modal"
     >
       <Modal.Header
-        title={draft?.name || 'Edit avatar'}
+        title={draft?.name || (origin === 'entry' ? 'New avatar' : 'Edit avatar')}
         id="create-avatar-edit-title"
         onClose={close}
       />
@@ -988,6 +1057,9 @@ function CreateAvatarModal({
             draft={draft}
             onChange={setDraft}
             exampleVideos={exampleVideos}
+            // Blank/upload drafts have no source image yet → editor shows an
+            // upload tile in the media column instead of a preview.
+            isBlank={origin === 'entry'}
             // No delete control inside the create flow.
           />
         )}
@@ -1010,6 +1082,134 @@ function CreateAvatarModal({
         </Modal.FooterContent>
       </Modal.Footer>
     </Modal.Root>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Entry chooser (step 0 of create flow) — pick a creation path:
+//  - Browse our avatars (the existing pre-made selection grid)
+//  - Start blank: upload your own video/photo of the proposed avatar (mock)
+// ---------------------------------------------------------------------------
+
+function EntryChooser({
+  onBrowse,
+  onStartBlank,
+}: {
+  onBrowse: () => void;
+  onStartBlank: () => void;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>
+        Pick a ready-made avatar to customize, or start blank and upload your own
+        video or photo to build from.
+      </Text>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: 16,
+        }}
+      >
+        {/* Path 1 — browse our avatars */}
+        <button
+          type="button"
+          onClick={onBrowse}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            padding: 20,
+            textAlign: 'left',
+            background: 'var(--light-100)',
+            border: '1px solid var(--dark-8)',
+            borderRadius: 12,
+            cursor: 'pointer',
+            font: 'inherit',
+            color: 'inherit',
+            transition: 'border-color 160ms ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'var(--dark-15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'var(--dark-8)';
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              background: 'var(--dark-4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <SmileyHappyPlus size={20} color="var(--dark-80)" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
+              Choose from our avatars
+            </Text>
+            <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+              Browse a library of ready-made avatars and tailor one to your brand.
+            </Text>
+          </div>
+        </button>
+
+        {/* Path 2 — start blank / upload your own */}
+        <button
+          type="button"
+          onClick={onStartBlank}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            padding: 20,
+            textAlign: 'left',
+            background: 'var(--light-100)',
+            border: '1px dashed var(--dark-15)',
+            borderRadius: 12,
+            cursor: 'pointer',
+            font: 'inherit',
+            color: 'inherit',
+            transition: 'border-color 160ms ease, background 160ms ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'var(--dark-40)';
+            e.currentTarget.style.background = 'var(--dark-2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'var(--dark-15)';
+            e.currentTarget.style.background = 'var(--light-100)';
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              background: 'var(--dark-4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Upload size={20} color="var(--dark-80)" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
+              Start blank — upload your own
+            </Text>
+            <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+              Upload a video or photo of the avatar you want, then describe it.
+            </Text>
+          </div>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -1210,23 +1410,42 @@ function AvatarEditor({
   onChange,
   onDelete,
   exampleVideos,
+  isBlank = false,
 }: {
   draft: AvatarProfile;
   onChange: (next: AvatarProfile) => void;
   onDelete?: () => void;
   /**
    * When provided (create flow), render an EXAMPLE VIDEOS strip under the
-   * sticky image. These are *samples* — not yet generated by the user.
+   * video preview. These are *samples* — not yet generated by the user.
    */
   exampleVideos?: ExampleVideo[];
+  /**
+   * Blank/upload drafts have no source media yet → the media column shows a
+   * large dashed upload tile instead of a video preview.
+   */
+  isBlank?: boolean;
 }) {
   const set = <K extends keyof AvatarProfile>(key: K, value: AvatarProfile[K]) => {
     onChange({ ...draft, [key]: value });
   };
 
+  // Local-only mock: pretend the user uploaded their own clip. We reuse the
+  // first thumb from the pool so the preview has something to show.
+  const [uploadedMedia, setUploadedMedia] = useState<string | null>(null);
+  const handleMockUpload = () => setUploadedMedia(thumb(0) ?? '');
+  const previewUrl = draft.imageUrl || uploadedMedia || '';
+
+  const handleOutfitPreset = (preset: string) => set('outfit', preset);
+  const handleRandomizeOutfit = () => {
+    const pick = OUTFIT_PRESETS[Math.floor(Math.random() * OUTFIT_PRESETS.length)];
+    set('outfit', pick ?? 'Casual');
+  };
+
   const hasVideos = draft.videos.length > 0;
   const hasCampaigns = draft.campaigns.length > 0;
   const hasExamples = !!exampleVideos && exampleVideos.length > 0;
+  const showUploadTile = isBlank && !previewUrl;
 
   return (
     <div
@@ -1237,7 +1456,7 @@ function AvatarEditor({
         alignItems: 'start',
       }}
     >
-      {/* LEFT — sticky image column (image + optional example-videos strip) */}
+      {/* LEFT — sticky media column (video preview + example-videos strip) */}
       <div
         style={{
           position: 'sticky',
@@ -1247,28 +1466,21 @@ function AvatarEditor({
           gap: 12,
         }}
       >
-        <div
-          style={{
-            width: '100%',
-            aspectRatio: '3 / 4',
-            borderRadius: 12,
-            overflow: 'hidden',
-            background: 'var(--dark-4)',
-            border: '1px solid var(--dark-8)',
-          }}
-        >
-          <img
-            src={draft.imageUrl}
-            alt={draft.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-        </div>
+        {showUploadTile ? (
+          <UploadMediaTile onUpload={handleMockUpload} />
+        ) : (
+          <VideoPreview imageUrl={previewUrl} label={draft.name} />
+        )}
 
         {hasExamples ? (
           <ExampleVideosStrip videos={exampleVideos!} />
+        ) : showUploadTile ? (
+          <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+            Upload a video or photo of your avatar to preview it here.
+          </Text>
         ) : (
           <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
-            Update the image by pasting a new URL in the right column.
+            This is a preview of how your avatar will appear in generated videos.
           </Text>
         )}
       </div>
@@ -1282,24 +1494,11 @@ function AvatarEditor({
           <Field label="Short summary" hint="Shown on the avatar card.">
             <TextField value={draft.summary} onChange={(v) => set('summary', v)} />
           </Field>
-          <Field label="Image URL">
-            <TextField value={draft.imageUrl} onChange={(v) => set('imageUrl', v)} />
-          </Field>
-          <Field label="Ethnicity">
-            <TextField value={draft.ethnicity} onChange={(v) => set('ethnicity', v)} />
-          </Field>
           <Field label="Tone of voice" hint="e.g. Warm, authoritative">
             <TextField value={draft.toneOfVoice} onChange={(v) => set('toneOfVoice', v)} />
           </Field>
           <Field label="Accent" hint="e.g. American Midwest, British RP">
             <TextField value={draft.accent} onChange={(v) => set('accent', v)} />
-          </Field>
-          <Field label="Visual description" hint="What they look like, what they wear.">
-            <TextArea
-              value={draft.visualDescription}
-              onChange={(v) => set('visualDescription', v)}
-              rows={3}
-            />
           </Field>
           <Field label="Personal characteristics" hint="Personality traits, habits.">
             <TextArea
@@ -1309,6 +1508,116 @@ function AvatarEditor({
             />
           </Field>
         </FieldGroup>
+
+        {/* === Appearance ===================================================== */}
+        <SettingsSection
+          title="Appearance"
+          description="Describe the appearance of your avatar."
+        >
+          {/* Basic Info — three side-by-side dropdowns */}
+          <SubField label="Basic Info">
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 12,
+              }}
+            >
+              <SelectField
+                label="Gender"
+                value={draft.gender ?? SETTINGS_DEFAULTS.gender}
+                options={GENDER_OPTIONS}
+                onChange={(v) => set('gender', v)}
+              />
+              <SelectField
+                label="Age"
+                value={draft.ageRange ?? SETTINGS_DEFAULTS.ageRange}
+                options={AGE_OPTIONS}
+                onChange={(v) => set('ageRange', v)}
+              />
+              <SelectField
+                label="Ethnicity"
+                value={draft.appearanceEthnicity ?? SETTINGS_DEFAULTS.appearanceEthnicity}
+                options={ETHNICITY_OPTIONS}
+                onChange={(v) => set('appearanceEthnicity', v)}
+              />
+            </div>
+          </SubField>
+
+          {/* Outfit — textarea + preset chips */}
+          <SubField label="Outfit" optional>
+            <TextArea
+              value={draft.outfit ?? ''}
+              onChange={(v) => set('outfit', v)}
+              placeholder="e.g. casual, formal, sporty, business, trendy, vintage…"
+              rows={2}
+            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+              <PresetChip frontIcon={Shuffle} onClick={handleRandomizeOutfit}>
+                Randomize
+              </PresetChip>
+              {OUTFIT_PRESETS.map((preset) => (
+                <PresetChip
+                  key={preset}
+                  active={draft.outfit === preset}
+                  onClick={() => handleOutfitPreset(preset)}
+                >
+                  {preset}
+                </PresetChip>
+              ))}
+            </div>
+          </SubField>
+
+          {/* More details — textarea */}
+          <SubField label="More details" optional>
+            <TextArea
+              value={draft.moreDetails ?? ''}
+              onChange={(v) => set('moreDetails', v)}
+              placeholder="e.g. hair, tattoo, beards, freckles…"
+              rows={2}
+            />
+          </SubField>
+        </SettingsSection>
+
+        {/* === Behavior ====================================================== */}
+        <SettingsSection
+          title="Behavior"
+          description="Describe the avatar's actions, expressions, or style."
+        >
+          <SubField>
+            <TextArea
+              value={draft.behavior ?? ''}
+              onChange={(v) => set('behavior', v)}
+              placeholder="e.g. confident gestures, warm smile, looks directly at the camera…"
+              rows={2}
+            />
+          </SubField>
+
+          <GuidanceScaleField
+            value={draft.guidanceScale ?? SETTINGS_DEFAULTS.guidanceScale}
+            onChange={(v) => set('guidanceScale', v)}
+          />
+        </SettingsSection>
+
+        {/* === Background ==================================================== */}
+        <SettingsSection
+          title="Background"
+          description="Describe the background scene of your avatar."
+        >
+          <SubField label="Scene type" optional>
+            <TextArea
+              value={draft.sceneType ?? ''}
+              onChange={(v) => set('sceneType', v)}
+              placeholder="e.g. living room, kitchen, gym, office, clinic, car, beach…"
+              rows={2}
+            />
+          </SubField>
+
+          <BrandingCard
+            placement={draft.logoPlacement ?? SETTINGS_DEFAULTS.logoPlacement}
+            onPlacementChange={(p) => set('logoPlacement', p)}
+          />
+        </SettingsSection>
 
         {/* Enabled toggle row */}
         <div
@@ -1365,23 +1674,154 @@ function AvatarEditor({
 }
 
 // ---------------------------------------------------------------------------
-// Example videos strip — used in the create flow under the sticky image.
-// Horizontally-scrollable row of 80px-tall thumbs with a duration tag.
+// Play badge — circle + white triangle. Sized for both the main video preview
+// (lg) and the small example thumbnails (sm).
+// ---------------------------------------------------------------------------
+
+function PlayBadge({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
+  const dim = size === 'lg' ? 48 : 22;
+  const tri = size === 'lg' ? 14 : 7;
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: dim,
+        height: dim,
+        borderRadius: '50%',
+        background: 'rgba(0,0,0,0.55)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+      }}
+    >
+      <span
+        style={{
+          display: 'block',
+          width: 0,
+          height: 0,
+          marginLeft: size === 'lg' ? 3 : 1,
+          borderTop: `${tri}px solid transparent`,
+          borderBottom: `${tri}px solid transparent`,
+          borderLeft: `${tri * 1.4}px solid var(--light-100)`,
+        }}
+      />
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// VideoPreview — portrait (9:16-ish) thumbnail that reads like a video: image
+// with a centered play badge. A mock — no real playback.
+// ---------------------------------------------------------------------------
+
+function VideoPreview({ imageUrl, label }: { imageUrl: string; label: string }) {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        aspectRatio: '9 / 16',
+        borderRadius: 12,
+        overflow: 'hidden',
+        background: 'var(--dark-4)',
+        border: '1px solid var(--dark-8)',
+      }}
+    >
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt={label}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      )}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <PlayBadge size="lg" />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// UploadMediaTile — large dashed tile for the start-blank / upload-your-own
+// path. Mock only: clicking pretends a file was chosen.
+// ---------------------------------------------------------------------------
+
+function UploadMediaTile({ onUpload }: { onUpload: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onUpload}
+      style={{
+        width: '100%',
+        aspectRatio: '9 / 16',
+        borderRadius: 12,
+        border: '1px dashed var(--dark-15)',
+        background: 'var(--dark-2)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+        cursor: 'pointer',
+        padding: 16,
+        textAlign: 'center',
+        font: 'inherit',
+        color: 'inherit',
+        transition: 'border-color 160ms ease, background 160ms ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--dark-40)';
+        e.currentTarget.style.background = 'var(--dark-4)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--dark-15)';
+        e.currentTarget.style.background = 'var(--dark-2)';
+      }}
+    >
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 12,
+          background: 'var(--light-100)',
+          border: '1px solid var(--dark-8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Upload size={20} color="var(--dark-80)" />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
+          Upload a video or photo of your avatar
+        </Text>
+        <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+          MP4, MOV, JPG or PNG
+        </Text>
+      </div>
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Example videos strip — used under the video preview. Horizontally-scrollable
+// row of 80px-tall thumbs, each with a tiny play badge + duration tag.
 // ---------------------------------------------------------------------------
 
 function ExampleVideosStrip({ videos }: { videos: ExampleVideo[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <Text
-        variant="metadata"
-        style={{
-          fontSize: 12,
-          fontWeight: 500,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          color: 'var(--dark-60)',
-        }}
-      >
+      <Text style={{ fontSize: 12, fontWeight: 500, color: 'var(--dark-60)' }}>
         Example videos
       </Text>
       <div
@@ -1416,6 +1856,17 @@ function ExampleVideosStrip({ videos }: { videos: ExampleVideo[] }) {
                 display: 'block',
               }}
             />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <PlayBadge size="sm" />
+            </div>
             <div
               style={{
                 position: 'absolute',
@@ -1578,15 +2029,17 @@ function CampaignsSection({ campaigns }: { campaigns: AvatarCampaign[] }) {
   );
 }
 
-const TYPE_CHIP: Record<CampaignChannel, { label: string; color: string }> = {
-  paid: { label: 'Paid Social', color: 'var(--status-posting)' },
-  organic: { label: 'Organic Social', color: 'var(--status-approved)' },
+// Channel + status meta both render via StatusPill (design system). Tones map
+// the channel/status concept to a sensible semantic color — no hand-rolled hex.
+const TYPE_CHIP: Record<CampaignChannel, { label: string; tone: StatusPillTone }> = {
+  paid: { label: 'Paid Social', tone: 'info' },
+  organic: { label: 'Organic Social', tone: 'success' },
 };
 
-const STATUS_META: Record<CampaignStatus, { label: string; color: string }> = {
-  live: { label: 'Live', color: 'var(--status-approved)' },
-  scheduled: { label: 'Scheduled', color: 'var(--status-posting)' },
-  ended: { label: 'Ended', color: 'var(--dark-60)' },
+const STATUS_META: Record<CampaignStatus, { label: string; tone: StatusPillTone }> = {
+  live: { label: 'Live', tone: 'success' },
+  scheduled: { label: 'Scheduled', tone: 'info' },
+  ended: { label: 'Ended', tone: 'neutral' },
 };
 
 function CampaignRow({
@@ -1655,64 +2108,18 @@ function CampaignRow({
             flexWrap: 'wrap',
           }}
         >
-          <TypeChip color={chip.color}>{chip.label}</TypeChip>
-          <StatusDot color={status.color} label={status.label} />
+          <StatusPill tone={chip.tone} size="sm">
+            {chip.label}
+          </StatusPill>
+          <StatusPill tone={status.tone} size="sm">
+            {status.label}
+          </StatusPill>
           <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
             · {campaign.dateHint}
           </Text>
         </div>
       </div>
     </div>
-  );
-}
-
-function TypeChip({ color, children }: { color: string; children: ReactNode }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 8px',
-        fontFamily: "'Sohne', sans-serif",
-        fontSize: 12,
-        fontWeight: 500,
-        letterSpacing: '0.02em',
-        color,
-        background: `color-mix(in srgb, ${color} 12%, transparent)`,
-        borderRadius: 999,
-        lineHeight: 1.4,
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
-function StatusDot({ color, label }: { color: string; label: string }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        fontFamily: "'Sohne', sans-serif",
-        fontSize: 12,
-        fontWeight: 500,
-        color,
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          display: 'inline-block',
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: color,
-        }}
-      />
-      {label}
-    </span>
   );
 }
 
@@ -1795,18 +2202,462 @@ function TextArea({
   value,
   onChange,
   rows = 3,
+  placeholder,
 }: {
   value: string;
   onChange: (v: string) => void;
   rows?: number;
+  placeholder?: string;
 }) {
   return (
     <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}
       rows={rows}
+      placeholder={placeholder}
       style={{ ...inputBaseStyle, resize: 'vertical', lineHeight: 1.5 }}
     />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Settings section — bold title + muted one-line description, then children.
+// Used for the Appearance / Behavior / Background groups in the editor.
+// ---------------------------------------------------------------------------
+
+function SettingsSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16,
+        paddingTop: 16,
+        borderTop: '1px solid var(--dark-8)',
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <Text style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
+          {title}
+        </Text>
+        <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{description}</Text>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// A labeled sub-field inside a settings section. When `optional`, the label
+// reads "<label>" in normal weight with "(optional)" muted alongside it.
+function SubField({
+  label,
+  optional = false,
+  children,
+}: {
+  label?: string;
+  optional?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {label && (
+        <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
+          {label}
+          {optional && (
+            <span style={{ fontWeight: 400, color: 'var(--dark-40)' }}> (optional)</span>
+          )}
+        </Text>
+      )}
+      {children}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SelectField — labeled native <select> styled to match the text inputs.
+// (Matches the file's existing "inline native control" convention.)
+// ---------------------------------------------------------------------------
+
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</Text>
+      <div style={{ position: 'relative' }}>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            ...inputBaseStyle,
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            paddingRight: 32,
+            cursor: 'pointer',
+          }}
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            right: 10,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'inline-flex',
+            pointerEvents: 'none',
+          }}
+        >
+          <ChevronDown size={16} color="var(--dark-60)" />
+        </span>
+      </div>
+    </label>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PresetChip — small pill button used for the Outfit presets row.
+// ---------------------------------------------------------------------------
+
+function PresetChip({
+  children,
+  onClick,
+  active = false,
+  frontIcon: FrontIcon,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  frontIcon?: (props: { size?: number; color?: string }) => ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '6px 12px',
+        borderRadius: 999,
+        border: `1px solid ${active ? 'var(--dark-90)' : 'var(--dark-8)'}`,
+        background: active ? 'var(--dark-90)' : 'var(--light-100)',
+        color: active ? 'var(--light-100)' : 'var(--dark-80)',
+        fontFamily: "'Sohne', sans-serif",
+        fontSize: 13,
+        fontWeight: 500,
+        cursor: 'pointer',
+        transition: 'border-color 160ms ease, background 160ms ease',
+      }}
+      onMouseEnter={(e) => {
+        if (!active) e.currentTarget.style.borderColor = 'var(--dark-15)';
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.borderColor = 'var(--dark-8)';
+      }}
+    >
+      {FrontIcon && (
+        <FrontIcon size={16} color={active ? 'var(--light-100)' : 'var(--dark-60)'} />
+      )}
+      {children}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// GuidanceScaleField — label + help icon, slider (0–2, step 0.1), numeric
+// readout. All on one row.
+// ---------------------------------------------------------------------------
+
+function GuidanceScaleField({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
+          Guidance scale
+        </Text>
+        <span
+          title="How closely the avatar follows your description. Higher values stay closer; lower values allow more variety."
+          style={{ display: 'inline-flex', cursor: 'help' }}
+        >
+          <Help size={16} color="var(--dark-40)" />
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <input
+          type="range"
+          min={0}
+          max={2}
+          step={0.1}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          style={{ flex: 1, accentColor: 'var(--dark-90)', cursor: 'pointer' }}
+        />
+        <input
+          type="number"
+          min={0}
+          max={2}
+          step={0.1}
+          value={value.toFixed(1)}
+          onChange={(e) => {
+            const next = parseFloat(e.target.value);
+            if (!Number.isNaN(next)) onChange(Math.min(2, Math.max(0, next)));
+          }}
+          style={{
+            ...inputBaseStyle,
+            width: 64,
+            flexShrink: 0,
+            padding: '8px 10px',
+            textAlign: 'center',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BrandingCard — collapsible card (caret toggle, expanded by default) with a
+// logo upload tile + two logo-placement option cards.
+// ---------------------------------------------------------------------------
+
+function BrandingCard({
+  placement,
+  onPlacementChange,
+}: {
+  placement: LogoPlacement;
+  onPlacementChange: (p: LogoPlacement) => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const Caret = expanded ? ChevronUp : ChevronDown;
+
+  return (
+    <div
+      style={{
+        border: '1px solid var(--dark-8)',
+        borderRadius: 10,
+        background: 'var(--light-100)',
+        overflow: 'hidden',
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '12px 16px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          font: 'inherit',
+          color: 'inherit',
+          textAlign: 'left',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
+            Branding
+          </Text>
+          <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+            Show your Brand Kit logo on this avatar's videos.
+          </Text>
+        </div>
+        <Caret size={20} color="var(--dark-60)" />
+      </button>
+
+      {expanded && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+            padding: '0 16px 16px',
+          }}
+        >
+          {/* Logo placement — logo comes from the Brand Kit, not uploaded here. */}
+          <SubField label="Logo placement">
+            <Text style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: -4 }}>
+              Uses your Brand Kit logo. Update it in Brand Kit settings.
+            </Text>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gap: 12,
+              }}
+            >
+              <PlacementOption
+                variant="bottom"
+                label="Near the avatar"
+                selected={placement === 'bottom'}
+                onSelect={() => onPlacementChange('bottom')}
+              />
+              <PlacementOption
+                variant="floating"
+                label="Floating above"
+                selected={placement === 'floating'}
+                onSelect={() => onPlacementChange('floating')}
+              />
+            </div>
+          </SubField>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// A single logo-placement option card with a mock illustration. Selected state
+// uses a dark border (NOT purple) and a check badge.
+function PlacementOption({
+  variant,
+  label,
+  selected,
+  onSelect,
+}: {
+  variant: LogoPlacement;
+  label: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        padding: 8,
+        borderRadius: 10,
+        border: `2px solid ${selected ? 'var(--dark-90)' : 'var(--dark-8)'}`,
+        background: 'var(--light-100)',
+        cursor: 'pointer',
+        font: 'inherit',
+        color: 'inherit',
+        textAlign: 'left',
+        transition: 'border-color 160ms ease',
+      }}
+      onMouseEnter={(e) => {
+        if (!selected) e.currentTarget.style.borderColor = 'var(--dark-15)';
+      }}
+      onMouseLeave={(e) => {
+        if (!selected) e.currentTarget.style.borderColor = 'var(--dark-8)';
+      }}
+    >
+      {selected && (
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            background: 'var(--dark-90)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Check size={16} color="var(--light-100)" />
+        </span>
+      )}
+      <PlacementMock variant={variant} />
+      <Text style={{ fontSize: 12, color: 'var(--dark-80)' }}>{label}</Text>
+    </button>
+  );
+}
+
+// Simple gray placeholder illustration depicting where the logo sits relative
+// to the avatar. A circle = avatar head, rounded rect = logo chip.
+function PlacementMock({ variant }: { variant: LogoPlacement }) {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        aspectRatio: '4 / 3',
+        borderRadius: 8,
+        background: 'var(--dark-4)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* avatar silhouette */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          bottom: 8,
+          transform: 'translateX(-50%)',
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          background: 'var(--dark-15)',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          bottom: -8,
+          transform: 'translateX(-50%)',
+          width: 40,
+          height: 26,
+          borderRadius: '20px 20px 0 0',
+          background: 'var(--dark-15)',
+        }}
+      />
+      {/* logo chip */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          ...(variant === 'bottom'
+            ? { bottom: 6 }
+            : { top: 8 }),
+          width: 26,
+          height: 10,
+          borderRadius: 3,
+          background: 'var(--dark-40)',
+        }}
+      />
+    </div>
   );
 }
 
