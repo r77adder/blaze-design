@@ -5,6 +5,7 @@ import type { WorkspaceItem } from '@ios/components';
 import approvalsIcon from '@ios/icons/approvals.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
+import lineChartIcon from '@ios/icons/line-chart-up-01.svg';
 import playIcon from '@ios/icons/play.svg';
 import cardIcon from '@ios/icons/card.svg';
 import sendIcon from '@ios/icons/send-01.svg';
@@ -83,8 +84,22 @@ function SectionHeader({ title, showPlus }: { title: string; showPlus?: boolean 
   );
 }
 
-export function HomeScreen() {
+export type LLDataState = 'no-account' | 'collecting' | 'active';
+
+export function HomeScreen({
+  llState = 'no-account',
+  onOpenLearningLoop = () => {},
+  onApproveCampaign = () => {},
+}: {
+  llState?: LLDataState;
+  onOpenLearningLoop?: () => void;
+  onApproveCampaign?: () => void;
+} = {}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const llSub =
+    llState === 'no-account' ? 'Recommendations, applied for you' :
+    llState === 'collecting' ? 'Day 3 of 7 — almost ready' :
+                               '3 recommendations available';
 
   return (
     <div style={{ fontFamily: font, background: 'white', minHeight: '100%' }}>
@@ -140,6 +155,7 @@ export function HomeScreen() {
             {UP_NEXT.map((card) => (
               <div
                 key={card.id}
+                onClick={card.title === 'Approve your next campaign' ? onApproveCampaign : undefined}
                 style={{
                   border: '1px solid var(--ios-dark-8)',
                   borderRadius: 12, padding: 16,
@@ -243,6 +259,26 @@ export function HomeScreen() {
           </div>
         </div>
 
+        {/* Track & improve */}
+        <div>
+          <SectionHeader title="Track & improve" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ border: '1px solid var(--ios-dark-8)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 6, minHeight: 96 }}>
+              <img src={barGroupIcon} alt="" aria-hidden="true" style={{ width: 18, height: 18, opacity: 0.85 }} />
+              <span style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>Insights</span>
+              <span style={{ fontFamily: font, fontSize: 12, color: 'var(--ios-dark-60)', letterSpacing: '0.12px', lineHeight: 1.4 }}>See what's driving your performance</span>
+            </div>
+            <div
+              onClick={onOpenLearningLoop}
+              style={{ border: '1px solid var(--ios-dark-8)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 6, minHeight: 96, cursor: 'pointer' }}
+            >
+              <img src={lineChartIcon} alt="" aria-hidden="true" style={{ width: 18, height: 18, opacity: 0.85 }} />
+              <span style={{ fontFamily: font, fontSize: 14, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>Learning Loop</span>
+              <span style={{ fontFamily: font, fontSize: 12, color: 'var(--ios-dark-60)', letterSpacing: '0.12px', lineHeight: 1.4 }}>{llSub}</span>
+            </div>
+          </div>
+        </div>
+
         {/* Expand your reach */}
         <div style={{ paddingBottom: 16 }}>
           <SectionHeader title="Expand your reach" />
@@ -250,6 +286,7 @@ export function HomeScreen() {
             {REACH_CARDS.map((card) => (
               <div
                 key={card.id}
+                onClick={card.title === 'Unlock the Learning Loop' ? onOpenLearningLoop : undefined}
                 style={{
                   border: '1px solid var(--ios-dark-8)',
                   borderRadius: 12, padding: 16,
