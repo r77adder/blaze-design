@@ -1402,7 +1402,7 @@ function InternalCampaignSection({
                 >
                   <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
                     <circle cx="12" cy="12" r="9" stroke={red} strokeWidth="1.5"/>
-                    <path d="M8 12h8M12 8v8" stroke={red} strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M9 9l6 6M15 9l-6 6" stroke={red} strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
                   <span style={{ fontSize:12, fontWeight:500, color:red, fontFamily:F, whiteSpace:'nowrap' }}>
                     Returned by Client ({returnedPosts.length})
