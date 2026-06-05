@@ -784,6 +784,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   isPast?: boolean;
 }) {
   const [chatInput, setChatInput] = useState('');
+  const [focusMode, setFocusMode] = useState(false);
   const { openModal } = useModals();
   const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
   const isApproved = status === 'approved';
@@ -895,46 +896,58 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
 
         {/* Left panel — AI suggestions */}
         <div style={{
-          width: 280, flexShrink: 0,
+          width: focusMode ? 0 : 280,
+          opacity: focusMode ? 0 : 1,
+          overflow: 'hidden',
+          padding: focusMode ? 0 : undefined,
+          flexShrink: 0,
           background: white, borderRight: `1px solid ${dark8}`,
           display: 'flex', flexDirection: 'column',
-          padding: '20px 20px 0',
-          overflowY: 'auto',
+          transition: 'width 0.3s ease, opacity 0.3s ease, padding 0.3s ease',
         }}>
-          <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
-            Blaze can improve this post by:
-          </p>
-          <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {suggestions.map((s, i) => (
-              <li key={i} style={{ fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
-                <span style={{ marginRight: 4 }}>{s.emoji}</span>
-                <strong style={{ fontWeight: 500, color: dark90 }}>{s.label}</strong>
-                {': '}
-                <span style={{ color: dark60 }}>{s.detail}</span>
-              </li>
-            ))}
-          </ol>
-          <p style={{ margin: '20px 0 12px', fontSize: 13, color: dark80, fontFamily: F }}>What would you like to do?</p>
-          <div style={{ flex: 1 }} />
-          {/* Chat input */}
+          <div style={{ width: 280, display: 'flex', flexDirection: 'column', flex: 1, padding: '20px 20px 0', overflowY: 'auto', minHeight: 0 }}>
+            <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+              Blaze can improve this post by:
+            </p>
+            <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {suggestions.map((s, i) => (
+                <li key={i} style={{ fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+                  <span style={{ marginRight: 4 }}>{s.emoji}</span>
+                  <strong style={{ fontWeight: 500, color: dark90 }}>{s.label}</strong>
+                  {': '}
+                  <span style={{ color: dark60 }}>{s.detail}</span>
+                </li>
+              ))}
+            </ol>
+            <p style={{ margin: '20px 0 12px', fontSize: 13, color: dark80, fontFamily: F }}>What would you like to do?</p>
+            <div style={{ flex: 1 }} />
+          </div>
+          {/* Chat input — pinned to bottom */}
           <div style={{
-            borderTop: `1px solid ${dark8}`, paddingTop: 12, paddingBottom: 16,
-            display: 'flex', alignItems: 'center', gap: 8,
+            width: 280, flexShrink: 0,
+            borderTop: `1px solid ${dark8}`, padding: '12px 16px 16px',
           }}>
             <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+              display: 'flex', alignItems: 'center', gap: 8,
               border: `1px solid ${dark8}`, borderRadius: 8, padding: '8px 10px',
               background: white,
             }}>
+              {/* Paperclip icon */}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: dark40 }}>
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <input
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 placeholder="Ask Blaze to change something..."
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, color: dark90, fontFamily: F, background: 'transparent' }}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, color: dark90, fontFamily: F, background: 'transparent', minWidth: 0 }}
               />
+              {/* Credits label */}
+              <span style={{ fontSize: 11, color: dark40, fontFamily: F, whiteSpace: 'nowrap', flexShrink: 0 }}>5 credits ✦</span>
+              {/* Send button */}
               <button style={{
                 width: 26, height: 26, borderRadius: 99, border: 'none',
-                background: dark90, color: white, cursor: 'pointer',
+                background: dark90, color: white, cursor: 'pointer', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -945,11 +958,40 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
 
         {/* Center — post preview */}
         <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
+          flex: 1, position: 'relative', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24,
           overflowY: 'auto',
         }}>
-          {/* Post card + result bar — relative wrapper so "View as" can sit to the left */}
+          {/* Focus Mode toggle button */}
+          <button
+            onClick={() => setFocusMode(f => !f)}
+            style={{
+              position: 'absolute', top: 12, right: 12,
+              background: white, border: `1px solid ${dark15}`, borderRadius: 8,
+              padding: '5px 10px', fontSize: 12, color: dark60, fontFamily: F,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, zIndex: 10,
+            }}
+          >
+            {focusMode ? (
+              <>
+                {/* Two outward arrows — expand */}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Open panels to Edit
+              </>
+            ) : (
+              <>
+                {/* Two inward arrows — collapse */}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 9l-7-7-7 7M3 15l7 7 7-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Focus Mode
+              </>
+            )}
+          </button>
+
+          {/* Post card wrapper — relative so "View as" can sit to the left */}
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
             {/* View as label + social icons — pinned left of post card */}
             <div style={{ position: 'absolute', right: '100%', top: 0, marginRight: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -960,134 +1002,162 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
                 ))}
               </div>
             </div>
-            {/* Post card */}
+            {/* Post card — Instagram style */}
             <div style={{
               width: 320, background: white, borderRadius: 12,
               boxShadow: '0 4px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
             }}>
-              {/* Account not connected banner */}
+              {/* Header row */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                padding: '10px 14px', borderBottom: `1px solid ${dark8}`,
+                padding: '10px 14px',
               }}>
-                <div style={{ width: 24, height: 24, borderRadius: 99, background: dark8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke={dark40} strokeWidth="1.5"/><circle cx="12" cy="12" r="4" stroke={dark40} strokeWidth="1.5"/></svg>
+                {/* Avatar circle with person icon */}
+                <div style={{ width: 32, height: 32, borderRadius: 99, background: dark8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="4" stroke={dark40} strokeWidth="1.5"/>
+                    <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke={dark40} strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 500, color: dark80, fontFamily: F }}>Account Not Connected</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F, lineHeight: 1.2 }}>Account Not Connected</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>Jun 26 at 3:30</span>
+                    {/* Lock/visibility icon */}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="11" width="18" height="11" rx="2" stroke={dark40} strokeWidth="1.5"/>
+                      <path d="M7 11V7a5 5 0 0110 0v4" stroke={dark40} strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+                {/* More button ⋯ */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: dark80, padding: '2px 4px', display: 'flex', alignItems: 'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
+                </button>
               </div>
-              {/* Image */}
+              {/* Image — square */}
               <div style={{ aspectRatio: '1/1', background: '#c8c0b4', overflow: 'hidden' }}>
                 {post.img && <img src={post.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
               </div>
-              {/* Actions row */}
-              <div style={{ padding: '10px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', gap: 14 }}>
-                  {['♡', '○', '⬆'].map(ic => <span key={ic} style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>{ic}</span>)}
-                </div>
-                <span style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>⊡</span>
+              {/* Action bar */}
+              <div style={{ padding: '10px 14px 6px', display: 'flex', alignItems: 'center', gap: 24 }}>
+                {/* Like */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, padding: 0, color: dark80, fontSize: 12, fontFamily: F }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z" stroke={dark80} strokeWidth="1.5" strokeLinejoin="round"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" stroke={dark80} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Like
+                </button>
+                {/* Comment */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, padding: 0, color: dark80, fontSize: 12, fontFamily: F }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke={dark80} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Comment
+                </button>
+                {/* Share */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, padding: 0, color: dark80, fontSize: 12, fontFamily: F }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke={dark80} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Share
+                </button>
               </div>
               {/* Caption */}
               <div style={{ padding: '0 14px 14px' }}>
                 <p style={{ margin: 0, fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
-                  <strong>Account Not Connected</strong>{' '}
+                  <strong style={{ fontWeight: 500 }}>Account Not Connected</strong>{' '}
                   <span style={{ color: dark80 }}>{post.caption}</span>
-                  {' '}<span style={{ color: dark40 }}>see more</span>
+                  {' '}<span style={{ color: dark40, cursor: 'pointer' }}>See more</span>
                 </p>
               </div>
-            </div>
-
-            {/* Do you like the result bar */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 20px', background: white, borderRadius: 99,
-              boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: `1px solid ${dark8}`,
-            }}>
-              <span style={{ fontSize: 13, color: dark80, fontFamily: F }}>Do you like the result?</span>
-              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👎</button>
-              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👍</button>
-              <Button variant="secondary" size="sm" onPress={onClose}>Close</Button>
             </div>
           </div>
         </div>
 
         {/* Right panel — posting details */}
         <div style={{
-          width: 220, flexShrink: 0,
+          width: focusMode ? 0 : 220,
+          opacity: focusMode ? 0 : 1,
+          overflow: 'hidden',
+          flexShrink: 0,
           background: white, borderLeft: `1px solid ${dark8}`,
-          padding: '20px 16px', overflowY: 'auto',
-          display: 'flex', flexDirection: 'column', gap: 20,
+          transition: 'width 0.3s ease, opacity 0.3s ease',
         }}>
-          {/* Posting on */}
-          <div>
-            <p style={{ margin: '0 0 4px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting on</p>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>{post.date}</p>
-            <button style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', fontSize: 12, color: dark40, fontFamily: F }}>▾</button>
-          </div>
-
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Posting to */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting to</p>
-            {[
-              { name: 'Instagram', connected: false },
-              { name: 'Facebook', connected: true },
-              { name: 'LinkedIn', connected: true },
-              { name: 'X/Twitter', connected: true },
-              { name: 'Google Business', connected: true },
-            ].map(acct => (
-              <div key={acct.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 13, color: dark90, fontFamily: F }}>{acct.name}</span>
-                {acct.connected
-                  ? <div style={{ width: 18, height: 18, borderRadius: 99, background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke={dark40} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-                  : <Button variant="secondary" size="xs" onPress={() => {}}>Connect</Button>
-                }
+          <div style={{ width: 220, padding: '20px 16px', overflowY: 'auto', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Posting on */}
+            <div>
+              <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting on</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{post.date}</p>
+                <button style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
 
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Campaign */}
-          <div>
-            <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Campaign</p>
-            <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>Eat Well Feel Better</p>
-            <p style={{ margin: 0, fontSize: 12, color: dark60, fontFamily: F }}>🛍️ Lifestyle Content</p>
-          </div>
-
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Quick Edits */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Quick Edits</p>
-            {[
-              { icon: '✏️', label: 'Adjust Caption' },
-              { icon: '🎨', label: 'Edit Design' },
-            ].map(item => (
-              <button key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 4 }}>
-                <span>{item.icon}</span>
-                <span style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Redesign */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Redesign</p>
-            {[
-              { icon: '↻', label: 'Regenerate Design', sub: 'Blaze will generate new design' },
-              { icon: '🖼', label: 'Replace with Media', sub: 'Swap design with your own' },
-            ].map(item => (
-              <button key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 8, textAlign: 'left' }}>
-                <span style={{ fontSize: 16, lineHeight: 1.2 }}>{item.icon}</span>
-                <div>
-                  <div style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</div>
-                  <div style={{ fontSize: 11, color: dark40, fontFamily: F }}>{item.sub}</div>
+            {/* Posting to */}
+            <div>
+              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting to</p>
+              {[
+                { name: 'Instagram', platform: 'instagram', connected: false },
+                { name: 'Facebook', platform: 'facebook', connected: true },
+                { name: 'LinkedIn', platform: 'linkedin', connected: true },
+                { name: 'X/Twitter', platform: 'x', connected: true },
+                { name: 'Google Business', platform: 'google', connected: true },
+              ].map(acct => (
+                <div key={acct.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <SocialIcon platform={acct.platform} active={acct.connected} />
+                  <span style={{ fontSize: 13, color: dark90, fontFamily: F, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acct.name}</span>
+                  {acct.connected
+                    ? <div style={{ width: 18, height: 18, borderRadius: 99, background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke={dark40} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+                    : <Button variant="secondary" size="xs" onPress={() => {}}>Connect</Button>
+                  }
                 </div>
-              </button>
-            ))}
+              ))}
+            </div>
+
+            {/* Campaign */}
+            <div>
+              <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Campaign</p>
+              <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>Eat Well Feel Better</p>
+              <p style={{ margin: 0, fontSize: 12, color: dark60, fontFamily: F }}>🛍️ Lifestyle Content</p>
+            </div>
+
+            {/* Quick Edits */}
+            <div>
+              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Quick Edits</p>
+              {[
+                {
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                  label: 'Adjust caption',
+                },
+                {
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                  label: 'Change design elements',
+                },
+                {
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/></svg>,
+                  label: 'Add more in Designer',
+                },
+              ].map(item => (
+                <button key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 4 }}>
+                  {item.icon}
+                  <span style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Redesign */}
+            <div>
+              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Redesign</p>
+              {[
+                { icon: '↻', label: 'Regenerate Design', sub: 'Blaze will generate new design' },
+                { icon: '🖼', label: 'Replace with Image', sub: 'Swap design with your own' },
+              ].map(item => (
+                <button key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 8, textAlign: 'left' }}>
+                  <span style={{ fontSize: 16, lineHeight: 1.2 }}>{item.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: dark40, fontFamily: F }}>{item.sub}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
