@@ -1212,7 +1212,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
       onClick={() => onChange(!on)}
       style={{
         width: 40, height: 24, borderRadius: 99, border: 'none', padding: 2,
-        background: on ? green : dark15,
+        background: on ? dark90 : dark15,
         cursor: 'pointer', flexShrink: 0, position: 'relative',
         transition: 'background 0.2s',
       }}
@@ -1230,12 +1230,12 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 
 // ── Approval Settings modal ───────────────────────────────────────────────────
 const CONTENT_TYPES = [
-  { key: 'campaigns',  emoji: '🗓️',  label: 'Organic Campaigns',           desc: 'Scheduled social posts across all connected platforms.',   defaultOn: false },
-  { key: 'seo-local',  emoji: '📍',  label: 'Local SEO — Google Business', desc: 'Posts and updates to your Google Business Profile.',       defaultOn: true  },
-  { key: 'seo-blogs',  emoji: '✏️',  label: 'SEO / AEO Blogs',             desc: 'Long-form content published to your website or blog.',     defaultOn: false },
-  { key: 'reputation', emoji: '⭐',  label: 'Reputation',                  desc: 'Review responses and reputation management content.',      defaultOn: true  },
-  { key: 'paid-ads',   emoji: '📢',  label: 'Paid Ads',                    desc: 'Search and display ad copy before going to ad networks.',  defaultOn: true  },
-  { key: 'paid-social',emoji: '🎯',  label: 'Paid Social',                 desc: 'Sponsored social content across Facebook, Instagram, and LinkedIn.', defaultOn: true },
+  { key: 'campaigns',  label: 'Organic Campaigns',           desc: 'Scheduled social posts across all connected platforms.',   defaultOn: false },
+  { key: 'seo-local',  label: 'Local SEO — Google Business', desc: 'Posts and updates to your Google Business Profile.',       defaultOn: true  },
+  { key: 'seo-blogs',  label: 'SEO / AEO Blogs',             desc: 'Long-form content published to your website or blog.',     defaultOn: false },
+  { key: 'reputation', label: 'Reputation',                  desc: 'Review responses and reputation management content.',      defaultOn: true  },
+  { key: 'paid-ads',   label: 'Paid Ads',                    desc: 'Search and display ad copy before going to ad networks.',  defaultOn: true  },
+  { key: 'paid-social',label: 'Paid Social',                 desc: 'Sponsored social content across Facebook, Instagram, and LinkedIn.', defaultOn: true },
 ];
 
 function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
@@ -1329,7 +1329,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
                   }}>
                     <div>
                       <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 400, color: dark90, fontFamily: F }}>
-                        {ct.emoji} {ct.label}
+                        {ct.label}
                       </p>
                       <p style={{ margin: '0 0 6px', fontSize: 12, color: dark60, fontFamily: F, lineHeight: 1.5 }}>{ct.desc}</p>
                       <span style={{
