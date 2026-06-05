@@ -126,7 +126,7 @@ const TYPE_LABEL: Record<ContentType, string> = {
 // ── Status pill ───────────────────────────────────────────────────────────────
 const purple = '#7f24b7';
 
-function StatusPill({ status, dontPostReasons, isPast, resubmitNote }: { status: Status; dontPostReasons?: string[]; isPast?: boolean; resubmitNote?: string }) {
+function StatusPill({ status, dontPostReasons, isPast, resubmitNote, tooltipPlacement = 'above' }: { status: Status; dontPostReasons?: string[]; isPast?: boolean; resubmitNote?: string; tooltipPlacement?: 'above' | 'below' }) {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const isDontPost = status === 'rejected';
   const isPosted  = isPast && status === 'approved';
@@ -194,8 +194,10 @@ function StatusPill({ status, dontPostReasons, isPast, resubmitNote }: { status:
       </span>
       {tooltipPos && hasTooltip && createPortal(
         <div style={{
-          position: 'fixed', left: tooltipPos.x, top: tooltipPos.y,
-          transform: 'translateY(calc(-100% - 8px))',
+          position: 'fixed', left: tooltipPos.x,
+          ...(tooltipPlacement === 'below'
+            ? { top: tooltipPos.y + 28 }
+            : { top: tooltipPos.y, transform: 'translateY(calc(-100% - 8px))' }),
           background: dark90, color: white, borderRadius: 6,
           padding: '8px 10px', fontSize: 11, fontFamily: F, lineHeight: 1.6,
           whiteSpace: 'nowrap', zIndex: 9999,
@@ -888,7 +890,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               if (status === 'approved' && isReadyForClient) return <StatusPill status="approved" />;
               return <InternalStatusPill status={internalStatus ?? 'internalReview'} />;
             })()
-            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} resubmitNote={resubmitNotes?.[post.id]} isPast={isPast} />}
+            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} resubmitNote={resubmitNotes?.[post.id]} isPast={isPast} tooltipPlacement="below" />}
           <Button variant="ghost" size="sm" square>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
           </Button>
