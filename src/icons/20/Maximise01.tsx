@@ -13,7 +13,7 @@ export const Maximise01 = forwardRef<SVGSVGElement, IconProps>(({ color = 'curre
       ref={forwardedRef}
     >
       <path
-        d="M2.22461 6.56946H6.56944V2.22463M6.56944 6.56946L1.50049 1.50049M12.7757 8.43066H8.43091V12.7755M8.43091 8.43066L13.4999 13.4996"
+        d="M13.4997 5.84483V1.5H9.15487M13.4997 1.5L8.43073 6.56897M1.50049 9.15517V13.5H5.84532M1.50049 13.5L6.56946 8.43103"
         stroke={color}
         strokeWidth="1.15"
         strokeLinecap="round"
