@@ -313,22 +313,16 @@ function ContentCard({
         </div>
 
       ) : isPortrait ? (
-        /* ── Portrait 9:16 layout — padded inside dark-2 card, rounded image ── */
-        <div style={{ flex:1, padding:'0 8px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{
-            flex:1, position:'relative', overflow:'hidden',
-            borderRadius:8, background:'#1a1a1a',
-          }}>
-            {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            {/* Play icon for feed-video / short */}
-            {(post.type === 'feed-video' || post.type === 'short') && (
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <div style={{ width:36, height:36, borderRadius:99, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="11" height="13" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
-                </div>
+        /* ── Portrait 9:16 — full-bleed image edge-to-edge below header ── */
+        <div style={{ flex:1, position:'relative', background:'#1a1a1a', overflow:'hidden' }}>
+          {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+          {post.type === 'feed-video' && (
+            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
       ) : isLandscape ? (
@@ -1522,17 +1516,16 @@ function InternalCard({
           </div>
         </div>
       ) : isPortrait ? (
-        <div style={{ flex:1, padding:'0 8px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{ flex:1, position:'relative', overflow:'hidden', borderRadius:8, background:'#1a1a1a' }}>
-            {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            {(post.type === 'feed-video' || post.type === 'short') && (
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <div style={{ width:36, height:36, borderRadius:99, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="11" height="13" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
-                </div>
+        /* ── Portrait 9:16 — full-bleed image edge-to-edge below header ── */
+        <div style={{ flex:1, position:'relative', background:'#1a1a1a', overflow:'hidden' }}>
+          {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+          {post.type === 'feed-video' && (
+            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ) : isLandscape ? (
         <div style={{ flex:1, padding:'0 10px 10px', display:'flex', flexDirection:'column' }}>
