@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeShell } from '../_shell';
 import { Button, Modal, ModalStack, useModals } from '@/components';
-import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit } from '@/icons/20';
+import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, ArrowExpand1, Expand2 } from '@/icons/20';
 import { Layers5 } from '@/icons/24';
 import { ChevronDown, ChevronRight } from '@/icons/16';
 
@@ -640,15 +640,55 @@ function CampaignSection({
 
 // ── Social platform icons ─────────────────────────────────────────────────────
 const SocialIcon = ({ platform, active }: { platform: string; active?: boolean }) => {
-  const s = active ? 1 : 0.35;
+  const opacity = active ? 1 : 0.4;
+  const size = 28;
   const icons: Record<string, React.ReactNode> = {
-    instagram: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>,
-    facebook:  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    linkedin:  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" strokeWidth="1.5"/><path d="M7 10v7M7 7v.5M12 17v-4a2 2 0 014 0v4M12 10v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    x:         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4l16 16M20 4L4 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    google:    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20.3 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h4.7a4 4 0 01-1.7 2.6v2.2h2.8c1.6-1.5 2.5-3.7 2.5-6.4z" fill="#4285F4"/><path d="M12 21c2.4 0 4.4-.8 5.8-2.1l-2.8-2.2c-.8.5-1.8.9-3 .9-2.3 0-4.2-1.5-4.9-3.6H4.2v2.2A9 9 0 0012 21z" fill="#34A853"/><path d="M7.1 14c-.2-.5-.3-1-.3-1.6v-1.5c0-.5.1-1 .3-1.5V7.3H4.2A9 9 0 003 12a9 9 0 001.2 4.7l2.9-2.7z" fill="#FBBC04"/><path d="M12 6.8c1.3 0 2.5.4 3.4 1.3l2.5-2.5C16.4 4.2 14.4 3.4 12 3.4A9 9 0 004.2 7.3l2.9 2.3c.7-2 2.6-3.5 4.9-3.5-.1-.1 0-.2 0-.3z" fill="#EA4335"/></svg>,
+    instagram: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <defs>
+          <radialGradient id="ig-g" cx="30%" cy="107%" r="150%">
+            <stop offset="0%" stopColor="#fdf497"/>
+            <stop offset="10%" stopColor="#fdf497"/>
+            <stop offset="30%" stopColor="#fd5949"/>
+            <stop offset="55%" stopColor="#d6249f"/>
+            <stop offset="70%" stopColor="#285AEB"/>
+          </radialGradient>
+        </defs>
+        <rect width="28" height="28" rx="7" fill="url(#ig-g)"/>
+        <rect x="7" y="7" width="14" height="14" rx="4" stroke="white" strokeWidth="1.4"/>
+        <circle cx="14" cy="14" r="4" stroke="white" strokeWidth="1.4"/>
+        <circle cx="19" cy="9" r="1" fill="white"/>
+      </svg>
+    ),
+    facebook: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#1877F2"/>
+        <path d="M16.5 9h-2a1 1 0 00-1 1v2h3l-.5 3H13.5v7H10.5v-7H9v-3h1.5v-2a4 4 0 014-4h2v3z" fill="white"/>
+      </svg>
+    ),
+    linkedin: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#0A66C2"/>
+        <path d="M9 11.5h2.5v8H9v-8zm1.25-1a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zM13.5 11.5H16v1.1c.4-.7 1.3-1.3 2.5-1.3 2.2 0 3 1.5 3 3.5v4.7H19v-4.4c0-1-.4-1.6-1.3-1.6-1.1 0-1.7.7-1.7 1.8v4.2H13.5v-8z" fill="white"/>
+      </svg>
+    ),
+    x: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#000"/>
+        <path d="M8 8h4l2.5 3.5L17 8h3l-4.5 6L20 20h-4l-2.8-3.8L10 20H7l5-6.5L8 8z" fill="white"/>
+      </svg>
+    ),
+    google: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="white" stroke="#e0e0e0" strokeWidth="1"/>
+        <path d="M20.8 14.2c0-.5 0-1-.1-1.5H14v2.8h3.8a3.2 3.2 0 01-1.4 2.1v1.8h2.3c1.3-1.2 2.1-3 2.1-5.2z" fill="#4285F4"/>
+        <path d="M14 21c1.9 0 3.5-.6 4.7-1.7l-2.3-1.8c-.6.4-1.4.7-2.4.7-1.9 0-3.4-1.3-4-3H7.7v1.8A7 7 0 0014 21z" fill="#34A853"/>
+        <path d="M10 15.2a4.2 4.2 0 010-2.4v-1.8H7.7A7 7 0 007 14c0 1.1.3 2.2.7 3.2L10 15.2z" fill="#FBBC04"/>
+        <path d="M14 10.6c1 0 2 .4 2.7 1.1l2-2C17.5 8.5 15.9 8 14 8a7 7 0 00-6.3 3.8l2.3 1.8c.6-1.7 2.1-3 4-3z" fill="#EA4335"/>
+      </svg>
+    ),
   };
-  return <span style={{ opacity: s, cursor: 'pointer', color: dark80 }}>{icons[platform]}</span>;
+  return <span style={{ opacity, cursor: 'pointer', display: 'flex' }}>{icons[platform]}</span>;
 };
 
 // ── Don't Post feedback modal ─────────────────────────────────────────────────
@@ -963,39 +1003,22 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           overflowY: 'auto',
         }}>
           {/* Focus Mode toggle button */}
-          <button
-            onClick={() => setFocusMode(f => !f)}
-            style={{
-              position: 'absolute', top: 12, right: 12,
-              background: white, border: `1px solid ${dark15}`, borderRadius: 8,
-              padding: '5px 10px', fontSize: 12, color: dark60, fontFamily: F,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, zIndex: 10,
-            }}
-          >
-            {focusMode ? (
-              <>
-                {/* Two outward arrows — expand */}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Open panels to Edit
-              </>
-            ) : (
-              <>
-                {/* Two inward arrows — collapse */}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 9l-7-7-7 7M3 15l7 7 7-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Focus Mode
-              </>
-            )}
-          </button>
+          <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              frontIcon={focusMode ? ArrowExpand1 : Expand2}
+              onPress={() => setFocusMode(f => !f)}
+            >
+              {focusMode ? 'Open Panels to Edit' : 'Focus Mode'}
+            </Button>
+          </div>
 
           {/* Post card wrapper — relative so "View as" can sit to the left */}
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
             {/* View as label + social icons — pinned left of post card */}
-            <div style={{ position: 'absolute', right: '100%', top: 0, marginRight: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, color: dark40, fontFamily: F }}>View as</span>
+            <div style={{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>View as</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
                 {(['instagram','facebook','linkedin','x','google'] as const).map((p, i) => (
                   <SocialIcon key={p} platform={p} active={i === 0} />
