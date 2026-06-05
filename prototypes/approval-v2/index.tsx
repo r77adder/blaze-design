@@ -826,7 +826,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   isPast?: boolean;
 }) {
   const [chatInput, setChatInput] = useState('');
-  const [focusMode, setFocusMode] = useState(false);
+  const [focusMode, setFocusMode] = useState(true);
   const { openModal } = useModals();
   const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
   const isApproved = status === 'approved';
