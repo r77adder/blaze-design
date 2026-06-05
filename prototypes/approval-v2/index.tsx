@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeShell } from '../_shell';
 import { Button, Modal, ModalStack, useModals } from '@/components';
-import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, ArrowExpand1, Expand2 } from '@/icons/20';
+import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit } from '@/icons/20';
+import { Maximise01 } from '@/icons/20/Maximise01';
+import { Minimise02 } from '@/icons/20/Minimise02';
 import { Layers5 } from '@/icons/24';
 import { ChevronDown, ChevronRight } from '@/icons/16';
 
@@ -1008,7 +1010,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
             <Button
               variant="secondary"
               size="sm"
-              frontIcon={focusMode ? ArrowExpand1 : Expand2}
+              frontIcon={focusMode ? Maximise01 : Minimise02}
               onPress={() => setFocusMode(f => !f)}
             >
               {focusMode ? 'Open Panels to Edit' : 'Focus Mode'}
