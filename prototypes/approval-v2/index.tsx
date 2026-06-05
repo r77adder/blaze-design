@@ -1770,17 +1770,12 @@ function ApprovalV2Inner() {
     });
   };
 
-  // Topbar right: credits + avatar only
+  // Topbar right: credits only (shell renders its own avatar)
   const avatarEl = (
-    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-      <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
-        82 Credits
-      </span>
-      <div style={{ width:32, height:32, borderRadius:99, overflow:'hidden', flexShrink:0 }}>
-        <img src={IMG_AVATAR} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-      </div>
-    </div>
+    <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+      82 Credits
+    </span>
   );
 
   // Tab bar in topbar center
