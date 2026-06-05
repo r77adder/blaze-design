@@ -1317,6 +1317,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
           {approvalsOn && (
             <>
               <div style={{ height: 1, background: dark8, margin: '0 0 16px' }} />
+              <div style={{ paddingLeft: 20, borderLeft: `2px solid ${dark8}` }}>
               <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 500, color: dark40, fontFamily: F, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
                 Approval required per content type
               </p>
@@ -1345,6 +1346,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
                     <Toggle on={types[ct.key]} onChange={v => setTypes(prev => ({ ...prev, [ct.key]: v }))} />
                   </div>
                 ))}
+              </div>
               </div>
             </>
           )}
