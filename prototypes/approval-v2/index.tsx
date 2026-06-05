@@ -125,11 +125,12 @@ const TYPE_LABEL: Record<ContentType, string> = {
 // ── Status pill ───────────────────────────────────────────────────────────────
 const purple = '#7f24b7';
 
-function StatusPill({ status, dontPostReasons, isPast }: { status: Status; dontPostReasons?: string[]; isPast?: boolean }) {
+function StatusPill({ status, dontPostReasons, isPast, resubmitNote }: { status: Status; dontPostReasons?: string[]; isPast?: boolean; resubmitNote?: string }) {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const isDontPost = status === 'rejected';
   const isPosted  = isPast && status === 'approved';
   const isFailed  = isPast && status === 'pending';
+  const isResubmitted = !isPast && status === 'pending' && !!resubmitNote;
   const cfg =
     isPosted ? {
       bg: white, overlay: 'rgba(127,36,183,0.08)',
@@ -146,19 +147,25 @@ function StatusPill({ status, dontPostReasons, isPast }: { status: Status; dontP
     isDontPost ? {
       bg: white, overlay: 'rgba(174,34,34,0.08)',
       border: 'rgba(174,34,34,0.3)', color: '#ae2222', label: "Don't Post",
+    } : isResubmitted ? {
+      bg: white, overlay: 'rgba(255,174,0,0.3)',
+      border: 'rgba(255,174,0,0.45)', color: '#7a4800', label: 'Review V2',
     } : {
       bg: white, overlay: 'rgba(255,174,0,0.3)',
       border: 'rgba(255,174,0,0.45)', color: '#7a4800', label: 'Review',
     };
 
   const hasReasons = isDontPost && dontPostReasons && dontPostReasons.length > 0;
+  const hasTooltip = hasReasons || isResubmitted;
+  const tooltipLines = hasReasons ? dontPostReasons! : resubmitNote ? [resubmitNote] : [];
+  const tooltipLabel = hasReasons ? 'Reason' : 'Staff Note';
 
   return (
     <>
       <span
         style={{ display: 'inline-flex', alignItems: 'center' }}
         onMouseEnter={e => {
-          if (!hasReasons) return;
+          if (!hasTooltip) return;
           const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
           setTooltipPos({ x: r.left, y: r.top });
         }}
@@ -175,7 +182,7 @@ function StatusPill({ status, dontPostReasons, isPast }: { status: Status; dontP
           cursor: hasReasons ? 'default' : 'inherit',
         }}>
           {cfg.label}
-          {isDontPost && (
+          {(isDontPost || isResubmitted) && (
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
               <path d="M6.5 6C6.5 5.17 7.17 4.5 8 4.5C8.83 4.5 9.5 5.17 9.5 6C9.5 6.83 8 7.5 8 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -184,7 +191,7 @@ function StatusPill({ status, dontPostReasons, isPast }: { status: Status; dontP
           )}
         </span>
       </span>
-      {tooltipPos && hasReasons && createPortal(
+      {tooltipPos && hasTooltip && createPortal(
         <div style={{
           position: 'fixed', left: tooltipPos.x, top: tooltipPos.y,
           transform: 'translateY(calc(-100% - 8px))',
@@ -194,8 +201,8 @@ function StatusPill({ status, dontPostReasons, isPast }: { status: Status; dontP
           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
           pointerEvents: 'none',
         }}>
-          <div style={{ fontWeight: 500, marginBottom: 4, opacity: 0.7, fontSize: 10, letterSpacing: '0.2px', textTransform: 'uppercase' }}>Reason</div>
-          {dontPostReasons!.map(r => <div key={r}>• {r}</div>)}
+          <div style={{ fontWeight: 500, marginBottom: 4, opacity: 0.7, fontSize: 10, letterSpacing: '0.2px', textTransform: 'uppercase' }}>{tooltipLabel}</div>
+          {tooltipLines.map(r => <div key={r}>• {r}</div>)}
         </div>,
         document.body
       )}
@@ -247,9 +254,9 @@ function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
 
 // ── Content card — 245×378px, dark-2 bg, Figma spec ─────────────────────────
 function ContentCard({
-  post, status, dontPostReasons, isPast, onApprove, onRemoveApproval, onReview,
+  post, status, dontPostReasons, resubmitNote, isPast, onApprove, onRemoveApproval, onReview,
 }: {
-  post: Post; status: Status; dontPostReasons?: string[]; isPast?: boolean;
+  post: Post; status: Status; dontPostReasons?: string[]; resubmitNote?: string; isPast?: boolean;
   onApprove: () => void; onRemoveApproval: () => void; onReview: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -374,7 +381,7 @@ function ContentCard({
 
       {/* ── Status pill — always anchored bottom-left 10px ── */}
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        <StatusPill status={status} dontPostReasons={dontPostReasons} isPast={isPast} />
+        <StatusPill status={status} dontPostReasons={dontPostReasons} resubmitNote={resubmitNote} isPast={isPast} />
       </div>
 
       {/* ── Hover overlay ── */}
@@ -413,11 +420,12 @@ function ContentCard({
 
 // ── Campaign section ──────────────────────────────────────────────────────────
 function CampaignSection({
-  campaign, statuses, dontPostReasons, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast,
+  campaign, statuses, dontPostReasons, resubmitNotes, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast,
 }: {
   campaign: Campaign;
   statuses: Record<number, Status>;
   dontPostReasons: Record<number, string[]>;
+  resubmitNotes?: Record<number, string>;
   onApprove: (id: number) => void;
   onRemoveApproval: (id: number) => void;
   onReview: (id: number) => void;
@@ -548,6 +556,7 @@ function CampaignSection({
                   key={post.id} post={post}
                   status={statuses[post.id]}
                   dontPostReasons={dontPostReasons[post.id]}
+                  resubmitNote={resubmitNotes?.[post.id]}
                   isPast
                   onApprove={() => onApprove(post.id)}
                   onRemoveApproval={() => onRemoveApproval(post.id)}
@@ -565,6 +574,7 @@ function CampaignSection({
                       key={post.id} post={post}
                       status={statuses[post.id]}
                       dontPostReasons={dontPostReasons[post.id]}
+                      resubmitNote={resubmitNotes?.[post.id]}
                       onApprove={() => onApprove(post.id)}
                       onRemoveApproval={() => onRemoveApproval(post.id)}
                       onReview={() => onReview(post.id)}
@@ -697,9 +707,10 @@ const DONT_POST_OPTIONS = [
 // ── Resubmit confirmation modal ───────────────────────────────────────────────
 function ResubmitModal({ close, onConfirm, onReviewFirst }: {
   close: () => void;
-  onConfirm: () => void;
+  onConfirm: (note: string) => void;
   onReviewFirst: () => void;
 }) {
+  const [note, setNote] = useState('');
   return (
     <Modal.Root size="sm" onClose={close}>
       <Modal.Header onClose={close}>
@@ -708,9 +719,23 @@ function ResubmitModal({ close, onConfirm, onReviewFirst }: {
         </span>
       </Modal.Header>
       <Modal.Content>
-        <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
-          Have you revised this post? The client will be notified to review it again.
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
+            Have you revised this post? The client will be notified to review it again.
+          </p>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="Add a note for the client (optional)"
+            style={{
+              width: '100%', minHeight: 80, resize: 'vertical',
+              border: `1px solid ${dark15}`, borderRadius: 8,
+              padding: '10px 12px', fontSize: 13, color: dark90,
+              fontFamily: F, lineHeight: 1.5, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
       </Modal.Content>
       <Modal.Footer>
         <Modal.FooterContent slot="left">
@@ -719,7 +744,7 @@ function ResubmitModal({ close, onConfirm, onReviewFirst }: {
           </Modal.FooterButton>
         </Modal.FooterContent>
         <Modal.FooterContent slot="right">
-          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(note.trim()); close(); }}>
             Yes, Resubmit
           </Modal.FooterButton>
         </Modal.FooterContent>
@@ -806,7 +831,7 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (re
 
 // ── Content review page (full-page overlay) ───────────────────────────────────
 function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
-  mode, internalStatus, onMarkReady, onUndoReady, dontPostReasons, isPast,
+  mode, internalStatus, onMarkReady, onUndoReady, dontPostReasons, resubmitNotes, isPast,
 }: {
   post: Post; status: Status;
   allPosts: Post[]; allStatuses: Record<number, Status>;
@@ -817,6 +842,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   onMarkReady?: () => void;
   onUndoReady?: () => void;
   dontPostReasons?: Record<number, string[]>;
+  resubmitNotes?: Record<number, string>;
   isPast?: boolean;
 }) {
   const [chatInput, setChatInput] = useState('');
@@ -864,7 +890,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               if (status === 'approved' && isReadyForClient) return <StatusPill status="approved" />;
               return <InternalStatusPill status={internalStatus ?? 'internalReview'} />;
             })()
-            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} isPast={isPast} />}
+            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} resubmitNote={resubmitNotes?.[post.id]} isPast={isPast} />}
           <Button variant="ghost" size="sm" square>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
           </Button>
@@ -1462,7 +1488,7 @@ function InternalCard({
   returnedByClient?: boolean;
   approvedByClient?: boolean;
   dontPostReasons?: string[];
-  onResubmit?: () => void;
+  onResubmit?: (note: string) => void;
   pastClientStatus?: Status;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -1472,7 +1498,7 @@ function InternalCard({
   const handleResubmit = (e: React.MouseEvent) => {
     e.stopPropagation();
     openModal(ResubmitModal, {
-      onConfirm: () => onResubmit?.(),
+      onConfirm: (note: string) => onResubmit?.(note),
       onReviewFirst: () => onReview(),
     });
   };
@@ -1626,7 +1652,7 @@ function InternalCampaignSection({
   onUndo: (id: number) => void;
   onMarkAllReady: () => void;
   onReview: (post: Post) => void;
-  onResubmit: (id: number) => void;
+  onResubmit: (id: number, note: string) => void;
   defaultCollapsed?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
@@ -1792,7 +1818,7 @@ function InternalCampaignSection({
                       onMarkReady={() => onMarkReady(post.id)}
                       onUndo={() => onUndo(post.id)}
                       onReview={() => onReview(post)}
-                      onResubmit={() => onResubmit(post.id)}
+                      onResubmit={(note) => onResubmit(post.id, note)}
                     />
                   ))}
                 </div>
@@ -1880,6 +1906,7 @@ function ApprovalV2Inner() {
   const [reviewPost, setReviewPost] = useState<Post | null>(null);
   const [completingCampaignId, setCompletingCampaignId] = useState<number | null>(null);
   const [dontPostReasons, setDontPostReasons] = useState<Record<number, string[]>>({});
+  const [resubmitNotes, setResubmitNotes] = useState<Record<number, string>>({});
 
   const { openModal } = useModals();
 
@@ -1911,9 +1938,11 @@ function ApprovalV2Inner() {
     setStatuses(prev => ({ ...prev, [id]: 'rejected' }));
   };
 
-  const resubmitPost = (id: number) => {
+  const resubmitPost = (id: number, note: string) => {
     setStatuses(prev => ({ ...prev, [id]: 'pending' }));
     setDontPostReasons(prev => { const n = { ...prev }; delete n[id]; return n; });
+    if (note) setResubmitNotes(prev => ({ ...prev, [id]: note }));
+    else setResubmitNotes(prev => { const n = { ...prev }; delete n[id]; return n; });
   };
 
   // Internal handlers
@@ -2006,6 +2035,7 @@ function ApprovalV2Inner() {
               internalStatuses={internalStatuses}
               statuses={statuses}
               dontPostReasons={dontPostReasons}
+              resubmitNotes={resubmitNotes}
               today={today}
               isPast={opts?.isPast}
               defaultCollapsed={opts?.defaultCollapsed}
@@ -2061,6 +2091,7 @@ function ApprovalV2Inner() {
               campaign={clientCampaign}
               statuses={statuses}
               dontPostReasons={dontPostReasons}
+              resubmitNotes={resubmitNotes}
               onApprove={(id) => approve(id, campaign.id)}
               onRemoveApproval={removeApproval}
               onReview={(id) => { setReviewPost(campaign.posts.find(p => p.id === id)!); }}
@@ -2150,6 +2181,7 @@ function ApprovalV2Inner() {
           onMarkReady={() => markReadyForClient(reviewPost.id)}
           onUndoReady={() => undoReady(reviewPost.id)}
           dontPostReasons={dontPostReasons}
+          resubmitNotes={resubmitNotes}
           isPast={CAMPAIGNS.find(c => c.posts.some(p => p.id === reviewPost.id))?.endDate < today}
         />
       )}
