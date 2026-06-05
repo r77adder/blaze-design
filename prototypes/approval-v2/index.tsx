@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeShell } from '../_shell';
 import { Button, Modal, ModalStack, useModals } from '@/components';
+import { Toast } from '@/staging';
 import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, Settings } from '@/icons/20';
 import { Maximise01 } from '@/icons/20/Maximise01';
 import { Minimise02 } from '@/icons/20/Minimise02';
@@ -1901,6 +1902,11 @@ function ApprovalV2Inner() {
   });
 
   const [reviewPost, setReviewPost] = useState<Post | null>(null);
+  const [showFeedbackToast, setShowFeedbackToast] = useState(false);
+  const triggerFeedbackToast = () => {
+    setShowFeedbackToast(true);
+    setTimeout(() => setShowFeedbackToast(false), 3500);
+  };
   const [completingCampaignId, setCompletingCampaignId] = useState<number | null>(null);
   const [dontPostReasons, setDontPostReasons] = useState<Record<number, string[]>>({});
   const [resubmitNotes, setResubmitNotes] = useState<Record<number, string>>({});
@@ -2171,7 +2177,7 @@ function ApprovalV2Inner() {
             approve(reviewPost.id, c.id);
           }}
           onRemoveApproval={() => removeApproval(reviewPost.id)}
-          onDontPost={(reasons) => { rejectPost(reviewPost.id); setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: reasons })); setReviewPost(null); }}
+          onDontPost={(reasons) => { rejectPost(reviewPost.id); setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: reasons })); setReviewPost(null); triggerFeedbackToast(); }}
           onNavigate={(id) => setReviewPost(CAMPAIGNS.flatMap(c => c.posts).find(p => p.id === id) ?? null)}
           mode={tab}
           internalStatus={internalStatuses[reviewPost.id]}
@@ -2181,6 +2187,16 @@ function ApprovalV2Inner() {
           resubmitNotes={resubmitNotes}
           isPast={CAMPAIGNS.find(c => c.posts.some(p => p.id === reviewPost.id))?.endDate < today}
         />
+      )}
+
+      {/* Feedback submitted toast */}
+      {showFeedbackToast && createPortal(
+        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+          <Toast variant="success" onDismiss={() => setShowFeedbackToast(false)}>
+            Feedback submitted. Agent is notified for revision.
+          </Toast>
+        </div>,
+        document.body
       )}
     </PrototypeShell>
   );
