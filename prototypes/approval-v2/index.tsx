@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { PrototypeShell } from '../_shell';
+import { createPortal } from 'react-dom';
+import { PrototypeShell, H2_SECTIONS } from '../_shell';
 import { Button, Modal, ModalStack, useModals } from '@/components';
-import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit } from '@/icons/20';
+import { Toast } from '@/staging';
+import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, Settings } from '@/icons/20';
+import { Maximise01 } from '@/icons/20/Maximise01';
+import { Minimise02 } from '@/icons/20/Minimise02';
 import { Layers5 } from '@/icons/24';
 import { ChevronDown, ChevronRight } from '@/icons/16';
 
@@ -64,14 +68,14 @@ const CAMPAIGNS: Campaign[] = [
     badge: 'Campaigns',
     endDate: '2026-10-18', // future — active
     posts: [
-      { id:0, type:'still',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:00', img:U1, caption:'Get ready to take a trip down memory lane with our latest design. Experience the finest dining in the heart of the city.' },
-      { id:1, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:01', img:U2, caption:'Get access to loyalty discounts and savings this fall! Limited time offer for our valued members.' },
-      { id:2, type:'feed-video', date:'Sep 25  10:00am', dateSort:'2025-09-25T10:02', img:U3, caption:'Behind the scenes of our latest farm-to-table experience. Watch how we source the freshest ingredients.' },
-      { id:3, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:03', img:U4, caption:'Limited time offer — shop now and save 25% on all meal prep kits this weekend only.' },
-      { id:4, type:'carousel',   date:'Sep 25  10:00am', dateSort:'2025-09-25T10:04', img:U5, slides:5, caption:'Spring is here — swipe through our top 5 seasonal picks for a healthier you.' },
-      { id:5, type:'still',      date:'Sep 26  10:00am', dateSort:'2025-09-26T10:00', img:U6, caption:'Wellness tips for the modern professional. Eat better, live better, feel better every day.' },
-      { id:6, type:'carousel',   date:'Sep 27  11:00am', dateSort:'2025-09-27T11:00', img:U7, slides:4, caption:'Our top picks for the season — curated by our nutrition experts for optimal health.' },
-      { id:7, type:'email',      date:'Sep 28  8:00am',  dateSort:'2025-09-28T08:00', img:U8, caption:'Snag 20% off — limited time sale this weekend! Don\'t miss our biggest discount of the year.' },
+      { id:0, type:'still',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:00', img:U1, caption:'Get ready to take a trip down memory lane with our latest design. Experience the finest dining in the heart of the city — where every plate tells a story and every bite is crafted with love. Reserve your table now and treat yourself to something extraordinary. 🍽️ #FineD' },
+      { id:1, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:01', img:U2, caption:'Get access to exclusive loyalty discounts and savings this fall! Limited time offer for our valued members — earn points on every purchase, unlock early access to seasonal menus, and enjoy complimentary desserts on your birthday. Join the family today and taste the difference. 🍂' },
+      { id:2, type:'feed-video', date:'Sep 25  10:00am', dateSort:'2025-09-25T10:02', img:U3, caption:'Behind the scenes of our latest farm-to-table experience. Watch how we source the freshest ingredients straight from local growers who share our passion for quality. From the field to your fork in under 24 hours — this is food with a story worth telling. 🌿 #FarmToTable' },
+      { id:3, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:03', img:U4, caption:'Limited time offer — shop now and save 25% on all meal prep kits this weekend only! Stock your fridge with chef-curated recipes designed to save you time without sacrificing flavor. Healthy eating has never been this easy or this delicious. Use code PREP25 at checkout. 🥗' },
+      { id:4, type:'carousel',   date:'Sep 25  10:00am', dateSort:'2025-09-25T10:04', img:U5, slides:5, caption:'Spring is here — swipe through our top 5 seasonal picks for a healthier you! From vibrant grain bowls to refreshing smoothie blends, our nutrition team has curated the best of the season. Tap each slide to see the full recipe and order your ingredients directly from our app. 🌸' },
+      { id:5, type:'still',      date:'Sep 26  10:00am', dateSort:'2025-09-26T10:00', img:U6, caption:'Wellness tips for the modern professional. Eat better, live better, feel better every day. We know how busy life gets, which is why we\'ve designed meal plans that fit around your schedule — not the other way around. Fuel your ambitions with food that actually works as hard as you do. 💪' },
+      { id:6, type:'carousel',   date:'Sep 27  11:00am', dateSort:'2025-09-27T11:00', img:U7, slides:4, caption:'Our top picks for the season — curated by our nutrition experts for optimal health and maximum flavor. Swipe to explore four standout dishes that hit every macro target while keeping your taste buds guessing. Perfect for meal-preppers and food lovers alike. Tag a friend who needs to see this! 🏆' },
+      { id:7, type:'email',      date:'Sep 28  8:00am',  dateSort:'2025-09-28T08:00', img:U8, caption:'Snag 20% off — limited time sale this weekend only! Don\'t miss our biggest discount of the year across the entire menu. Whether you\'re stocking up on staples or trying something new, now\'s the time to go big. Shop before midnight Sunday and use code SAVE20 to claim your discount. ⏰' },
     ],
   },
   {
@@ -120,30 +124,92 @@ const TYPE_LABEL: Record<ContentType, string> = {
 };
 
 // ── Status pill ───────────────────────────────────────────────────────────────
-function StatusPill({ status }: { status: Status }) {
-  // Each pill: white base + semi-transparent color layer on top (via backgroundImage)
+const purple = '#7f24b7';
+
+function StatusPill({ status, dontPostReasons, isPast, resubmitNote, tooltipPlacement = 'above' }: { status: Status; dontPostReasons?: string[]; isPast?: boolean; resubmitNote?: string; tooltipPlacement?: 'above' | 'below' }) {
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const isDontPost = status === 'rejected';
+  const isPosted  = isPast && status === 'approved';
+  const isFailed  = isPast && status === 'pending';
+  const isResubmitted = !isPast && status === 'pending' && !!resubmitNote;
   const cfg =
+    isPosted ? {
+      bg: white, overlay: 'rgba(127,36,183,0.08)',
+      border: 'rgba(127,36,183,0.25)', color: purple, label: 'Posted',
+    } :
+    isFailed ? {
+      bg: white, overlay: dark4,
+      border: dark15, color: dark60, label: 'Failed',
+    } :
     status === 'approved' ? {
       bg: white, overlay: 'rgba(32,161,79,0.1)',
       border: 'rgba(32,161,79,0.25)', color: green, label: 'Approved',
     } :
-    status === 'rejected' ? {
-      bg: white, overlay: dark4,
-      border: dark15, color: dark60, label: 'Draft',
+    isDontPost ? {
+      bg: white, overlay: 'rgba(174,34,34,0.08)',
+      border: 'rgba(174,34,34,0.3)', color: '#ae2222', label: "Don't Post",
+    } : isResubmitted ? {
+      bg: white, overlay: 'rgba(255,174,0,0.3)',
+      border: 'rgba(255,174,0,0.45)', color: '#7a4800', label: 'Review V2',
     } : {
       bg: white, overlay: 'rgba(255,174,0,0.3)',
       border: 'rgba(255,174,0,0.45)', color: '#7a4800', label: 'Review',
     };
+
+  const hasReasons = isDontPost && dontPostReasons && dontPostReasons.length > 0;
+  const hasTooltip = hasReasons || isResubmitted;
+  const tooltipLines = hasReasons ? dontPostReasons! : resubmitNote ? [resubmitNote] : [];
+  const tooltipLabel = hasReasons ? 'Reason' : 'Agent Note';
+
   return (
-    <span style={{
-      display:'inline-flex', alignItems:'center',
-      padding:'2px 6px', borderRadius:4,
-      backgroundColor: cfg.bg,
-      backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
-      border:`1px solid ${cfg.border}`,
-      fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
-      letterSpacing:'0.22px', whiteSpace:'nowrap',
-    }}>{cfg.label}</span>
+    <>
+      <span
+        style={{ display: 'inline-flex', alignItems: 'center' }}
+        onMouseEnter={e => {
+          if (!hasTooltip) return;
+          const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+          setTooltipPos({ x: r.left, y: r.top });
+        }}
+        onMouseLeave={() => setTooltipPos(null)}
+      >
+        <span style={{
+          display:'inline-flex', alignItems:'center', gap: 4,
+          padding:'2px 6px', borderRadius:4,
+          backgroundColor: cfg.bg,
+          backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
+          border:`1px solid ${cfg.border}`,
+          fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
+          letterSpacing:'0.22px', whiteSpace:'nowrap',
+          cursor: hasReasons ? 'default' : 'inherit',
+        }}>
+          {cfg.label}
+          {(isDontPost || isResubmitted) && (
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
+              <path d="M6.5 6C6.5 5.17 7.17 4.5 8 4.5C8.83 4.5 9.5 5.17 9.5 6C9.5 6.83 8 7.5 8 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <circle cx="8" cy="11" r="0.75" fill="currentColor"/>
+            </svg>
+          )}
+        </span>
+      </span>
+      {tooltipPos && hasTooltip && createPortal(
+        <div style={{
+          position: 'fixed', left: tooltipPos.x,
+          ...(tooltipPlacement === 'below'
+            ? { top: tooltipPos.y + 28 }
+            : { top: tooltipPos.y, transform: 'translateY(calc(-100% - 8px))' }),
+          background: dark90, color: white, borderRadius: 6,
+          padding: '8px 10px', fontSize: 11, fontFamily: F, lineHeight: 1.6,
+          whiteSpace: 'nowrap', zIndex: 9999,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ fontWeight: 500, marginBottom: 4, opacity: 0.7, fontSize: 10, letterSpacing: '0.2px', textTransform: 'uppercase' }}>{tooltipLabel}</div>
+          {tooltipLines.map(r => <div key={r}>• {r}</div>)}
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
 
@@ -191,9 +257,9 @@ function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
 
 // ── Content card — 245×378px, dark-2 bg, Figma spec ─────────────────────────
 function ContentCard({
-  post, status, onApprove, onRemoveApproval, onReview,
+  post, status, dontPostReasons, resubmitNote, isPast, onApprove, onRemoveApproval, onReview,
 }: {
-  post: Post; status: Status;
+  post: Post; status: Status; dontPostReasons?: string[]; resubmitNote?: string; isPast?: boolean;
   onApprove: () => void; onRemoveApproval: () => void; onReview: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -257,22 +323,16 @@ function ContentCard({
         </div>
 
       ) : isPortrait ? (
-        /* ── Portrait 9:16 layout — padded inside dark-2 card, rounded image ── */
-        <div style={{ flex:1, padding:'0 8px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{
-            flex:1, position:'relative', overflow:'hidden',
-            borderRadius:8, background:'#1a1a1a',
-          }}>
-            {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            {/* Play icon for feed-video / short */}
-            {(post.type === 'feed-video' || post.type === 'short') && (
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <div style={{ width:36, height:36, borderRadius:99, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="11" height="13" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
-                </div>
+        /* ── Portrait 9:16 — full-bleed image edge-to-edge below header ── */
+        <div style={{ flex:1, position:'relative', background:'#1a1a1a', overflow:'hidden' }}>
+          {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+          {post.type === 'feed-video' && (
+            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
       ) : isLandscape ? (
@@ -324,7 +384,7 @@ function ContentCard({
 
       {/* ── Status pill — always anchored bottom-left 10px ── */}
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        <StatusPill status={status} />
+        <StatusPill status={status} dontPostReasons={dontPostReasons} resubmitNote={resubmitNote} isPast={isPast} />
       </div>
 
       {/* ── Hover overlay ── */}
@@ -340,18 +400,20 @@ function ContentCard({
           transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
           display:'flex', flexDirection:'column', alignItems:'center', gap:8,
         }}>
-          <Button
-            variant={isApproved ? 'secondary' : isDraft ? 'secondary' : 'green'}
-            size="sm"
-            frontIcon={isApproved ? ApprovalsIcon : isDraft ? CalendarEdit : Check2}
-            onPress={(e) => { (e as any).continuePropagation?.(); }}
-            onClick={(e) => { e.stopPropagation(); isApproved ? onRemoveApproval() : onApprove(); }}
-          >
-            {isApproved ? 'Remove approval' : isDraft ? 'Reschedule' : 'Approve'}
-          </Button>
+          {!isPast && (
+            <Button
+              variant={isApproved ? 'secondary' : isDraft ? 'secondary' : 'green'}
+              size="sm"
+              frontIcon={isApproved ? ApprovalsIcon : isDraft ? CalendarEdit : Check2}
+              onPress={(e) => { (e as any).continuePropagation?.(); }}
+              onClick={(e) => { e.stopPropagation(); isApproved ? onRemoveApproval() : onApprove(); }}
+            >
+              {isApproved ? 'Remove approval' : isDraft ? 'Reschedule' : 'Approve'}
+            </Button>
+          )}
           <Button variant="secondary" size="sm" frontIcon={EyeOpen}
             onClick={(e) => { e.stopPropagation(); onReview(); }}>
-            Review
+            {isPast ? 'View' : 'Review'}
           </Button>
         </div>
       </div>
@@ -361,10 +423,12 @@ function ContentCard({
 
 // ── Campaign section ──────────────────────────────────────────────────────────
 function CampaignSection({
-  campaign, statuses, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast,
+  campaign, statuses, dontPostReasons, resubmitNotes, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast,
 }: {
   campaign: Campaign;
   statuses: Record<number, Status>;
+  dontPostReasons: Record<number, string[]>;
+  resubmitNotes?: Record<number, string>;
   onApprove: (id: number) => void;
   onRemoveApproval: (id: number) => void;
   onReview: (id: number) => void;
@@ -475,7 +539,7 @@ function CampaignSection({
         </div>
       </div>
 
-      {/* ── Pending / review / draft cards ── */}
+      {/* ── Cards ── */}
       {!collapsed && (
         <div style={{
           display:'flex', flexDirection:'column', gap:18,
@@ -487,78 +551,96 @@ function CampaignSection({
             ? 'opacity 0.45s ease, transform 0.45s cubic-bezier(0.4,0,1,1), max-height 0.55s ease'
             : 'none',
         }}>
-          {/* Pending grid */}
-          {pending.length > 0 && (
+          {isPast ? (
+            /* Past campaigns — flat grid with Posted/Don't Post/Failed pills */
             <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-              {pending.map(post => (
+              {campaign.posts.map(post => (
                 <ContentCard
-                  key={post.id}
-                  post={post}
+                  key={post.id} post={post}
                   status={statuses[post.id]}
+                  dontPostReasons={dontPostReasons[post.id]}
+                  resubmitNote={resubmitNotes?.[post.id]}
+                  isPast
                   onApprove={() => onApprove(post.id)}
                   onRemoveApproval={() => onRemoveApproval(post.id)}
                   onReview={() => onReview(post.id)}
                 />
               ))}
             </div>
-          )}
-
-          {/* Approved section */}
-          {approved.length > 0 && (() => {
-            const allDone = pending.length === 0; // every post in campaign is approved
-            if (allDone) {
-              // Campaign fully approved — no divider, just the grid
-              return (
+          ) : (
+            <>
+              {/* Pending grid */}
+              {pending.length > 0 && (
                 <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-                  {approved.map(post => (
+                  {pending.map(post => (
                     <ContentCard
-                      key={post.id} post={post} status={statuses[post.id]}
+                      key={post.id} post={post}
+                      status={statuses[post.id]}
+                      dontPostReasons={dontPostReasons[post.id]}
+                      resubmitNote={resubmitNotes?.[post.id]}
                       onApprove={() => onApprove(post.id)}
                       onRemoveApproval={() => onRemoveApproval(post.id)}
                       onReview={() => onReview(post.id)}
                     />
                   ))}
                 </div>
-              );
-            }
-            // Partially approved — show collapsible section with divider
-            return (
-              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:4 }}>
-                  <div style={{ flex:1, height:1, background:dark8 }} />
-                  <button
-                    onClick={() => setApprovedSectionCollapsed(c => !c)}
-                    style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
-                      <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
-                      <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
-                      Approved ({approved.length})
-                    </span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                      style={{ transform: approvedSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
-                      <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  <div style={{ flex:1, height:1, background:dark8 }} />
-                </div>
-                {!approvedSectionCollapsed && (
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-                    {approved.map(post => (
-                      <ContentCard
-                        key={post.id} post={post} status={statuses[post.id]}
-                        onApprove={() => onApprove(post.id)}
-                        onRemoveApproval={() => onRemoveApproval(post.id)}
-                        onReview={() => onReview(post.id)}
-                      />
-                    ))}
+              )}
+              {/* Approved section */}
+              {approved.length > 0 && (() => {
+                const allDone = pending.length === 0;
+                if (allDone) {
+                  return (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                      {approved.map(post => (
+                        <ContentCard
+                          key={post.id} post={post} status={statuses[post.id]}
+                          onApprove={() => onApprove(post.id)}
+                          onRemoveApproval={() => onRemoveApproval(post.id)}
+                          onReview={() => onReview(post.id)}
+                        />
+                      ))}
+                    </div>
+                  );
+                }
+                return (
+                  <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:4 }}>
+                      <div style={{ flex:1, height:1, background:dark8 }} />
+                      <button
+                        onClick={() => setApprovedSectionCollapsed(c => !c)}
+                        style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                          <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
+                          <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
+                          Approved ({approved.length})
+                        </span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          style={{ transform: approvedSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
+                          <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                      <div style={{ flex:1, height:1, background:dark8 }} />
+                    </div>
+                    {!approvedSectionCollapsed && (
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                        {approved.map(post => (
+                          <ContentCard
+                            key={post.id} post={post} status={statuses[post.id]}
+                            onApprove={() => onApprove(post.id)}
+                            onRemoveApproval={() => onRemoveApproval(post.id)}
+                            onReview={() => onReview(post.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })()}
+                );
+              })()}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -567,26 +649,211 @@ function CampaignSection({
 
 // ── Social platform icons ─────────────────────────────────────────────────────
 const SocialIcon = ({ platform, active }: { platform: string; active?: boolean }) => {
-  const s = active ? 1 : 0.35;
+  const opacity = active ? 1 : 0.4;
+  const size = 28;
   const icons: Record<string, React.ReactNode> = {
-    instagram: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>,
-    facebook:  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    linkedin:  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" strokeWidth="1.5"/><path d="M7 10v7M7 7v.5M12 17v-4a2 2 0 014 0v4M12 10v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    x:         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4l16 16M20 4L4 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    google:    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20.3 12.2c0-.6-.1-1.2-.2-1.8H12v3.4h4.7a4 4 0 01-1.7 2.6v2.2h2.8c1.6-1.5 2.5-3.7 2.5-6.4z" fill="#4285F4"/><path d="M12 21c2.4 0 4.4-.8 5.8-2.1l-2.8-2.2c-.8.5-1.8.9-3 .9-2.3 0-4.2-1.5-4.9-3.6H4.2v2.2A9 9 0 0012 21z" fill="#34A853"/><path d="M7.1 14c-.2-.5-.3-1-.3-1.6v-1.5c0-.5.1-1 .3-1.5V7.3H4.2A9 9 0 003 12a9 9 0 001.2 4.7l2.9-2.7z" fill="#FBBC04"/><path d="M12 6.8c1.3 0 2.5.4 3.4 1.3l2.5-2.5C16.4 4.2 14.4 3.4 12 3.4A9 9 0 004.2 7.3l2.9 2.3c.7-2 2.6-3.5 4.9-3.5-.1-.1 0-.2 0-.3z" fill="#EA4335"/></svg>,
+    instagram: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <defs>
+          <radialGradient id="ig-g" cx="30%" cy="107%" r="150%">
+            <stop offset="0%" stopColor="#fdf497"/>
+            <stop offset="10%" stopColor="#fdf497"/>
+            <stop offset="30%" stopColor="#fd5949"/>
+            <stop offset="55%" stopColor="#d6249f"/>
+            <stop offset="70%" stopColor="#285AEB"/>
+          </radialGradient>
+        </defs>
+        <rect width="28" height="28" rx="7" fill="url(#ig-g)"/>
+        <rect x="7" y="7" width="14" height="14" rx="4" stroke="white" strokeWidth="1.4"/>
+        <circle cx="14" cy="14" r="4" stroke="white" strokeWidth="1.4"/>
+        <circle cx="19" cy="9" r="1" fill="white"/>
+      </svg>
+    ),
+    facebook: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#1877F2"/>
+        <path d="M16.5 9h-2a1 1 0 00-1 1v2h3l-.5 3H13.5v7H10.5v-7H9v-3h1.5v-2a4 4 0 014-4h2v3z" fill="white"/>
+      </svg>
+    ),
+    linkedin: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#0A66C2"/>
+        <path d="M9 11.5h2.5v8H9v-8zm1.25-1a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zM13.5 11.5H16v1.1c.4-.7 1.3-1.3 2.5-1.3 2.2 0 3 1.5 3 3.5v4.7H19v-4.4c0-1-.4-1.6-1.3-1.6-1.1 0-1.7.7-1.7 1.8v4.2H13.5v-8z" fill="white"/>
+      </svg>
+    ),
+    x: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#000"/>
+        <path d="M8 8h4l2.5 3.5L17 8h3l-4.5 6L20 20h-4l-2.8-3.8L10 20H7l5-6.5L8 8z" fill="white"/>
+      </svg>
+    ),
+    google: (
+      <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="white" stroke="#e0e0e0" strokeWidth="1"/>
+        <path d="M20.8 14.2c0-.5 0-1-.1-1.5H14v2.8h3.8a3.2 3.2 0 01-1.4 2.1v1.8h2.3c1.3-1.2 2.1-3 2.1-5.2z" fill="#4285F4"/>
+        <path d="M14 21c1.9 0 3.5-.6 4.7-1.7l-2.3-1.8c-.6.4-1.4.7-2.4.7-1.9 0-3.4-1.3-4-3H7.7v1.8A7 7 0 0014 21z" fill="#34A853"/>
+        <path d="M10 15.2a4.2 4.2 0 010-2.4v-1.8H7.7A7 7 0 007 14c0 1.1.3 2.2.7 3.2L10 15.2z" fill="#FBBC04"/>
+        <path d="M14 10.6c1 0 2 .4 2.7 1.1l2-2C17.5 8.5 15.9 8 14 8a7 7 0 00-6.3 3.8l2.3 1.8c.6-1.7 2.1-3 4-3z" fill="#EA4335"/>
+      </svg>
+    ),
   };
-  return <span style={{ opacity: s, cursor: 'pointer', color: dark80 }}>{icons[platform]}</span>;
+  return <span style={{ opacity, cursor: 'pointer', display: 'flex' }}>{icons[platform]}</span>;
 };
 
+// ── Don't Post feedback modal ─────────────────────────────────────────────────
+const DONT_POST_OPTIONS = [
+  'Image', 'Wrong language', 'Amount of text', 'Caption text',
+  'Layout', 'Writing quality', 'Inaccurate', 'Missing text',
+  'Colors and fonts', 'Other',
+];
+
+// ── Resubmit confirmation modal ───────────────────────────────────────────────
+function ResubmitModal({ close, onConfirm, onReviewFirst }: {
+  close: () => void;
+  onConfirm: (note: string) => void;
+  onReviewFirst: () => void;
+}) {
+  const [note, setNote] = useState('');
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
+          Resubmit to Client?
+        </span>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
+            Have you revised this post? The client will be notified to review it again.
+          </p>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="Add a note for the client (optional)"
+            style={{
+              width: '100%', minHeight: 80, resize: 'vertical',
+              border: `1px solid ${dark15}`, borderRadius: 8,
+              padding: '10px 12px', fontSize: 13, color: dark90,
+              fontFamily: F, lineHeight: 1.5, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="secondary" onPress={() => { close(); onReviewFirst(); }}>
+            Review Post First
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(note.trim()); close(); }}>
+            Yes, Resubmit
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (reasons: string[]) => void }) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [otherText, setOtherText] = useState('');
+  const otherSelected = selected.has('Other');
+
+  const toggle = (opt: string) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(opt) ? next.delete(opt) : next.add(opt);
+    return next;
+  });
+
+  const buildReasons = () => {
+    const reasons = Array.from(selected).filter(r => r !== 'Other');
+    if (otherSelected) reasons.push('Other');
+    if (otherText.trim()) reasons.push(otherText.trim());
+    return reasons;
+  };
+
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
+          What could be improved?
+        </span>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {DONT_POST_OPTIONS.map(opt => {
+              const active = selected.has(opt);
+              return (
+                <button
+                  key={opt}
+                  onClick={() => toggle(opt)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 99,
+                    border: `1.5px solid ${active ? dark90 : dark15}`,
+                    background: active ? dark4 : white,
+                    fontSize: 13, fontWeight: active ? 500 : 400,
+                    color: dark90, fontFamily: F, cursor: 'pointer',
+                    transition: 'border-color 0.15s, background 0.15s',
+                  }}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+          <textarea
+            value={otherText}
+            onChange={e => setOtherText(e.target.value)}
+            placeholder="Tell us more"
+            style={{
+              width: '100%', minHeight: 88, resize: 'vertical',
+              border: `1px solid ${dark15}`, borderRadius: 8,
+              padding: '10px 12px', fontSize: 13, color: dark90,
+              fontFamily: F, lineHeight: 1.5, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(buildReasons()); close(); }}>
+            Send Feedback
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
 // ── Content review page (full-page overlay) ───────────────────────────────────
-function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate }: {
+function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
+  mode, internalStatus, onMarkReady, onUndoReady, dontPostReasons, resubmitNotes, isPast,
+}: {
   post: Post; status: Status;
   allPosts: Post[]; allStatuses: Record<number, Status>;
   onClose: () => void; onApprove: () => void; onRemoveApproval: () => void;
-  onDontPost: () => void; onNavigate: (id: number) => void;
+  onDontPost: (reasons: string[]) => void; onNavigate: (id: number) => void;
+  mode?: 'internal' | 'client';
+  internalStatus?: InternalStatus;
+  onMarkReady?: () => void;
+  onUndoReady?: () => void;
+  dontPostReasons?: Record<number, string[]>;
+  resubmitNotes?: Record<number, string>;
+  isPast?: boolean;
 }) {
   const [chatInput, setChatInput] = useState('');
+  const [focusMode, setFocusMode] = useState(true);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
+  const CAPTION_LIMIT = 100;
+  const { openModal } = useModals();
+  const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
   const isApproved = status === 'approved';
+  const isInternal = mode === 'internal';
+  const isReadyForClient = internalStatus === 'readyForClient';
   const currentIdx = allPosts.findIndex(p => p.id === post.id);
   const prevPost = allPosts[currentIdx - 1];
   const nextPost = allPosts[currentIdx + 1];
@@ -617,13 +884,19 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           <span style={{ fontSize: 14, fontWeight: 400, color: dark80, fontFamily: F, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
             {post.caption.slice(0, 48)}{post.caption.length > 48 ? '…' : ''}
           </span>
-          <StatusPill status={status} />
+          {isInternal ? (() => {
+              if (isPast) return <StatusPill status={status} isPast dontPostReasons={dontPostReasons?.[post.id]} />;
+              if (status === 'rejected' && isReadyForClient) return <StatusPill status="rejected" dontPostReasons={dontPostReasons?.[post.id]} />;
+              if (status === 'approved' && isReadyForClient) return <StatusPill status="approved" />;
+              return <InternalStatusPill status={internalStatus ?? 'internalReview'} />;
+            })()
+            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} resubmitNote={resubmitNotes?.[post.id]} isPast={isPast} tooltipPlacement="below" />}
           <Button variant="ghost" size="sm" square>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
           </Button>
         </div>
 
-        {/* Center: Prev / Don't Post / Approve / Next */}
+        {/* Center: Prev / Don't Post / primary CTA / Next */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <Button
             variant="ghost" size="sm" frontIcon={ArrowLeft}
@@ -632,17 +905,35 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           >
             Previous
           </Button>
-          <Button variant="secondary" size="sm" onPress={() => { onDontPost(); }}>
-            Don't Post
-          </Button>
-          {isApproved ? (
-            <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
-              Remove approval
+          {!(isInternal && isReadyForClient) && status !== 'rejected' && (
+            <Button variant="secondary" size="sm" onPress={handleDontPost}>
+              Don't Post
             </Button>
+          )}
+          {isInternal ? (
+            isReadyForClient ? (
+              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onUndoReady?.(); }}>
+                Remove Approval
+              </Button>
+            ) : (
+              <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onMarkReady?.(); }}>
+                Ready for Client
+              </Button>
+            )
           ) : (
-            <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
-              Approve
-            </Button>
+            isApproved ? (
+              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
+                Remove approval
+              </Button>
+            ) : status === 'rejected' ? (
+              <Button variant="secondary" size="sm" frontIcon={CalendarEdit} onPress={() => { onRemoveApproval(); }}>
+                Reschedule
+              </Button>
+            ) : (
+              <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
+                Approve
+              </Button>
+            )
           )}
           <Button
             variant="ghost" size="sm" endIcon={ArrowRight}
@@ -653,14 +944,15 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           </Button>
         </div>
 
-        {/* Right: credits + upgrade + avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end' }}>
-          <Button variant="ghost" size="sm">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={dark60} strokeWidth="1.6" strokeLinecap="round"/></svg>
-            <span style={{ marginLeft: 4, fontSize: 13, color: dark60, fontFamily: F }}>Add More Credits</span>
-          </Button>
-          <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon}>Upgrade</Button>
-          <div style={{ width: 28, height: 28, borderRadius: 99, background: '#5b2d6e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: white, fontSize: 12, fontFamily: F }}>S</div>
+        {/* Right: credits + avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: dark90, fontFamily: F }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+            82 Credits
+          </span>
+          <div style={{ width: 28, height: 28, borderRadius: 99, overflow: 'hidden', flexShrink: 0 }}>
+            <img src={IMG_AVATAR} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </div>
         </div>
       </div>
 
@@ -669,46 +961,58 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
 
         {/* Left panel — AI suggestions */}
         <div style={{
-          width: 280, flexShrink: 0,
+          width: focusMode ? 0 : 280,
+          opacity: focusMode ? 0 : 1,
+          overflow: 'hidden',
+          padding: focusMode ? 0 : undefined,
+          flexShrink: 0,
           background: white, borderRight: `1px solid ${dark8}`,
           display: 'flex', flexDirection: 'column',
-          padding: '20px 20px 0',
-          overflowY: 'auto',
+          transition: 'width 0.3s ease, opacity 0.3s ease, padding 0.3s ease',
         }}>
-          <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
-            Blaze can improve this post by:
-          </p>
-          <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {suggestions.map((s, i) => (
-              <li key={i} style={{ fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
-                <span style={{ marginRight: 4 }}>{s.emoji}</span>
-                <strong style={{ fontWeight: 500, color: dark90 }}>{s.label}</strong>
-                {': '}
-                <span style={{ color: dark60 }}>{s.detail}</span>
-              </li>
-            ))}
-          </ol>
-          <p style={{ margin: '20px 0 12px', fontSize: 13, color: dark80, fontFamily: F }}>What would you like to do?</p>
-          <div style={{ flex: 1 }} />
-          {/* Chat input */}
+          <div style={{ width: 280, display: 'flex', flexDirection: 'column', flex: 1, padding: '20px 20px 0', overflowY: 'auto', minHeight: 0 }}>
+            <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+              Blaze can improve this post by:
+            </p>
+            <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {suggestions.map((s, i) => (
+                <li key={i} style={{ fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+                  <span style={{ marginRight: 4 }}>{s.emoji}</span>
+                  <strong style={{ fontWeight: 500, color: dark90 }}>{s.label}</strong>
+                  {': '}
+                  <span style={{ color: dark60 }}>{s.detail}</span>
+                </li>
+              ))}
+            </ol>
+            <p style={{ margin: '20px 0 12px', fontSize: 13, color: dark80, fontFamily: F }}>What would you like to do?</p>
+            <div style={{ flex: 1 }} />
+          </div>
+          {/* Chat input — pinned to bottom */}
           <div style={{
-            borderTop: `1px solid ${dark8}`, paddingTop: 12, paddingBottom: 16,
-            display: 'flex', alignItems: 'center', gap: 8,
+            width: 280, flexShrink: 0,
+            borderTop: `1px solid ${dark8}`, padding: '12px 16px 16px',
           }}>
             <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+              display: 'flex', alignItems: 'center', gap: 8,
               border: `1px solid ${dark8}`, borderRadius: 8, padding: '8px 10px',
               background: white,
             }}>
+              {/* Paperclip icon */}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: dark40 }}>
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <input
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 placeholder="Ask Blaze to change something..."
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, color: dark90, fontFamily: F, background: 'transparent' }}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, color: dark90, fontFamily: F, background: 'transparent', minWidth: 0 }}
               />
+              {/* Credits label */}
+              <span style={{ fontSize: 11, color: dark40, fontFamily: F, whiteSpace: 'nowrap', flexShrink: 0 }}>5 credits ✦</span>
+              {/* Send button */}
               <button style={{
                 width: 26, height: 26, borderRadius: 99, border: 'none',
-                background: dark90, color: white, cursor: 'pointer',
+                background: dark90, color: white, cursor: 'pointer', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -719,151 +1023,368 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
 
         {/* Center — post preview */}
         <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
+          flex: 1, position: 'relative', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24,
           overflowY: 'auto',
         }}>
-          {/* View as label + social icons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, color: dark40, fontFamily: F }}>View as</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-            {(['instagram','facebook','linkedin','x','google'] as const).map((p, i) => (
-              <SocialIcon key={p} platform={p} active={i === 0} />
-            ))}
+          {/* Focus Mode toggle button */}
+          <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              frontIcon={focusMode ? Maximise01 : Minimise02}
+              onPress={() => setFocusMode(f => !f)}
+            >
+              {focusMode ? 'Open Panels to Edit' : 'Focus Mode'}
+            </Button>
           </div>
 
-          {/* Post card */}
-          <div style={{
-            width: 320, background: white, borderRadius: 12,
-            boxShadow: '0 4px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
-          }}>
-            {/* Account not connected banner */}
+          {/* Post card wrapper — relative so "View as" can sit to the left */}
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            {/* View as label + social icons — pinned left of post card */}
+            <div style={{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>View as</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                {(['instagram','facebook','linkedin','x','google'] as const).map((p, i) => (
+                  <SocialIcon key={p} platform={p} active={i === 0} />
+                ))}
+              </div>
+            </div>
+            {/* Post card — Instagram style */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 14px', borderBottom: `1px solid ${dark8}`,
+              width: 320, background: white, borderRadius: 12,
+              boxShadow: '0 4px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
             }}>
-              <div style={{ width: 24, height: 24, borderRadius: 99, background: dark8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke={dark40} strokeWidth="1.5"/><circle cx="12" cy="12" r="4" stroke={dark40} strokeWidth="1.5"/></svg>
+              {/* Header row */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px',
+              }}>
+                {/* Avatar circle with person icon */}
+                <div style={{ width: 32, height: 32, borderRadius: 99, background: dark8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="4" stroke={dark40} strokeWidth="1.5"/>
+                    <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke={dark40} strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F, lineHeight: 1.2 }}>Account Not Connected</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>Jun 26 at 3:30</span>
+                    {/* Lock/visibility icon */}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="11" width="18" height="11" rx="2" stroke={dark40} strokeWidth="1.5"/>
+                      <path d="M7 11V7a5 5 0 0110 0v4" stroke={dark40} strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+                {/* More button ⋯ */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: dark80, padding: '2px 4px', display: 'flex', alignItems: 'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
+                </button>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: dark80, fontFamily: F }}>Account Not Connected</span>
-            </div>
-            {/* Image */}
-            <div style={{ aspectRatio: '1/1', background: '#c8c0b4', overflow: 'hidden' }}>
-              {post.img && <img src={post.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-            </div>
-            {/* Actions row */}
-            <div style={{ padding: '10px 14px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', gap: 14 }}>
-                {['♡', '○', '⬆'].map(ic => <span key={ic} style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>{ic}</span>)}
+              {/* Image — square */}
+              <div style={{ aspectRatio: '1/1', background: '#c8c0b4', overflow: 'hidden' }}>
+                {post.img && <img src={post.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
               </div>
-              <span style={{ fontSize: 18, color: dark80, cursor: 'pointer' }}>⊡</span>
+              {/* Action bar */}
+              <div style={{ padding: '10px 14px 6px', display: 'flex', alignItems: 'center', gap: 24 }}>
+                {/* Like */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, padding: 0, color: dark80, fontSize: 12, fontFamily: F }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z" stroke={dark80} strokeWidth="1.5" strokeLinejoin="round"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" stroke={dark80} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Like
+                </button>
+                {/* Comment */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, padding: 0, color: dark80, fontSize: 12, fontFamily: F }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke={dark80} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Comment
+                </button>
+                {/* Share */}
+                <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, padding: 0, color: dark80, fontSize: 12, fontFamily: F }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke={dark80} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Share
+                </button>
+              </div>
+              {/* Caption */}
+              <div style={{ padding: '0 14px 14px' }}>
+                <p style={{ margin: 0, fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
+                  <strong style={{ fontWeight: 500 }}>Account Not Connected</strong>{' '}
+                  <span style={{ color: dark80 }}>
+                    {captionExpanded || post.caption.length <= CAPTION_LIMIT
+                      ? post.caption
+                      : post.caption.slice(0, CAPTION_LIMIT) + '…'}
+                  </span>
+                  {post.caption.length > CAPTION_LIMIT && (
+                    <span
+                      onClick={() => setCaptionExpanded(e => !e)}
+                      style={{ color: dark40, cursor: 'pointer', marginLeft: 4 }}
+                    >
+                      {captionExpanded ? 'See less' : 'See more'}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-            {/* Caption */}
-            <div style={{ padding: '0 14px 14px' }}>
-              <p style={{ margin: 0, fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
-                <strong>Account Not Connected</strong>{' '}
-                <span style={{ color: dark80 }}>{post.caption}</span>
-                {' '}<span style={{ color: dark40 }}>see more</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Do you like the result bar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '10px 20px', background: white, borderRadius: 99,
-            boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: `1px solid ${dark8}`,
-          }}>
-            <span style={{ fontSize: 13, color: dark80, fontFamily: F }}>Do you like the result?</span>
-            <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👎</button>
-            <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👍</button>
-            <Button variant="secondary" size="sm" onPress={onClose}>Close</Button>
           </div>
         </div>
 
         {/* Right panel — posting details */}
         <div style={{
-          width: 220, flexShrink: 0,
+          width: focusMode ? 0 : 220,
+          opacity: focusMode ? 0 : 1,
+          overflow: 'hidden',
+          flexShrink: 0,
           background: white, borderLeft: `1px solid ${dark8}`,
-          padding: '20px 16px', overflowY: 'auto',
-          display: 'flex', flexDirection: 'column', gap: 20,
+          transition: 'width 0.3s ease, opacity 0.3s ease',
         }}>
-          {/* Posting on */}
-          <div>
-            <p style={{ margin: '0 0 4px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting on</p>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>{post.date}</p>
-            <button style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', fontSize: 12, color: dark40, fontFamily: F }}>▾</button>
-          </div>
-
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Posting to */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting to</p>
-            {[
-              { name: 'Instagram', connected: false },
-              { name: 'Facebook', connected: true },
-              { name: 'LinkedIn', connected: true },
-              { name: 'X/Twitter', connected: true },
-              { name: 'Google Business', connected: true },
-            ].map(acct => (
-              <div key={acct.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 13, color: dark90, fontFamily: F }}>{acct.name}</span>
-                {acct.connected
-                  ? <div style={{ width: 18, height: 18, borderRadius: 99, background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke={dark40} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-                  : <Button variant="secondary" size="xs" onPress={() => {}}>Connect</Button>
-                }
+          <div style={{ width: 220, padding: '20px 16px', overflowY: 'auto', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Posting on */}
+            <div>
+              <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting on</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{post.date}</p>
+                <button style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
 
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Campaign */}
-          <div>
-            <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Campaign</p>
-            <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>Eat Well Feel Better</p>
-            <p style={{ margin: 0, fontSize: 12, color: dark60, fontFamily: F }}>🛍️ Lifestyle Content</p>
-          </div>
-
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Quick Edits */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Quick Edits</p>
-            {[
-              { icon: '✏️', label: 'Adjust Caption' },
-              { icon: '🎨', label: 'Edit Design' },
-            ].map(item => (
-              <button key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 4 }}>
-                <span>{item.icon}</span>
-                <span style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ height: 1, background: dark8 }} />
-
-          {/* Redesign */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Redesign</p>
-            {[
-              { icon: '↻', label: 'Regenerate Design', sub: 'Blaze will generate new design' },
-              { icon: '🖼', label: 'Replace with Media', sub: 'Swap design with your own' },
-            ].map(item => (
-              <button key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 8, textAlign: 'left' }}>
-                <span style={{ fontSize: 16, lineHeight: 1.2 }}>{item.icon}</span>
-                <div>
-                  <div style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</div>
-                  <div style={{ fontSize: 11, color: dark40, fontFamily: F }}>{item.sub}</div>
+            {/* Posting to */}
+            <div>
+              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Posting to</p>
+              {[
+                { name: 'Instagram', platform: 'instagram', connected: false },
+                { name: 'Facebook', platform: 'facebook', connected: true },
+                { name: 'LinkedIn', platform: 'linkedin', connected: true },
+                { name: 'X/Twitter', platform: 'x', connected: true },
+                { name: 'Google Business', platform: 'google', connected: true },
+              ].map(acct => (
+                <div key={acct.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <SocialIcon platform={acct.platform} active={acct.connected} />
+                  <span style={{ fontSize: 13, color: dark90, fontFamily: F, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acct.name}</span>
+                  {acct.connected
+                    ? <div style={{ width: 18, height: 18, borderRadius: 99, background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke={dark40} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+                    : <Button variant="secondary" size="xs" onPress={() => {}}>Connect</Button>
+                  }
                 </div>
-              </button>
-            ))}
+              ))}
+            </div>
+
+            {/* Campaign */}
+            <div>
+              <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Campaign</p>
+              <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>Eat Well Feel Better</p>
+              <p style={{ margin: 0, fontSize: 12, color: dark60, fontFamily: F }}>🛍️ Lifestyle Content</p>
+            </div>
+
+            {/* Quick Edits */}
+            <div>
+              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Quick Edits</p>
+              {[
+                {
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                  label: 'Adjust caption',
+                },
+                {
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                  label: 'Change design elements',
+                },
+                {
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke={dark60} strokeWidth="1.5"/></svg>,
+                  label: 'Add more in Designer',
+                },
+              ].map(item => (
+                <button key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 4 }}>
+                  {item.icon}
+                  <span style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Redesign */}
+            <div>
+              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', textTransform: 'uppercase' }}>Redesign</p>
+              {[
+                { icon: '↻', label: 'Regenerate Design', sub: 'Blaze will generate new design' },
+                { icon: '🖼', label: 'Replace with Image', sub: 'Swap design with your own' },
+              ].map(item => (
+                <button key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 8, textAlign: 'left' }}>
+                  <span style={{ fontSize: 16, lineHeight: 1.2 }}>{item.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: dark40, fontFamily: F }}>{item.sub}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Toggle switch ────────────────────────────────────────────────────────────
+function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      role="switch" aria-checked={on}
+      onClick={() => onChange(!on)}
+      style={{
+        width: 40, height: 24, borderRadius: 99, border: 'none', padding: 2,
+        background: on ? dark90 : dark15,
+        cursor: 'pointer', flexShrink: 0, position: 'relative',
+        transition: 'background 0.2s',
+      }}
+    >
+      <span style={{
+        position: 'absolute', top: 3, left: on ? 19 : 3,
+        width: 18, height: 18, borderRadius: 99, background: white,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+        transition: 'left 0.2s',
+        display: 'block',
+      }} />
+    </button>
+  );
+}
+
+// ── Approval Settings modal ───────────────────────────────────────────────────
+const CONTENT_TYPES = [
+  { key: 'campaigns',  label: 'Organic Campaigns',           desc: 'Scheduled social posts across all connected platforms.',   defaultOn: false },
+  { key: 'seo-local',  label: 'Local SEO — Google Business', desc: 'Posts and updates to your Google Business Profile.',       defaultOn: true  },
+  { key: 'seo-blogs',  label: 'SEO / AEO Blogs',             desc: 'Long-form content published to your website or blog.',     defaultOn: false },
+  { key: 'reputation', label: 'Reputation',                  desc: 'Review responses and reputation management content.',      defaultOn: true  },
+  { key: 'paid-ads',   label: 'Paid Ads',                    desc: 'Search and display ad copy before going to ad networks.',  defaultOn: true  },
+  { key: 'paid-social',label: 'Paid Search',                 desc: 'Google Search ad copy before going live on search networks.',        defaultOn: true },
+];
+
+function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Turn off Approvals?</span>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
+            All content types will bypass client review and publish automatically after agent review.
+          </p>
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10,
+            background: 'rgba(255,174,0,0.1)', border: '1px solid rgba(255,174,0,0.4)',
+            borderRadius: 8, padding: '10px 12px',
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <p style={{ margin: 0, fontSize: 13, color: '#7a4800', fontFamily: F, lineHeight: 1.55 }}>
+              Any content currently awaiting client approval will be auto-approved and scheduled to post.
+            </p>
+          </div>
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="secondary" onPress={close}>Cancel</Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>Turn Off</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+function ApprovalSettingsModal({ close }: { close: () => void }) {
+  const { openModal } = useModals();
+  const [approvalsOn, setApprovalsOn] = useState(true);
+  const [types, setTypes] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(CONTENT_TYPES.map(t => [t.key, t.defaultOn]))
+  );
+
+  const handleMasterToggle = (val: boolean) => {
+    if (!val) {
+      openModal(TurnOffConfirmModal, { onConfirm: () => setApprovalsOn(false) });
+    } else {
+      setApprovalsOn(true);
+    }
+  };
+
+  const clientRequiredCount = Object.values(types).filter(Boolean).length;
+
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Approval Settings</span>
+          <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>
+            Control which content types require client sign-off before publishing.
+          </span>
+        </div>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {/* Master toggle */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, paddingBottom: 16 }}>
+            <div>
+              <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>Approvals</p>
+              <p style={{ margin: 0, fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.55 }}>
+                Require client sign-off before content goes live. When off, agent-reviewed content publishes automatically.
+              </p>
+            </div>
+            <Toggle on={approvalsOn} onChange={handleMasterToggle} />
+          </div>
+
+          {/* Per-type list — only when approvals is on */}
+          {approvalsOn && (
+            <>
+              <div style={{ height: 1, background: dark8, margin: '0 0 16px' }} />
+              <div style={{ paddingLeft: 20, borderLeft: `2px solid ${dark8}` }}>
+              <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 500, color: dark40, fontFamily: F, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                Approval required per content type
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {CONTENT_TYPES.map((ct, i) => (
+                  <div key={ct.key} style={{
+                    display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16,
+                    paddingTop: i === 0 ? 0 : 14, paddingBottom: 14,
+                    borderBottom: i < CONTENT_TYPES.length - 1 ? `1px solid ${dark8}` : 'none',
+                  }}>
+                    <div>
+                      <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 400, color: dark90, fontFamily: F }}>
+                        {ct.label}
+                      </p>
+                      <p style={{ margin: '0 0 6px', fontSize: 12, color: dark60, fontFamily: F, lineHeight: 1.5 }}>{ct.desc}</p>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 99,
+                        fontSize: 11, fontFamily: F,
+                        background: types[ct.key] ? 'rgba(32,161,79,0.08)' : dark4,
+                        color: types[ct.key] ? green : dark60,
+                        border: `1px solid ${types[ct.key] ? 'rgba(32,161,79,0.25)' : dark15}`,
+                      }}>
+                        {types[ct.key] ? 'Client approval required' : 'Agent review only'}
+                      </span>
+                    </div>
+                    <Toggle on={types[ct.key]} onChange={v => setTypes(prev => ({ ...prev, [ct.key]: v }))} />
+                  </div>
+                ))}
+              </div>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>
+            {approvalsOn
+              ? `${clientRequiredCount} of ${CONTENT_TYPES.length} content types require client approval`
+              : 'Approvals disabled — all content publishes automatically'}
+          </span>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={close}>Save settings</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
   );
 }
 
@@ -960,12 +1481,27 @@ function InternalStatusPill({ status }: { status: InternalStatus }) {
 // ── Internal content card ─────────────────────────────────────────────────────
 function InternalCard({
   post, internalStatus, onMarkReady, onUndo, onReview, isPast,
+  returnedByClient, approvedByClient, dontPostReasons, onResubmit, pastClientStatus,
 }: {
   post: Post; internalStatus: InternalStatus; isPast?: boolean;
   onMarkReady: () => void; onUndo: () => void; onReview: () => void;
+  returnedByClient?: boolean;
+  approvedByClient?: boolean;
+  dontPostReasons?: string[];
+  onResubmit?: (note: string) => void;
+  pastClientStatus?: Status;
 }) {
   const [hovered, setHovered] = useState(false);
+  const { openModal } = useModals();
   const isReady = internalStatus === 'readyForClient';
+
+  const handleResubmit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openModal(ResubmitModal, {
+      onConfirm: (note: string) => onResubmit?.(note),
+      onReviewFirst: () => onReview(),
+    });
+  };
   const isBlog  = post.type === 'blog';
   const isPortrait = post.type === 'story' || post.type === 'short' || post.type === 'feed-video';
   const isLandscape = post.type === 'still' || post.type === 'carousel';
@@ -979,7 +1515,7 @@ function InternalCard({
         position:'relative', width:245, height:CARD_H, flexShrink:0,
         background:dark2, border:`1px solid ${dark4}`, borderRadius:10,
         overflow:'hidden', cursor:'pointer',
-        opacity: isReady ? 0.65 : 1, transition:'opacity 0.2s',
+        opacity: returnedByClient ? 1 : isReady ? 0.65 : 1, transition:'opacity 0.2s',
         display:'flex', flexDirection:'column',
       }}
       onMouseEnter={() => setHovered(true)}
@@ -1006,17 +1542,16 @@ function InternalCard({
           </div>
         </div>
       ) : isPortrait ? (
-        <div style={{ flex:1, padding:'0 8px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{ flex:1, position:'relative', overflow:'hidden', borderRadius:8, background:'#1a1a1a' }}>
-            {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            {(post.type === 'feed-video' || post.type === 'short') && (
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <div style={{ width:36, height:36, borderRadius:99, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="11" height="13" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
-                </div>
+        /* ── Portrait 9:16 — full-bleed image edge-to-edge below header ── */
+        <div style={{ flex:1, position:'relative', background:'#1a1a1a', overflow:'hidden' }}>
+          {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+          {post.type === 'feed-video' && (
+            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ) : isLandscape ? (
         <div style={{ flex:1, padding:'0 10px 10px', display:'flex', flexDirection:'column' }}>
@@ -1050,25 +1585,51 @@ function InternalCard({
 
       {/* Status pill */}
       <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        {isPast && !isReady
-          ? <StatusPill status="rejected" />
-          : <InternalStatusPill status={internalStatus} />}
+        {isPast && pastClientStatus !== undefined
+          ? <StatusPill status={pastClientStatus} dontPostReasons={dontPostReasons} isPast />
+          : returnedByClient
+            ? <StatusPill status="rejected" dontPostReasons={dontPostReasons} />
+            : approvedByClient
+              ? <StatusPill status="approved" />
+              : <InternalStatusPill status={internalStatus} />}
       </div>
 
       {/* Hover overlay */}
       <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)', opacity:hovered?1:0, transition:'opacity 0.18s', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, pointerEvents:hovered?'all':'none' }}>
         <div style={{ transform:hovered?'scale(1) translateY(0)':'scale(0.9) translateY(4px)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-          <Button
-            variant={isReady ? 'secondary' : 'green'}
-            size="sm"
-            frontIcon={isReady ? ApprovalsIcon : Check2}
-            onClick={(e) => { e.stopPropagation(); isReady ? onUndo() : onMarkReady(); }}
-          >
-            {isReady ? 'Undo' : 'Ready for Client'}
-          </Button>
-          <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-            Review
-          </Button>
+          {isPast ? (
+            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+              View
+            </Button>
+          ) : returnedByClient ? (
+            <>
+              <Button variant="green" size="sm" frontIcon={Check2} onClick={handleResubmit}>
+                Resubmit to Client
+              </Button>
+              <Button variant="secondary" size="sm" frontIcon={EyeOpen}
+                onClick={(e) => { e.stopPropagation(); onReview(); }}>
+                Review
+              </Button>
+            </>
+          ) : approvedByClient ? (
+            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+              Review
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant={isReady ? 'secondary' : 'green'}
+                size="sm"
+                frontIcon={isReady ? ApprovalsIcon : Check2}
+                onClick={(e) => { e.stopPropagation(); isReady ? onUndo() : onMarkReady(); }}
+              >
+                {isReady ? 'Undo' : 'Ready for Client'}
+              </Button>
+              <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+                Review
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1077,26 +1638,36 @@ function InternalCard({
 
 // ── Internal campaign section (proper component so useState works) ───────────
 function InternalCampaignSection({
-  campaign, internalStatuses, today, isPast: isPastProp,
-  onMarkReady, onUndo, onMarkAllReady, onReview,
+  campaign, internalStatuses, statuses, dontPostReasons, today, isPast: isPastProp,
+  onMarkReady, onUndo, onMarkAllReady, onReview, onResubmit,
   defaultCollapsed,
 }: {
   campaign: Campaign;
   internalStatuses: Record<number, InternalStatus>;
+  statuses: Record<number, Status>;
+  dontPostReasons: Record<number, string[]>;
   today: string;
   isPast?: boolean;
   onMarkReady: (id: number) => void;
   onUndo: (id: number) => void;
   onMarkAllReady: () => void;
   onReview: (post: Post) => void;
+  onResubmit: (id: number, note: string) => void;
   defaultCollapsed?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
+  const [returnedCollapsed, setReturnedCollapsed] = useState(false);
+  const [approvedCollapsed, setApprovedCollapsed] = useState(false);
 
-  const posts       = campaign.posts;
-  const readyCount  = posts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
-  const totalCount  = posts.length;
-  const allReady    = readyCount === totalCount;
+  const posts = campaign.posts;
+  const isReturned    = (p: Post) => statuses[p.id] === 'rejected'  && internalStatuses[p.id] === 'readyForClient';
+  const isApproved    = (p: Post) => statuses[p.id] === 'approved'  && internalStatuses[p.id] === 'readyForClient';
+  const returnedPosts      = posts.filter(isReturned);
+  const approvedByClient   = posts.filter(isApproved);
+  const activePosts        = posts.filter(p => !isReturned(p) && !isApproved(p));
+  const readyCount  = activePosts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
+  const totalCount  = activePosts.length;
+  const allReady    = totalCount > 0 && readyCount === totalCount;
   const isPastCamp  = isPastProp ?? campaign.endDate < today;
 
   return (
@@ -1104,7 +1675,6 @@ function InternalCampaignSection({
       {/* Campaign header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {/* Collapse chevron */}
           <button
             onClick={() => setCollapsed(c => !c)}
             style={{ display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20, border:'none', background:'transparent', cursor:'pointer', padding:0, flexShrink:0 }}
@@ -1123,45 +1693,180 @@ function InternalCampaignSection({
           </button>
         </div>
 
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           {isPastCamp ? (
-            <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{totalCount} posts</span>
-          ) : (
-            <>
-              <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
-                {allReady
-                  ? <span style={{ color:green, display:'flex', alignItems:'center', gap:4 }}><ApprovalsIcon size={13} color={green} />{totalCount} ready for client</span>
-                  : `${totalCount - readyCount} to review`}
-              </span>
-              {!allReady && (
-                <>
-                  <div style={{ width:1, height:16, background:dark8 }} />
-                  <button onClick={onMarkAllReady}
-                    style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 8px', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:400, color:dark90, fontFamily:F }}>
-                    <ApprovalsIcon size={15} color={dark90} />
-                    All Ready for Client
-                  </button>
-                </>
-              )}
-            </>
-          )}
+            <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{posts.length} posts</span>
+          ) : (() => {
+            const clientRejectedCount = posts.filter(p => statuses[p.id] === 'rejected').length;
+            const clientApprovedCount = posts.filter(p => statuses[p.id] === 'approved').length;
+            const hasClientFeedback = clientRejectedCount > 0 || clientApprovedCount > 0;
+            return (
+              <>
+                {/* Total count */}
+                <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
+                  {posts.length} posts
+                </span>
+
+                {/* Client feedback counters */}
+                {hasClientFeedback && (
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    {clientRejectedCount > 0 && (
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, color:red, fontFamily:F, fontWeight:500 }}>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke={red} strokeWidth="1.4"/>
+                          <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke={red} strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                        {clientRejectedCount}
+                      </span>
+                    )}
+                    {clientApprovedCount > 0 && (
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, color:green, fontFamily:F, fontWeight:500 }}>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke={green} strokeWidth="1.4"/>
+                          <path d="M5 8.5l2 2 4-4" stroke={green} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        {clientApprovedCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* All Ready for Client */}
+                {!allReady && totalCount > 0 && (
+                  <>
+                    <div style={{ width:1, height:16, background:dark8 }} />
+                    <button onClick={onMarkAllReady}
+                      style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 8px', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:400, color:dark90, fontFamily:F }}>
+                      <ApprovalsIcon size={15} color={dark90} />
+                      All Ready for Client
+                    </button>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
       {/* Cards grid */}
       {!collapsed && (
-        <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
-          {posts.map(post => (
-            <InternalCard
-              key={post.id}
-              post={post}
-              internalStatus={internalStatuses[post.id]}
-              isPast={isPastCamp}
-              onMarkReady={() => onMarkReady(post.id)}
-              onUndo={() => onUndo(post.id)}
-              onReview={() => onReview(post)}
-            />
-          ))}
+        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+
+          {/* Past campaigns — flat grid with Posted/Don't Post/Failed */}
+          {isPastCamp ? (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+              {posts.map(post => (
+                <InternalCard
+                  key={post.id} post={post}
+                  internalStatus={internalStatuses[post.id]}
+                  isPast
+                  pastClientStatus={statuses[post.id]}
+                  dontPostReasons={dontPostReasons[post.id]}
+                  onMarkReady={() => onMarkReady(post.id)}
+                  onUndo={() => onUndo(post.id)}
+                  onReview={() => onReview(post)}
+                />
+              ))}
+            </div>
+          ) : (
+          <>
+          {/* 1 — Active posts */}
+          {activePosts.length > 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+              {activePosts.map(post => (
+                <InternalCard
+                  key={post.id} post={post}
+                  internalStatus={internalStatuses[post.id]}
+                  onMarkReady={() => onMarkReady(post.id)}
+                  onUndo={() => onUndo(post.id)}
+                  onReview={() => onReview(post)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* 2 — Returned by Client (below active, full opacity) */}
+          {returnedPosts.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+                <button
+                  onClick={() => setReturnedCollapsed(c => !c)}
+                  style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                    <circle cx="12" cy="12" r="9" stroke={red} strokeWidth="1.5"/>
+                    <path d="M9 9l6 6M15 9l-6 6" stroke={red} strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <span style={{ fontSize:12, fontWeight:500, color:red, fontFamily:F, whiteSpace:'nowrap' }}>
+                    Returned by Client ({returnedPosts.length})
+                  </span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    style={{ transform: returnedCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
+                    <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+              </div>
+              {!returnedCollapsed && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                  {returnedPosts.map(post => (
+                    <InternalCard
+                      key={post.id} post={post}
+                      internalStatus={internalStatuses[post.id]}
+                      returnedByClient isPast={isPastCamp} dontPostReasons={dontPostReasons[post.id]}
+                      onMarkReady={() => onMarkReady(post.id)}
+                      onUndo={() => onUndo(post.id)}
+                      onReview={() => onReview(post)}
+                      onResubmit={(note) => onResubmit(post.id, note)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 3 — Approved by Client (bottom, dimmed, collapsible) */}
+          {approvedByClient.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+                <button
+                  onClick={() => setApprovedCollapsed(c => !c)}
+                  style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+                    <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
+                    <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
+                    Approved by Client ({approvedByClient.length})
+                  </span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    style={{ transform: approvedCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
+                    <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <div style={{ flex:1, height:1, background:dark8 }} />
+              </div>
+              {!approvedCollapsed && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                  {approvedByClient.map(post => (
+                    <InternalCard
+                      key={post.id} post={post}
+                      internalStatus={internalStatuses[post.id]}
+                      approvedByClient
+                      onMarkReady={() => onMarkReady(post.id)}
+                      onUndo={() => onUndo(post.id)}
+                      onReview={() => onReview(post)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          </>
+          )}
         </div>
       )}
     </div>
@@ -1172,7 +1877,8 @@ function InternalCampaignSection({
 function ApprovalV2Inner() {
   const allPosts = CAMPAIGNS.flatMap(c => c.posts);
   const today = '2026-06-03';
-  const [tab, setTab] = useState<'internal' | 'client'>('internal');
+  const [clientView, setClientView] = useState(false);
+  const tab: 'internal' | 'client' = clientView ? 'client' : 'internal';
 
   // Internal statuses — all start as internalReview (past campaigns pre-mixed)
   const [internalStatuses, setInternalStatuses] = useState<Record<number, InternalStatus>>(() => {
@@ -1199,7 +1905,14 @@ function ApprovalV2Inner() {
   });
 
   const [reviewPost, setReviewPost] = useState<Post | null>(null);
+  const [showFeedbackToast, setShowFeedbackToast] = useState(false);
+  const triggerFeedbackToast = () => {
+    setShowFeedbackToast(true);
+    setTimeout(() => setShowFeedbackToast(false), 3500);
+  };
   const [completingCampaignId, setCompletingCampaignId] = useState<number | null>(null);
+  const [dontPostReasons, setDontPostReasons] = useState<Record<number, string[]>>({});
+  const [resubmitNotes, setResubmitNotes] = useState<Record<number, string>>({});
 
   const { openModal } = useModals();
 
@@ -1231,6 +1944,13 @@ function ApprovalV2Inner() {
     setStatuses(prev => ({ ...prev, [id]: 'rejected' }));
   };
 
+  const resubmitPost = (id: number, note: string) => {
+    setStatuses(prev => ({ ...prev, [id]: 'pending' }));
+    setDontPostReasons(prev => { const n = { ...prev }; delete n[id]; return n; });
+    if (note) setResubmitNotes(prev => ({ ...prev, [id]: note }));
+    else setResubmitNotes(prev => { const n = { ...prev }; delete n[id]; return n; });
+  };
+
   // Internal handlers
   const markReadyForClient = (id: number) => {
     setInternalStatuses(prev => ({ ...prev, [id]: 'readyForClient' }));
@@ -1255,53 +1975,61 @@ function ApprovalV2Inner() {
     });
   };
 
-  // Upgrade button for topbar
-  const upgradeBtn = (
-    <button style={{
-      display:'flex', alignItems:'center', gap:4,
-      padding:'6px 10px', borderRadius:8,
-      border:`1px solid ${dark8}`, background:white,
-      cursor:'pointer', fontSize:14, fontWeight:400,
-      color:'#6a00ff', fontFamily:F, letterSpacing:'0.14px',
-    }}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.6H22L15.8 14l2.5 7.4L12 17l-6.3 4.4 2.5-7.4L2 9.6h7.6L12 2z" fill="#6a00ff"/></svg>
-      Upgrade
-    </button>
-  );
+  // Returned by client count for header badge
+  const returnedCount = CAMPAIGNS.filter(c => c.endDate >= today)
+    .flatMap(c => c.posts)
+    .filter(p => statuses[p.id] === 'rejected' && internalStatuses[p.id] === 'readyForClient')
+    .length;
 
-  // Avatar for topbar
-  const avatarEl = (
-    <div style={{ width:32, height:32, borderRadius:99, overflow:'hidden', flexShrink:0 }}>
-      <img src={IMG_AVATAR} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-    </div>
-  );
-
-  // Tab bar in topbar center
-  const tabBar = (
-    <div style={{ display:'flex', gap:2, background:dark4, borderRadius:8, padding:3 }}>
-      {(['internal','client'] as const).map(t => (
-        <button key={t} onClick={() => setTab(t)} style={{
-          height:28, padding:'0 14px', borderRadius:6, border:'none',
-          background: tab === t ? white : 'transparent',
-          color: tab === t ? dark90 : dark60,
-          fontSize:13, fontWeight: tab === t ? 500 : 400, fontFamily:F,
-          cursor:'pointer', transition:'background 0.15s, color 0.15s',
-          boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-          whiteSpace:'nowrap',
-        }}>
-          {t === 'internal' ? 'Internal Review' : 'Client Approval'}
-        </button>
-      ))}
+  // Header title: Approvals + Settings + optional Returned by Client indicator
+  const headerTitle = (
+    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+      <span style={{ fontSize:16, fontWeight:500, color:dark90, fontFamily:F }}>Approvals</span>
+      <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
+      {returnedCount > 0 && (
+        <div style={{ display:'flex', alignItems:'center', gap:5, marginLeft:4 }}>
+          <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:18, height:18, borderRadius:99, background:red, color:white, fontSize:10, fontWeight:600, padding:'0 5px', lineHeight:1 }}>{returnedCount}</span>
+          <span style={{ fontSize:13, color:red, fontFamily:F, fontWeight:500 }}>Returned by Client</span>
+        </div>
+      )}
     </div>
   );
 
   return (
     <PrototypeShell
-      title="Approvals"
-      sidebarActiveLabel="Approvals"
-      topbarCenter={tabBar}
-      topbarRight={<div style={{ display:'flex', alignItems:'center', gap:8 }}>{upgradeBtn}{avatarEl}</div>}
+      title={headerTitle}
+      sidebarSections={H2_SECTIONS}
+      workspaceName="CertaPro Austin"
+      topbarRight={
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+            82 Credits
+          </span>
+          <Button
+            variant={clientView ? 'primary' : 'secondary'}
+            size="sm"
+            frontIcon={EyeOpen}
+            onPress={() => setClientView(v => !v)}
+          >
+            {clientView ? 'Exit client view' : 'View as client'}
+          </Button>
+        </div>
+      }
     >
+      {/* Client view banner */}
+      {clientView && (
+        <div style={{ display:'flex', alignItems:'center', gap:10, background:dark90, color:white, borderRadius:10, padding:'10px 14px', marginBottom:16, fontFamily:F }}>
+          <EyeOpen size={16} color={white} />
+          <span style={{ fontSize:13, flex:1 }}>
+            Viewing as <strong style={{ fontWeight:600 }}>Client</strong> — only content marked ready for client is visible.
+          </span>
+          <button onClick={() => setClientView(false)} style={{ background:'rgba(255,255,255,0.14)', border:'none', color:white, fontSize:12.5, fontWeight:600, padding:'5px 12px', borderRadius:7, cursor:'pointer', fontFamily:F }}>
+            Exit
+          </button>
+        </div>
+      )}
+
       {tab === 'internal' ? (
         /* ── Internal Review tab ── */
         (() => {
@@ -1323,6 +2051,9 @@ function ApprovalV2Inner() {
               key={c.id}
               campaign={c}
               internalStatuses={internalStatuses}
+              statuses={statuses}
+              dontPostReasons={dontPostReasons}
+              resubmitNotes={resubmitNotes}
               today={today}
               isPast={opts?.isPast}
               defaultCollapsed={opts?.defaultCollapsed}
@@ -1330,6 +2061,7 @@ function ApprovalV2Inner() {
               onUndo={undoReady}
               onMarkAllReady={() => markAllReadyForClient(c)}
               onReview={setReviewPost}
+              onResubmit={resubmitPost}
             />
           );
 
@@ -1366,20 +2098,28 @@ function ApprovalV2Inner() {
         const approved = CAMPAIGNS.filter(isAllApproved);
         const past     = CAMPAIGNS.filter(isPast);
 
-        const renderCampaign = (campaign: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => (
-          <CampaignSection
-            key={campaign.id}
-            campaign={campaign}
-            statuses={statuses}
-            onApprove={(id) => approve(id, campaign.id)}
-            onRemoveApproval={removeApproval}
-            onReview={(id) => { setReviewPost(campaign.posts.find(p => p.id === id)!); }}
-            onApproveAll={() => approveAll(campaign)}
-            justCompleted={completingCampaignId === campaign.id}
-            defaultCollapsed={opts?.defaultCollapsed}
-            isPast={opts?.isPast}
-          />
-        );
+        const renderCampaign = (campaign: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => {
+          // Only expose posts the internal team has marked Ready for Client
+          const visiblePosts = campaign.posts.filter(p => internalStatuses[p.id] === 'readyForClient');
+          if (visiblePosts.length === 0) return null;
+          const clientCampaign = { ...campaign, posts: visiblePosts };
+          return (
+            <CampaignSection
+              key={campaign.id}
+              campaign={clientCampaign}
+              statuses={statuses}
+              dontPostReasons={dontPostReasons}
+              resubmitNotes={resubmitNotes}
+              onApprove={(id) => approve(id, campaign.id)}
+              onRemoveApproval={removeApproval}
+              onReview={(id) => { setReviewPost(campaign.posts.find(p => p.id === id)!); }}
+              onApproveAll={() => approveAll(clientCampaign)}
+              justCompleted={completingCampaignId === campaign.id}
+              defaultCollapsed={opts?.defaultCollapsed}
+              isPast={opts?.isPast}
+            />
+          );
+        };
 
         const SectionHeader = ({ label, count }: { label: string; count: number }) => (
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -1390,8 +2130,32 @@ function ApprovalV2Inner() {
           </div>
         );
 
+        // Nothing to approve = no active campaign has any readyForClient+pending post
+        const hasAnythingToApprove = active.some(c =>
+          c.posts.some(p => internalStatuses[p.id] === 'readyForClient' && statuses[p.id] === 'pending')
+        );
+
         return (
           <div style={{ display:'flex', flexDirection:'column', gap:40 }}>
+            {/* ── Empty state ── */}
+            {!hasAnythingToApprove && (
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16, padding:'40px 0 20px' }}>
+                <div style={{ width:56, height:56, borderRadius:99, background:'rgba(32,161,79,0.1)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" stroke={green} strokeWidth="1.5"/>
+                    <path d="M8 12.5l2.5 2.5 5.5-5.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p style={{ margin:0, fontSize:22, fontWeight:500, color:dark90, fontFamily:F, textAlign:'center' }}>
+                  All Set! Nothing to Approve just yet.
+                </p>
+                <div style={{ display:'flex', gap:10 }}>
+                  <Button variant="secondary" size="sm" frontIcon={Layers5}>Open Campaigns</Button>
+                  <Button variant="secondary" size="sm" frontIcon={CalendarEdit}>Go to Calendar</Button>
+                </div>
+              </div>
+            )}
+
             {/* ── Active campaigns ── */}
             {active.map(renderCampaign)}
 
@@ -1428,9 +2192,26 @@ function ApprovalV2Inner() {
             approve(reviewPost.id, c.id);
           }}
           onRemoveApproval={() => removeApproval(reviewPost.id)}
-          onDontPost={() => { rejectPost(reviewPost.id); setReviewPost(null); }}
+          onDontPost={(reasons) => { rejectPost(reviewPost.id); setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: reasons })); setReviewPost(null); triggerFeedbackToast(); }}
           onNavigate={(id) => setReviewPost(CAMPAIGNS.flatMap(c => c.posts).find(p => p.id === id) ?? null)}
+          mode={tab}
+          internalStatus={internalStatuses[reviewPost.id]}
+          onMarkReady={() => markReadyForClient(reviewPost.id)}
+          onUndoReady={() => undoReady(reviewPost.id)}
+          dontPostReasons={dontPostReasons}
+          resubmitNotes={resubmitNotes}
+          isPast={CAMPAIGNS.find(c => c.posts.some(p => p.id === reviewPost.id))?.endDate < today}
         />
+      )}
+
+      {/* Feedback submitted toast */}
+      {showFeedbackToast && createPortal(
+        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+          <Toast variant="success" onDismiss={() => setShowFeedbackToast(false)}>
+            Feedback submitted. Agent is notified for revision.
+          </Toast>
+        </div>,
+        document.body
       )}
     </PrototypeShell>
   );
