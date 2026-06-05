@@ -67,14 +67,14 @@ const CAMPAIGNS: Campaign[] = [
     badge: 'Campaigns',
     endDate: '2026-10-18', // future — active
     posts: [
-      { id:0, type:'still',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:00', img:U1, caption:'Get ready to take a trip down memory lane with our latest design. Experience the finest dining in the heart of the city.' },
-      { id:1, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:01', img:U2, caption:'Get access to loyalty discounts and savings this fall! Limited time offer for our valued members.' },
-      { id:2, type:'feed-video', date:'Sep 25  10:00am', dateSort:'2025-09-25T10:02', img:U3, caption:'Behind the scenes of our latest farm-to-table experience. Watch how we source the freshest ingredients.' },
-      { id:3, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:03', img:U4, caption:'Limited time offer — shop now and save 25% on all meal prep kits this weekend only.' },
-      { id:4, type:'carousel',   date:'Sep 25  10:00am', dateSort:'2025-09-25T10:04', img:U5, slides:5, caption:'Spring is here — swipe through our top 5 seasonal picks for a healthier you.' },
-      { id:5, type:'still',      date:'Sep 26  10:00am', dateSort:'2025-09-26T10:00', img:U6, caption:'Wellness tips for the modern professional. Eat better, live better, feel better every day.' },
-      { id:6, type:'carousel',   date:'Sep 27  11:00am', dateSort:'2025-09-27T11:00', img:U7, slides:4, caption:'Our top picks for the season — curated by our nutrition experts for optimal health.' },
-      { id:7, type:'email',      date:'Sep 28  8:00am',  dateSort:'2025-09-28T08:00', img:U8, caption:'Snag 20% off — limited time sale this weekend! Don\'t miss our biggest discount of the year.' },
+      { id:0, type:'still',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:00', img:U1, caption:'Get ready to take a trip down memory lane with our latest design. Experience the finest dining in the heart of the city — where every plate tells a story and every bite is crafted with love. Reserve your table now and treat yourself to something extraordinary. 🍽️ #FineD' },
+      { id:1, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:01', img:U2, caption:'Get access to exclusive loyalty discounts and savings this fall! Limited time offer for our valued members — earn points on every purchase, unlock early access to seasonal menus, and enjoy complimentary desserts on your birthday. Join the family today and taste the difference. 🍂' },
+      { id:2, type:'feed-video', date:'Sep 25  10:00am', dateSort:'2025-09-25T10:02', img:U3, caption:'Behind the scenes of our latest farm-to-table experience. Watch how we source the freshest ingredients straight from local growers who share our passion for quality. From the field to your fork in under 24 hours — this is food with a story worth telling. 🌿 #FarmToTable' },
+      { id:3, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:03', img:U4, caption:'Limited time offer — shop now and save 25% on all meal prep kits this weekend only! Stock your fridge with chef-curated recipes designed to save you time without sacrificing flavor. Healthy eating has never been this easy or this delicious. Use code PREP25 at checkout. 🥗' },
+      { id:4, type:'carousel',   date:'Sep 25  10:00am', dateSort:'2025-09-25T10:04', img:U5, slides:5, caption:'Spring is here — swipe through our top 5 seasonal picks for a healthier you! From vibrant grain bowls to refreshing smoothie blends, our nutrition team has curated the best of the season. Tap each slide to see the full recipe and order your ingredients directly from our app. 🌸' },
+      { id:5, type:'still',      date:'Sep 26  10:00am', dateSort:'2025-09-26T10:00', img:U6, caption:'Wellness tips for the modern professional. Eat better, live better, feel better every day. We know how busy life gets, which is why we\'ve designed meal plans that fit around your schedule — not the other way around. Fuel your ambitions with food that actually works as hard as you do. 💪' },
+      { id:6, type:'carousel',   date:'Sep 27  11:00am', dateSort:'2025-09-27T11:00', img:U7, slides:4, caption:'Our top picks for the season — curated by our nutrition experts for optimal health and maximum flavor. Swipe to explore four standout dishes that hit every macro target while keeping your taste buds guessing. Perfect for meal-preppers and food lovers alike. Tag a friend who needs to see this! 🏆' },
+      { id:7, type:'email',      date:'Sep 28  8:00am',  dateSort:'2025-09-28T08:00', img:U8, caption:'Snag 20% off — limited time sale this weekend only! Don\'t miss our biggest discount of the year across the entire menu. Whether you\'re stocking up on staples or trying something new, now\'s the time to go big. Shop before midnight Sunday and use code SAVE20 to claim your discount. ⏰' },
     ],
   },
   {
@@ -828,7 +828,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   const [chatInput, setChatInput] = useState('');
   const [focusMode, setFocusMode] = useState(true);
   const [captionExpanded, setCaptionExpanded] = useState(false);
-  const CAPTION_LIMIT = 280;
+  const CAPTION_LIMIT = 100;
   const { openModal } = useModals();
   const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
   const isApproved = status === 'approved';
