@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { PrototypeShell } from '../_shell';
+import { PrototypeShell, H2_SECTIONS } from '../_shell';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import { Toast } from '@/staging';
 import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, Settings } from '@/icons/20';
@@ -2013,7 +2013,8 @@ function ApprovalV2Inner() {
   return (
     <PrototypeShell
       title="Approvals"
-      sidebarActiveLabel="Approvals"
+      sidebarSections={H2_SECTIONS}
+      workspaceName="CertaPro Austin"
       topbarCenter={tabBar}
       topbarRight={avatarEl}
     >
