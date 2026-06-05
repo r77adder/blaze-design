@@ -828,7 +828,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   const [chatInput, setChatInput] = useState('');
   const [focusMode, setFocusMode] = useState(true);
   const [captionExpanded, setCaptionExpanded] = useState(false);
-  const CAPTION_LIMIT = 100;
+  const CAPTION_LIMIT = 280;
   const { openModal } = useModals();
   const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
   const isApproved = status === 'approved';
