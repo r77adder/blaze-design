@@ -1235,7 +1235,7 @@ const CONTENT_TYPES = [
   { key: 'seo-blogs',  label: 'SEO / AEO Blogs',             desc: 'Long-form content published to your website or blog.',     defaultOn: false },
   { key: 'reputation', label: 'Reputation',                  desc: 'Review responses and reputation management content.',      defaultOn: true  },
   { key: 'paid-ads',   label: 'Paid Ads',                    desc: 'Search and display ad copy before going to ad networks.',  defaultOn: true  },
-  { key: 'paid-social',label: 'Paid Social',                 desc: 'Sponsored social content across Facebook, Instagram, and LinkedIn.', defaultOn: true },
+  { key: 'paid-social',label: 'Paid Search',                 desc: 'Google Search ad copy before going live on search networks.',        defaultOn: true },
 ];
 
 function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
