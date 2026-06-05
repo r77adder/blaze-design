@@ -159,7 +159,7 @@ function StatusPill({ status, dontPostReasons, isPast, resubmitNote }: { status:
   const hasReasons = isDontPost && dontPostReasons && dontPostReasons.length > 0;
   const hasTooltip = hasReasons || isResubmitted;
   const tooltipLines = hasReasons ? dontPostReasons! : resubmitNote ? [resubmitNote] : [];
-  const tooltipLabel = hasReasons ? 'Reason' : 'Staff Note';
+  const tooltipLabel = hasReasons ? 'Reason' : 'Agent Note';
 
   return (
     <>
