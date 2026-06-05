@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeShell } from '../_shell';
 import { Button, Modal, ModalStack, useModals } from '@/components';
-import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit } from '@/icons/20';
+import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, Settings } from '@/icons/20';
 import { Maximise01 } from '@/icons/20/Maximise01';
 import { Minimise02 } from '@/icons/20/Minimise02';
 import { Layers5 } from '@/icons/24';
@@ -1204,6 +1204,168 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   );
 }
 
+// ── Toggle switch ────────────────────────────────────────────────────────────
+function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      role="switch" aria-checked={on}
+      onClick={() => onChange(!on)}
+      style={{
+        width: 40, height: 24, borderRadius: 99, border: 'none', padding: 2,
+        background: on ? green : dark15,
+        cursor: 'pointer', flexShrink: 0, position: 'relative',
+        transition: 'background 0.2s',
+      }}
+    >
+      <span style={{
+        position: 'absolute', top: 3, left: on ? 19 : 3,
+        width: 18, height: 18, borderRadius: 99, background: white,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+        transition: 'left 0.2s',
+        display: 'block',
+      }} />
+    </button>
+  );
+}
+
+// ── Approval Settings modal ───────────────────────────────────────────────────
+const CONTENT_TYPES = [
+  { key: 'campaigns',  emoji: '🗓️',  label: 'Organic Campaigns',           desc: 'Scheduled social posts across all connected platforms.',   defaultOn: false },
+  { key: 'seo-local',  emoji: '📍',  label: 'Local SEO — Google Business', desc: 'Posts and updates to your Google Business Profile.',       defaultOn: true  },
+  { key: 'seo-blogs',  emoji: '✏️',  label: 'SEO / AEO Blogs',             desc: 'Long-form content published to your website or blog.',     defaultOn: false },
+  { key: 'reputation', emoji: '⭐',  label: 'Reputation',                  desc: 'Review responses and reputation management content.',      defaultOn: true  },
+  { key: 'paid-ads',   emoji: '📢',  label: 'Paid Ads',                    desc: 'Search and display ad copy before going to ad networks.',  defaultOn: true  },
+  { key: 'paid-social',emoji: '🎯',  label: 'Paid Social',                 desc: 'Sponsored social content across Facebook, Instagram, and LinkedIn.', defaultOn: true },
+];
+
+function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Turn off Approvals?</span>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
+            All content types will bypass client review and publish automatically after agent review.
+          </p>
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: 10,
+            background: 'rgba(255,174,0,0.1)', border: '1px solid rgba(255,174,0,0.4)',
+            borderRadius: 8, padding: '10px 12px',
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <p style={{ margin: 0, fontSize: 13, color: '#7a4800', fontFamily: F, lineHeight: 1.55 }}>
+              Any content currently awaiting client approval will be auto-approved and scheduled to post.
+            </p>
+          </div>
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="secondary" onPress={close}>Cancel</Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(); close(); }}>Turn Off</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+function ApprovalSettingsModal({ close }: { close: () => void }) {
+  const { openModal } = useModals();
+  const [approvalsOn, setApprovalsOn] = useState(true);
+  const [types, setTypes] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(CONTENT_TYPES.map(t => [t.key, t.defaultOn]))
+  );
+
+  const handleMasterToggle = (val: boolean) => {
+    if (!val) {
+      openModal(TurnOffConfirmModal, { onConfirm: () => setApprovalsOn(false) });
+    } else {
+      setApprovalsOn(true);
+    }
+  };
+
+  const clientRequiredCount = Object.values(types).filter(Boolean).length;
+
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Approval Settings</span>
+          <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>
+            Control which content types require client sign-off before publishing.
+          </span>
+        </div>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {/* Master toggle */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, paddingBottom: 16 }}>
+            <div>
+              <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>Approvals</p>
+              <p style={{ margin: 0, fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.55 }}>
+                Require client sign-off before content goes live. When off, agent-reviewed content publishes automatically.
+              </p>
+            </div>
+            <Toggle on={approvalsOn} onChange={handleMasterToggle} />
+          </div>
+
+          {/* Per-type list — only when approvals is on */}
+          {approvalsOn && (
+            <>
+              <div style={{ height: 1, background: dark8, margin: '0 0 16px' }} />
+              <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 500, color: dark40, fontFamily: F, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                Approval required per content type
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {CONTENT_TYPES.map((ct, i) => (
+                  <div key={ct.key} style={{
+                    display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16,
+                    paddingTop: i === 0 ? 0 : 14, paddingBottom: 14,
+                    borderBottom: i < CONTENT_TYPES.length - 1 ? `1px solid ${dark8}` : 'none',
+                  }}>
+                    <div>
+                      <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 400, color: dark90, fontFamily: F }}>
+                        {ct.emoji} {ct.label}
+                      </p>
+                      <p style={{ margin: '0 0 6px', fontSize: 12, color: dark60, fontFamily: F, lineHeight: 1.5 }}>{ct.desc}</p>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 99,
+                        fontSize: 11, fontFamily: F,
+                        background: types[ct.key] ? 'rgba(32,161,79,0.08)' : dark4,
+                        color: types[ct.key] ? green : dark60,
+                        border: `1px solid ${types[ct.key] ? 'rgba(32,161,79,0.25)' : dark15}`,
+                      }}>
+                        {types[ct.key] ? 'Client approval required' : 'Agent review only'}
+                      </span>
+                    </div>
+                    <Toggle on={types[ct.key]} onChange={v => setTypes(prev => ({ ...prev, [ct.key]: v }))} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>
+            {approvalsOn
+              ? `${clientRequiredCount} of ${CONTENT_TYPES.length} content types require client approval`
+              : 'Approvals disabled — all content publishes automatically'}
+          </span>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={close}>Save settings</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
 // ── Celebration modal ─────────────────────────────────────────────────────────
 interface CelebrationModalProps {
   close: () => void; index: number; isOpen?: boolean;
@@ -1793,6 +1955,7 @@ function ApprovalV2Inner() {
 
   // Tab bar in topbar center
   const tabBar = (
+    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
     <div style={{ display:'flex', gap:2, background:dark4, borderRadius:8, padding:3 }}>
       {(['internal','client'] as const).map(t => (
         <button key={t} onClick={() => setTab(t)} style={{
@@ -1813,6 +1976,8 @@ function ApprovalV2Inner() {
           })()}
         </button>
       ))}
+    </div>
+    <Button variant="ghost" size="sm" square frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})} />
     </div>
   );
 
