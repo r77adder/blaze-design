@@ -1877,7 +1877,8 @@ function InternalCampaignSection({
 function ApprovalV2Inner() {
   const allPosts = CAMPAIGNS.flatMap(c => c.posts);
   const today = '2026-06-03';
-  const [tab, setTab] = useState<'internal' | 'client'>('internal');
+  const [clientView, setClientView] = useState(false);
+  const tab: 'internal' | 'client' = clientView ? 'client' : 'internal';
 
   // Internal statuses — all start as internalReview (past campaigns pre-mixed)
   const [internalStatuses, setInternalStatuses] = useState<Record<number, InternalStatus>>(() => {
@@ -1974,50 +1975,61 @@ function ApprovalV2Inner() {
     });
   };
 
-  // Topbar right: credits only (shell renders its own avatar)
-  const avatarEl = (
-    <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F }}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
-      82 Credits
-    </span>
-  );
+  // Returned by client count for header badge
+  const returnedCount = CAMPAIGNS.filter(c => c.endDate >= today)
+    .flatMap(c => c.posts)
+    .filter(p => statuses[p.id] === 'rejected' && internalStatuses[p.id] === 'readyForClient')
+    .length;
 
-  // Tab bar in topbar center
-  const tabBar = (
+  // Header title: Approvals + Settings + optional Returned by Client indicator
+  const headerTitle = (
     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-    <div style={{ display:'flex', gap:2, background:dark4, borderRadius:8, padding:3 }}>
-      {(['internal','client'] as const).map(t => (
-        <button key={t} onClick={() => setTab(t)} style={{
-          height:28, padding:'0 14px', borderRadius:6, border:'none',
-          background: tab === t ? white : 'transparent',
-          color: tab === t ? dark90 : dark60,
-          fontSize:13, fontWeight: tab === t ? 500 : 400, fontFamily:F,
-          cursor:'pointer', transition:'background 0.15s, color 0.15s',
-          boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-          whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5,
-        }}>
-          {t === 'internal' ? 'Internal Review' : 'Client Approval'}
-          {t === 'internal' && (() => {
-            const n = CAMPAIGNS.filter(c => c.endDate >= today).flatMap(c => c.posts).filter(p => statuses[p.id] === 'rejected').length;
-            return n > 0 ? (
-              <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:16, height:16, borderRadius:99, background:red, color:white, fontSize:10, fontWeight:600, padding:'0 4px', lineHeight:1 }}>{n}</span>
-            ) : null;
-          })()}
-        </button>
-      ))}
-    </div>
-    <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
+      <span style={{ fontSize:16, fontWeight:500, color:dark90, fontFamily:F }}>Approvals</span>
+      <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
+      {returnedCount > 0 && (
+        <div style={{ display:'flex', alignItems:'center', gap:5, marginLeft:4 }}>
+          <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:18, height:18, borderRadius:99, background:red, color:white, fontSize:10, fontWeight:600, padding:'0 5px', lineHeight:1 }}>{returnedCount}</span>
+          <span style={{ fontSize:13, color:red, fontFamily:F, fontWeight:500 }}>Returned by Client</span>
+        </div>
+      )}
     </div>
   );
 
   return (
     <PrototypeShell
-      title="Approvals"
+      title={headerTitle}
       sidebarSections={H2_SECTIONS}
       workspaceName="CertaPro Austin"
-      topbarCenter={tabBar}
-      topbarRight={avatarEl}
+      topbarRight={
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+            82 Credits
+          </span>
+          <Button
+            variant={clientView ? 'primary' : 'secondary'}
+            size="sm"
+            frontIcon={EyeOpen}
+            onPress={() => setClientView(v => !v)}
+          >
+            {clientView ? 'Exit client view' : 'View as client'}
+          </Button>
+        </div>
+      }
     >
+      {/* Client view banner */}
+      {clientView && (
+        <div style={{ display:'flex', alignItems:'center', gap:10, background:dark90, color:white, borderRadius:10, padding:'10px 14px', marginBottom:16, fontFamily:F }}>
+          <EyeOpen size={16} color={white} />
+          <span style={{ fontSize:13, flex:1 }}>
+            Viewing as <strong style={{ fontWeight:600 }}>Client</strong> — only content marked ready for client is visible.
+          </span>
+          <button onClick={() => setClientView(false)} style={{ background:'rgba(255,255,255,0.14)', border:'none', color:white, fontSize:12.5, fontWeight:600, padding:'5px 12px', borderRadius:7, cursor:'pointer', fontFamily:F }}>
+            Exit
+          </button>
+        </div>
+      )}
+
       {tab === 'internal' ? (
         /* ── Internal Review tab ── */
         (() => {
