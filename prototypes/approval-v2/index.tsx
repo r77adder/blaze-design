@@ -920,14 +920,15 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           </Button>
         </div>
 
-        {/* Right: credits + upgrade + avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end' }}>
-          <Button variant="ghost" size="sm">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={dark60} strokeWidth="1.6" strokeLinecap="round"/></svg>
-            <span style={{ marginLeft: 4, fontSize: 13, color: dark60, fontFamily: F }}>Add More Credits</span>
-          </Button>
-          <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon}>Upgrade</Button>
-          <div style={{ width: 28, height: 28, borderRadius: 99, background: '#5b2d6e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: white, fontSize: 12, fontFamily: F }}>S</div>
+        {/* Right: credits + avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: dark90, fontFamily: F }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+            82 Credits
+          </span>
+          <div style={{ width: 28, height: 28, borderRadius: 99, overflow: 'hidden', flexShrink: 0 }}>
+            <img src={IMG_AVATAR} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </div>
         </div>
       </div>
 
@@ -1767,24 +1768,16 @@ function ApprovalV2Inner() {
     });
   };
 
-  // Upgrade button for topbar
-  const upgradeBtn = (
-    <button style={{
-      display:'flex', alignItems:'center', gap:4,
-      padding:'6px 10px', borderRadius:8,
-      border:`1px solid ${dark8}`, background:white,
-      cursor:'pointer', fontSize:14, fontWeight:400,
-      color:'#6a00ff', fontFamily:F, letterSpacing:'0.14px',
-    }}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.6H22L15.8 14l2.5 7.4L12 17l-6.3 4.4 2.5-7.4L2 9.6h7.6L12 2z" fill="#6a00ff"/></svg>
-      Upgrade
-    </button>
-  );
-
-  // Avatar for topbar
+  // Topbar right: credits + avatar only
   const avatarEl = (
-    <div style={{ width:32, height:32, borderRadius:99, overflow:'hidden', flexShrink:0 }}>
-      <img src={IMG_AVATAR} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+      <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+        82 Credits
+      </span>
+      <div style={{ width:32, height:32, borderRadius:99, overflow:'hidden', flexShrink:0 }}>
+        <img src={IMG_AVATAR} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+      </div>
     </div>
   );
 
@@ -1818,7 +1811,7 @@ function ApprovalV2Inner() {
       title="Approvals"
       sidebarActiveLabel="Approvals"
       topbarCenter={tabBar}
-      topbarRight={<div style={{ display:'flex', alignItems:'center', gap:8 }}>{upgradeBtn}{avatarEl}</div>}
+      topbarRight={avatarEl}
     >
       {tab === 'internal' ? (
         /* ── Internal Review tab ── */
