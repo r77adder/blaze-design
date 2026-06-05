@@ -766,8 +766,8 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (re
 
   const buildReasons = () => {
     const reasons = Array.from(selected).filter(r => r !== 'Other');
-    if (otherSelected && otherText.trim()) reasons.push(otherText.trim());
-    else if (otherSelected) reasons.push('Other');
+    if (otherSelected) reasons.push('Other');
+    if (otherText.trim()) reasons.push(otherText.trim());
     return reasons;
   };
 
@@ -801,21 +801,18 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (re
               );
             })}
           </div>
-          {otherSelected && (
-            <textarea
-              value={otherText}
-              onChange={e => setOtherText(e.target.value)}
-              placeholder="Tell us more"
-              style={{
-                width: '100%', minHeight: 88, resize: 'vertical',
-                border: `1px solid ${dark15}`, borderRadius: 8,
-                padding: '10px 12px', fontSize: 13, color: dark90,
-                fontFamily: F, lineHeight: 1.5, outline: 'none',
-                boxSizing: 'border-box',
-              }}
-              autoFocus
-            />
-          )}
+          <textarea
+            value={otherText}
+            onChange={e => setOtherText(e.target.value)}
+            placeholder="Tell us more"
+            style={{
+              width: '100%', minHeight: 88, resize: 'vertical',
+              border: `1px solid ${dark15}`, borderRadius: 8,
+              padding: '10px 12px', fontSize: 13, color: dark90,
+              fontFamily: F, lineHeight: 1.5, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
         </div>
       </Modal.Content>
       <Modal.Footer>
