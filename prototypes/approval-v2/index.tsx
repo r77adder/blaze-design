@@ -1979,7 +1979,7 @@ function ApprovalV2Inner() {
         </button>
       ))}
     </div>
-    <Button variant="secondary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
+    <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
     </div>
   );
 
