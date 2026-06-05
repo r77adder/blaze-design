@@ -827,6 +827,8 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
 }) {
   const [chatInput, setChatInput] = useState('');
   const [focusMode, setFocusMode] = useState(true);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
+  const CAPTION_LIMIT = 100;
   const { openModal } = useModals();
   const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
   const isApproved = status === 'approved';
@@ -1087,8 +1089,19 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               <div style={{ padding: '0 14px 14px' }}>
                 <p style={{ margin: 0, fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
                   <strong style={{ fontWeight: 500 }}>Account Not Connected</strong>{' '}
-                  <span style={{ color: dark80 }}>{post.caption}</span>
-                  {' '}<span style={{ color: dark40, cursor: 'pointer' }}>See more</span>
+                  <span style={{ color: dark80 }}>
+                    {captionExpanded || post.caption.length <= CAPTION_LIMIT
+                      ? post.caption
+                      : post.caption.slice(0, CAPTION_LIMIT) + '…'}
+                  </span>
+                  {post.caption.length > CAPTION_LIMIT && (
+                    <span
+                      onClick={() => setCaptionExpanded(e => !e)}
+                      style={{ color: dark40, cursor: 'pointer', marginLeft: 4 }}
+                    >
+                      {captionExpanded ? 'See less' : 'See more'}
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
