@@ -266,13 +266,12 @@ export interface ConversationGoals {
 
 // ── Escalation rules ──────────────────────────────────────────────────────
 
-export type EscalationAction = 'escalate' | 'digest' | 'decline' | 'handle';
+export type EscalationAction = 'escalate' | 'handle' | 'decline';
 
 export const ESCALATION_ACTIONS: { id: EscalationAction; label: string; tone: string; description: string }[] = [
-  { id: 'escalate', label: 'Escalate now',  tone: 'danger',  description: 'Notify owner immediately.' },
-  { id: 'digest',   label: 'Morning digest', tone: 'warning', description: 'Log and notify at 8 AM.' },
-  { id: 'decline',  label: 'Decline',        tone: 'neutral', description: 'AI wraps up, offers callback.' },
-  { id: 'handle',   label: 'AI handles',     tone: 'success', description: 'No escalation needed.' },
+  { id: 'escalate', label: 'Escalate now',    tone: 'danger',  description: 'Notify owner immediately.' },
+  { id: 'handle',   label: 'AI handling',     tone: 'success', description: 'AI handles it — no escalation needed.' },
+  { id: 'decline',  label: 'Decline',         tone: 'neutral', description: 'AI disqualifies and opts the lead out.' },
 ];
 
 export interface EscalationTrigger {
@@ -281,14 +280,21 @@ export interface EscalationTrigger {
   description: string;
   duringHours: EscalationAction;
   afterHours: EscalationAction;
+  /** Free-text conditions that must be met before the rule fires (e.g.
+   *  "Caller mentions hail, wind, or storm damage in the last 60 days").
+   *  Optional — blank means the rule fires whenever the description applies. */
+  requirements?: string;
+  /** Built-in default rule that ships with every workspace and can't be
+   *  removed (e.g. "caller asks to speak with a human"). */
+  default?: boolean;
 }
 
 export const DEFAULT_ESCALATION_TRIGGERS: EscalationTrigger[] = [
   { id: 'burst-pipe', label: 'Burst pipe / active flood',   description: 'Caller explicitly mentions active water emergency.', duringHours: 'escalate', afterHours: 'escalate' },
   { id: 'gas-safety', label: 'Gas-related / safety issue',  description: 'Smell of gas, CO concern, anything safety-critical.', duringHours: 'escalate', afterHours: 'escalate' },
-  { id: 'complaint',  label: 'Caller mentions complaint',   description: 'Dissatisfied with previous work or service.',         duringHours: 'escalate', afterHours: 'digest'   },
+  { id: 'complaint',  label: 'Caller mentions complaint',   description: 'Dissatisfied with previous work or service.',         duringHours: 'escalate', afterHours: 'escalate' },
   { id: 'ask-human',  label: 'Asks to speak to a human',    description: 'Explicitly requests a person.',                       duringHours: 'escalate', afterHours: 'decline'  },
-  { id: 'ask-price',  label: 'Asks for a price or quote',   description: 'Wants a quote before booking.',                       duringHours: 'escalate', afterHours: 'digest'   },
+  { id: 'ask-price',  label: 'Asks for a price or quote',   description: 'Wants a quote before booking.',                       duringHours: 'escalate', afterHours: 'escalate' },
   { id: 'reschedule', label: 'Wants to reschedule',         description: 'Existing customer changing an appointment.',          duringHours: 'handle',   afterHours: 'handle'   },
 ];
 

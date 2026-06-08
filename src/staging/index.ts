@@ -71,3 +71,6 @@ export type { CalloutProps, CalloutTone } from './Callout';
 
 export { Tabs } from './Tabs';
 export type { TabsRootProps, TabsTabProps, TabsVariant } from './Tabs';
+
+export { Select } from './Select';
+export type { SelectProps, SelectOption, SelectSize } from './Select';

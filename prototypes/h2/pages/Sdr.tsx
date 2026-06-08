@@ -1,34 +1,85 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Button, IconButton, ModalStack, Text } from '@/components';
-import { Avatar, StatusPill, TabChip } from '@/staging';
+import { Button, Heading, IconButton, ModalStack, Text } from '@/components';
+import { Avatar, Select, StatusPill, TabChip } from '@/staging';
 import Filter from '@/icons/20/Filter';
 import ArrowLeft from '@/icons/20/ArrowLeft';
+import ArrowUp from '@/icons/20/ArrowUp';
+import ArrowDown from '@/icons/20/ArrowDown';
+import ChevronDown from '@/icons/20/ChevronDown';
+import ChevronUp from '@/icons/20/ChevronUp';
+import Search from '@/icons/20/Search';
+import Voice from '@/icons/20/Voice';
+import MessageText2 from '@/icons/20/MessageText2';
+import MessageChat01 from '@/icons/20/MessageChat01';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { ChannelGlyph, SdrDetail } from '../SdrDetail';
+import { ContactHistory } from '../ContactHistory';
 import { SdrColdView } from './ColdViews';
 import { SdrSettingsBody } from './SdrSettings';
 import {
   ALL_CHANNELS,
+  ALL_METHODS,
   ALL_STATUSES,
-  CHANNEL_LABELS,
+  SOURCE_LABELS,
+  METHOD_LABELS,
   LEADS as RAW_LEADS,
+  LEAD_NEEDS_SUMMARY,
   STATUS_STYLES,
+  avatarColor,
   formatRelative,
+  isUnread,
   relativeMinutesAgo,
   scoreColor,
   truncate,
   type Channel,
+  type Contact,
+  type Method,
   type Lead,
   type Status,
 } from '../sdr-data';
+
+// Blaze-style focus: on focus the border darkens to var(--dark-40) + a subtle
+// ring; on blur it reverts to the default var(--dark-8). Spread onto raw
+// inputs whose resting border is var(--dark-8).
+const inputFocusProps = {
+  onFocus: (e: { currentTarget: HTMLInputElement | HTMLTextAreaElement }) => {
+    e.currentTarget.style.borderColor = 'var(--dark-40)';
+    e.currentTarget.style.boxShadow = '0 0 0 3px var(--dark-4)';
+  },
+  onBlur: (e: { currentTarget: HTMLInputElement | HTMLTextAreaElement }) => {
+    e.currentTarget.style.borderColor = 'var(--dark-8)';
+    e.currentTarget.style.boxShadow = 'none';
+  },
+};
+
+// ─── Contacts ────────────────────────────────────────────────────────
+// One Contact per unique person in the CertaPro re-skin. contact_id is
+// injected into each lead via the post-processing step below.
+
+const CONTACTS: Contact[] = [
+  { id: 'c-priya',      name: 'Priya Patel',     phone: '+1 (512) 555-0148', email: 'priya.patel@gmail.com' },
+  { id: 'c-david-lin',  name: 'David Lin',        phone: '+1 (512) 555-0193', email: 'd.lin@oakridgehoa.org' },
+  { id: 'c-sara-lopez', name: 'Sara Lopez',       phone: '+1 (512) 555-0167', email: 'sara@lopezfamily.net' },
+  { id: 'c-carlos',     name: 'Carlos Reyes',     phone: '+1 (512) 555-0142', email: 'carlos@reyeshome.net' },
+  { id: 'c-janet',      name: 'Janet Bracken',    phone: '+1 (512) 555-0118', email: 'janet@brackenrealty.com' },
+  { id: 'c-sara-bell',  name: 'Sara Bell',        phone: '+1 (512) 555-0144', email: 'sara.bell@gmail.com' },
+  { id: 'c-noah',       name: 'Noah Okafor',      phone: '+1 (512) 555-0181', email: 'noah@helmsmanproperties.com' },
+  { id: 'c-emily',      name: 'Emily Tran',       phone: '+1 (512) 555-0179', email: 'emily.tran@gmail.com' },
+  { id: 'c-david-wu',   name: 'David Wu',         phone: '+1 (512) 555-0192', email: 'd.wu@handyworks.net' },
+  { id: 'c-talia',      name: 'Talia Mendez',     phone: '+1 (512) 555-0136', email: 'talia@mendezfam.com' },
+  { id: 'c-rohan',      name: 'Rohan Bhatt',      phone: '+1 (512) 555-0118', email: 'rohan@bhattfam.com' },
+  { id: 'c-helena',     name: 'Helena Saunders',  phone: '+1 (512) 555-0511', email: 'helena@saundersfam.com' },
+  { id: 'c-felix',      name: 'Felix Rosenthal',  phone: '+1 (512) 555-0102', email: 'felix@rosenthalfam.com' },
+  { id: 'c-mia',        name: 'Mia Andersson',    phone: '+1 (512) 555-0177', email: 'mia@anderssonfam.com' },
+];
 
 // CertaPro Painters of Austin — local re-skin of the imported LEADS for this
 // prototype. We keep the underlying shape, scoring, channels, and transcripts
 // intact so the inbox + detail UIs render identically — only the business
 // content (names, companies, snippets, scorecards, tags, source URLs) changes.
-const LEADS: Lead[] = [
+const LEADS_RAW: Lead[] = [
   {
     ...RAW_LEADS[0],
     prospect: {
@@ -429,7 +480,91 @@ const LEADS: Lead[] = [
       { id: 't2', role: 'ai', type: 'text', content: "Hi Mia — thanks for filling out the form. Quick question to point you at the right package: is this a full exterior or trim/touch-up only?", timestamp: 'm:18' },
     ],
   },
+  // Priya Patel follow-up — second lead for c-priya (warranty claim after booking).
+  // Demonstrates one contact → multiple leads in the contact history view.
+  {
+    id: 'l-priya-followup',
+    created_at: 'm:120',
+    last_activity_at: 'm:40',
+    prospect: {
+      name: 'Priya Patel',
+      company: 'Patel Family — Westlake',
+      phone: '+1 (512) 555-0148',
+      email: 'priya.patel@gmail.com',
+      source_url: 'certapro.com/austin',
+    },
+    channel: 'form',
+    method: 'sms',
+    status: 'human-handling' as const,
+    score: 40,
+    factors: ['Past customer', 'Warranty concern'],
+    tags: ['Residential', 'Westlake', 'Warranty claim'],
+    first_touch_source: 'Inbound SMS — warranty inquiry',
+    first_seen: 'm:14400',
+    hubspot_id: 'HS-39902',
+    calendly_event_id: null,
+    suggested_next_action: {
+      type: 'reply',
+      summary: 'Priya is reporting peeling paint 3 weeks after the exterior job. Needs owner callback — likely a warranty inspection.',
+      payload: "Hi Priya — I'm sorry to hear that. Matthew will reach out today to schedule a warranty inspection.",
+    },
+    scorecard: {
+      reasoning: 'Past customer reporting a quality issue. Warranty claim — owner must respond promptly.',
+    },
+    transcript: [
+      { id: 'pf-t1', role: 'prospect' as const, type: 'text' as const, content: "Hi — we had our exterior done about 3 weeks ago. The west-side trim is already peeling in two spots. Not happy at all.", timestamp: 'm:14400' },
+      { id: 'pf-t2', role: 'system' as const, type: 'system' as const, content: 'Warranty claim detected · Escalated to owner · Morning digest queued', timestamp: 'm:14399' },
+      { id: 'pf-t3', role: 'ai' as const, type: 'text' as const, content: "Hi Priya — I'm really sorry to hear that. I've flagged this for Matthew right away. He'll review the job record and reach out today. Can you share a photo of the affected area if convenient?", timestamp: 'm:14395' },
+      { id: 'pf-t4', role: 'prospect' as const, type: 'text' as const, content: "Here's a photo. It's on the north trim above the garage door.", timestamp: 'm:14380' },
+      { id: 'pf-t5', role: 'system' as const, type: 'system' as const, content: 'AI paused for owner review · warranty inspection required', timestamp: 'm:7200' },
+    ],
+  },
+  // Batch 2 — the 33 additional leads added to sdr-data.ts (indices 14–46).
+  // These are already CertaPro-Austin branded so no re-skinning needed.
+  ...RAW_LEADS.slice(14),
 ];
+
+// Post-process: inject contact_id + related_lead_ids from CONTACTS lookup.
+const CONTACT_ID_BY_EMAIL: Record<string, string> = Object.fromEntries(
+  CONTACTS.map((c) => [c.email, c.id]),
+);
+
+// The AI auto-handles most conversations, so only a few rows should surface a
+// "new / waiting on us" dot. Human-handling rows always get a dot (they're the
+// reason a human is looking at the inbox); we also let a couple of AI-handling
+// rows show the dot so the AI section isn't visually quiet.
+const KEEP_NEW_STATUSES = new Set<Status>(['human-handling']);
+const MAX_AI_HANDLING_NEW = 2;
+let aiHandlingNewLeft = MAX_AI_HANDLING_NEW;
+
+// Seed a couple of bookings as unread so the Bookings tab also shows the blue-
+// dot treatment. Picked by `last_activity_at` — the two most recent resolved
+// leads.
+const BOOKING_UNREAD_IDS = new Set<string>(['l-rohan-bhatt', 'l-emily-tran']);
+
+const LEADS: Lead[] = LEADS_RAW.map((l) => {
+  // isUnread() derives from the transcript here since `l.unread` is still unset.
+  const derivedUnread = isUnread(l);
+  let unread = KEEP_NEW_STATUSES.has(l.status) && derivedUnread;
+  if (!unread && l.status === 'ai-handling' && derivedUnread && aiHandlingNewLeft > 0) {
+    unread = true;
+    aiHandlingNewLeft--;
+  }
+  if (l.status === 'resolved' && BOOKING_UNREAD_IDS.has(l.id)) {
+    unread = true;
+  }
+  const cid = CONTACT_ID_BY_EMAIL[l.prospect.email];
+  const relatedIds =
+    l.id === 'l-aria-chen' ? ['l-priya-followup']
+    : l.id === 'l-priya-followup' ? ['l-aria-chen']
+    : undefined;
+  return {
+    ...l,
+    unread,
+    ...(cid ? { contact_id: cid } : {}),
+    ...(relatedIds ? { related_lead_ids: relatedIds } : {}),
+  };
+});
 
 /**
  * /h2/sdr — AI inbound-sales SDR.
@@ -445,8 +580,6 @@ const LEADS: Lead[] = [
  */
 
 type DateFilter = 'today' | '7d' | '30d' | 'all';
-type ScoreFilter = 'top' | 'all' | 'bottom25';
-
 const DATE_LABELS: Record<DateFilter, string> = {
   today: 'Today',
   '7d': '7d',
@@ -454,14 +587,8 @@ const DATE_LABELS: Record<DateFilter, string> = {
   all: 'All',
 };
 
-const SCORE_LABELS: Record<ScoreFilter, string> = {
-  top: '60+ (Strong)',
-  all: 'All',
-  bottom25: 'Bottom 25%',
-};
-
 const DATE_DEFAULT: DateFilter = 'all';
-const SCORE_DEFAULT: ScoreFilter = 'all';
+const PROGRESS_MIN_DEFAULT = 0;
 
 function initials(name: string): string {
   return name
@@ -469,6 +596,38 @@ function initials(name: string): string {
     .map((p) => p.charAt(0).toUpperCase())
     .slice(0, 2)
     .join('');
+}
+
+function requestType(lead: Lead): string {
+  const src = lead.first_touch_source ?? '';
+  if (/cabinet/i.test(src)) return 'Cabinet refinishing';
+  if (/exterior/i.test(src)) return 'Exterior painting';
+  if (/interior/i.test(src)) return 'Interior painting';
+  if (/warranty/i.test(src)) return 'Warranty claim';
+  if (/hoa|hoA/i.test(src)) return 'HOA project';
+  if (/commercial|restaurant|healthcare/i.test(src)) return 'Commercial painting';
+  if (/deck|fence/i.test(src)) return 'Deck & fence';
+  if (/color/i.test(src)) return 'Color consultation';
+  // Fall back to scorecard need
+  const need = lead.scorecard.need ?? '';
+  if (/cabinet/i.test(need)) return 'Cabinet refinishing';
+  if (/exterior/i.test(need)) return 'Exterior painting';
+  if (/interior/i.test(need)) return 'Interior painting';
+  // Fall back to first meaningful tag
+  const tag = lead.tags.find((t) => !/residential|westlake|cedar park|austin|pflugerville|leander|round rock|lakeway|bee cave|dripping|booked|hot lead|cooled/i.test(t));
+  if (tag) return tag;
+  return 'General inquiry';
+}
+
+function leadProgress(lead: Lead): number {
+  const sc = lead.scorecard;
+  let filled = 0;
+  if (sc.budget) filled++;
+  if (sc.timeline) filled++;
+  if (sc.need) filled++;
+  if (sc.decisionMaker) filled++;
+  if (sc.custom && Object.keys(sc.custom).length > 0) filled++;
+  return filled;
 }
 
 function latestSnippet(lead: Lead): string {
@@ -483,6 +642,13 @@ function latestSnippet(lead: Lead): string {
   return '';
 }
 
+/** One-sentence "what's needed" summary for the inbox. Prefers the hand-
+ *  authored per-lead summary (LEAD_NEEDS_SUMMARY), then the AI's suggested
+ *  next-step, then the last message excerpt so the row never reads empty. */
+function whatsNeeded(lead: Lead): string {
+  return LEAD_NEEDS_SUMMARY[lead.id] ?? lead.suggested_next_action?.summary ?? latestSnippet(lead);
+}
+
 export function SdrRoute() {
   return (
     <ModalStack>
@@ -491,21 +657,28 @@ export function SdrRoute() {
   );
 }
 
-type SdrTab = 'leads' | 'settings';
+type SdrTab = 'dashboard' | 'leads' | 'bookings' | 'settings';
 
 function SdrInner() {
   const { getState } = useDevState();
   const isCold = getState('/h2/sdr') === 'cold';
   const [leads, setLeads] = useState<Lead[]>(LEADS);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
-  const [tab, setTab] = useState<SdrTab>('leads');
+  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [tab, setTab] = useState<SdrTab>('dashboard');
 
   // Filters
   const [channels, setChannels] = useState<Set<Channel>>(new Set());
+  const [methods, setMethods] = useState<Set<Method>>(new Set());
   const [statuses, setStatuses] = useState<Set<Status>>(new Set());
   const [dateFilter, setDateFilter] = useState<DateFilter>(DATE_DEFAULT);
-  const [scoreFilter, setScoreFilter] = useState<ScoreFilter>(SCORE_DEFAULT);
+  const [progressMin, setProgressMin] = useState<number>(PROGRESS_MIN_DEFAULT);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Resolved + opted-out groups start collapsed — their header still shows
+  // (label + count) and toggles open on click; human/ai-handling stay open.
+  const [collapsedStatuses, setCollapsedStatuses] = useState<Set<Status>>(
+    () => new Set<Status>(['resolved', 'opted-out']),
+  );
 
   const sortedLeads = useMemo(() => {
     return [...leads].sort(
@@ -516,6 +689,7 @@ function SdrInner() {
   const filteredLeads = useMemo(() => {
     return sortedLeads.filter((lead) => {
       if (channels.size > 0 && !channels.has(lead.channel)) return false;
+      if (methods.size > 0 && !methods.has(lead.method)) return false;
       if (statuses.size > 0 && !statuses.has(lead.status)) return false;
 
       const minsAgo = relativeMinutesAgo(lead.last_activity_at);
@@ -523,17 +697,20 @@ function SdrInner() {
       if (dateFilter === '7d' && minsAgo > 7 * 24 * 60) return false;
       if (dateFilter === '30d' && minsAgo > 30 * 24 * 60) return false;
 
-      if (scoreFilter === 'top' && lead.score < 60) return false;
-      if (scoreFilter === 'bottom25' && lead.score >= 25) return false;
+      if (progressMin > 0) {
+        const pct = Math.round((leadProgress(lead) / 5) * 100);
+        if (pct < progressMin) return false;
+      }
       return true;
     });
-  }, [sortedLeads, channels, statuses, dateFilter, scoreFilter]);
+  }, [sortedLeads, channels, methods, statuses, dateFilter, progressMin]);
 
   const activeFilterCount =
     channels.size +
+    methods.size +
     statuses.size +
     (dateFilter !== DATE_DEFAULT ? 1 : 0) +
-    (scoreFilter !== SCORE_DEFAULT ? 1 : 0);
+    (progressMin > PROGRESS_MIN_DEFAULT ? 1 : 0);
 
   const toggle = <T,>(set: Set<T>, value: T): Set<T> => {
     const next = new Set(set);
@@ -548,20 +725,55 @@ function SdrInner() {
 
   const activeLead = activeLeadId ? leads.find((l) => l.id === activeLeadId) ?? null : null;
 
+  // count of leads per contact_id — used for inbox badge
+  const contactLeadCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const l of leads) {
+      if (l.contact_id) counts.set(l.contact_id, (counts.get(l.contact_id) ?? 0) + 1);
+    }
+    return counts;
+  }, [leads]);
+
+  const openContact = (contactId: string) => {
+    setActiveContactId(contactId);
+  };
+
   const tabStrip = (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <TabChip selected={tab === 'dashboard'} onSelect={() => setTab('dashboard')}>Dashboard</TabChip>
       <TabChip selected={tab === 'leads'} onSelect={() => setTab('leads')}>Leads</TabChip>
+      <TabChip selected={tab === 'bookings'} onSelect={() => setTab('bookings')}>Bookings</TabChip>
       <TabChip selected={tab === 'settings'} onSelect={() => setTab('settings')}>Settings</TabChip>
     </div>
   );
 
-  // ─── Settings tab ──────────────────────────────────────────────────
-  if (tab === 'settings' && !activeLead) {
+  // ─── Dashboard tab ─────────────────────────────────────────────────
+  if (tab === 'dashboard' && !activeLead) {
     return (
-      <H2Layout topbarCenter={tabStrip}>
-        <SdrSettingsBody />
+      <H2Layout topbarCenter={isCold ? undefined : tabStrip} topbarRight={isCold ? undefined : <GenerateReportButton />}>
+        <SdrDashboard leads={leads} isCold={isCold} onViewLeads={() => setTab('leads')} onOpenLead={setActiveLeadId} />
       </H2Layout>
     );
+  }
+
+  // ─── Bookings tab ──────────────────────────────────────────────────
+  if (tab === 'bookings' && !activeLead) {
+    return (
+      <H2Layout topbarCenter={tabStrip} topbarRight={<GenerateReportButton />}>
+        <BookingsTab
+          leads={leads}
+          contactLeadCounts={contactLeadCounts}
+          onOpenLead={setActiveLeadId}
+        />
+      </H2Layout>
+    );
+  }
+
+  // ─── Settings tab ──────────────────────────────────────────────────
+  // SdrSettingsBody renders its own H2Layout so the "Add agent" action can
+  // live in the topbar next to the profile avatar.
+  if (tab === 'settings' && !activeLead) {
+    return <SdrSettingsBody tabStrip={tabStrip} />;
   }
 
   // ─── Cold view ─────────────────────────────────────────────────────
@@ -570,21 +782,68 @@ function SdrInner() {
   // populated inbox below.
   if (isCold) {
     return (
-      <H2Layout topbarCenter={tabStrip} topbarRight={<GenerateReportButton />}>
+      <H2Layout>
         <SdrColdView />
+      </H2Layout>
+    );
+  }
+
+  // ─── Contact history view ──────────────────────────────────────────
+  if (activeContactId) {
+    const contact = CONTACTS.find((c) => c.id === activeContactId) ?? null;
+    const contactLeads = leads.filter((l) => l.contact_id === activeContactId);
+    return (
+      <H2Layout
+        title={
+          contact ? (
+            <ContactTitleCluster contact={contact} onBack={() => setActiveContactId(null)} />
+          ) : (
+            <span style={{ fontSize: 14, fontWeight: 500 }}>Contact history</span>
+          )
+        }
+        topbarRight={<GenerateReportButton />}
+      >
+        <ContactHistory
+          contact={contact}
+          leads={contactLeads}
+          onOpenLead={(id) => {
+            setActiveContactId(null);
+            setActiveLeadId(id);
+          }}
+        />
       </H2Layout>
     );
   }
 
   // ─── Detail view ───────────────────────────────────────────────────
   if (activeLead) {
+    const activeLeadIndex = filteredLeads.findIndex((l) => l.id === activeLeadId);
+    const prevLead = activeLeadIndex > 0 ? (filteredLeads[activeLeadIndex - 1] ?? null) : null;
+    const nextLead = activeLeadIndex >= 0 && activeLeadIndex < filteredLeads.length - 1 ? (filteredLeads[activeLeadIndex + 1] ?? null) : null;
     return (
       <H2Layout
         title={<DetailTitleCluster lead={activeLead} onBack={() => setActiveLeadId(null)} />}
-        topbarRight={<GenerateReportButton />}
+        topbarRight={
+          <>
+            <DetailNav
+              index={activeLeadIndex >= 0 ? activeLeadIndex + 1 : undefined}
+              total={filteredLeads.length}
+              onPrev={prevLead ? () => setActiveLeadId(prevLead.id) : undefined}
+              onNext={nextLead ? () => setActiveLeadId(nextLead.id) : undefined}
+            />
+            <GenerateReportButton />
+          </>
+        }
         fullBleed
       >
-        <SdrDetail lead={activeLead} onUpdateLead={updateLead} />
+        <SdrDetail
+          lead={activeLead}
+          onUpdateLead={updateLead}
+          allLeads={leads}
+          contacts={CONTACTS}
+          onOpenContact={openContact}
+          onSwitchToLead={(id) => setActiveLeadId(id)}
+        />
       </H2Layout>
     );
   }
@@ -597,19 +856,30 @@ function SdrInner() {
       onToggle={() => setFiltersOpen((v) => !v)}
       onClose={() => setFiltersOpen(false)}
     >
-      <FilterGroup label="Channel">
-        {ALL_CHANNELS.map((c) => (
+      <FilterGroup label="Source">
+        {ALL_CHANNELS.filter((c) => c !== 'chat').map((c) => (
           <TabChip
             key={c}
             selected={channels.has(c)}
             onSelect={() => setChannels((prev) => toggle(prev, c))}
           >
-            {CHANNEL_LABELS[c]}
+            {SOURCE_LABELS[c]}
+          </TabChip>
+        ))}
+      </FilterGroup>
+      <FilterGroup label="Method">
+        {ALL_METHODS.map((m) => (
+          <TabChip
+            key={m}
+            selected={methods.has(m)}
+            onSelect={() => setMethods((prev) => toggle(prev, m))}
+          >
+            {METHOD_LABELS[m]}
           </TabChip>
         ))}
       </FilterGroup>
       <FilterGroup label="Status">
-        {ALL_STATUSES.map((s) => (
+        {ALL_STATUSES.filter((s) => !HIDDEN_STATUSES.has(s)).map((s) => (
           <TabChip
             key={s}
             selected={statuses.has(s)}
@@ -626,12 +896,42 @@ function SdrInner() {
           </TabChip>
         ))}
       </FilterGroup>
-      <FilterGroup label="Score">
-        {(Object.keys(SCORE_LABELS) as ScoreFilter[]).map((s) => (
-          <TabChip key={s} selected={scoreFilter === s} onSelect={() => setScoreFilter(s)}>
-            {SCORE_LABELS[s]}
-          </TabChip>
-        ))}
+      <FilterGroup label="Progress">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--dark-40)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--dark-4)'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--dark-15)'; e.currentTarget.style.boxShadow = 'none'; }}
+            type="number"
+            min={0}
+            max={100}
+            step={20}
+            value={progressMin}
+            onChange={(e) => setProgressMin(Math.max(0, Math.min(100, Number(e.target.value))))}
+            placeholder="0"
+            style={{
+              width: 64,
+              height: 32,
+              border: '1px solid var(--dark-15)',
+              borderRadius: 6,
+              padding: '0 8px',
+              fontSize: 13,
+              fontFamily: 'inherit',
+              color: 'var(--dark-90)',
+              background: 'var(--light-100)',
+              outline: 'none',
+            }}
+          />
+          <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>% min</Text>
+          {progressMin > 0 && (
+            <button
+              type="button"
+              onClick={() => setProgressMin(0)}
+              style={{ fontSize: 12, color: 'var(--dark-40)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontFamily: 'inherit' }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </FilterGroup>
     </FiltersPopoverButton>
   );
@@ -647,52 +947,100 @@ function SdrInner() {
       }
     >
       <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
-        {/* section: inbox table */}
-        <div
-          style={{
-            background: 'var(--light-100)',
-            border: '1px solid var(--dark-8)',
-            borderRadius: 12,
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                '220px 140px minmax(280px, 2fr) 64px 116px',
-              borderBottom: '1px solid var(--dark-8)',
-              padding: '6px 20px',
-              gap: 20,
-              fontSize: 12,
-              color: 'var(--dark-60)',
-              fontWeight: 400,
-            }}
-          >
-            <span>Prospect</span>
-            <span>Channel</span>
-            <span>Last activity</span>
-            <span>Score</span>
-            <span>Status</span>
-          </div>
+        {/* section: inbox — one table per status, heading sits outside its table */}
+        {(() => {
+          const groups = STATUS_FUNNEL_ORDER
+            .map((status) => ({ status, ss: STATUS_STYLES[status], groupLeads: filteredLeads.filter((l) => l.status === status) }))
+            .filter((g) => g.groupLeads.length > 0);
 
-          {filteredLeads.length === 0 && (
-            <div style={{ padding: 40, textAlign: 'center' }}>
-              <Text variant="secondary">No leads match these filters.</Text>
-            </div>
-          )}
+          if (groups.length === 0) {
+            return (
+              <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+                <Text variant="secondary">No leads match these filters.</Text>
+              </div>
+            );
+          }
 
-          {filteredLeads.map((lead, i) => (
-            <LeadRow
-              key={lead.id}
-              lead={lead}
-              isLast={i === filteredLeads.length - 1}
-              onOpen={() => setActiveLeadId(lead.id)}
-            />
-          ))}
-        </div>
+          return groups.map((g, groupIndex) => {
+            const isCollapsed = collapsedStatuses.has(g.status);
+            const ChevronIcon = isCollapsed ? ChevronDown : ChevronUp;
+            const toggle = () =>
+              setCollapsedStatuses((prev) => {
+                const next = new Set(prev);
+                if (next.has(g.status)) next.delete(g.status);
+                else next.add(g.status);
+                return next;
+              });
+            return (
+              <div key={g.status} style={{ marginTop: groupIndex === 0 ? 0 : 32 }}>
+                {/* status heading lives outside the table — whole row toggles collapse */}
+                <button
+                  type="button"
+                  onClick={toggle}
+                  aria-expanded={!isCollapsed}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: isCollapsed ? 0 : 10,
+                    paddingLeft: 2,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    width: '100%',
+                    textAlign: 'left',
+                  }}
+                >
+                  <Heading level={3}>{g.ss.label}</Heading>
+                  {g.status === 'human-handling' && (
+                    <Text style={{ fontSize: 13, color: 'var(--dark-40)' }}>(Human handling)</Text>
+                  )}
+                  <Text style={{ fontSize: 14, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{g.groupLeads.length}</Text>
+                  <span style={{ marginLeft: 'auto', display: 'inline-flex' }}>
+                    <ChevronIcon size={18} color="var(--dark-40)" />
+                  </span>
+                </button>
+                {!isCollapsed && (
+                  <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+                    {/* column labels appear only on the first table */}
+                    {groupIndex === 0 && (
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: LEADS_GRID,
+                          borderBottom: '1px solid var(--dark-8)',
+                          padding: '6px 28px',
+                          gap: 12,
+                          fontSize: 12,
+                          color: 'var(--dark-60)',
+                          fontWeight: 400,
+                        }}
+                      >
+                        <span>Prospect</span>
+                        <span>Method</span>
+                        <span>Call reason</span>
+                        <span>What&apos;s needed</span>
+                        <span>Time</span>
+                      </div>
+                    )}
+                    {g.groupLeads.map((lead, i) => (
+                      <LeadRow
+                        key={lead.id}
+                        lead={lead}
+                        isLast={i === g.groupLeads.length - 1}
+                        onOpen={() => setActiveLeadId(lead.id)}
+                        contactLeadCount={lead.contact_id ? (contactLeadCounts.get(lead.contact_id) ?? 1) : 1}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          });
+        })()}
 
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 16 }}>
           <Text variant="secondary" style={{ fontSize: 12 }}>
             {filteredLeads.length} of {leads.length} leads · sorted by last activity
           </Text>
@@ -707,8 +1055,83 @@ function SdrInner() {
 // normally lives). Icon-only back button — no text — so the cluster stays
 // compact and lets the lead name read as the page identity.
 
-function DetailTitleCluster({ lead, onBack }: { lead: Lead; onBack: () => void }) {
+function DetailTitleCluster({
+  lead,
+  onBack,
+}: {
+  lead: Lead;
+  onBack: () => void;
+}) {
   const ss = STATUS_STYLES[lead.status];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back to inbox" onPress={onBack} />
+      <span aria-hidden style={{ width: 1, height: 16, background: 'var(--dark-15)' }} />
+      <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
+        {lead.prospect.name}
+        <span style={{ color: 'var(--dark-60)', fontWeight: 400 }}>
+          {' · '}
+          {lead.prospect.company}
+        </span>
+      </Text>
+      <StatusPill tone={ss.tone} size="md">{ss.label}</StatusPill>
+      {/* channel pill — moved here, next to the status pill */}
+      <StatusPill tone="neutral" size="md">
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <ChannelGlyph channel={lead.channel} size={13} muted />
+          {SOURCE_LABELS[lead.channel]}
+        </span>
+      </StatusPill>
+    </div>
+  );
+}
+
+// Conversation prev/next switcher — lives on the right of the detail topbar.
+// Up = previous lead, Down = next lead.
+function DetailNav({
+  index,
+  total,
+  onPrev,
+  onNext,
+}: {
+  index?: number;
+  total?: number;
+  onPrev?: () => void;
+  onNext?: () => void;
+}) {
+  if (total === undefined || total <= 1) return null;
+  const navButton = (handler: (() => void) | undefined, label: string, icon: 'up' | 'down') => (
+    <button
+      type="button"
+      onClick={handler}
+      disabled={!handler}
+      aria-label={label}
+      style={{
+        width: 28, height: 28, borderRadius: 6,
+        border: '1px solid var(--dark-8)',
+        background: handler ? 'var(--light-100)' : 'var(--dark-4)',
+        color: handler ? 'var(--dark-80)' : 'var(--dark-15)',
+        cursor: handler ? 'pointer' : 'not-allowed',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+      }}
+    >
+      {icon === 'up' ? <ArrowUp size={15} /> : <ArrowDown size={15} />}
+    </button>
+  );
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        {index} of {total}
+      </span>
+      {navButton(onPrev, 'Previous lead', 'up')}
+      {navButton(onNext, 'Next lead', 'down')}
+    </div>
+  );
+}
+
+// ─── Contact history title cluster ───────────────────────────────────
+
+function ContactTitleCluster({ contact, onBack }: { contact: Contact; onBack: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <IconButton
@@ -718,18 +1141,13 @@ function DetailTitleCluster({ lead, onBack }: { lead: Lead; onBack: () => void }
         aria-label="Back to inbox"
         onPress={onBack}
       />
-      <span
-        aria-hidden
-        style={{ width: 1, height: 16, background: 'var(--dark-15)' }}
-      />
+      <span aria-hidden style={{ width: 1, height: 16, background: 'var(--dark-15)' }} />
       <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-        {lead.prospect.name}
-        <span style={{ color: 'var(--dark-60)', fontWeight: 400 }}>
-          {' · '}
-          {lead.prospect.company}
-        </span>
+        {contact.name}
       </Text>
-      <StatusPill tone={ss.tone} size="md">{ss.label}</StatusPill>
+      <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+        Contact history
+      </Text>
     </div>
   );
 }
@@ -830,10 +1248,7 @@ function FiltersPopoverButton({
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <Text
-        variant="metadata"
-        style={{ textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--dark-40)' }}
-      >
+      <Text variant="metadata" style={{ fontSize: 11, fontWeight: 500, color: 'var(--dark-40)', letterSpacing: '0.04em' }}>
         {label}
       </Text>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{children}</div>
@@ -843,16 +1258,42 @@ function FilterGroup({ label, children }: { label: string; children: React.React
 
 // ─── Lead row ─────────────────────────────────────────────────────────
 
+// Shared column template for the header row and every LeadRow. Status column
+// dropped — each table is already grouped under a status heading.
+const LEADS_GRID = '300px 68px 160px minmax(160px, 2fr) 64px';
+
+// Column template for the BookingsTab table. 4 cols: prospect (hugs like
+// LEADS_GRID), call reason, scheduled, location (stretches).
+const BOOKINGS_GRID = '340px 200px 200px minmax(200px, 1fr)';
+
+// Drop the leading +1 country code for compact display in table sub-lines.
+const localPhone = (phone: string) => phone.replace(/^\+1\s*/, '');
+
+// Month helpers for the Past-bookings filter. Months are parsed straight from
+// the human `scheduled_at` label (e.g. "Mon, Jun 2 · 10:00 AM CT" → "Jun").
+const MONTH_FULL: Record<string, string> = {
+  Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', May: 'May', Jun: 'June',
+  Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October', Nov: 'November', Dec: 'December',
+};
+const monthOf = (scheduledAt?: string): string | null => {
+  const m = scheduledAt?.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/);
+  return m ? m[1] : null;
+};
+
 interface LeadRowProps {
   lead: Lead;
   isLast: boolean;
   onOpen: () => void;
+  contactLeadCount?: number;
 }
 
-function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
-  const ss = STATUS_STYLES[lead.status];
-  const sc = scoreColor(lead.score);
-  const snippet = latestSnippet(lead);
+function LeadRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps) {
+  const snippet = whatsNeeded(lead);
+  const unread = isUnread(lead);
+  // Rows with nothing new (already replied / read) recede onto a dark-2 tint;
+  // rows with a fresh prospect message stay bright white.
+  const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
+  const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
 
   return (
     <div
@@ -867,35 +1308,25 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
       }}
       style={{
         display: 'grid',
-        gridTemplateColumns:
-          '220px 140px minmax(280px, 2fr) 64px 116px',
-        gap: 20,
-        padding: '12px 20px',
+        gridTemplateColumns: LEADS_GRID,
+        gap: 12,
+        padding: '12px 28px',
         borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
         alignItems: 'center',
         cursor: 'pointer',
-        background: 'var(--light-100)',
+        background: baseBg,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-2)')}
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--light-100)')}
+      onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
+      onMouseLeave={(e) => (e.currentTarget.style.background = baseBg)}
     >
-      {/* Prospect — blue dot at the row's left edge signals fresh activity.
-          Absolute-positioned so it never shifts column widths. */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          minWidth: 0,
-          position: 'relative',
-        }}
-      >
-        {relativeMinutesAgo(lead.last_activity_at) <= 20 && (
+      {/* Prospect — blue dot signals prospect's message is waiting for reply */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, position: 'relative' }}>
+        {unread && (
           <span
-            aria-label="New activity"
+            aria-label="Unread"
             style={{
               position: 'absolute',
-              left: -16,
+              left: -18,
               top: '50%',
               transform: 'translateY(-50%)',
               width: 8,
@@ -905,90 +1336,1422 @@ function LeadRow({ lead, isLast, onOpen }: LeadRowProps) {
             }}
           />
         )}
-        <Avatar
-          src={lead.prospect.avatarUrl}
-          fallback={initials(lead.prospect.name)}
-          size={32}
-        />
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <Text
-            style={{
-              fontWeight: 500,
-              color: 'var(--dark-90)',
-              fontSize: 14,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {lead.prospect.name}
-          </Text>
-          <Text
-            variant="secondary"
-            style={{
-              fontSize: 12,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {lead.prospect.company}
-          </Text>
-        </div>
-      </div>
-
-      {/* Channel */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        <ChannelGlyph channel={lead.channel} size={16} />
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <Text style={{ fontSize: 12, color: 'var(--dark-90)' }}>
-            {CHANNEL_LABELS[lead.channel]}
-          </Text>
-          {lead.channel === 'missed-call' && (
-            <Text style={{ fontSize: 12, color: 'var(--red-70)', fontWeight: 500 }}>
-              missed
-            </Text>
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <Avatar src={lead.prospect.avatarUrl} fallback={initials(lead.prospect.name)} size={32} style={{ background: avatarColor(lead.prospect.name) }} />
+          {contactLeadCount > 1 && (
+            <span
+              aria-label={`${contactLeadCount} leads`}
+              style={{
+                position: 'absolute',
+                top: -4,
+                right: -4,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 999,
+                background: 'var(--dark-60)',
+                color: 'var(--light-100)',
+                fontSize: 10,
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 3px',
+                border: '1.5px solid var(--light-100)',
+              }}
+            >
+              {contactLeadCount}
+            </span>
           )}
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <Text style={{ fontWeight: 500, color: 'var(--dark-90)', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {lead.prospect.name}
+          </Text>
+          <Text variant="secondary" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {localPhone(lead.prospect.phone)}&nbsp;&nbsp;{lead.location ?? lead.prospect.company}
+          </Text>
+        </div>
       </div>
 
-      {/* Last activity — snippet on top, relative timestamp underneath. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+      {/* Method */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        {lead.method === 'call' && <Voice size={14} color="var(--dark-60)" />}
+        {lead.method === 'sms' && <MessageText2 size={14} color="var(--dark-60)" />}
+        {lead.method === 'other' && <MessageChat01 size={14} color="var(--dark-60)" />}
+        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14 }}>
+          {METHOD_LABELS[lead.method]}
+        </Text>
+      </div>
+
+      {/* Request type */}
+      <div style={{ minWidth: 0 }}>
+        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {requestType(lead)}
+        </Text>
+      </div>
+
+      {/* What's needed — AI Handling rows surface a call/booking pill when
+          relevant (live call, successful call, or booked); otherwise the AI
+          summary / last-message excerpt. */}
+      <div style={{ minWidth: 0, overflow: 'hidden' }}>
+        {lead.status === 'ai-handling' && lead.callOutcome === 'live' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <StatusPill tone="danger" size="sm">Live</StatusPill>
+            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              Call in progress
+            </Text>
+          </div>
+        ) : lead.status === 'ai-handling' && lead.scheduled_at ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <StatusPill tone="success" size="sm">Scheduled</StatusPill>
+            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
+              Nothing needed
+            </Text>
+          </div>
+        ) : lead.status === 'ai-handling' && lead.callOutcome === 'successful' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <StatusPill tone="success" size="sm">Call successful</StatusPill>
+            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {truncate(snippet, 36)}
+            </Text>
+          </div>
+        ) : (
+          <div
+            style={{
+              fontSize: 14,
+              color: unread ? 'var(--dark-90)' : 'var(--dark-60)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              lineHeight: 1.4,
+              fontWeight: unread ? 500 : 400,
+            }}
+          >
+            {truncate(snippet, 60)}
+          </div>
+        )}
+      </div>
+
+      {/* Time */}
+      <div style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        {formatRelative(lead.last_activity_at)}
+      </div>
+    </div>
+  );
+}
+
+// ─── Booking row ──────────────────────────────────────────────────────
+//
+// Variant of LeadRow used by the BookingsTab. Columns: Prospect · Call
+// reason · Scheduled · Location. Keeps LeadRow's unread visuals (blue dot
+// to the left of the avatar + dark-2 row tint when nothing new) so the
+// table reads identically to the Leads inbox even though the layout is
+// different. LeadRow is left untouched because it's still used by the
+// 5-column Leads inbox.
+function BookingRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps) {
+  const unread = isUnread(lead);
+  const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
+  const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: BOOKINGS_GRID,
+        gap: 12,
+        padding: '12px 28px',
+        borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
+        alignItems: 'center',
+        cursor: 'pointer',
+        background: baseBg,
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
+      onMouseLeave={(e) => (e.currentTarget.style.background = baseBg)}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, position: 'relative' }}>
+        {unread && (
+          <span
+            aria-label="Unread"
+            style={{
+              position: 'absolute',
+              left: -18,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: 'var(--status-posting)',
+            }}
+          />
+        )}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <Avatar src={lead.prospect.avatarUrl} fallback={initials(lead.prospect.name)} size={32} style={{ background: avatarColor(lead.prospect.name) }} />
+          {contactLeadCount > 1 && (
+            <span
+              aria-label={`${contactLeadCount} leads`}
+              style={{
+                position: 'absolute',
+                top: -4,
+                right: -4,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 999,
+                background: 'var(--dark-60)',
+                color: 'var(--light-100)',
+                fontSize: 10,
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 3px',
+                border: '1.5px solid var(--light-100)',
+              }}
+            >
+              {contactLeadCount}
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <Text style={{ fontWeight: 500, color: 'var(--dark-90)', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {lead.prospect.name}
+          </Text>
+          <Text variant="secondary" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {localPhone(lead.prospect.phone)}&nbsp;&nbsp;{lead.prospect.company}
+          </Text>
+        </div>
+      </div>
+
+      <div style={{ minWidth: 0 }}>
+        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {requestType(lead)}
+        </Text>
+      </div>
+
+      <div style={{ minWidth: 0 }}>
         <Text
+          variant="secondary"
+          color="var(--dark-60)"
+          style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+        >
+          {lead.scheduled_at ?? '—'}
+        </Text>
+      </div>
+
+      <div style={{ minWidth: 0, overflow: 'hidden' }}>
+        <Text
+          variant="secondary"
+          color="var(--dark-60)"
+          style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        >
+          {lead.location ?? '—'}
+        </Text>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DASHBOARD TAB — Funnel KPI strip + recent activity summary
+// ═══════════════════════════════════════════════════════════════════════
+
+function SdrDashboard({ leads, isCold, onViewLeads, onOpenLead }: { leads: Lead[]; isCold: boolean; onViewLeads: () => void; onOpenLead: (id: string) => void }) {
+  // This-month summary stats (simplified — no funnel/conversion math).
+  const inboundRequests = leads.length;
+  const needsReview = leads.filter((l) => l.status === 'human-handling').length;
+  const resolved = leads.filter((l) => l.status === 'resolved').length;
+  const aiHandled = leads.filter((l) => l.status !== 'human-handling').length;
+  const booked = leads.filter((l) => l.status === 'resolved' && l.scheduled_at).length;
+
+  // Leads needing owner action (needs-review or has a suggested next action)
+  const actionLeads = leads
+    .filter((l) => l.status === 'human-handling' || l.suggested_next_action != null)
+    .sort((a, b) => relativeMinutesAgo(a.last_activity_at) - relativeMinutesAgo(b.last_activity_at))
+    .slice(0, 5);
+
+  if (isCold) return <ColdDashboard onViewLeads={onViewLeads} />;
+
+  return (
+    <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
+      {/* section: this-month summary stats */}
+      <div style={{ marginBottom: 32 }}>
+        <Heading level={4} style={{ marginBottom: 12, paddingLeft: 2 }}>This month</Heading>
+        <div style={{ display: 'flex', gap: 16 }}>
+          {[
+            { label: 'Requests', value: inboundRequests, sub: 'came in' },
+            { label: 'Handled by AI', value: aiHandled, sub: 'no human needed' },
+            { label: 'Resolved', value: resolved, sub: `${booked} booked` },
+            { label: 'Needs review', value: needsReview, sub: 'waiting on you' },
+          ].map((m) => (
+            <div
+              key={m.label}
+              style={{
+                flex: 1,
+                background: 'var(--light-100)',
+                border: '1px solid var(--dark-8)',
+                borderRadius: 12,
+                padding: '18px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              <Text variant="secondary" style={{ fontSize: 12 }}>{m.label}</Text>
+              <span style={{ fontSize: 32, fontWeight: 400, color: 'var(--dark-90)', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {m.value}
+              </span>
+              <Text variant="secondary" style={{ fontSize: 12 }}>{m.sub}</Text>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* section: bottom summary — needs attention + bookings (left), breakdowns (right) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 32, alignItems: 'start' }}>
+        {/* left column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
+          <DashboardSection
+            title="Needs attention"
+            action={
+              <Button variant="tertiary" size="sm" onPress={onViewLeads}>
+                View leads
+              </Button>
+            }
+          >
+            {actionLeads.length === 0 ? (
+              <div style={{ padding: '8px 0' }}>
+                <Text variant="secondary" style={{ fontSize: 13 }}>No leads need attention right now.</Text>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {actionLeads.map((lead, i, arr) => {
+                  const unread = isUnread(lead);
+                  return (
+                    <div
+                      key={lead.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => onOpenLead(lead.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onOpenLead(lead.id);
+                        }
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '10px 8px',
+                        margin: '0 -8px',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        background: 'transparent',
+                        borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--dark-4)',
+                      }}
+                    >
+                      <span aria-hidden style={{ width: 6, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                        {unread && <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--status-posting)' }} />}
+                      </span>
+                      <Avatar
+                        src={lead.prospect.avatarUrl}
+                        fallback={lead.prospect.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}
+                        size={32}
+                        style={{ background: avatarColor(lead.prospect.name) }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: unread ? 600 : 500, color: 'var(--dark-90)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {lead.prospect.name}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {localPhone(lead.prospect.phone)} · {requestType(lead)}
+                        </div>
+                      </div>
+                      <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)', whiteSpace: 'nowrap', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                        {formatRelative(lead.last_activity_at)}
+                      </Text>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </DashboardSection>
+
+          <DashboardSection title="Recent bookings">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {leads
+                .filter((l) => l.status === 'resolved' && l.scheduled_at && typeof l.scheduled_when === 'number')
+                .sort((a, b) => (b.scheduled_when ?? 0) - (a.scheduled_when ?? 0))
+                .slice(0, 4)
+                .map((lead, i, arr) => {
+                  const ss = STATUS_STYLES[lead.status];
+                  return (
+                    <div
+                      key={lead.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => onOpenLead(lead.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onOpenLead(lead.id);
+                        }
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        padding: '10px 8px',
+                        margin: '0 -8px',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        background: 'transparent',
+                        borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--dark-4)',
+                      }}
+                    >
+                      <Avatar
+                        src={lead.prospect.avatarUrl}
+                        fallback={lead.prospect.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}
+                        size={32}
+                        style={{ background: avatarColor(lead.prospect.name) }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {lead.prospect.name}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {lead.scheduled_at}
+                        </div>
+                      </div>
+                      <div style={{ flexShrink: 0 }}>
+                        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </DashboardSection>
+        </div>
+
+        {/* right column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
+          <DashboardSection title="Request type breakdown">
+            <RequestTypeBreakdownRows leads={leads} />
+          </DashboardSection>
+          <DashboardSection title="Lead status snapshot">
+            <StatusSnapshotRows leads={leads} />
+          </DashboardSection>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Cold / empty state dashboard ──────────────────────────────────────────
+
+function ColdDashboard({ onViewLeads }: { onViewLeads: () => void }) {
+  return (
+    <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
+      {/* section: upsell CTA — uses the expert-upsell-banner palette (soft blue
+          gradient + dark text), not the legacy black/yellow treatment. */}
+      <div
+        style={{
+          background: 'linear-gradient(100deg, #b9d9f4 0%, #d6e9f8 55%, #e7f1fa 100%)',
+          borderRadius: 16,
+          padding: '40px 48px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 48,
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ flex: 1 }}>
+          <div
+            role="img"
+            aria-label="Blaze marketing expert"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              marginBottom: 16,
+              backgroundImage: 'url("https://cdn.prod.website-files.com/64cd367074be316f3359db61/69fa1e7f4a1bab3f0a963897_image%20771-p-1600.jpg")',
+              backgroundSize: 'cover',
+              backgroundPosition: '90% 50%',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: 'var(--status-posting)',
+              letterSpacing: '0.4px',
+              marginBottom: 12,
+            }}
+          >
+            Expert setup
+          </div>
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 500,
+              color: 'var(--dark-90)',
+              lineHeight: 1.3,
+              marginBottom: 12,
+              letterSpacing: '-0.3px',
+            }}
+          >
+            Let our team set this up for you
+          </div>
+          <div
+            style={{
+              fontSize: 15,
+              color: 'var(--dark-80)',
+              lineHeight: 1.6,
+              maxWidth: 480,
+              marginBottom: 28,
+            }}
+          >
+            Most businesses see their first qualified lead within 48 hours of go-live.
+            A Blaze marketing expert handles AI configuration, voice training, and channel setup — start to finish.
+          </div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <Button variant="secondary" size="xl" onPress={() => {}}>
+              Talk to a marketing expert
+            </Button>
+            <button
+              type="button"
+              onClick={onViewLeads}
+              style={{
+                fontSize: 14,
+                color: 'var(--dark-60)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                padding: 0,
+              }}
+            >
+              Or set it up myself →
+            </button>
+          </div>
+        </div>
+
+        {/* Right: checklist of what's included */}
+        <div
           style={{
-            fontSize: 12,
-            color: 'var(--dark-90)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            lineHeight: 1.4,
+            flexShrink: 0,
+            width: 260,
+            background: 'rgba(255, 255, 255, 0.6)',
+            borderRadius: 12,
+            padding: '20px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 14,
           }}
         >
-          {truncate(snippet, 60)}
-        </Text>
-        <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>
-          {formatRelative(lead.last_activity_at)}
-        </Text>
+          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--dark-60)', marginBottom: 2 }}>
+            What's included
+          </div>
+          {[
+            'AI receptionist configuration',
+            'Phone number provisioning',
+            'Voice & script training',
+            'Channel setup (SMS + email)',
+            'Ongoing monitoring',
+          ].map((item) => (
+            <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <span style={{ color: 'var(--status-posting)', fontSize: 14, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>✓</span>
+              <span style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.4 }}>{item}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Score — color-coded number. */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Text
+      {/* section: setup steps */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        {[
+          { step: '1', title: 'Connect your phone', body: 'Provision a local number or forward your existing line to the AI.', done: false },
+          { step: '2', title: 'Configure the agent', body: "Define the AI's persona, goals, and escalation rules in Settings.", done: false },
+          { step: '3', title: 'Go live', body: 'Flip the switch. Your AI receptionist starts handling inbound requests immediately.', done: false },
+        ].map(({ step, title, body, done }) => (
+          <div
+            key={step}
+            style={{
+              background: 'var(--light-100)',
+              border: '1px solid var(--dark-8)',
+              borderRadius: 12,
+              padding: '20px 20px',
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: done ? 'var(--status-approved)' : 'var(--dark-8)',
+                color: done ? 'var(--light-100)' : 'var(--dark-40)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 13,
+                fontWeight: 600,
+                marginBottom: 14,
+              }}
+            >
+              {step}
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>{title}</div>
+            <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>{body}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardSection({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ minWidth: 0 }}>
+      {/* heading lives outside the bordered card. The action is positioned
+          out of flow so the header height (and thus the heading→card gap) is
+          identical across every section, whether or not it has an action. */}
+      <div style={{ position: 'relative', marginBottom: 12, paddingLeft: 2 }}>
+        <Heading level={4} style={{ lineHeight: 1.2 }}>{title}</Heading>
+        {action && (
+          <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>{action}</div>
+        )}
+      </div>
+      <div
+        style={{
+          background: 'var(--light-100)',
+          border: '1px solid var(--dark-8)',
+          borderRadius: 12,
+          padding: '6px 16px',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ChannelBreakdownRows({ leads }: { leads: Lead[] }) {
+  const total = leads.length || 1;
+  const callCount = leads.filter((l) => l.channel === 'inbound-call').length;
+  const formCount = leads.filter((l) => l.channel === 'form').length;
+  const chatCount = leads.filter((l) => l.channel === 'chat').length;
+  const rows = [
+    { label: 'Inbound call', count: callCount, pct: Math.round((callCount / total) * 100), color: 'var(--status-posting)' },
+    { label: 'SMS / form', count: formCount, pct: Math.round((formCount / total) * 100), color: 'var(--purple)' },
+    { label: 'Chat widget', count: chatCount, pct: Math.round((chatCount / total) * 100), color: 'var(--brand)' },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {rows.map((r) => (
+        <div key={r.label}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <Text style={{ fontSize: 13, color: 'var(--dark-90)' }}>{r.label}</Text>
+            <Text style={{ fontSize: 13, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
+              {r.count} · {r.pct}%
+            </Text>
+          </div>
+          <div
+            style={{
+              height: 6,
+              borderRadius: 999,
+              background: 'var(--dark-8)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${r.pct}%`,
+                height: '100%',
+                borderRadius: 999,
+                background: r.color,
+                transition: 'width 600ms ease',
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// All four simplified statuses are filterable — nothing to hide.
+const HIDDEN_STATUSES = new Set<Status>();
+
+function RequestTypeBreakdownRows({ leads }: { leads: Lead[] }) {
+  const total = leads.length || 1;
+  const counts = new Map<string, number>();
+  for (const lead of leads) {
+    const rt = requestType(lead);
+    counts.set(rt, (counts.get(rt) ?? 0) + 1);
+  }
+  const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '6px 0' }}>
+      {rows.map(([label, count]) => {
+        const pct = Math.round((count / total) * 100);
+        return (
+          <div key={label}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text variant="secondary" style={{ fontSize: 13 }}>{label}</Text>
+              <Text variant="secondary" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                {count} · {pct}%
+              </Text>
+            </div>
+            <div style={{ height: 6, borderRadius: 999, background: 'var(--dark-4)', overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: 'var(--dark-60)', transition: 'width 600ms ease' }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const STATUS_FUNNEL_ORDER: Status[] = [
+  'human-handling',
+  'ai-handling',
+  'resolved',
+  'opted-out',
+];
+
+function StatusSnapshotRows({ leads }: { leads: Lead[] }) {
+  const counts: Partial<Record<Status, { label: string; tone: string; count: number }>> = {};
+  for (const lead of leads) {
+    const ss = STATUS_STYLES[lead.status];
+    if (!counts[lead.status]) counts[lead.status] = { label: ss.label, tone: ss.tone, count: 0 };
+    counts[lead.status]!.count++;
+  }
+  const rows = STATUS_FUNNEL_ORDER.filter((s) => counts[s]).map((s) => ({ status: s, ...counts[s]! }));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {rows.map(({ status, label, tone, count }, i) => (
+        <div
+          key={status}
           style={{
-            fontSize: 14,
-            fontWeight: 500,
-            color: sc.fg,
-            fontVariantNumeric: 'tabular-nums',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            padding: '12px 0',
+            borderBottom: i === rows.length - 1 ? 'none' : '1px solid var(--dark-4)',
           }}
         >
-          {lead.score}
-        </Text>
+          <StatusPill tone={tone as any} size="sm">{label}</StatusPill>
+          <Text style={{ fontSize: 14, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+            {count}
+          </Text>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ACTIVITY TAB — Calls · SMS · Booking Requests + search
+// ═══════════════════════════════════════════════════════════════════════
+
+type ActivityTab = 'calls' | 'sms' | 'bookings';
+
+interface CallRecord {
+  id: string;
+  contact: string;
+  company: string;
+  duration: string;
+  when: string;
+  outcome: 'qualified' | 'escalated' | 'booked' | 'missed' | 'disqualified';
+  channel: 'inbound-call' | 'missed-call';
+}
+
+interface SmsRecord {
+  id: string;
+  contact: string;
+  company: string;
+  preview: string;
+  when: string;
+  direction: 'inbound' | 'outbound';
+  unread?: boolean;
+}
+
+interface BookingRecord {
+  id: string;
+  contact: string;
+  company: string;
+  requestType: string;
+  service: string;
+  scheduledFor: string;
+  bookedAt: string;
+  status: 'confirmed' | 'pending' | 'cancelled';
+}
+
+const CALL_RECORDS: CallRecord[] = [
+  { id: 'cr1', contact: 'David Lin', company: 'Oakridge HOA Board', duration: '3m 42s', when: '2h ago', outcome: 'escalated', channel: 'inbound-call' },
+  { id: 'cr2', contact: 'Emily Tran', company: 'Tran Family — Pflugerville', duration: '5m 10s', when: '4h ago', outcome: 'booked', channel: 'inbound-call' },
+  { id: 'cr3', contact: 'Carlos Reyes', company: 'Reyes Family — Round Rock', duration: '0m 47s', when: '6h ago', outcome: 'missed', channel: 'missed-call' },
+  { id: 'cr4', contact: 'Rohan Bhatt', company: 'Bhatt Family — Leander', duration: '4m 02s', when: 'Yesterday', outcome: 'booked', channel: 'inbound-call' },
+  { id: 'cr5', contact: 'Noah Okafor', company: 'Helmsman Properties', duration: '2m 15s', when: 'Yesterday', outcome: 'qualified', channel: 'inbound-call' },
+  { id: 'cr6', contact: 'David Wu', company: 'Solo handyman', duration: '1m 30s', when: '2 days ago', outcome: 'disqualified', channel: 'inbound-call' },
+  { id: 'cr7', contact: 'Felix Rosenthal', company: 'Rosenthal Family — Round Rock', duration: '0m 0s', when: '3 days ago', outcome: 'missed', channel: 'missed-call' },
+];
+
+const SMS_RECORDS: SmsRecord[] = [
+  { id: 'sr1', contact: 'Priya Patel', company: 'Patel Family — Westlake', preview: 'Thursday afternoon would be ideal. Send the confirmation!', when: '1h ago', direction: 'inbound', unread: true },
+  { id: 'sr2', contact: 'Sara Lopez', company: 'Lopez Family — Cedar Park', preview: 'Yes, include the color samples — between Alabaster and Swiss Coffee.', when: '3h ago', direction: 'inbound', unread: true },
+  { id: 'sr3', contact: 'Mia Andersson', company: 'Andersson Family — Westlake', preview: 'Is this for full exterior or trim/touch-up only?', when: '5h ago', direction: 'outbound' },
+  { id: 'sr4', contact: 'Carlos Reyes', company: 'Reyes Family — Round Rock', preview: "Sorry we missed you. Free this afternoon or tomorrow morning to chat?", when: '6h ago', direction: 'outbound' },
+  { id: 'sr5', contact: 'Janet Bracken', company: 'Bracken Realty — Lakeway', preview: 'Got two April listings. Sellers asked about a quick interior refresh.', when: 'Yesterday', direction: 'inbound' },
+  { id: 'sr6', contact: 'Helena Saunders', company: 'Saunders Family — Pflugerville', preview: 'Are you looking at interior, exterior, or both?', when: 'Yesterday', direction: 'outbound' },
+  { id: 'sr7', contact: 'Sara Bell', company: 'Bell Family — Bee Cave', preview: 'Hi Sara — are you looking at interior, exterior, or cabinet work?', when: '2 days ago', direction: 'outbound' },
+];
+
+const BOOKING_RECORDS: BookingRecord[] = [
+  { id: 'br1', contact: 'Priya Patel', company: 'Patel Family — Westlake', requestType: 'Exterior painting', service: 'In-home estimate — exterior', scheduledFor: 'Thu, May 29 · 3:00 PM', bookedAt: '1h ago', status: 'confirmed' },
+  { id: 'br2', contact: 'Emily Tran', company: 'Tran Family — Pflugerville', requestType: 'Interior painting', service: 'In-home estimate — interior', scheduledFor: 'Thu, May 29 · 11:00 AM', bookedAt: '4h ago', status: 'confirmed' },
+  { id: 'br3', contact: 'Rohan Bhatt', company: 'Bhatt Family — Leander', requestType: 'Exterior painting', service: 'In-home estimate — exterior', scheduledFor: 'Wed, May 28 · 10:00 AM', bookedAt: 'Yesterday', status: 'confirmed' },
+  { id: 'br4', contact: 'Sara Lopez', company: 'Lopez Family — Cedar Park', requestType: 'Cabinet refinishing', service: 'In-home estimate — cabinets', scheduledFor: 'Fri, May 30 · 9:00 AM', bookedAt: 'Yesterday', status: 'pending' },
+  { id: 'br5', contact: 'Talia Mendez', company: 'Mendez Family — Dripping Springs', requestType: 'Exterior painting', service: 'In-home estimate — exterior', scheduledFor: 'Mon, May 19 · 2:00 PM', bookedAt: '8 days ago', status: 'confirmed' },
+  { id: 'br6', contact: 'Noah Okafor', company: 'Helmsman Properties', requestType: 'Commercial painting', service: 'Commercial walkthrough', scheduledFor: 'Tue, May 27 · 1:00 PM', bookedAt: '2 days ago', status: 'pending' },
+];
+
+const OUTCOME_STYLES: Record<CallRecord['outcome'], { label: string; color: string }> = {
+  qualified:    { label: 'Qualified',    color: 'var(--status-posting)' },
+  escalated:    { label: 'Escalated',   color: '#edb62c' },
+  booked:       { label: 'Booked',      color: 'var(--status-approved)' },
+  missed:       { label: 'Missed',      color: 'var(--red-70)' },
+  disqualified: { label: 'Disqualified', color: 'var(--dark-40)' },
+};
+
+const BOOKING_STATUS_STYLES: Record<BookingRecord['status'], { label: string; tone: 'success' | 'warning' | 'neutral' }> = {
+  confirmed: { label: 'Confirmed', tone: 'success' },
+  pending:   { label: 'Pending owner', tone: 'warning' },
+  cancelled: { label: 'Cancelled', tone: 'neutral' },
+};
+
+function SdrActivity() {
+  const [actTab, setActTab] = useState<ActivityTab>('calls');
+  const [query, setQuery] = useState('');
+
+  const filteredCalls = CALL_RECORDS.filter(
+    (r) =>
+      r.contact.toLowerCase().includes(query.toLowerCase()) ||
+      r.company.toLowerCase().includes(query.toLowerCase()),
+  );
+  const filteredSms = SMS_RECORDS.filter(
+    (r) =>
+      r.contact.toLowerCase().includes(query.toLowerCase()) ||
+      r.company.toLowerCase().includes(query.toLowerCase()) ||
+      r.preview.toLowerCase().includes(query.toLowerCase()),
+  );
+  const filteredBookings = BOOKING_RECORDS.filter(
+    (r) =>
+      r.contact.toLowerCase().includes(query.toLowerCase()) ||
+      r.company.toLowerCase().includes(query.toLowerCase()) ||
+      r.service.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  return (
+    <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
+      {/* section: search + sub-tabs */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 20,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: 10,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--dark-40)',
+              display: 'flex',
+              pointerEvents: 'none',
+            }}
+          >
+            <Search size={16} />
+          </span>
+          <input
+            {...inputFocusProps}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search contacts, messages…"
+            style={{
+              height: 36,
+              paddingLeft: 32,
+              paddingRight: 12,
+              borderRadius: 8,
+              border: '1px solid var(--dark-8)',
+              background: 'var(--light-100)',
+              color: 'var(--dark-90)',
+              fontFamily: 'inherit',
+              fontSize: 14,
+              outline: 'none',
+              width: 260,
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: 6 }}>
+          <TabChip selected={actTab === 'calls'} onSelect={() => setActTab('calls')}>
+            Calls
+          </TabChip>
+          <TabChip selected={actTab === 'sms'} onSelect={() => setActTab('sms')}>
+            SMS
+          </TabChip>
+          <TabChip selected={actTab === 'bookings'} onSelect={() => setActTab('bookings')}>
+            Booking Requests
+          </TabChip>
+        </div>
       </div>
 
-      {/* Status */}
-      <div>
-        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
+      {/* section: activity list */}
+      <div
+        style={{
+          background: 'var(--light-100)',
+          border: '1px solid var(--dark-8)',
+          borderRadius: 12,
+          overflow: 'hidden',
+        }}
+      >
+        {actTab === 'calls' && (
+          <>
+            <ActivityListHeader columns={['Contact', 'Duration', 'When', 'Outcome']} />
+            {filteredCalls.length === 0 && <ActivityEmptyState />}
+            {filteredCalls.map((r, i) => (
+              <div
+                key={r.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 100px 120px 140px',
+                  gap: 16,
+                  padding: '12px 20px',
+                  alignItems: 'center',
+                  borderBottom: i === filteredCalls.length - 1 ? 'none' : '1px solid var(--dark-4)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 30,
+                      height: 30,
+                      borderRadius: 8,
+                      background: r.channel === 'missed-call' ? 'rgba(188,1,11,0.08)' : 'var(--dark-4)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Voice size={16} color={r.channel === 'missed-call' ? 'var(--red-70)' : 'var(--dark-60)'} />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', display: 'block' }}>
+                      {r.contact}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.company}</Text>
+                  </div>
+                </div>
+                <Text style={{ fontSize: 13, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
+                  {r.duration}
+                </Text>
+                <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.when}</Text>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: OUTCOME_STYLES[r.outcome].color,
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: OUTCOME_STYLES[r.outcome].color,
+                      flexShrink: 0,
+                    }}
+                  />
+                  {OUTCOME_STYLES[r.outcome].label}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
+
+        {actTab === 'sms' && (
+          <>
+            <ActivityListHeader columns={['Contact', 'Last message', 'When', 'Direction']} />
+            {filteredSms.length === 0 && <ActivityEmptyState />}
+            {filteredSms.map((r, i) => (
+              <div
+                key={r.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '200px 1fr 120px 110px',
+                  gap: 16,
+                  padding: '12px 20px',
+                  alignItems: 'center',
+                  borderBottom: i === filteredSms.length - 1 ? 'none' : '1px solid var(--dark-4)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  {r.unread && (
+                    <span
+                      aria-label="Unread"
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        background: 'var(--status-posting)',
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  {!r.unread && <span style={{ width: 7, flexShrink: 0 }} />}
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 30,
+                      height: 30,
+                      borderRadius: 8,
+                      background: 'var(--dark-4)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <MessageText2 size={16} color="var(--dark-60)" />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: r.unread ? 600 : 500,
+                        color: 'var(--dark-90)',
+                        display: 'block',
+                      }}
+                    >
+                      {r.contact}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.company}</Text>
+                  </div>
+                </div>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: 'var(--dark-60)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    fontWeight: r.unread ? 500 : 400,
+                  }}
+                >
+                  {r.preview}
+                </Text>
+                <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.when}</Text>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontSize: 12,
+                    color: r.direction === 'inbound' ? 'var(--status-posting)' : 'var(--dark-40)',
+                  }}
+                >
+                  {r.direction === 'inbound' ? '↙' : '↗'}{' '}
+                  {r.direction === 'inbound' ? 'Inbound' : 'Outbound'}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
+
+        {actTab === 'bookings' && (
+          <>
+            <ActivityListHeader columns={['Contact', 'Service', 'Scheduled for', 'Status']} />
+            {filteredBookings.length === 0 && <ActivityEmptyState />}
+            {filteredBookings.map((r, i) => {
+              const bs = BOOKING_STATUS_STYLES[r.status];
+              return (
+                <div
+                  key={r.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 200px 160px',
+                    gap: 16,
+                    padding: '12px 20px',
+                    alignItems: 'center',
+                    borderBottom: i === filteredBookings.length - 1 ? 'none' : '1px solid var(--dark-4)',
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', display: 'block' }}>
+                      {r.contact}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.company}</Text>
+                  </div>
+                  <Text style={{ fontSize: 13, color: 'var(--dark-90)' }}>{r.service}</Text>
+                  <div>
+                    <Text style={{ fontSize: 13, color: 'var(--dark-90)', display: 'block' }}>
+                      {r.scheduledFor}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: 'var(--dark-40)' }}>booked {r.bookedAt}</Text>
+                  </div>
+                  <StatusPill tone={bs.tone} size="sm">{bs.label}</StatusPill>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
+
+      <div style={{ marginTop: 10 }}>
+        <Text variant="secondary" style={{ fontSize: 12 }}>
+          {actTab === 'calls' && `${filteredCalls.length} call${filteredCalls.length !== 1 ? 's' : ''}`}
+          {actTab === 'sms' && `${filteredSms.length} conversation${filteredSms.length !== 1 ? 's' : ''}`}
+          {actTab === 'bookings' && `${filteredBookings.length} booking request${filteredBookings.length !== 1 ? 's' : ''}`}
+          {query ? ` matching "${query}"` : ' · sorted by most recent'}
+        </Text>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// BOOKINGS TAB — single-table list of resolved leads, reusing the inbox row
+// visual. Click a row → opens the same SdrDetail used by Leads. Replaces the
+// old Outcomes screen (which had a search input + Bookings/Messages sub-tabs).
+// ═══════════════════════════════════════════════════════════════════════
+
+function BookingsTab({
+  leads,
+  contactLeadCounts,
+  onOpenLead,
+}: {
+  leads: Lead[];
+  contactLeadCounts: Map<string, number>;
+  onOpenLead: (id: string) => void;
+}) {
+  // Only resolved leads that actually have a scheduled time appear as bookings.
+  // Split into upcoming (`scheduled_when > 0`) and past (`<= 0`). Inside each
+  // bucket, upcoming sorts by soonest-first, past by most-recently-elapsed first.
+  const { upcoming, past, pastMonths, currentMonth } = useMemo(() => {
+    const scheduled = leads.filter(
+      (l) => l.status === 'resolved' && l.scheduled_at && typeof l.scheduled_when === 'number',
+    );
+    const up = scheduled
+      .filter((l) => (l.scheduled_when ?? 0) > 0)
+      .sort((a, b) => (a.scheduled_when ?? 0) - (b.scheduled_when ?? 0));
+    const pa = scheduled
+      .filter((l) => (l.scheduled_when ?? 0) <= 0)
+      .sort((a, b) => (b.scheduled_when ?? 0) - (a.scheduled_when ?? 0));
+    // Distinct months in past bookings, most-recent first (pa is already sorted).
+    const months: string[] = [];
+    for (const l of pa) {
+      const m = monthOf(l.scheduled_at);
+      if (m && !months.includes(m)) months.push(m);
+    }
+    // "Current" month = the month of the booking closest to now (min |when|).
+    const closest = [...scheduled].sort(
+      (a, b) => Math.abs(a.scheduled_when ?? 0) - Math.abs(b.scheduled_when ?? 0),
+    )[0];
+    return { upcoming: up, past: pa, pastMonths: months, currentMonth: monthOf(closest?.scheduled_at) };
+  }, [leads]);
+
+  // Past-bookings month filter — defaults to the current month when it has
+  // bookings, otherwise the most recent month available.
+  const [pastMonth, setPastMonth] = useState<string>(
+    () => (currentMonth && pastMonths.includes(currentMonth) ? currentMonth : (pastMonths[0] ?? 'all')),
+  );
+  const monthOptions = [
+    ...pastMonths.map((m) => ({ value: m, label: MONTH_FULL[m] ?? m })),
+    { value: 'all', label: 'All time' },
+  ];
+  const filteredPast = pastMonth === 'all' ? past : past.filter((l) => monthOf(l.scheduled_at) === pastMonth);
+
+  const renderTable = (rows: Lead[]) => (
+    <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: BOOKINGS_GRID,
+          borderBottom: '1px solid var(--dark-8)',
+          padding: '6px 28px',
+          gap: 12,
+          fontSize: 12,
+          color: 'var(--dark-60)',
+          fontWeight: 400,
+        }}
+      >
+        <span>Prospect</span>
+        <span>Call reason</span>
+        <span>Scheduled</span>
+        <span>Location</span>
+      </div>
+      {rows.map((lead, i) => (
+        <BookingRow
+          key={lead.id}
+          lead={lead}
+          isLast={i === rows.length - 1}
+          onOpen={() => onOpenLead(lead.id)}
+          contactLeadCount={lead.contact_id ? (contactLeadCounts.get(lead.contact_id) ?? 1) : 1}
+        />
+      ))}
+    </div>
+  );
+
+  const total = upcoming.length + past.length;
+
+  return (
+    <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
+      {total === 0 ? (
+        <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+          <Text variant="secondary">No bookings yet.</Text>
+        </div>
+      ) : (
+        <>
+          {upcoming.length > 0 && (
+            <div style={{ marginBottom: past.length > 0 ? 32 : 0 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10, paddingLeft: 2 }}>
+                <Heading level={3}>Upcoming</Heading>
+                <Text style={{ fontSize: 14, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>
+                  {upcoming.length}
+                </Text>
+              </div>
+              {renderTable(upcoming)}
+            </div>
+          )}
+
+          {past.length > 0 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, paddingLeft: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <Heading level={3}>Past</Heading>
+                  <Text style={{ fontSize: 14, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>
+                    {filteredPast.length}
+                  </Text>
+                </div>
+                <div style={{ marginLeft: 'auto' }}>
+                  <Select
+                    size="sm"
+                    value={pastMonth}
+                    onChange={setPastMonth}
+                    options={monthOptions}
+                    aria-label="Filter past bookings by month"
+                  />
+                </div>
+              </div>
+              {filteredPast.length > 0 ? (
+                renderTable(filteredPast)
+              ) : (
+                <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: 28, textAlign: 'center' }}>
+                  <Text variant="secondary">
+                    No bookings in {pastMonth === 'all' ? 'this range' : (MONTH_FULL[pastMonth] ?? pastMonth)}.
+                  </Text>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LEGACY OUTCOMES TAB — kept temporarily as dead code; replaced by BookingsTab
+// above. Safe to delete after the new tab has been verified.
+// ═══════════════════════════════════════════════════════════════════════
+
+function SdrBookingsPage() {
+  const [query, setQuery] = useState('');
+  const [outcomeTab, setOutcomeTab] = useState<'bookings' | 'messages'>('bookings');
+
+  const filteredBookings = BOOKING_RECORDS.filter(
+    (r) =>
+      r.contact.toLowerCase().includes(query.toLowerCase()) ||
+      r.company.toLowerCase().includes(query.toLowerCase()) ||
+      r.service.toLowerCase().includes(query.toLowerCase()) ||
+      r.requestType.toLowerCase().includes(query.toLowerCase()),
+  );
+  const filteredMessages = SMS_RECORDS.filter(
+    (r) =>
+      r.direction === 'inbound' &&
+      (r.contact.toLowerCase().includes(query.toLowerCase()) ||
+      r.company.toLowerCase().includes(query.toLowerCase()) ||
+      r.preview.toLowerCase().includes(query.toLowerCase())),
+  );
+
+  return (
+    <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
+      {/* section: search + sub-tabs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <span aria-hidden style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--dark-40)', display: 'flex', pointerEvents: 'none' }}>
+            <Search size={16} />
+          </span>
+          <input
+            {...inputFocusProps}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search outcomes…"
+            style={{ height: 36, paddingLeft: 32, paddingRight: 12, borderRadius: 8, border: '1px solid var(--dark-8)', background: 'var(--light-100)', color: 'var(--dark-90)', fontFamily: 'inherit', fontSize: 14, outline: 'none', width: 260 }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <TabChip selected={outcomeTab === 'bookings'} onSelect={() => setOutcomeTab('bookings')}>
+            Bookings
+          </TabChip>
+          <TabChip selected={outcomeTab === 'messages'} onSelect={() => setOutcomeTab('messages')}>
+            Messages
+          </TabChip>
+        </div>
+      </div>
+
+      {/* section: bookings table */}
+      {outcomeTab === 'bookings' && (
+        <>
+          <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 160px minmax(180px,1fr) 220px', gap: 16, padding: '8px 20px', borderBottom: '1px solid var(--dark-8)', background: 'var(--dark-2)' }}>
+              {['Contact', 'Request type', 'Service', 'Scheduled for'].map((c) => (
+                <span key={c} style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>{c}</span>
+              ))}
+            </div>
+            {filteredBookings.length === 0 && <ActivityEmptyState />}
+            {filteredBookings.map((r, i) => (
+              <div
+                key={r.id}
+                style={{ display: 'grid', gridTemplateColumns: '200px 160px minmax(180px,1fr) 220px', gap: 16, padding: '12px 20px', alignItems: 'center', borderBottom: i === filteredBookings.length - 1 ? 'none' : '1px solid var(--dark-4)' }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.contact}</Text>
+                  <Text style={{ fontSize: 12, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.company}</Text>
+                </div>
+                <Text style={{ fontSize: 13, color: 'var(--dark-80)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.requestType}</Text>
+                <Text style={{ fontSize: 13, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.service}</Text>
+                <div>
+                  <Text style={{ fontSize: 13, color: 'var(--dark-90)', display: 'block' }}>{r.scheduledFor}</Text>
+                  <Text style={{ fontSize: 12, color: 'var(--dark-40)' }}>booked {r.bookedAt}</Text>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <Text variant="secondary" style={{ fontSize: 12 }}>
+              {filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''}
+              {query ? ` matching "${query}"` : ' · sorted by most recent'}
+            </Text>
+          </div>
+        </>
+      )}
+
+      {/* section: messages table */}
+      {outcomeTab === 'messages' && (
+        <>
+          <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 120px 110px', gap: 16, padding: '8px 20px', borderBottom: '1px solid var(--dark-8)', background: 'var(--dark-2)' }}>
+              {['Contact', 'Last message', 'When', 'Direction'].map((c) => (
+                <span key={c} style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>{c}</span>
+              ))}
+            </div>
+            {filteredMessages.length === 0 && <ActivityEmptyState />}
+            {filteredMessages.map((r, i) => (
+              <div
+                key={r.id}
+                style={{ display: 'grid', gridTemplateColumns: '200px 1fr 120px 110px', gap: 16, padding: '12px 20px', alignItems: 'center', borderBottom: i === filteredMessages.length - 1 ? 'none' : '1px solid var(--dark-4)' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  {r.unread && <span aria-label="Unread" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--status-posting)', flexShrink: 0 }} />}
+                  {!r.unread && <span style={{ width: 7, flexShrink: 0 }} />}
+                  <div style={{ minWidth: 0 }}>
+                    <Text style={{ fontSize: 14, fontWeight: r.unread ? 600 : 500, color: 'var(--dark-90)', display: 'block' }}>{r.contact}</Text>
+                    <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.company}</Text>
+                  </div>
+                </div>
+                <Text style={{ fontSize: 13, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: r.unread ? 500 : 400 }}>
+                  {r.preview}
+                </Text>
+                <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.when}</Text>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: r.direction === 'inbound' ? 'var(--status-posting)' : 'var(--dark-40)' }}>
+                  {r.direction === 'inbound' ? '↙' : '↗'}{' '}{r.direction === 'inbound' ? 'Inbound' : 'Outbound'}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <Text variant="secondary" style={{ fontSize: 12 }}>
+              {filteredMessages.length} message{filteredMessages.length !== 1 ? 's' : ''}
+              {query ? ` matching "${query}"` : ' · sorted by most recent'}
+            </Text>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ActivityListHeader({ columns }: { columns: string[] }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: columns.length === 4 ? '1fr 1fr 200px 160px' : '1fr 100px 120px 140px',
+        gap: 16,
+        padding: '8px 20px',
+        borderBottom: '1px solid var(--dark-8)',
+        background: 'var(--dark-2)',
+      }}
+    >
+      {columns.map((c) => (
+        <span key={c} style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>
+          {c}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ActivityEmptyState() {
+  return (
+    <div style={{ padding: 40, textAlign: 'center' }}>
+      <Text variant="secondary">No results found.</Text>
     </div>
   );
 }
