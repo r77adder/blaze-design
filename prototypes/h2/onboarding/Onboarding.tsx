@@ -144,16 +144,6 @@ function PrototypeBar({
         aria-label="Prototype flow switch"
         style={{ display: 'inline-flex', alignItems: 'center', padding: '0 2px' }}
       >
-        <span
-          aria-hidden
-          style={{
-            padding: '0 8px',
-            fontSize: 12,
-            color: 'var(--dark-60)',
-          }}
-        >
-          Flow
-        </span>
         <FlowChip selected={track === 'dfy'} onPress={() => onSetTrack('dfy')}>
           DFY
         </FlowChip>
