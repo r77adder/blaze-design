@@ -1563,13 +1563,34 @@ function BookingRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps
 // DASHBOARD TAB — Funnel KPI strip + recent activity summary
 // ═══════════════════════════════════════════════════════════════════════
 
+// Timeframe windows for the summary-metrics filter. `maxDays` is compared
+// against each lead's `last_activity_at` (minutes-ago) via relativeMinutesAgo.
+const DASHBOARD_TIMEFRAMES: { value: string; label: string; maxDays: number }[] = [
+  { value: '2d', label: 'Last two days', maxDays: 2 },
+  { value: '7d', label: 'Last 7 days', maxDays: 7 },
+  { value: '2w', label: 'Last two weeks', maxDays: 14 },
+  { value: '1m', label: 'Last month', maxDays: 30 },
+  { value: 'all', label: 'All time', maxDays: Infinity },
+];
+
 function SdrDashboard({ leads, isCold, onViewLeads, onOpenLead }: { leads: Lead[]; isCold: boolean; onViewLeads: () => void; onOpenLead: (id: string) => void }) {
-  // This-month summary stats (simplified — no funnel/conversion math).
-  const inboundRequests = leads.length;
-  const needsReview = leads.filter((l) => l.status === 'human-handling').length;
-  const resolved = leads.filter((l) => l.status === 'resolved').length;
-  const aiHandled = leads.filter((l) => l.status !== 'human-handling').length;
-  const booked = leads.filter((l) => l.status === 'resolved' && l.scheduled_at).length;
+  const [timeframe, setTimeframe] = useState('all');
+
+  // Leads whose last activity falls inside the selected window — drives the
+  // summary stats so the metric cards recompute as the timeframe narrows.
+  const scopedLeads = useMemo(() => {
+    const maxDays = DASHBOARD_TIMEFRAMES.find((t) => t.value === timeframe)?.maxDays ?? Infinity;
+    if (maxDays === Infinity) return leads;
+    const maxMinutes = maxDays * 1440;
+    return leads.filter((l) => relativeMinutesAgo(l.last_activity_at) <= maxMinutes);
+  }, [leads, timeframe]);
+
+  // Summary stats (simplified — no funnel/conversion math).
+  const inboundRequests = scopedLeads.length;
+  const needsReview = scopedLeads.filter((l) => l.status === 'human-handling').length;
+  const resolved = scopedLeads.filter((l) => l.status === 'resolved').length;
+  const aiHandled = scopedLeads.filter((l) => l.status !== 'human-handling').length;
+  const booked = scopedLeads.filter((l) => l.status === 'resolved' && l.scheduled_at).length;
 
   // Leads needing owner action (needs-review or has a suggested next action)
   const actionLeads = leads
@@ -1581,9 +1602,17 @@ function SdrDashboard({ leads, isCold, onViewLeads, onOpenLead }: { leads: Lead[
 
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
-      {/* section: this-month summary stats */}
+      {/* section: summary stats */}
       <div style={{ marginBottom: 32 }}>
-        <Heading level={4} style={{ marginBottom: 12, paddingLeft: 2 }}>This month</Heading>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, paddingLeft: 2 }}>
+          <Heading level={4}>Summary</Heading>
+          <Select
+            size="sm"
+            value={timeframe}
+            onChange={setTimeframe}
+            options={DASHBOARD_TIMEFRAMES.map(({ value, label }) => ({ value, label }))}
+          />
+        </div>
         <div style={{ display: 'flex', gap: 16 }}>
           {[
             { label: 'Requests', value: inboundRequests, sub: 'came in' },
