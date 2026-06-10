@@ -19,9 +19,13 @@ import {
   SOURCE_LABELS,
   STATUS_STYLES,
   ALL_STATUSES,
+  BOOKING_OUTCOME_STYLES,
+  effectiveBookingOutcome,
   avatarColor,
+  conversationSummary,
   formatRelative,
   relativeMinutesAgo,
+  type BookingOutcome,
   type Channel,
   type Contact,
   type Lead,
@@ -29,6 +33,7 @@ import {
   type Scorecard,
   type Status,
 } from './sdr-data';
+import { OutcomeSelect } from './BookingOutcomeSelect';
 
 // Blaze-style focus for the composer: the textarea has no border of its own —
 // the visible border lives on its parent pill wrapper — so focus mutates the
@@ -141,11 +146,25 @@ interface TimelineEvent {
   timestamp: string;
   leadId: string;
   isActive: boolean;
+  /** When set, the timeline renders a solid dot in this color (used for the
+   *  booking-outcome event so it's colored by sentiment). */
+  dotColor?: string;
 }
 
 function isTriggerMessage(content: string): boolean {
   return /escalat|flagged for owner|paused for owner|detected|rules-engine|morning digest/i.test(content);
 }
+
+// Dot color for a booking-outcome timeline event, by sentiment.
+const OUTCOME_DOT_COLOR: Record<string, string> = {
+  completed: 'var(--status-posting)',
+  'estimate-sent': '#b3870f',
+  won: 'var(--status-approved)',
+  'job-done': 'var(--purple)',
+  'no-show': 'var(--status-connect)',
+  canceled: 'var(--dark-40)',
+  lost: 'var(--red-70)',
+};
 
 function buildContactTimeline(leads: Lead[], activeLead: Lead): TimelineEvent[] {
   const events: TimelineEvent[] = [];
@@ -173,6 +192,21 @@ function buildContactTimeline(leads: Lead[], activeLead: Lead): TimelineEvent[] 
     }
     if (lead.status === 'resolved') {
       events.push({ id: `${lead.id}-out`, kind: 'booking', label: 'Booking scheduled', timestamp: lead.last_activity_at, leadId: lead.id, isActive });
+      // Surface the booking's outcome once it's moved past plain "Scheduled"
+      // (auto-derived completion or a manual override). Updates live as the
+      // outcome is changed from the booking card or the Bookings table.
+      const outcome = effectiveBookingOutcome(lead);
+      if (outcome !== 'scheduled') {
+        events.push({
+          id: `${lead.id}-outcome`,
+          kind: 'outcome',
+          label: `Outcome · ${BOOKING_OUTCOME_STYLES[outcome].label}`,
+          timestamp: lead.last_activity_at,
+          leadId: lead.id,
+          isActive,
+          dotColor: OUTCOME_DOT_COLOR[outcome] ?? 'var(--dark-40)',
+        });
+      }
     } else if (lead.status === 'human-handling') {
       events.push({ id: `${lead.id}-out`, kind: 'escalation', label: 'Needs owner review', timestamp: lead.last_activity_at, leadId: lead.id, isActive });
     } else if (lead.status === 'opted-out') {
@@ -249,10 +283,23 @@ const ROLE_LABELS: Record<Message['role'], string> = {
 };
 
 const BUBBLE_BG: Record<Message['role'], string> = {
-  ai: 'rgba(124, 92, 252, 0.12)',
-  owner: 'rgba(1, 121, 207, 0.12)',
+  // AI uses a light --status-posting tint (same blue as the summary card).
+  // Owner replies are a solid --status-posting fill so the human takeover
+  // reads as a bolder "sent by you" bubble, distinct from the AI's tints.
+  ai: 'rgba(1, 121, 207, 0.12)',
+  owner: 'var(--status-posting)',
   prospect: 'var(--dark-4)',
   system: 'var(--dark-4)',
+};
+
+// Bubble text color. Owner sits on the solid blue fill, so it needs white text
+// (~4.5:1 contrast on --status-posting #0179cf — passes WCAG AA); every other
+// role sits on a light tint and keeps dark text.
+const BUBBLE_FG: Record<Message['role'], string> = {
+  ai: 'var(--dark-90)',
+  owner: 'var(--light-100)',
+  prospect: 'var(--dark-90)',
+  system: 'var(--dark-90)',
 };
 
 function TextBubble({
@@ -284,7 +331,7 @@ function TextBubble({
       <div
         style={{
           background: BUBBLE_BG[msg.role],
-          color: 'var(--dark-90)',
+          color: BUBBLE_FG[msg.role],
           borderRadius: 12,
           padding: '10px 14px',
           fontSize: 14,
@@ -328,16 +375,16 @@ function FeedbackButtons({ context }: { context: string }) {
   );
 }
 
+// Call transcript rendered inline — no card. It sits in the conversation flow
+// like the text bubbles and system rows; the labelled header + speaker-prefixed
+// turns are enough to read it as a call without a box around it. (The boxed/
+// tinted card treatment now belongs to the conversation summary at the top.)
 function CallTurnBlock({ msg, muted = false }: { msg: Message; muted?: boolean }) {
   const { showToast } = useToast();
   if (!msg.call) return null;
   return (
     <div
       style={{
-        border: '1px solid rgba(1, 121, 207, 0.15)',
-        background: 'rgba(1, 121, 207, 0.04)',
-        borderRadius: 8,
-        padding: '14px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
@@ -352,7 +399,7 @@ function CallTurnBlock({ msg, muted = false }: { msg: Message; muted?: boolean }
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {msg.call.turns.map((t, i) => (
           <div key={i} style={{ display: 'flex', gap: 8, fontSize: 14, lineHeight: 1.5, color: 'var(--dark-80)' }}>
-            <span style={{ fontWeight: 500, color: t.speaker === 'AI' ? 'var(--purple)' : 'var(--dark-90)', flexShrink: 0, minWidth: 56 }}>
+            <span style={{ fontWeight: 500, color: t.speaker === 'AI' ? 'var(--status-posting)' : 'var(--dark-90)', flexShrink: 0, minWidth: 56 }}>
               {t.speaker}:
             </span>
             <span>{t.line}</span>
@@ -365,6 +412,30 @@ function CallTurnBlock({ msg, muted = false }: { msg: Message; muted?: boolean }
         </Button>
         <FeedbackButtons context="Call" />
       </div>
+    </div>
+  );
+}
+
+// Conversation summary card — the prominent boxed element at the top of the
+// thread. Inherits the blue-tinted card treatment the call transcript used to
+// own, so the summary now reads as the priority element of the conversation.
+function ConversationSummary({ lead }: { lead: Lead }) {
+  return (
+    <div
+      style={{
+        border: '1px solid rgba(1, 121, 207, 0.15)',
+        background: 'rgba(1, 121, 207, 0.04)',
+        borderRadius: 8,
+        padding: '14px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
+      <Text variant="secondary">Summary</Text>
+      <Text variant="primary" style={{ fontSize: 16, lineHeight: 1.5 }}>
+        {conversationSummary(lead)}
+      </Text>
     </div>
   );
 }
@@ -428,7 +499,7 @@ function isBookingMessage(msg: Message): boolean {
  * message is present. Carries a Reschedule affordance that re-opens the
  * Calendly mock modal via the same handler as the sidebar button.
  */
-function BookingCard({ lead, onReschedule }: { lead: Lead; onReschedule?: () => void }) {
+function BookingCard({ lead, onReschedule, onSetOutcome }: { lead: Lead; onReschedule?: () => void; onSetOutcome?: (o: BookingOutcome | null) => void }) {
   return (
     <div
       style={{
@@ -456,9 +527,12 @@ function BookingCard({ lead, onReschedule }: { lead: Lead; onReschedule?: () => 
         <CalendarOutline size={20} color="var(--status-approved)" />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: 1 }}>
-        <Text style={{ fontSize: 12, color: 'var(--status-approved)', fontWeight: 500 }}>
-          Booking confirmed
-        </Text>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <Text style={{ fontSize: 12, color: 'var(--status-approved)', fontWeight: 500 }}>
+            Booking confirmed
+          </Text>
+          {onSetOutcome && <OutcomeSelect lead={lead} onSetOutcome={onSetOutcome} />}
+        </div>
         <Heading level={3} style={{ margin: 0 }}>
           {lead.scheduled_at}
         </Heading>
@@ -526,8 +600,10 @@ interface ThreadPaneProps {
   allContactLeads: Lead[];
   paused: boolean;
   onSendOwner: (text: string) => void;
+  onApproveSuggested: (text: string) => void;
   onResumeAi: () => void;
   onReschedule: () => void;
+  onUpdateLead: (lead: Lead) => void;
   segmentRefs: React.MutableRefObject<Record<string, HTMLElement | null>>;
 }
 
@@ -536,30 +612,27 @@ function ThreadPane({
   allContactLeads,
   paused,
   onSendOwner,
+  onApproveSuggested,
   onResumeAi,
   onReschedule,
+  onUpdateLead,
   segmentRefs,
 }: ThreadPaneProps) {
   const [draft, setDraft] = useState('');
   const canSend = draft.trim().length > 0;
   const showSegments = allContactLeads.length > 1;
 
-  // The thread opens pre-scrolled to the bottom (newest conversation), and the
-  // composer's top border only appears once the messages actually overflow.
+  // The thread opens pre-scrolled to the TOP so the summary card reads first,
+  // and the composer's top border only appears once the messages overflow.
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
 
-  // Prefill the composer with the AI's proposed response whenever the active
-  // lead is in 'human-handling' and has a suggested_next_action. Runs only on
-  // lead-id change so subsequent edits aren't clobbered.
+  // Reset the composer to empty whenever the active lead changes. The AI's
+  // proposed reply is no longer prefilled here — it lives in its own card above
+  // the composer with a dedicated "Send Reply" action.
   useEffect(() => {
-    if (lead.status === 'human-handling' && lead.suggested_next_action) {
-      setDraft(lead.suggested_next_action.payload);
-    } else {
-      setDraft('');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDraft('');
   }, [lead.id]);
 
   // Auto-grow the composer textarea to fit the (possibly multi-line, prefilled)
@@ -571,12 +644,21 @@ function ThreadPane({
     el.style.height = `${el.scrollHeight}px`;
   }, [draft]);
 
+  // On opening a conversation, scroll to the top so the summary is seen first.
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
+    el.scrollTop = 0;
     setIsScrollable(el.scrollHeight > el.clientHeight + 1);
-  }, [lead.id, lead.transcript.length]);
+  }, [lead.id]);
+
+  // Appending a message (e.g. Send Reply) only recomputes overflow — it must
+  // not yank the scroll position back to the top.
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsScrollable(el.scrollHeight > el.clientHeight + 1);
+  }, [lead.transcript.length]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -624,6 +706,7 @@ function ThreadPane({
               >
                 <LeadSegmentDivider lead={l} capture={capture} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 8 }}>
+                  <ConversationSummary lead={l} />
                   {(() => {
                     const booked = l.status === 'resolved' && !!l.scheduled_at;
                     const hasBookingMsg = booked && messages.some(isBookingMessage);
@@ -631,14 +714,14 @@ function ThreadPane({
                       <>
                         {messages.map((msg) => {
                           if (booked && isBookingMessage(msg)) {
-                            return <BookingCard key={msg.id} lead={l} onReschedule={l.id === lead.id ? onReschedule : undefined} />;
+                            return <BookingCard key={msg.id} lead={l} onReschedule={l.id === lead.id ? onReschedule : undefined} onSetOutcome={(o) => onUpdateLead({ ...l, outcome: o })} />;
                           }
                           if (msg.type === 'system') return <SystemRow key={msg.id} msg={msg} />;
                           if (msg.type === 'call') return <CallTurnBlock key={msg.id} msg={msg} />;
                           return <TextBubble key={msg.id} msg={msg} prospectName={l.prospect.name} />;
                         })}
                         {booked && !hasBookingMsg && (
-                          <BookingCard lead={l} onReschedule={l.id === lead.id ? onReschedule : undefined} />
+                          <BookingCard lead={l} onReschedule={l.id === lead.id ? onReschedule : undefined} onSetOutcome={(o) => onUpdateLead({ ...l, outcome: o })} />
                         )}
                       </>
                     );
@@ -652,6 +735,7 @@ function ThreadPane({
           })
         ) : (
           <>
+            <ConversationSummary lead={lead} />
             {(() => {
               const booked = lead.status === 'resolved' && !!lead.scheduled_at;
               const hasBookingMsg = booked && lead.transcript.some(isBookingMessage);
@@ -659,14 +743,14 @@ function ThreadPane({
                 <>
                   {lead.transcript.map((msg) => {
                     if (booked && isBookingMessage(msg)) {
-                      return <BookingCard key={msg.id} lead={lead} onReschedule={onReschedule} />;
+                      return <BookingCard key={msg.id} lead={lead} onReschedule={onReschedule} onSetOutcome={(o) => onUpdateLead({ ...lead, outcome: o })} />;
                     }
                     if (msg.type === 'system') return <SystemRow key={msg.id} msg={msg} />;
                     if (msg.type === 'call') return <CallTurnBlock key={msg.id} msg={msg} />;
                     return <TextBubble key={msg.id} msg={msg} prospectName={lead.prospect.name} />;
                   })}
                   {booked && !hasBookingMsg && (
-                    <BookingCard lead={lead} onReschedule={onReschedule} />
+                    <BookingCard lead={lead} onReschedule={onReschedule} onSetOutcome={(o) => onUpdateLead({ ...lead, outcome: o })} />
                   )}
                 </>
               );
@@ -688,33 +772,34 @@ function ThreadPane({
       {/* composer — top border only once the thread overflows */}
       <div style={{ borderTop: isScrollable ? '1px solid var(--dark-8)' : '1px solid transparent', padding: '16px clamp(64px, 12%, 240px) 28px', flexShrink: 0 }}>
         {lead.status === 'human-handling' && lead.suggested_next_action && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
-            <Text variant="secondary">
-              Call reason · {requestType(lead)}
-            </Text>
-            <Text variant="primary" style={{ lineHeight: 1.45 }}>
-              {lead.suggested_next_action.summary}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+            {/* label left; Resume AI (when paused) + Send Reply pinned top-right */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <Text variant="secondary" style={{ fontSize: 12 }}>Proposed reply</Text>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {paused && (
+                  <Button variant="ghost" size="xs" onPress={onResumeAi}>Resume AI</Button>
+                )}
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  frontIcon={Send2}
+                  onPress={() => onApproveSuggested(lead.suggested_next_action!.payload)}
+                >
+                  Send Reply
+                </Button>
+              </div>
+            </div>
+            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, lineHeight: 1.45 }}>
+              {lead.suggested_next_action.payload}
             </Text>
           </div>
         )}
-        {paused && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              background: 'rgba(237, 124, 44, 0.1)',
-              border: '1px solid rgba(237, 124, 44, 0.25)',
-              borderRadius: 8,
-              padding: '6px 10px',
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--status-connect)', flexShrink: 0 }} />
-            <Text style={{ flex: 1, fontSize: 12, color: 'var(--dark-90)' }}>
-              AI paused — you are now responding.
-            </Text>
-            <Button variant="ghost" size="sm" onPress={onResumeAi}>Resume AI</Button>
+        {/* Fallback Resume AI when the AI is paused but there's no proposed-reply
+            card to host it (keeps the action reachable without the old banner). */}
+        {paused && !(lead.status === 'human-handling' && lead.suggested_next_action) && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+            <Button variant="ghost" size="xs" onPress={onResumeAi}>Resume AI</Button>
           </div>
         )}
         <div
@@ -725,7 +810,7 @@ function ThreadPane({
             background: 'var(--light-100)',
             border: '1px solid var(--dark-8)',
             borderRadius: 22,
-            padding: '4px 4px 4px 14px',
+            padding: '6px 6px 6px 16px',
           }}
         >
           <textarea
@@ -750,7 +835,7 @@ function ThreadPane({
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              padding: '8px 0',
+              padding: '5px 0',
               lineHeight: 1.4,
               minWidth: 0,
               resize: 'none',
@@ -981,14 +1066,19 @@ function ContactTimeline({
         const isLast = i === events.length - 1;
         const isLeadStart = ev.kind === 'inbound';
         const isTrigger = ev.kind === 'trigger' || ev.kind === 'escalation';
-        const dotBg = isLeadStart
+        const hasColor = !!ev.dotColor;
+        const dotBg = hasColor
+          ? 'var(--light-100)'
+          : isLeadStart
           ? 'var(--dark-80)'
           : isTrigger
           ? 'rgba(237,182,44,0.15)'
           : ev.kind === 'booking'
           ? 'rgba(4,175,0,0.12)'
           : 'var(--dark-4)';
-        const dotBorder = isLeadStart
+        const dotBorder = hasColor
+          ? ev.dotColor!
+          : isLeadStart
           ? 'var(--dark-80)'
           : isTrigger
           ? '#edb62c'
@@ -1022,6 +1112,8 @@ function ContactTimeline({
               >
                 {isLeadStart ? (
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--light-100)', display: 'block' }} />
+                ) : hasColor ? (
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: ev.dotColor, display: 'block' }} />
                 ) : DotIcon}
               </div>
               {!isLast && (
@@ -1320,6 +1412,18 @@ export function SdrDetail({ lead, onUpdateLead, allLeads, contacts: _contacts, o
     showToast({ message: 'Message sent · AI paused' });
   };
 
+  // Owner approved the AI's proposed reply: send it as an AI message and clear
+  // the suggestion so the proposed-reply card disappears. No pause — the owner
+  // is endorsing the AI's draft rather than taking over the conversation.
+  const handleApproveSuggested = (text: string) => {
+    onUpdateLead({
+      ...lead,
+      suggested_next_action: null,
+      transcript: [...lead.transcript, makeMessage('ai', 'text', text)],
+    });
+    showToast({ message: 'Reply sent' });
+  };
+
   const handleResumeAi = () => {
     setPaused(false);
     appendMessage(makeMessage('system', 'system', 'Owner handed back to AI'));
@@ -1376,8 +1480,10 @@ export function SdrDetail({ lead, onUpdateLead, allLeads, contacts: _contacts, o
           allContactLeads={allContactLeads}
           paused={paused}
           onSendOwner={handleSendOwner}
+          onApproveSuggested={handleApproveSuggested}
           onResumeAi={handleResumeAi}
           onReschedule={handleScheduleMeeting}
+          onUpdateLead={onUpdateLead}
           segmentRefs={segmentRefs}
         />
         <Sidebar

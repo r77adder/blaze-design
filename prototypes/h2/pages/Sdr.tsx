@@ -16,6 +16,7 @@ import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { ChannelGlyph, SdrDetail } from '../SdrDetail';
 import { ContactHistory } from '../ContactHistory';
+import { OutcomeSelect } from '../BookingOutcomeSelect';
 import { SdrColdView } from './ColdViews';
 import { SdrSettingsBody } from './SdrSettings';
 import {
@@ -27,6 +28,7 @@ import {
   LEADS as RAW_LEADS,
   LEAD_NEEDS_SUMMARY,
   STATUS_STYLES,
+  effectiveBookingOutcome,
   avatarColor,
   formatRelative,
   isUnread,
@@ -38,6 +40,7 @@ import {
   type Method,
   type Lead,
   type Status,
+  type BookingOutcome,
 } from '../sdr-data';
 
 // Blaze-style focus: on focus the border darkens to var(--dark-40) + a subtle
@@ -125,6 +128,14 @@ const LEADS_RAW: Lead[] = [
     factors: ['Large project', 'No timeline yet', 'Needs board approval'],
     tags: ['HOA', 'Multi-building', 'Board approval'],
     first_touch_source: 'Inbound — phone tree, option 2',
+    // Override the inherited (l-morgan-lee) action so the proposed reply matches
+    // David Lin's HOA conversation rather than the original clinics scenario.
+    suggested_next_action: {
+      type: 'send-followup',
+      summary: 'Send the phased estimate the board asked for',
+      payload:
+        "Hi David — putting the phased estimate together now: buildings A–G in year one, H–N in year two, so the board can spread it across both fiscal years. Want me to send it over before your call with Matthew?",
+    },
     scorecard: {
       budget: 'Confidential — board approval',
       timeline: 'Tentatively Q4',
@@ -542,6 +553,16 @@ let aiHandlingNewLeft = MAX_AI_HANDLING_NEW;
 // leads.
 const BOOKING_UNREAD_IDS = new Set<string>(['l-rohan-bhatt', 'l-emily-tran']);
 
+// Seed outcomes on a few PAST bookings so the funnel metrics + outcome pills
+// aren't empty on first load. Upcoming bookings are left to auto-derive
+// ('scheduled'); past ones without a seed auto-derive to 'completed'.
+const SEED_BOOKING_OUTCOMES: Record<string, BookingOutcome> = {
+  'l-aria-chen': 'job-done',
+  'l-talia-mendez': 'won',
+  'l-maria-santos': 'lost',
+  'l-lisa-kim': 'no-show',
+};
+
 const LEADS: Lead[] = LEADS_RAW.map((l) => {
   // isUnread() derives from the transcript here since `l.unread` is still unset.
   const derivedUnread = isUnread(l);
@@ -563,6 +584,7 @@ const LEADS: Lead[] = LEADS_RAW.map((l) => {
     unread,
     ...(cid ? { contact_id: cid } : {}),
     ...(relatedIds ? { related_lead_ids: relatedIds } : {}),
+    ...(SEED_BOOKING_OUTCOMES[l.id] ? { outcome: SEED_BOOKING_OUTCOMES[l.id] } : {}),
   };
 });
 
@@ -764,6 +786,7 @@ function SdrInner() {
           leads={leads}
           contactLeadCounts={contactLeadCounts}
           onOpenLead={setActiveLeadId}
+          onUpdateLead={updateLead}
         />
       </H2Layout>
     );
@@ -1262,9 +1285,9 @@ function FilterGroup({ label, children }: { label: string; children: React.React
 // dropped — each table is already grouped under a status heading.
 const LEADS_GRID = '300px 68px 160px minmax(160px, 2fr) 64px';
 
-// Column template for the BookingsTab table. 4 cols: prospect (hugs like
-// LEADS_GRID), call reason, scheduled, location (stretches).
-const BOOKINGS_GRID = '340px 200px 200px minmax(200px, 1fr)';
+// Column template for the BookingsTab table. 5 cols: prospect (hugs like
+// LEADS_GRID), call reason, scheduled, location (stretches), outcome (pill).
+const BOOKINGS_GRID = '300px 170px 180px minmax(150px, 1fr) 172px';
 
 // Drop the leading +1 country code for compact display in table sub-lines.
 const localPhone = (phone: string) => phone.replace(/^\+1\s*/, '');
@@ -1443,12 +1466,12 @@ function LeadRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps) {
 // ─── Booking row ──────────────────────────────────────────────────────
 //
 // Variant of LeadRow used by the BookingsTab. Columns: Prospect · Call
-// reason · Scheduled · Location. Keeps LeadRow's unread visuals (blue dot
-// to the left of the avatar + dark-2 row tint when nothing new) so the
-// table reads identically to the Leads inbox even though the layout is
+// reason · Scheduled · Location · Outcome. Keeps LeadRow's unread visuals
+// (blue dot to the left of the avatar + dark-2 row tint when nothing new) so
+// the table reads identically to the Leads inbox even though the layout is
 // different. LeadRow is left untouched because it's still used by the
 // 5-column Leads inbox.
-function BookingRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps) {
+function BookingRow({ lead, isLast, onOpen, onSetOutcome, contactLeadCount = 1 }: LeadRowProps & { onSetOutcome: (o: BookingOutcome | null) => void }) {
   const unread = isUnread(lead);
   const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
   const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
@@ -1554,6 +1577,11 @@ function BookingRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps
         >
           {lead.location ?? '—'}
         </Text>
+      </div>
+
+      {/* Outcome — selectable pill (auto scheduled/completed, else override) */}
+      <div style={{ minWidth: 0, display: 'flex', justifyContent: 'flex-start' }}>
+        <OutcomeSelect lead={lead} onSetOutcome={onSetOutcome} />
       </div>
     </div>
   );
@@ -2488,14 +2516,29 @@ function SdrActivity() {
 // old Outcomes screen (which had a search input + Bookings/Messages sub-tabs).
 // ═══════════════════════════════════════════════════════════════════════
 
+// One funnel-metric card for the Bookings tab summary strip.
+function BookingMetric({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div style={{ flex: '1 1 0', minWidth: 140, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
+      <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</Text>
+      <div style={{ marginTop: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <Text style={{ fontSize: 24, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>{value}</Text>
+        {sub && <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{sub}</Text>}
+      </div>
+    </div>
+  );
+}
+
 function BookingsTab({
   leads,
   contactLeadCounts,
   onOpenLead,
+  onUpdateLead,
 }: {
   leads: Lead[];
   contactLeadCounts: Map<string, number>;
   onOpenLead: (id: string) => void;
+  onUpdateLead: (lead: Lead) => void;
 }) {
   // Only resolved leads that actually have a scheduled time appear as bookings.
   // Split into upcoming (`scheduled_when > 0`) and past (`<= 0`). Inside each
@@ -2534,6 +2577,26 @@ function BookingsTab({
   ];
   const filteredPast = pastMonth === 'all' ? past : past.filter((l) => monthOf(l.scheduled_at) === pastMonth);
 
+  // Funnel conversion metrics across every booking (upcoming + past), computed
+  // from each booking's effective outcome. Pending (scheduled, future) bookings
+  // sit outside every rate denominator since they have no result yet.
+  const stats = useMemo(() => {
+    const eff = [...upcoming, ...past].map(effectiveBookingOutcome);
+    const n = (set: BookingOutcome[]) => eff.filter((o) => set.includes(o)).length;
+    const showed = n(['completed', 'estimate-sent', 'won', 'job-done', 'lost']);
+    const noShow = n(['no-show']);
+    const quoted = n(['estimate-sent', 'won', 'job-done', 'lost']);
+    const won = n(['won', 'job-done']);
+    const decided = n(['won', 'job-done', 'lost']);
+    const rate = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : '—');
+    return {
+      total: eff.length,
+      show: rate(showed, showed + noShow), showSub: `${showed}/${showed + noShow}`,
+      quote: rate(quoted, showed), quoteSub: `${quoted}/${showed}`,
+      close: rate(won, decided), closeSub: `${won}/${decided}`,
+    };
+  }, [upcoming, past]);
+
   const renderTable = (rows: Lead[]) => (
     <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
       <div
@@ -2552,6 +2615,7 @@ function BookingsTab({
         <span>Call reason</span>
         <span>Scheduled</span>
         <span>Location</span>
+        <span>Outcome</span>
       </div>
       {rows.map((lead, i) => (
         <BookingRow
@@ -2559,6 +2623,7 @@ function BookingsTab({
           lead={lead}
           isLast={i === rows.length - 1}
           onOpen={() => onOpenLead(lead.id)}
+          onSetOutcome={(o) => onUpdateLead({ ...lead, outcome: o })}
           contactLeadCount={lead.contact_id ? (contactLeadCounts.get(lead.contact_id) ?? 1) : 1}
         />
       ))}
@@ -2575,6 +2640,14 @@ function BookingsTab({
         </div>
       ) : (
         <>
+          {/* Funnel metrics — recompute live as outcomes are set on the rows below */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+            <BookingMetric label="Bookings" value={String(stats.total)} />
+            <BookingMetric label="Show rate" value={stats.show} sub={stats.showSub} />
+            <BookingMetric label="Quote rate" value={stats.quote} sub={stats.quoteSub} />
+            <BookingMetric label="Close rate" value={stats.close} sub={stats.closeSub} />
+          </div>
+
           {upcoming.length > 0 && (
             <div style={{ marginBottom: past.length > 0 ? 32 : 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10, paddingLeft: 2 }}>

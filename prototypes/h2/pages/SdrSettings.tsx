@@ -1539,6 +1539,52 @@ const DEFAULT_SHIFT: ShiftDay[] = [
   { key: 'sun', label: 'Sunday',    enabled: false, start: '09:00', end: '17:00' },
 ];
 
+// How many rings before the AI answers — set separately for business hours vs
+// after hours. Business-hours default rings longer (4) so the team can pick up
+// first; after-hours answers on the first ring since no one's in the office.
+const RING_OPTIONS = [
+  { value: '1', label: 'On the 1st ring' },
+  { value: '2', label: 'On the 2nd ring' },
+  { value: '3', label: 'On the 3rd ring' },
+  { value: '4', label: 'On the 4th ring' },
+  { value: '5', label: 'On the 5th ring' },
+  { value: '6', label: 'On the 6th ring' },
+];
+
+function PickupRow({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 16,
+        padding: '12px 14px',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 10,
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{label}</Text>
+        <Text color="var(--dark-60)" style={{ display: 'block', fontSize: 12, marginTop: 2 }}>{hint}</Text>
+      </div>
+      <div style={{ flexShrink: 0 }}>
+        <Select size="sm" value={value} onChange={onChange} options={RING_OPTIONS} aria-label={`${label} — rings before the AI picks up`} />
+      </div>
+    </div>
+  );
+}
+
 function TriggersSection({
   agent,
   onChange,
@@ -1547,6 +1593,8 @@ function TriggersSection({
   onChange: (a: AgentConfig) => void;
 }) {
   const [shift, setShift] = useState<ShiftDay[]>(DEFAULT_SHIFT);
+  // Rings-before-pickup, separate for business hours vs after hours.
+  const [pickup, setPickup] = useState({ business: '4', afterHours: '1' });
 
   const toggleDay = (key: string) => {
     setShift((prev) => prev.map((d) => d.key === key ? { ...d, enabled: !d.enabled } : d));
@@ -1576,6 +1624,28 @@ function TriggersSection({
             {agent.agentPhone || '—'}
           </span>
           <StatusPill tone="success" size="sm">Active</StatusPill>
+        </div>
+      </SectionShell>
+
+      <SectionDivider />
+
+      <SectionShell
+        title="Pickup timing"
+        sub="How long the line rings before the AI answers. Ring longer during business hours so your team can grab it first; answer right away after hours."
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 520 }}>
+          <PickupRow
+            label="During business hours"
+            hint="Give the team a few rings to pick up first."
+            value={pickup.business}
+            onChange={(v) => setPickup((p) => ({ ...p, business: v }))}
+          />
+          <PickupRow
+            label="After hours"
+            hint="No one's in the office — the AI answers immediately."
+            value={pickup.afterHours}
+            onChange={(v) => setPickup((p) => ({ ...p, afterHours: v }))}
+          />
         </div>
       </SectionShell>
 

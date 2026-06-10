@@ -37,6 +37,20 @@ export type Status =
   | 'resolved'
   | 'opted-out';
 
+/** Post-booking outcome — how a booking actually performed after it was
+ *  scheduled. `scheduled` and `completed` are derived automatically from the
+ *  appointment time (future vs past) unless the user overrides; the rest are
+ *  set manually. See effectiveBookingOutcome() / BOOKING_OUTCOME_STYLES. */
+export type BookingOutcome =
+  | 'scheduled'
+  | 'completed'
+  | 'estimate-sent'
+  | 'won'
+  | 'job-done'
+  | 'no-show'
+  | 'canceled'
+  | 'lost';
+
 export type MessageRole = 'ai' | 'prospect' | 'system' | 'owner';
 export type MessageType = 'text' | 'call' | 'system';
 
@@ -165,6 +179,10 @@ export interface Lead {
    *  address neighborhood, "Phone call", "Virtual", or similar. Only
    *  meaningful when status === 'resolved'. */
   location?: string;
+  /** Manually-set post-booking outcome. When unset, the outcome is derived
+   *  from the appointment time (future → scheduled, past → completed) via
+   *  effectiveBookingOutcome(); setting it pins an explicit override. */
+  outcome?: BookingOutcome | null;
   /** Call activity signal surfaced as a pill in the AI Handling inbox group:
    *  'live' = a call is in progress right now; 'successful' = a call just
    *  completed successfully. Only meaningful when status === 'ai-handling'. */
@@ -211,6 +229,53 @@ export const ALL_STATUSES: Status[] = [
   'resolved',
   'opted-out',
 ];
+
+// ─── Booking outcomes ─────────────────────────────────────────────────
+
+/** Label + pill tone for each booking outcome. Tones map to sentiment:
+ *  neutral (inactive), info (happened), warning (awaiting), success/accent
+ *  (positive), danger (negative). */
+export const BOOKING_OUTCOME_STYLES: Record<BookingOutcome, StatusStyle> = {
+  scheduled:       { label: 'Scheduled',     tone: 'neutral' },
+  completed:       { label: 'Met',           tone: 'info'    },
+  'estimate-sent': { label: 'Estimate sent', tone: 'warning' },
+  won:             { label: 'Won',           tone: 'success' },
+  'job-done':      { label: 'Job done',      tone: 'accent'  },
+  'no-show':       { label: 'No-show',       tone: 'danger'  },
+  canceled:        { label: 'Canceled',      tone: 'neutral' },
+  lost:            { label: 'Lost',          tone: 'danger'  },
+};
+
+/** Funnel order: happy path first, then the closed-early exits. Drives the
+ *  outcome picker menu. */
+export const ALL_BOOKING_OUTCOMES: BookingOutcome[] = [
+  'scheduled',
+  'completed',
+  'estimate-sent',
+  'won',
+  'job-done',
+  'no-show',
+  'canceled',
+  'lost',
+];
+
+/** Time-derived outcome when the user hasn't pinned one: a future appointment
+ *  is 'scheduled', a past one is 'completed'. */
+export function autoBookingOutcome(lead: Lead): BookingOutcome {
+  return (lead.scheduled_when ?? 0) > 0 ? 'scheduled' : 'completed';
+}
+
+/** The outcome to display: the manual override if set, else the time-derived
+ *  value. */
+export function effectiveBookingOutcome(lead: Lead): BookingOutcome {
+  return lead.outcome ?? autoBookingOutcome(lead);
+}
+
+/** True when the outcome is still tracking the appointment time automatically
+ *  (no manual override set). */
+export function isAutoBookingOutcome(lead: Lead): boolean {
+  return lead.outcome == null;
+}
 
 export const ALL_CHANNELS: Channel[] = ['form', 'inbound-call', 'chat'];
 
@@ -278,6 +343,34 @@ export const LEAD_NEEDS_SUMMARY: Record<string, string> = {
   'l-laura-simmons':    'Declined — DIY, not seeking contractor',
   'l-grace-patterson':  'Lost — chose lower-price competitor',
 };
+
+/** Hand-authored 1–2 sentence recap of the whole conversation, surfaced as the
+ *  summary card at the top of the detail thread. Only the leads most likely to
+ *  be opened (the human-handling ones needing attention) carry a bespoke recap;
+ *  every other lead falls back to its scorecard reasoning via
+ *  conversationSummary(). Keep these grounded in the actual transcript. */
+export const LEAD_CONVERSATION_SUMMARY: Record<string, string> = {
+  // Human handling (needs attention) — these render the proposed-reply card too.
+  // NOTE: l-casey-park and l-morgan-lee are re-skinned in pages/Sdr.tsx (as
+  // Carlos Reyes and David Lin), so these recaps describe the RENDERED leads.
+  'l-casey-park':
+    'Carlos left a voicemail about a full exterior repaint and trim on his 2,200 sq ft Round Rock home — ~$12k budget, hoping to start in May. The AI texted back, locked a 9:30 AM callback, and sent a calendar invite; he then asked for a Round Rock case study before the call, which flagged the thread for owner review.',
+  'l-morgan-lee':
+    'David, the HOA board president, called about a full repaint of all 14 buildings (~220 units) in NW Austin — last painted ~9 years ago, board-approved budget, decision expected around Q4. The AI looped in Matthew, and after David asked about spreading the work across two fiscal years, paused for owner review to put together a phased estimate for the board.',
+  'l-jason-lee':
+    'Jason wants an exterior repaint across five rental properties (~$60k+) staggered through Q4, with each property priced separately so he can phase the spend. The AI offered to draft a master SOW and paused for owner review on the custom multi-property pricing.',
+  'l-michelle-huang':
+    'Michelle left a voicemail about repainting the common areas plus six suites (~14,000 sq ft) at the Tarrytown Business Center before Q4 tenant renewals. Budget is facilities-approved but the final number needs owner sign-off, so the AI paused for owner review.',
+  'l-priya-followup':
+    'Priya, a past customer, reported the west-side trim peeling about three weeks after her exterior job and shared a photo of the spot above the garage. The AI flagged it as a warranty claim and paused for an owner callback to schedule an inspection.',
+};
+
+/** Conversation summary for the detail thread's top card. Prefers the bespoke
+ *  recap, then falls back to the lead's scorecard reasoning so every
+ *  conversation shows something. */
+export function conversationSummary(lead: Lead): string {
+  return LEAD_CONVERSATION_SUMMARY[lead.id] ?? lead.scorecard.reasoning;
+}
 
 // ─── Score → color ──────────────────────────────────────────────────
 //
