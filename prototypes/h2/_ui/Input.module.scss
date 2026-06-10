@@ -1,0 +1,41 @@
+.root {
+  font-family: 'Sohne', sans-serif;
+  color: var(--dark-90);
+  background: var(--light-100);
+  border: 1px solid var(--dark-8);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 120ms ease;
+
+  &::placeholder {
+    color: var(--dark-40);
+  }
+
+  &:hover {
+    border-color: var(--dark-15);
+  }
+
+  &:focus {
+    border-color: var(--dark-40);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.fullWidth {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.size-sm {
+  font-size: 13px;
+  padding: 7px 11px;
+}
+
+.size-md {
+  font-size: 14px;
+  padding: 9px 12px;
+}

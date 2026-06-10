@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Modal, useModals } from '@/components';
+import { Button, Heading, Modal, Paragraph, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { Avatar, StatusPill, TabChip, useToast } from '@/staging';
+import { Avatar, Callout, Card, Pill, Select, StatusPill, TabChip, Tabs, useToast } from '@/staging';
+import { Checkbox, Input, Textarea } from '../_ui';
 import { APPROVAL_PENDING_COUNT } from './ApprovalsV2';
 import Approvals from '@/icons/20/Approvals';
 import CalendarPost from '@/icons/20/CalendarPost';
@@ -65,9 +66,9 @@ interface Meeting {
 }
 
 const MEETING_META: Record<MeetingType, { label: string; color: string; bg: string }> = {
-  kickoff: { label: 'Kickoff', color: 'var(--action-60)', bg: 'var(--action-10)' },
+  kickoff: { label: 'Kickoff', color: 'var(--focus-50)', bg: 'var(--focus-10)' },
   'check-in': { label: 'Check-in', color: 'var(--dark-60)', bg: 'var(--dark-6)' },
-  'creative-review': { label: 'Creative review', color: '#7A3FB8', bg: 'rgba(138,79,216,0.12)' },
+  'creative-review': { label: 'Creative review', color: 'var(--magenta-70)', bg: 'color-mix(in srgb, var(--magenta-70) 12%, transparent)' },
 };
 
 const MEETINGS: Meeting[] = [
@@ -272,7 +273,7 @@ const SEED_TEAM_FLAGS: TeamFlag[] = [
 
 const FLAG_META: Record<FlagKind, { label: string; color: string; bg: string }> = {
   blocked: { label: 'Blocked', color: 'var(--negative-60)', bg: 'var(--negative-10)' },
-  review: { label: 'Needs review', color: '#8a5a00', bg: 'rgba(252,183,40,0.18)' },
+  review: { label: 'Needs review', color: 'var(--yellow-80)', bg: 'color-mix(in srgb, var(--brand) 18%, transparent)' },
 };
 
 // ─── ACCOUNT WORK (Workstream tab) ─────────────────────────────────
@@ -308,7 +309,7 @@ interface AccountWorkItem {
 
 const ACCOUNT_WORK: AccountWorkItem[] = [
   {
-    id: 'w1', kind: 'signoff', sourceLabel: 'LOCAL SEO', icon: Marker03, assignee: 'alex', time: 'Today',
+    id: 'w1', kind: 'signoff', sourceLabel: 'Local SEO', icon: Marker03, assignee: 'alex', time: 'Today',
     title: '4 June Google Business posts drafted',
     body: 'Adapted from the June wave — service-area copy, no hashtags, booking link on each.',
     excerpt: '“Spring booked up fast — June exterior slots are open now. One local crew, from first walkthrough to final coat. Book a free estimate.”',
@@ -317,7 +318,7 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
     cta: { label: 'Review each', to: '/h2/organic-profile' },
   },
   {
-    id: 'w2', kind: 'signoff', sourceLabel: 'REPUTATION', icon: Star, assignee: 'alex', time: 'Today',
+    id: 'w2', kind: 'signoff', sourceLabel: 'Reputation', icon: Star, assignee: 'alex', time: 'Today',
     title: 'Reply drafted for a new 5★ review',
     body: '',
     quote: '“The crew’s prep work was unreal — best paint job we’ve had.” — ★★★★★ · Lakeway homeowner',
@@ -327,7 +328,7 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
     cta: { label: 'Edit reply', to: '/h2/reputation' },
   },
   {
-    id: 'w3', kind: 'signoff', sourceLabel: 'CLIENT APPROVALS', icon: Approvals, assignee: 'sarah', time: 'Jun 1',
+    id: 'w3', kind: 'signoff', sourceLabel: 'Client approvals', icon: Approvals, assignee: 'sarah', time: 'Jun 1',
     title: '6 items waiting on Sarah',
     body: 'Stills, carousels, a reel and the June newsletter.',
     thumbs: [
@@ -341,7 +342,7 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
     cta: { label: 'Open approvals', to: '/h2/approvals' },
   },
   {
-    id: 'w4', kind: 'flag', sourceLabel: 'PAID SOCIAL', icon: Cursor04, assignee: 'alex', time: 'Yesterday',
+    id: 'w4', kind: 'flag', sourceLabel: 'Paid Social', icon: Cursor04, assignee: 'alex', time: 'Yesterday',
     title: 'Meta token expires Jun 10 — boosts will pause',
     body: 'The connected ad account needs a reconnect before the Wave 2 boost schedule continues. Takes about two minutes.',
     statusLine: 'Boosts pause in 6 days — $240/wk of scheduled spend stops',
@@ -419,12 +420,12 @@ const SEED_ACTIVITY: ActivityItem[] = [
 ];
 
 const ACTIVITY_STYLE: Record<ActivityKind, { bg: string; color: string }> = {
-  agent: { bg: 'var(--action-10)', color: 'var(--action-60)' },
-  fathom: { bg: 'rgba(138,79,216,0.12)', color: '#7A3FB8' },
-  comment: { bg: 'rgba(252,183,40,0.18)', color: '#8a5a00' },
+  agent: { bg: 'var(--focus-10)', color: 'var(--focus-50)' },
+  fathom: { bg: 'color-mix(in srgb, var(--magenta-70) 12%, transparent)', color: 'var(--magenta-70)' },
+  comment: { bg: 'color-mix(in srgb, var(--brand) 18%, transparent)', color: 'var(--yellow-80)' },
   publish: { bg: 'var(--positive-10)', color: 'var(--positive-60)' },
   posted: { bg: 'var(--positive-10)', color: 'var(--positive-60)' },
-  review: { bg: 'rgba(252,183,40,0.18)', color: '#8a5a00' },
+  review: { bg: 'color-mix(in srgb, var(--brand) 18%, transparent)', color: 'var(--yellow-80)' },
 };
 
 function ActivityGlyph({ kind }: { kind: ActivityKind }) {
@@ -453,9 +454,9 @@ const EMBED_THUMBS = [
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--dark-40)', marginBottom: 7 }}>
+    <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 7 }}>
       {children}
-    </div>
+    </Text>
   );
 }
 
@@ -476,33 +477,15 @@ function AvatarStack({ ids, size = 20 }: { ids: PersonId[]; size?: number }) {
   );
 }
 
-function Checkbox({ checked, onToggle, disabled }: { checked: boolean; onToggle?: () => void; disabled?: boolean }) {
-  return (
-    <button
-      onClick={onToggle}
-      disabled={disabled}
-      style={{
-        width: 16, height: 16, borderRadius: 4, flexShrink: 0, padding: 0,
-        border: checked ? 'none' : '1.5px solid var(--dark-20)',
-        background: checked ? 'var(--action-50)' : 'var(--light-100)',
-        color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        cursor: onToggle && !disabled ? 'pointer' : 'default',
-      }}
-    >
-      {checked && <Check2 />}
-    </button>
-  );
-}
-
 function AttachmentChip({ att }: { att: Attachment }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: '1px solid var(--dark-10)', borderRadius: 7, padding: att.thumb ? 3 : '4px 9px', background: 'var(--light-100)', fontSize: 12, color: 'var(--dark-70)' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: '1px solid var(--dark-10)', borderRadius: 7, padding: att.thumb ? 3 : '4px 9px', background: 'var(--light-100)' }}>
       {att.thumb ? (
         <span style={{ width: 26, height: 26, borderRadius: 5, backgroundImage: `url('${att.thumb}')`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
       ) : (
         <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><File /></span>
       )}
-      <span style={{ paddingRight: att.thumb ? 7 : 0 }}>{att.name}</span>
+      <Text variant="metadata" color="var(--dark-70)" style={{ paddingRight: att.thumb ? 7 : 0 }}>{att.name}</Text>
     </span>
   );
 }
@@ -516,11 +499,11 @@ function ThreadMessage({ msg, isRoot }: { msg: ThreadMsg; isRoot?: boolean }) {
       <Avatar src={p.img} fallback={p.short.slice(0, 2)} size={24} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-90)' }}>{p.name}</span>
-          {p.isClient && <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--dark-50)', background: 'var(--dark-6)', padding: '1px 6px', borderRadius: 4 }}>Client</span>}
-          <span style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>{msg.time}</span>
+          <Text variant="smallList">{p.name}</Text>
+          {p.isClient && <Pill size="xs">Client</Pill>}
+          <Text variant="metadata" color="var(--dark-40)">{msg.time}</Text>
         </div>
-        <div style={{ fontSize: 13.5, color: 'var(--dark-80)', lineHeight: 1.55, marginTop: 4 }}>{msg.text}</div>
+        <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.55, marginTop: 4 }}>{msg.text}</Text>
         {msg.attachments && msg.attachments.length > 0 && (
           <div style={{ display: 'flex', gap: 6, marginTop: 7, flexWrap: 'wrap' }}>
             {msg.attachments.map((a, i) => <AttachmentChip key={i} att={a} />)}
@@ -540,14 +523,16 @@ function ThreadCard({ thread, viewer, onReply, onResolve }: {
   const [reply, setReply] = useState('');
   if (thread.resolved) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--dark-40)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ color: 'var(--positive-60)', display: 'inline-flex' }}><Check2 /></span>
-        Thread resolved · {thread.root.text.slice(0, 52).replace(/\s+\S*$/, '')}…
+        <Text variant="metadata" color="var(--dark-40)">
+          Thread resolved · {thread.root.text.slice(0, 52).replace(/\s+\S*$/, '')}…
+        </Text>
       </div>
     );
   }
   return (
-    <div style={{ border: '1px solid rgba(252,183,40,0.4)', background: 'rgba(252,183,40,0.06)', borderRadius: 10, padding: '12px 14px' }}>
+    <div style={{ border: '1px solid color-mix(in srgb, var(--brand) 40%, transparent)', background: 'color-mix(in srgb, var(--brand) 6%, transparent)', borderRadius: 10, padding: '12px 14px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <ThreadMessage msg={thread.root} isRoot />
@@ -559,7 +544,8 @@ function ThreadCard({ thread, viewer, onReply, onResolve }: {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
         <Avatar src={PEOPLE[viewer].img} fallback={PEOPLE[viewer].short.slice(0, 2)} size={24} />
-        <input
+        <Input
+          inputSize="sm"
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           onKeyDown={(e) => {
@@ -569,7 +555,7 @@ function ThreadCard({ thread, viewer, onReply, onResolve }: {
             }
           }}
           placeholder="Reply…"
-          style={{ flex: 1, fontSize: 13, padding: '7px 11px', borderRadius: 8, border: '1px solid var(--dark-10)', background: 'var(--light-100)', outline: 'none', fontFamily: 'inherit', color: 'var(--dark-90)' }}
+          style={{ flex: 1 }}
         />
       </div>
     </div>
@@ -597,12 +583,13 @@ function ThreadComposer({ viewer, onPost }: { viewer: PersonId; onPost: (text: s
     <div style={{ border: '1px solid var(--dark-10)', borderRadius: 10, padding: '12px 14px', background: 'var(--light-100)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
         <Avatar src={PEOPLE[viewer].img} fallback={PEOPLE[viewer].short.slice(0, 2)} size={24} />
-        <textarea
+        <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Start a thread — questions, direction, feedback…"
           autoFocus
-          style={{ flex: 1, fontSize: 13, padding: '7px 11px', borderRadius: 8, border: '1px solid var(--dark-10)', background: 'var(--light-100)', outline: 'none', fontFamily: 'inherit', color: 'var(--dark-90)', resize: 'vertical', minHeight: 52, lineHeight: 1.5 }}
+          fullWidth={false}
+          style={{ flex: 1, minHeight: 52 }}
         />
       </div>
       {attachments.length > 0 && (
@@ -611,12 +598,14 @@ function ThreadComposer({ viewer, onPost }: { viewer: PersonId; onPost: (text: s
         </div>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, marginLeft: 33 }}>
-        <button
-          onClick={() => setAttachments((prev) => [...prev, SAMPLE_ATTACHMENTS[prev.length % SAMPLE_ATTACHMENTS.length]])}
-          style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', fontSize: 12.5, color: 'var(--dark-40)', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+        <Button
+          variant="ghost"
+          size="xs"
+          frontIcon={File}
+          onPress={() => setAttachments((prev) => [...prev, SAMPLE_ATTACHMENTS[prev.length % SAMPLE_ATTACHMENTS.length]])}
         >
-          <File /> Attach
-        </button>
+          Attach
+        </Button>
         <span style={{ flex: 1 }} />
         <Button variant="secondary" size="xs" onPress={reset}>Cancel</Button>
         <Button
@@ -635,33 +624,34 @@ function ThreadComposer({ viewer, onPost }: { viewer: PersonId; onPost: (text: s
 function CampaignDraftCard() {
   const navigate = useNavigate();
   return (
-    <div style={{ border: '1px solid var(--action-40)', borderRadius: 10, overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', background: 'var(--action-5)', borderBottom: '1px solid var(--action-10)' }}>
-        <span style={{ color: 'var(--action-60)', display: 'inline-flex' }}><Stars /></span>
-        <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--dark-90)' }}>Agent drafted a campaign from this call</span>
-        <span style={{ flex: 1 }} />
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--dark-40)' }}>
+    <Card padding="none" style={{ border: '1px solid var(--focus-20)', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', background: 'var(--focus-5)', borderBottom: '1px solid var(--focus-10)' }}>
+        <span style={{ color: 'var(--focus-50)', display: 'inline-flex' }}><Stars /></span>
+        <Text variant="smallList" style={{ flex: 1 }}>Agent drafted a campaign from this call</Text>
+        <Text variant="label" color="var(--dark-40)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <EyeClosed /> AM only — hidden from client
-        </span>
+        </Text>
       </div>
       <div style={{ padding: '13px 14px' }}>
-        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--dark-90)' }}>{CAMPAIGN_DRAFT.title}</div>
-        <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 2 }}>{CAMPAIGN_DRAFT.meta}</div>
-        <div style={{ fontSize: 13, color: 'var(--dark-70)', lineHeight: 1.55, marginTop: 8 }}>{CAMPAIGN_DRAFT.theme}</div>
+        <Text variant="largeList" style={{ display: 'block' }}>{CAMPAIGN_DRAFT.title}</Text>
+        <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 2 }}>{CAMPAIGN_DRAFT.meta}</Text>
+        <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.55, marginTop: 8 }}>{CAMPAIGN_DRAFT.theme}</Text>
 
         {/* Assets: matched from Drive + flagged gaps */}
         <div style={{ marginTop: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--dark-70)', marginBottom: 7 }}>
+          <Text variant="smallList" color="var(--dark-70)" style={{ display: 'block', marginBottom: 7 }}>
             Assets — {CAMPAIGN_DRAFT.matched} of {CAMPAIGN_DRAFT.total} matched from Drive
-          </div>
+          </Text>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {CAMPAIGN_DRAFT.thumbs.map((src, i) => (
               <span key={i} style={{ width: 40, height: 40, borderRadius: 6, backgroundImage: `url('${src}')`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
             ))}
-            <span style={{ width: 40, height: 40, borderRadius: 6, background: 'var(--dark-6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--dark-40)', flexShrink: 0 }}>+5</span>
+            <span style={{ width: 40, height: 40, borderRadius: 6, background: 'var(--dark-6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Text variant="label" color="var(--dark-40)">+5</Text>
+            </span>
             {CAMPAIGN_DRAFT.missing.map((m) => (
-              <span key={m} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: '#8a5a00', background: 'rgba(252,183,40,0.16)', border: '1px solid rgba(252,183,40,0.4)', padding: '5px 9px', borderRadius: 6 }}>
-                Needs: {m}
+              <span key={m} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--yellow-80)', background: 'color-mix(in srgb, var(--brand) 16%, transparent)', border: '1px solid color-mix(in srgb, var(--brand) 40%, transparent)', padding: '5px 9px', borderRadius: 6 }}>
+                <Text variant="label" color="var(--yellow-80)">Needs: {m}</Text>
               </span>
             ))}
           </div>
@@ -669,12 +659,12 @@ function CampaignDraftCard() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 13 }}>
           <Button variant="primary" size="xs" onPress={() => navigate('/h2/campaigns?campaign=jw')}>Open draft campaign</Button>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600, color: 'var(--positive-60)' }}>
+          <Text variant="metadata" color="var(--positive-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Check2 /> Asset request sent — in Sarah's next steps
-          </span>
+          </Text>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -700,23 +690,23 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
   const openThreads = threads.filter((t) => !t.resolved).length;
 
   return (
-    <div
+    <Card
       ref={sectionRef}
+      padding="none"
       style={{
         scrollMarginTop: 16,
-        border: isDraft ? '1.5px solid var(--action-40)' : '1px solid var(--dark-8)',
+        border: isDraft ? '1.5px solid var(--focus-20)' : '1px solid var(--dark-8)',
         borderRadius: 12,
-        background: 'var(--light-100)',
         overflow: 'hidden',
       }}
     >
       {/* Draft banner — the agent wrote this, the AM gates it */}
       {isDraft && !clientView && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'var(--action-5)', borderBottom: '1px solid var(--action-10)' }}>
-          <span style={{ color: 'var(--action-60)', display: 'inline-flex' }}><Stars /></span>
-          <span style={{ fontSize: 12.5, color: 'var(--dark-80)', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'var(--focus-5)', borderBottom: '1px solid var(--focus-10)' }}>
+          <span style={{ color: 'var(--focus-50)', display: 'inline-flex' }}><Stars /></span>
+          <Text variant="secondary" color="var(--dark-80)" style={{ flex: 1 }}>
             <strong style={{ fontWeight: 600 }}>Drafted by agent</strong> from the Fathom transcript — updates Overview, drafts the June campaign, and adds 3 next steps. Notes not visible to the client yet.
-          </span>
+          </Text>
           <Button variant="secondary" size="xs" frontIcon={Edit1} onPress={() => showToast({ message: 'Opens the entry in the doc editor' })}>Edit</Button>
           <Button variant="primary" size="xs" frontIcon={Send1} onPress={onPublish}>Publish to client</Button>
         </div>
@@ -729,18 +719,18 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
-          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--dark-100)' }}>{meeting.date}</span>
-          <span style={{ fontSize: 15, color: 'var(--dark-50)' }}>{meta.label}</span>
+          <Text variant="smallList" color="var(--dark-100)">{meeting.date}</Text>
+          <Text variant="secondary" color="var(--dark-50)">{meta.label}</Text>
           <span style={{ flex: 1 }} />
           <span style={{ color: 'var(--dark-30)', display: 'inline-flex' }}>{expanded ? <ChevronUp /> : <ChevronDown />}</span>
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, paddingLeft: 16, fontSize: 12, color: 'var(--dark-40)' }}>
+        <Text variant="metadata" color="var(--dark-40)" style={{ display: 'flex', alignItems: 'center', gap: 7, paddingLeft: 16 }}>
           {meeting.duration}
           <MetaDot />
           <AvatarStack ids={meeting.attendees} size={16} />
           <MetaDot />
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ color: '#7A3FB8', display: 'inline-flex' }}><Voice /></span> Fathom
+            <span style={{ color: 'var(--magenta-70)', display: 'inline-flex' }}><Voice /></span> Fathom
           </span>
           <MetaDot />
           <span
@@ -755,19 +745,19 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
           {openThreads > 0 && (
             <>
               <MetaDot />
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600, color: '#8a5a00' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600, color: 'var(--yellow-80)' }}>
                 <Comment /> {openThreads} open
               </span>
             </>
           )}
-        </span>
+        </Text>
       </button>
 
       {/* Collapsed preview — aligned to the title text column */}
       {!expanded && (
-        <div style={{ padding: '0 16px 13px 32px', fontSize: 13, color: 'var(--dark-40)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <Text variant="secondary" color="var(--dark-40)" lineClamp={1} style={{ display: 'block', padding: '0 16px 13px 32px' }}>
           {meeting.foundation ? 'Goals, brand direction, audience and more — the foundation this account runs on.' : meeting.summary[0]}
-        </div>
+        </Text>
       )}
 
       {/* Expanded body — same text column as the title */}
@@ -779,32 +769,32 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
             <SectionLabel>Summary</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {meeting.summary.map((s, i) => (
-                <div key={i} style={{ display: 'flex', gap: 9, fontSize: 13.5, color: 'var(--dark-80)', lineHeight: 1.55 }}>
+                <Text key={i} variant="secondary" color="var(--dark-80)" style={{ display: 'flex', gap: 9, lineHeight: 1.55 }}>
                   <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--dark-30)', flexShrink: 0, marginTop: 8 }} />
                   {s}
-                </div>
+                </Text>
               ))}
             </div>
           </div>
 
           {/* Kickoff foundation — the cold content, captured once */}
           {meeting.foundation && (
-            <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, padding: '13px 15px', background: 'var(--dark-2, rgba(0,0,0,0.015))' }}>
+            <Card padding="none" style={{ borderRadius: 10, padding: '13px 15px', background: 'var(--dark-2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <SectionLabel>Foundation</SectionLabel>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--action-60)', marginBottom: 7 }}>
+                <Text variant="label" color="var(--focus-50)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 7 }}>
                   <Stars /> Feeds the brand brain
-                </span>
+                </Text>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                 {meeting.foundation.map(({ label, body }) => (
-                  <div key={label} style={{ display: 'flex', gap: 12, fontSize: 13 }}>
-                    <span style={{ color: 'var(--dark-40)', width: 110, flexShrink: 0, fontWeight: 500 }}>{label}</span>
-                    <span style={{ color: 'var(--dark-80)', lineHeight: 1.5 }}>{body}</span>
+                  <div key={label} style={{ display: 'flex', gap: 12 }}>
+                    <Text variant="smallList" color="var(--dark-40)" style={{ width: 110, flexShrink: 0 }}>{label}</Text>
+                    <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.5 }}>{body}</Text>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Decisions */}
@@ -813,10 +803,10 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
               <SectionLabel>Decisions</SectionLabel>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {meeting.decisions.map((d, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8, fontSize: 13.5, color: 'var(--dark-80)', lineHeight: 1.5, alignItems: 'flex-start' }}>
+                  <Text key={i} variant="secondary" color="var(--dark-80)" style={{ display: 'flex', gap: 8, lineHeight: 1.5, alignItems: 'flex-start' }}>
                     <span style={{ color: 'var(--positive-60)', display: 'inline-flex', marginTop: 2 }}><Check2 /></span>
                     {d}
-                  </div>
+                  </Text>
                 ))}
               </div>
             </div>
@@ -839,9 +829,9 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
               <SectionLabel>Action items</SectionLabel>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                 {meeting.actions.map((a, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5 }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                     <Checkbox checked={a.done} disabled />
-                    <span style={{ color: a.done ? 'var(--dark-40)' : 'var(--dark-80)', textDecoration: a.done ? 'line-through' : 'none', flex: 1 }}>{a.text}</span>
+                    <Text variant="secondary" color={a.done ? 'var(--dark-40)' : 'var(--dark-80)'} style={{ textDecoration: a.done ? 'line-through' : 'none', flex: 1 }}>{a.text}</Text>
                     <Avatar src={PEOPLE[a.owner].img} fallback={PEOPLE[a.owner].short.slice(0, 2)} size={18} />
                   </div>
                 ))}
@@ -854,8 +844,8 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
             <div style={{ border: '1px dashed var(--dark-20)', borderRadius: 10, padding: '10px 13px', display: 'flex', gap: 9, alignItems: 'flex-start' }}>
               <span style={{ color: 'var(--dark-40)', display: 'inline-flex', marginTop: 1 }}><EyeClosed /></span>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--dark-40)', marginBottom: 3 }}>Internal — hidden from client</div>
-                <div style={{ fontSize: 13, color: 'var(--dark-70)', lineHeight: 1.5 }}>{meeting.internalNote}</div>
+                <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 3 }}>Internal — hidden from client</Text>
+                <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5 }}>{meeting.internalNote}</Text>
               </div>
             </div>
           )}
@@ -876,31 +866,31 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
 function EmbeddedCampaign({ clientView }: { clientView: boolean }) {
   const navigate = useNavigate();
   return (
-    <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+    <Card padding="none" style={{ borderRadius: 10, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{ display: 'flex', gap: 4 }}>
         {EMBED_THUMBS.map((src, i) => (
           <div key={i} style={{ width: 44, height: 55, borderRadius: 5, backgroundImage: `url('${src}')`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
         ))}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--dark-90)' }}>Spring Refresh, Done Right</div>
-        <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 2 }}>6 posts · reviewed on this call</div>
+        <Text variant="smallList" style={{ display: 'block' }}>Spring Refresh, Done Right</Text>
+        <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 2 }}>6 posts · reviewed on this call</Text>
       </div>
       {clientView ? (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600, color: 'var(--positive-60)' }}>
+        <Text variant="metadata" color="var(--positive-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <Check2 /> Approved Apr 28
-        </span>
+        </Text>
       ) : (
         <Button variant="secondary" size="xs" onPress={() => navigate('/h2/dfy-campaigns')}>Open campaign</Button>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -931,39 +921,38 @@ function AgentTaskModal({ close, task, onApprove, onRequestChanges }: StackModal
       <Modal.Header title={task.text} id="agent-task-title" onClose={close} />
       <Modal.Content>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', background: 'var(--action-5)', border: '1px solid var(--action-10)', borderRadius: 10, padding: '11px 13px' }}>
-            <span style={{ color: 'var(--action-60)', display: 'inline-flex', marginTop: 1 }}><Stars /></span>
-            <div style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.55 }}>{task.detail}</div>
+          <div style={{ display: 'flex', background: 'var(--focus-5)', border: '1px solid var(--focus-10)', borderRadius: 10, padding: '11px 13px' }}>
+            <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.55 }}>{task.detail}</Text>
           </div>
 
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--dark-40)', marginBottom: 8 }}>Plan</div>
+            <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 8 }}>Plan</Text>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {task.plan.map((step, i) => (
                 <div key={i} style={{ display: 'flex', gap: 11, padding: '8px 2px', borderBottom: i < task.plan.length - 1 ? '1px solid var(--dark-6)' : 'none' }}>
-                  <span style={{ width: 19, height: 19, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--dark-6)', color: 'var(--dark-50)', fontSize: 11, fontWeight: 600 }}>
-                    {i + 1}
+                  <span style={{ width: 19, height: 19, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--dark-6)', color: 'var(--dark-50)' }}>
+                    <Text variant="label" color="var(--dark-50)">{i + 1}</Text>
                   </span>
-                  <span style={{ fontSize: 13.5, color: 'var(--dark-80)', lineHeight: 1.5 }}>{step}</span>
+                  <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.5 }}>{step}</Text>
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--dark-40)' }}>
+          <Text variant="metadata" color="var(--dark-40)" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Avatar src={PEOPLE[task.assignee].img} fallback={PEOPLE[task.assignee].short.slice(0, 2)} size={16} />
             <span>
               Approval owned by <strong style={{ fontWeight: 600, color: 'var(--dark-60)' }}>{PEOPLE[task.assignee].short}</strong> · created from the Jun 3 call · nothing client-facing runs before approval
             </span>
-          </div>
+          </Text>
 
           {showNote && (
-            <textarea
+            <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="What should the agent do differently on this task?"
               autoFocus
-              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 8, border: '1.5px solid var(--action-40)', background: 'var(--action-5)', fontSize: 13, color: 'var(--dark-90)', lineHeight: 1.5, resize: 'vertical', minHeight: 64, fontFamily: 'inherit', outline: 'none' }}
+              style={{ border: '1.5px solid var(--focus-20)', background: 'var(--focus-5)', minHeight: 64 }}
             />
           )}
         </div>
@@ -1032,20 +1021,20 @@ const BRAIN_MATERIALS = [
   { name: 'certapro.com/austin', meta: 'Website · crawled weekly' },
 ];
 
-function BrainCard({ title, prov, onEdit, children }: { title: string; prov: string; onEdit: () => void; children: React.ReactNode }) {
+function BrainCard({ title, prov, onEdit, headerAction, children }: { title: string; prov?: string; onEdit?: () => void; headerAction?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, padding: '13px 15px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-90)' }}>{title}</span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ fontSize: 10.5, color: 'var(--dark-40)' }}>{prov}</span>
-          <button onClick={onEdit} style={{ background: 'none', border: 'none', color: 'var(--dark-30)', cursor: 'pointer', display: 'inline-flex', padding: 0 }} aria-label={`Edit ${title}`}>
-            <Edit1 />
-          </button>
+    <Card padding="none" style={{ borderRadius: 10, padding: '13px 15px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 9 }}>
+        <Heading level={5} style={{ margin: 0 }}>{title}</Heading>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+          {prov && <Text variant="label" color="var(--dark-40)">{prov}</Text>}
+          {headerAction ?? (onEdit ? (
+            <Button variant="ghost" size="xs" square frontIcon={Edit1} onPress={onEdit} aria-label={`Edit ${title}`} />
+          ) : null)}
         </span>
       </div>
       {children}
-    </div>
+    </Card>
   );
 }
 
@@ -1082,6 +1071,7 @@ export function LivingDocRoute() {
   const { openModal, closeModal } = useModals();
   const navigate = useNavigate();
   const [tab, setTab] = useState<DocTab>('overview');
+  const [materialsTab, setMaterialsTab] = useState<'sources' | 'media'>('sources');
   const [workFilter, setWorkFilter] = useState<'all' | 'plans' | 'signoffs' | 'flags' | 'insights'>('all');
   const [personFilter, setPersonFilter] = useState<'all' | PersonId>('all');
   const { clientView, setClientView: setClientViewRaw } = useClientView();
@@ -1261,97 +1251,64 @@ export function LivingDocRoute() {
 
         {/* Client view banner — shown on every tab */}
         {clientView && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--dark-90)', color: 'white', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--dark-90)', color: 'var(--light-100)', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
             <EyeOpen />
-            <span style={{ fontSize: 13, flex: 1 }}>
+            <Text variant="secondary" color="var(--light-100)" style={{ flex: 1 }}>
               Viewing as <strong style={{ fontWeight: 600 }}>Sarah Johnson</strong> — drafts, internal notes and production activity are hidden.
-            </span>
-            <button onClick={() => setClientView(false)} style={{ background: 'rgba(255,255,255,0.14)', border: 'none', color: 'white', fontSize: 12.5, fontWeight: 600, padding: '5px 12px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit' }}>
+            </Text>
+            <Button variant="secondary-bg-agnostic" size="xs" onPress={() => setClientView(false)}>
               Exit
-            </button>
+            </Button>
           </div>
         )}
 
         {/* ── OVERVIEW TAB ── */}
         {tab === 'overview' && (
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-        <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: 780 }}>
-        <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 14, padding: '36px 40px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: 780, paddingTop: 15 }}>
 
           {/* Doc header — identity + health for the AM, reassurance for the client */}
           <div style={{ marginBottom: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--dark-100)', margin: 0, letterSpacing: '-0.01em' }}>
+              <Heading level={2} style={{ margin: 0 }}>
                 CertaPro Painters of Austin
-              </h1>
+              </Heading>
               <StatusPill tone="success" size="sm">On track</StatusPill>
               <span style={{ flex: 1 }} />
-              <span style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>
+              <Text variant="metadata" color="var(--dark-40)">
                 Updated by agent · after the {published ? 'Jun 3 check-in' : 'Apr 28 review'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-              <AvatarStack ids={['sarah', 'tom', 'alex']} size={22} />
-              <span style={{ fontSize: 12.5, color: 'var(--dark-50)' }}>
-                {clientView
-                  ? 'Kept current for you by your Blaze team — after every call and every publish'
-                  : 'Shared with Sarah & Tom — they see this page minus drafts and internal notes'}
-              </span>
+              </Text>
             </div>
           </div>
 
           {/* Where things stand */}
           <div>
-            <p style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.65, margin: '0 0 12px' }}>{overviewText}</p>
-
-            {/* The "is it working" glance — key numbers without leaving the page */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 26, padding: '11px 14px', border: '1px solid var(--dark-8)', borderRadius: 9, marginBottom: 10 }}>
-              {[
-                { value: '31', delta: '+18%', label: 'Estimate requests · May' },
-                { value: '12', delta: '100% on time', label: 'Posts published · May' },
-                { value: 'Jun 16', delta: undefined, label: 'June wave starts' },
-              ].map((s) => (
-                <div key={s.label}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                    <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--dark-100)' }}>{s.value}</span>
-                    {s.delta && <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--positive-60)' }}>{s.delta}</span>}
-                  </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--dark-40)', marginTop: 1 }}>{s.label}</div>
-                </div>
-              ))}
-              <span style={{ flex: 1 }} />
-              <button
-                onClick={() => setTab('insights')}
-                style={{ background: 'none', border: 'none', fontSize: 12.5, fontWeight: 500, color: 'var(--action-60)', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
-              >
-                See insights →
-              </button>
-            </div>
+            <Paragraph variant="primary" color="var(--dark-80)" style={{ lineHeight: 1.6, margin: '0 0 14px' }}>{overviewText}</Paragraph>
 
             <div style={{ display: 'flex', gap: 10 }}>
 
               {/* Client approvals — first: the most actionable thing on the page */}
-              <div style={{ flex: 1, border: '1px solid var(--dark-8)', borderRadius: 9, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>{clientView ? 'Your approvals' : 'Client approvals'}</div>
-                <div style={{ fontSize: 12.5, fontWeight: 550, color: 'var(--dark-90)', lineHeight: 1.35 }}>
+              <Card padding="none" style={{ flex: 1, borderRadius: 9, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Text variant="label" color="var(--dark-40)">{clientView ? 'Your approvals' : 'Client approvals'}</Text>
+                <Text variant="smallList" style={{ lineHeight: 1.35 }}>
                   {APPROVAL_PENDING_COUNT} item{APPROVAL_PENDING_COUNT === 1 ? '' : 's'} {clientView ? 'need your approval' : 'waiting on CertaPro'}
-                </div>
+                </Text>
                 <div style={{ marginTop: 'auto', paddingTop: 7 }}>
                   <Button variant="secondary" size="xs" frontIcon={Approvals} onPress={() => navigate('/h2/approvals')}>
                     {clientView ? 'Review & approve' : 'Open approvals'}
                   </Button>
                 </div>
-              </div>
+              </Card>
 
               {/* Next call — meeting logistics */}
-              <div style={{ flex: 1, border: '1px solid var(--dark-8)', borderRadius: 9, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Next call</div>
-                <div style={{ fontSize: 12.5, fontWeight: 550, color: 'var(--dark-90)', lineHeight: 1.35 }}>Creative review — Mon, Jun 16</div>
-                <div style={{ fontSize: 11.5, color: 'var(--dark-50)' }}>10:00–10:45 AM CT · Zoom</div>
+              <Card padding="none" style={{ flex: 1, borderRadius: 9, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Text variant="label" color="var(--dark-40)">Next call</Text>
+                <Text variant="smallList" style={{ lineHeight: 1.35 }}>Creative review — Mon, Jun 16</Text>
+                <Text variant="metadata" color="var(--dark-50)">10:00–10:45 AM CT · Zoom</Text>
                 <div style={{ marginTop: 'auto', paddingTop: 7 }}>
                   <Button variant="secondary" size="xs" frontIcon={Video} onPress={() => showToast({ message: 'Opening Zoom…' })}>Join</Button>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
 
@@ -1362,50 +1319,45 @@ export function LivingDocRoute() {
               <div style={{ height: 1, background: 'var(--dark-6)', margin: '26px 0' }} />
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--dark-100)', margin: 0, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <Heading level={4} style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   Project brain
                   <StatusPill tone="success" size="sm">Agent-ready</StatusPill>
-                </h2>
-                <span style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>Read by every agent run</span>
+                </Heading>
+                <Text variant="metadata" color="var(--dark-40)">Read by every agent run</Text>
               </div>
-              <div style={{ fontSize: 12.5, color: 'var(--dark-50)', margin: '0 0 14px', lineHeight: 1.5 }}>
+              <Text variant="secondary" color="var(--dark-50)" style={{ display: 'block', margin: '0 0 14px', lineHeight: 1.5 }}>
                 Replaces the Claude project — one curated file with everything the agents work from: voice, preferences, products, audience, materials and every conversation.
-              </div>
+              </Text>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                 <BrainCard title="Brand voice" prov="Kickoff · refined Apr 28" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
                   {BRAIN_VOICE.map(({ label, value }) => (
-                    <div key={label} style={{ display: 'flex', gap: 10, fontSize: 12.5, marginBottom: 5 }}>
-                      <span style={{ color: 'var(--dark-40)', width: 92, flexShrink: 0 }}>{label}</span>
-                      <span style={{ color: 'var(--dark-80)', lineHeight: 1.45 }}>{value}</span>
+                    <div key={label} style={{ marginBottom: 10 }}>
+                      <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 2 }}>{label}</Text>
+                      <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.45 }}>{value}</Text>
                     </div>
                   ))}
                 </BrainCard>
 
                 <BrainCard title="Content preferences" prov="Updated Jun 3" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
                   {BRAIN_PREFERENCES.map(({ label, value }) => (
-                    <div key={label} style={{ display: 'flex', gap: 10, fontSize: 12.5, marginBottom: 5 }}>
-                      <span style={{ color: 'var(--dark-40)', width: 92, flexShrink: 0 }}>{label}</span>
-                      <span style={{ color: 'var(--dark-80)', lineHeight: 1.45 }}>{value}</span>
+                    <div key={label} style={{ marginBottom: 10 }}>
+                      <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 2 }}>{label}</Text>
+                      <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.45 }}>{value}</Text>
                     </div>
                   ))}
                 </BrainCard>
 
                 <BrainCard title="Products & services" prov="Reviewed Mar 12" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
                   {brainProducts.map((p) => (
-                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, marginBottom: 6 }}>
-                      <span style={{ color: 'var(--dark-80)', flex: 1 }}>{p.name}</span>
-                      <span style={{ fontSize: 10.5, fontWeight: 600, padding: '1px 7px', borderRadius: 4, color: p.priority === 'Primary' ? 'var(--action-60)' : 'var(--dark-50)', background: p.priority === 'Primary' ? 'var(--action-10)' : 'var(--dark-6)' }}>
-                        {p.priority}
-                      </span>
+                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <Text variant="secondary" color="var(--dark-80)" style={{ flex: 1 }}>{p.name}</Text>
+                      <StatusPill tone={p.priority === 'Primary' ? 'info' : 'neutral'} size="sm">{p.priority}</StatusPill>
                     </div>
                   ))}
                   {productSuggestion === 'open' && (
-                    <div style={{ background: 'var(--action-5)', border: '1px solid var(--action-10)', borderRadius: 8, padding: '9px 11px', marginTop: 9 }}>
-                      <div style={{ display: 'flex', gap: 6, fontSize: 12, color: 'var(--dark-80)', lineHeight: 1.5 }}>
-                        <span style={{ color: 'var(--action-60)', display: 'inline-flex', marginTop: 1 }}><Stars /></span>
-                        <span>Agent suggests promoting cabinet refinishing to secondary focus — interest raised on the Apr 2 and Jun 3 calls.</span>
-                      </div>
+                    <div style={{ background: 'var(--focus-5)', border: '1px solid var(--focus-10)', borderRadius: 8, padding: '9px 11px', marginTop: 9 }}>
+                      <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.5 }}>Agent suggests promoting cabinet refinishing to secondary focus — interest raised on the Apr 2 and Jun 3 calls.</Text>
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                         <Button variant="primary" size="xs" frontIcon={Check2} onPress={acceptProductSuggestion}>Accept</Button>
                         <Button variant="secondary" size="xs" onPress={() => setProductSuggestion('dismissed')}>Dismiss</Button>
@@ -1413,67 +1365,69 @@ export function LivingDocRoute() {
                     </div>
                   )}
                   {productSuggestion === 'accepted' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'var(--positive-60)', marginTop: 8 }}>
+                    <Text variant="metadata" color="var(--positive-60)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8 }}>
                       <Check2 /> Updated — agent reads this on its next run
-                    </div>
+                    </Text>
                   )}
                 </BrainCard>
 
                 <BrainCard title="Audience" prov="From kickoff" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
-                  <div style={{ fontSize: 12.5, color: 'var(--dark-80)', lineHeight: 1.55 }}>{BRAIN_AUDIENCE}</div>
+                  <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.55 }}>{BRAIN_AUDIENCE}</Text>
                 </BrainCard>
               </div>
 
-              {/* Materials — everything uploaded or connected */}
-              <div style={{ marginBottom: 10 }}>
+              {/* Materials + Conversations — side by side */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10, alignItems: 'start' }}>
                 <BrainCard title="Materials" prov="3 sources connected" onEdit={() => showToast({ message: 'Manage connected sources' })}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                    {BRAIN_MATERIALS.map((m) => (
-                      <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        {m.thumbs ? (
-                          <span style={{ display: 'inline-flex', gap: 3 }}>
-                            {m.thumbs.map((src, i) => (
-                              <span key={i} style={{ width: 26, height: 26, borderRadius: 5, backgroundImage: `url('${src}')`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
-                            ))}
-                          </span>
-                        ) : (
+                  <Tabs.Root value={materialsTab} onChange={(v) => setMaterialsTab(v as 'sources' | 'media')} style={{ marginBottom: 12 }}>
+                    <Tabs.Tab value="sources">Source materials</Tabs.Tab>
+                    <Tabs.Tab value="media">Media</Tabs.Tab>
+                  </Tabs.Root>
+                  {materialsTab === 'sources' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                      {BRAIN_MATERIALS.filter((m) => !m.thumbs).map((m) => (
+                        <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><File /></span>
-                        )}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--dark-90)' }}>{m.name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>{m.meta}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Text variant="smallList" style={{ display: 'block' }}>{m.name}</Text>
+                            <Text variant="label" color="var(--dark-40)" style={{ display: 'block' }}>{m.meta}</Text>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {BRAIN_MATERIALS.filter((m) => m.thumbs).map((m) => (
+                        <div key={m.name}>
+                          <div style={{ display: 'flex', gap: 5, marginBottom: 6, flexWrap: 'wrap' }}>
+                            {m.thumbs!.map((src, i) => (
+                              <span key={i} style={{ width: 40, height: 40, borderRadius: 6, backgroundImage: `url('${src}')`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
+                            ))}
+                          </div>
+                          <Text variant="smallList" style={{ display: 'block' }}>{m.name}</Text>
+                          <Text variant="label" color="var(--dark-40)" style={{ display: 'block' }}>{m.meta}</Text>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ marginTop: 10 }}>
+                    <Button variant="ghost" size="xs" onPress={() => showToast({ message: 'Connect a Drive folder, upload files, or add a URL' })}>
+                      + Add material
+                    </Button>
+                  </div>
+                </BrainCard>
+
+                <BrainCard title="Conversations" prov={`${MEETINGS.length} calls ingested · latest Jun 3`} headerAction={<Button variant="secondary" size="xs" onPress={() => setTab('meetings')}>Open meetings</Button>}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                    {MEETINGS.map((m) => (
+                      <div key={m.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                        <Text variant="smallList" color="var(--dark-90)">{m.date}</Text>
+                        <Text variant="secondary" color="var(--dark-50)" style={{ flex: 1 }}>{MEETING_META[m.type].label} · {m.duration}</Text>
                       </div>
                     ))}
                   </div>
-                  <button
-                    onClick={() => showToast({ message: 'Connect a Drive folder, upload files, or add a URL' })}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', fontSize: 12, color: 'var(--dark-40)', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginTop: 10 }}
-                  >
-                    + Add material
-                  </button>
                 </BrainCard>
               </div>
-
-              {/* Conversations — every call feeds the brain automatically */}
-              <BrainCard title="Conversations" prov={`${MEETINGS.length} calls ingested · latest Jun 3`} onEdit={() => showToast({ message: 'Conversation ingest settings' })}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  {MEETINGS.map((m) => (
-                    <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5 }}>
-                      <span style={{ color: '#7A3FB8', display: 'inline-flex' }}><Voice /></span>
-                      <span style={{ fontWeight: 600, color: 'var(--dark-90)' }}>{m.date}</span>
-                      <span style={{ color: 'var(--dark-50)', flex: 1 }}>{MEETING_META[m.type].label} · {m.duration}</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: 'var(--positive-60)' }}>
-                        <Check2 /> Ingested
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 11 }}>
-                  <span style={{ fontSize: 11.5, color: 'var(--dark-40)', flex: 1 }}>Every Fathom call lands here automatically — no more paste-to-doc</span>
-                  <Button variant="secondary" size="xs" onPress={() => setTab('meetings')}>Open meetings</Button>
-                </div>
-              </BrainCard>
             </>
           )}
 
@@ -1483,85 +1437,105 @@ export function LivingDocRoute() {
               <div style={{ height: 1, background: 'var(--dark-6)', margin: '26px 0' }} />
 
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-                <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--dark-100)', margin: 0 }}>Your Blaze team</h2>
-                <span style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>On CertaPro every week</span>
+                <Heading level={4} style={{ margin: 0 }}>Your Blaze team</Heading>
+                <Text variant="metadata" color="var(--dark-40)">On CertaPro every week</Text>
               </div>
-              <div style={{ fontSize: 12.5, color: 'var(--dark-50)', margin: '0 0 14px', lineHeight: 1.5 }}>
+              <Text variant="secondary" color="var(--dark-50)" style={{ display: 'block', margin: '0 0 14px', lineHeight: 1.5 }}>
                 Two people and an agent — questions land with Alex, creative direction with Petar.
-              </div>
+              </Text>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                 {DFY_TEAM.map((m) => {
                   const p = PEOPLE[m.id];
                   return (
-                    <div key={m.id} style={{ border: '1px solid var(--dark-8)', borderRadius: 10, padding: '14px 15px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <Card key={m.id} padding="none" style={{ borderRadius: 10, padding: '14px 15px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                         <Avatar src={p.img} fallback={p.short.slice(0, 2)} size={36} />
                         <div>
-                          <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--dark-90)' }}>{p.name}</div>
-                          <div style={{ fontSize: 11.5, color: 'var(--dark-50)' }}>{p.role.replace('Blaze · ', '')}</div>
+                          <Text variant="smallList" style={{ display: 'block' }}>{p.name}</Text>
+                          <Text variant="metadata" color="var(--dark-50)" style={{ display: 'block' }}>{p.role.replace('Blaze · ', '')}</Text>
                         </div>
                       </div>
-                      <div style={{ fontSize: 12.5, color: 'var(--dark-70)', lineHeight: 1.5, flex: 1 }}>{m.blurb}</div>
+                      <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5, flex: 1 }}>{m.blurb}</Text>
                       <div style={{ display: 'flex', gap: 6, marginTop: 'auto' }}>
                         <Button variant="secondary" size="xs" frontIcon={Comment} onPress={() => showToast({ message: `Opens a thread with ${p.short}` })}>Message</Button>
                         {m.canBook && (
                           <Button variant="secondary" size="xs" frontIcon={Video} onPress={() => showToast({ message: `Opening ${p.short}’s calendar…` })}>Book time</Button>
                         )}
                       </div>
-                    </div>
+                    </Card>
                   );
                 })}
 
                 {/* The agent — always-on third member, human-reviewed */}
-                <div style={{ border: '1px solid var(--action-10)', background: 'var(--action-1, var(--action-5))', borderRadius: 10, padding: '14px 15px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Card padding="none" style={{ border: '1px solid var(--focus-10)', background: 'var(--focus-5)', borderRadius: 10, padding: '14px 15px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--action-10)', color: 'var(--action-60)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--focus-10)', color: 'var(--focus-50)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Stars />
                     </span>
                     <div>
-                      <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--dark-90)' }}>CertaPro Agent</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--action-60)', fontWeight: 500 }}>Always on</div>
+                      <Text variant="smallList" style={{ display: 'block' }}>CertaPro Agent</Text>
+                      <Text variant="metadata" color="var(--focus-50)" style={{ display: 'block' }}>Always on</Text>
                     </div>
                   </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--dark-70)', lineHeight: 1.5, flex: 1 }}>
+                  <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5, flex: 1 }}>
                     Drafts your content, preps call notes and keeps this page current — everything is reviewed by Alex before it reaches you.
-                  </div>
-                </div>
+                  </Text>
+                </Card>
               </div>
             </>
           )}
         </div>
-        </div>
 
         {/* Overview right rail */}
-        <div style={{ width: 360, flexShrink: 0, position: 'sticky', top: 12, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ width: 312, flexShrink: 0, position: 'sticky', top: 12, display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Insights — at-a-glance metrics, moved out of the doc body */}
+          <Card padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <Heading level={5} style={{ margin: 0 }}>Insights</Heading>
+              <Button variant="ghost" size="xs" onPress={() => setTab('insights')}>See all →</Button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { value: '31', delta: '+18%', label: 'Estimate requests · May' },
+                { value: '12', delta: '100% on time', label: 'Posts published · May' },
+                { value: 'Jun 16', delta: undefined, label: 'June wave starts' },
+              ].map((s) => (
+                <div key={s.label}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    <Text variant="largeList" color="var(--dark-100)">{s.value}</Text>
+                    {s.delta && <Text variant="label" color="var(--positive-60)">{s.delta}</Text>}
+                  </div>
+                  <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 1 }}>{s.label}</Text>
+                </div>
+              ))}
+            </div>
+          </Card>
 
           {/* AM: compact agent summary pointing into the Agent tab */}
           {!clientView && (
-            <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
+            <Card padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>
-                  <span style={{ color: 'var(--action-60)', display: 'inline-flex' }}><Stars /></span> Agent
-                </span>
+                <Heading level={5} style={{ margin: 0 }}>Agent</Heading>
                 <StatusPill tone={tasksToReview > 0 || hasBlocked ? 'warning' : 'success'} size="sm">
                   {tasksToReview + openFlags > 0 ? `${tasksToReview + openFlags} need you` : 'Running clean'}
                 </StatusPill>
               </div>
-              <div style={{ fontSize: 12.5, color: 'var(--dark-70)', lineHeight: 1.55 }}>
+              <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.55 }}>
                 {tasksToReview} plan{tasksToReview === 1 ? '' : 's'} to review · {openFlags} open flag{openFlags === 1 ? '' : 's'}{hasBlocked ? ' (1 blocking)' : ''}{outputsReady > 0 ? ` · ${outputsReady} output${outputsReady === 1 ? '' : 's'} ready` : ''}
-              </div>
+              </Text>
               <div style={{ marginTop: 10 }}>
                 <Button variant="secondary" size="xs" onPress={() => setTab('work')}>Open workstream</Button>
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Client to-dos — what's waiting on CertaPro, both views */}
-          <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
+          <Card padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{clientView ? 'Your next steps' : 'Waiting on CertaPro'}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--action-60)', background: 'var(--action-10)', padding: '2px 8px', borderRadius: 9 }}>{openClientSteps} open</span>
+              <Heading level={5} style={{ margin: 0 }}>{clientView ? 'Your next steps' : 'Waiting on CertaPro'}</Heading>
+              <StatusPill tone="info" size="sm">{openClientSteps} open</StatusPill>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
               {clientSteps.map((s) => (
@@ -1569,34 +1543,34 @@ export function LivingDocRoute() {
                   <span style={{ marginTop: 2, display: 'inline-flex' }}>
                     <Checkbox
                       checked={s.done}
-                      onToggle={() => setSteps((prev) => prev.map((p) => (p.id === s.id ? { ...p, done: !p.done } : p)))}
+                      onChange={() => setSteps((prev) => prev.map((p) => (p.id === s.id ? { ...p, done: !p.done } : p)))}
                     />
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: s.done ? 'var(--dark-40)' : 'var(--dark-90)', textDecoration: s.done ? 'line-through' : 'none', lineHeight: 1.4 }}>{s.text}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--dark-40)', marginTop: 3 }}>Due {s.due} · {s.source}</div>
+                    <Text variant="secondary" color={s.done ? 'var(--dark-40)' : 'var(--dark-90)'} style={{ display: 'block', textDecoration: s.done ? 'line-through' : 'none', lineHeight: 1.4 }}>{s.text}</Text>
+                    <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 3 }}>Due {s.due} · {s.source}</Text>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Client view gets the content-lifecycle activity here */}
           {clientView && (
-            <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)', marginBottom: 12 }}>Activity</div>
+            <Card padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
+              <Heading level={5} style={{ margin: '0 0 12px' }}>Activity</Heading>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
                 {visibleActivity.map((a) => (
                   <div key={a.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <ActivityGlyph kind={a.kind} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12.5, color: 'var(--dark-80)', lineHeight: 1.45 }}>{a.text}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--dark-40)', marginTop: 2 }}>{a.time}</div>
+                      <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.45 }}>{a.text}</Text>
+                      <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 2 }}>{a.time}</Text>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
         </div>
         </div>
@@ -1608,7 +1582,7 @@ export function LivingDocRoute() {
 
         {/* Outline rail — the meeting browser */}
         <div style={{ width: 172, flexShrink: 0, position: 'sticky', top: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--dark-30)', marginBottom: 8, paddingLeft: 10 }}>Meetings</div>
+          <Text variant="label" color="var(--dark-30)" style={{ display: 'block', marginBottom: 8, paddingLeft: 10 }}>Meetings</Text>
           {visibleMeetings.map((m) => (
             <button
               key={m.id}
@@ -1616,12 +1590,12 @@ export function LivingDocRoute() {
               style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 10px', borderRadius: 7 }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-80)' }}>{m.date}</span>
+                <Text variant="smallList" color="var(--dark-80)">{m.date}</Text>
                 {m.pending && !published && !clientView && (
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--action-50)', display: 'inline-block' }} title="Draft pending review" />
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--focus-50)', display: 'inline-block' }} title="Draft pending review" />
                 )}
               </span>
-              <span style={{ display: 'block', fontSize: 11.5, color: 'var(--dark-40)', marginTop: 1 }}>{MEETING_META[m.type].label}</span>
+              <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 1 }}>{MEETING_META[m.type].label}</Text>
             </button>
           ))}
         </div>
@@ -1629,10 +1603,10 @@ export function LivingDocRoute() {
         {/* Entries are standalone cards — no outer doc-card wrapper */}
         <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: 880 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12, padding: '0 2px' }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--dark-100)', margin: 0 }}>Meetings</h2>
-            <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>
+            <Heading level={4} style={{ margin: 0 }}>Meetings</Heading>
+            <Text variant="metadata" color="var(--dark-40)">
               {clientView ? 'Synced automatically from every call' : 'Drafted by agent · published by you'}
-            </span>
+            </Text>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {visibleMeetings.map((m) => (
@@ -1664,54 +1638,43 @@ export function LivingDocRoute() {
 
           {/* Hero — mirrors old Home's greeting block */}
           <div style={{ padding: '16px 0 20px' }}>
-            <div style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.3px', color: 'var(--dark-100)', lineHeight: 1.2 }}>
+            <Heading level={3} style={{ margin: 0, lineHeight: 1.2 }}>
               Everything moving on CertaPro.
-            </div>
-            <div style={{ fontSize: 13.5, color: 'var(--dark-60)', marginTop: 6, lineHeight: 1.5 }}>
+            </Heading>
+            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 6, lineHeight: 1.5 }}>
               {needsTeam} item{needsTeam === 1 ? '' : 's'} need someone — across organic, Local SEO, reputation and paid. The agent handles the rest ({agentDone}/{agentTasks.length} queue tasks done).
-            </div>
+            </Text>
           </div>
 
-          {/* Kind filters + batch action */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-            {([
-              { key: 'all' as const, label: 'All', count: agentTasks.length + teamFlags.length + ACCOUNT_WORK.length },
-              { key: 'plans' as const, label: 'Agent plans', count: agentTasks.length },
-              { key: 'signoffs' as const, label: 'Sign-offs', count: ACCOUNT_WORK.filter((w) => w.kind === 'signoff').length },
-              { key: 'flags' as const, label: 'Flags', count: teamFlags.length + ACCOUNT_WORK.filter((w) => w.kind === 'flag').length },
-              { key: 'insights' as const, label: 'Insights', count: ACCOUNT_WORK.filter((w) => w.kind === 'insight').length },
-            ]).map((f) => (
-              <TabChip key={f.key} selected={workFilter === f.key} count={f.count} onSelect={() => setWorkFilter(f.key)}>
-                {f.label}
-              </TabChip>
-            ))}
+          {/* Filters — kind + assignee consolidated into one dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            <Select
+              size="sm"
+              placeholder="Filters"
+              style={{ minWidth: 170 }}
+              value={personFilter !== 'all' ? `person:${personFilter}` : workFilter !== 'all' ? workFilter : ''}
+              onChange={(v) => {
+                if (v === 'all') { setWorkFilter('all'); setPersonFilter('all'); }
+                else if (v.startsWith('person:')) { setPersonFilter(v.slice(7) as PersonId); setWorkFilter('all'); }
+                else { setWorkFilter(v as 'all' | 'plans' | 'signoffs' | 'flags' | 'insights'); setPersonFilter('all'); }
+              }}
+              options={[
+                { value: 'all', label: 'All items' },
+                { value: 'plans', label: `Agent plans · ${agentTasks.length}` },
+                { value: 'signoffs', label: `Sign-offs · ${ACCOUNT_WORK.filter((w) => w.kind === 'signoff').length}` },
+                { value: 'flags', label: `Flags · ${teamFlags.length + ACCOUNT_WORK.filter((w) => w.kind === 'flag').length}` },
+                { value: 'insights', label: `Insights · ${ACCOUNT_WORK.filter((w) => w.kind === 'insight').length}` },
+                { value: 'person:alex', label: 'Assigned to Alex' },
+                { value: 'person:petar', label: 'Assigned to Petar' },
+                { value: 'person:sarah', label: 'Assigned to Sarah' },
+              ]}
+            />
             <span style={{ flex: 1 }} />
             {tasksToReview > 0 && (workFilter === 'all' || workFilter === 'plans') && (
               <Button variant="primary" size="sm" frontIcon={Check2} className={styles.approveBtn} onPress={approveAllTasks}>
                 Approve all plans ({tasksToReview})
               </Button>
             )}
-          </div>
-
-          {/* Assignee filter — avatar chips */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-            <span style={{ fontSize: 11.5, color: 'var(--dark-40)', marginRight: 2 }}>Assigned to</span>
-            <button
-              onClick={() => setPersonFilter('all')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 13, fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', border: personFilter === 'all' ? '1.5px solid var(--action-50)' : '1px solid var(--dark-10)', background: personFilter === 'all' ? 'var(--action-5)' : 'var(--light-100)', color: personFilter === 'all' ? 'var(--action-60)' : 'var(--dark-60)', fontWeight: personFilter === 'all' ? 600 : 400 }}
-            >
-              Everyone
-            </button>
-            {(['alex', 'petar', 'sarah'] as PersonId[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPersonFilter(personFilter === p ? 'all' : p)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px 3px 4px', borderRadius: 13, fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', border: personFilter === p ? '1.5px solid var(--action-50)' : '1px solid var(--dark-10)', background: personFilter === p ? 'var(--action-5)' : 'var(--light-100)', color: personFilter === p ? 'var(--action-60)' : 'var(--dark-60)', fontWeight: personFilter === p ? 600 : 400 }}
-              >
-                <Avatar src={PEOPLE[p].img} fallback={PEOPLE[p].short.slice(0, 2)} size={18} />
-                {PEOPLE[p].short}
-              </button>
-            ))}
           </div>
 
           {/* THE feed — plans, flags, cross-product items, each with its own tag */}
@@ -1721,14 +1684,13 @@ export function LivingDocRoute() {
             {(workFilter === 'all' || workFilter === 'plans') && agentTasks.filter((t) => personFilter === 'all' || t.assignee === personFilter).map((t) => {
               const doneWithOutput = t.status === 'done' && t.output;
               return (
-                <div
+                <Card
                   key={t.id}
+                  padding="none"
+                  interactive
                   onClick={() => openTaskModal(t)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter') openTaskModal(t); }}
                   className={styles.taskItem}
-                  style={{ background: 'var(--light-100)', border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px', cursor: 'pointer' }}
+                  style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}
                 >
                   {/* meta: status is the pill; source carries the ✦ agent mark;
                       assignee is just the avatar (name in tooltip) */}
@@ -1736,36 +1698,36 @@ export function LivingDocRoute() {
                     <StatusPill tone={t.status === 'done' ? 'success' : t.status === 'running' ? 'info' : 'warning'} size="sm">
                       {t.status === 'review' ? 'Needs approval' : t.status === 'running' ? 'Running' : t.status === 'revising' ? 'Revising' : doneWithOutput ? 'Done — review output' : 'Done'}
                     </StatusPill>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--dark-60)', fontSize: 12, fontWeight: 500, letterSpacing: '0.04em' }}>
-                      <span style={{ color: 'var(--action-60)', display: 'inline-flex' }}><Stars /></span> {t.source.toUpperCase()}
-                    </span>
+                    <Text variant="metadata" color="var(--dark-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'var(--focus-50)', display: 'inline-flex' }}><Stars /></span> {t.source}
+                    </Text>
                     <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      {t.status === 'running' && <span style={{ color: 'var(--action-60)', display: 'inline-flex' }}><SpinnerIcon /></span>}
+                      {t.status === 'running' && <span style={{ color: 'var(--focus-50)', display: 'inline-flex' }}><SpinnerIcon /></span>}
                       <Avatar src={PEOPLE[t.assignee].img} fallback={PEOPLE[t.assignee].short.slice(0, 2)} size={16} />
-                      <span style={{ fontSize: 11.5, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>Yesterday</span>
+                      <Text variant="metadata" color="var(--dark-40)" style={{ fontVariantNumeric: 'tabular-nums' }}>Yesterday</Text>
                     </span>
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 6 }}>{t.text}</div>
-                  <div style={{ fontSize: 13.5, color: 'var(--dark-60)', lineHeight: 1.55 }}>{t.detail}</div>
+                  <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 6 }}>{t.text}</Text>
+                  <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.55 }}>{t.detail}</Text>
 
                   {/* the plan itself — what you're actually approving */}
                   {(t.status === 'review' || t.status === 'revising') && (
                     <div style={{ marginTop: 10, borderLeft: '2px solid var(--dark-8)', paddingLeft: 11, display: 'flex', flexDirection: 'column', gap: 4 }}>
                       {t.plan.slice(0, 3).map((s, si) => (
-                        <div key={si} style={{ fontSize: 12.5, color: 'var(--dark-60)', lineHeight: 1.45 }}>
+                        <Text key={si} variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.45 }}>
                           <span style={{ color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{si + 1}.</span> {s}
-                        </div>
+                        </Text>
                       ))}
                       {t.plan.length > 3 && (
-                        <div style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>+{t.plan.length - 3} more step{t.plan.length - 3 === 1 ? '' : 's'} — open for the full plan</div>
+                        <Text variant="metadata" color="var(--dark-40)">+{t.plan.length - 3} more step{t.plan.length - 3 === 1 ? '' : 's'} — open for the full plan</Text>
                       )}
                     </div>
                   )}
 
                   {/* stakes — why this matters now */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9, fontSize: 12, fontWeight: 500, color: 'var(--dark-50)' }}>
+                  <Text variant="metadata" color="var(--dark-50)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9 }}>
                     <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><Clock1 /></span> {t.why}
-                  </div>
+                  </Text>
 
                   {(t.status === 'review' || doneWithOutput) && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }} onClick={(e) => e.stopPropagation()}>
@@ -1779,7 +1741,7 @@ export function LivingDocRoute() {
                       )}
                     </div>
                   )}
-                </div>
+                </Card>
               );
             })}
 
@@ -1787,28 +1749,28 @@ export function LivingDocRoute() {
             {(workFilter === 'all' || workFilter === 'flags') && teamFlags.filter((f) => personFilter === 'all' || f.owner === personFilter).map((f) => {
               const fm = FLAG_META[f.kind];
               return (
-                <div key={f.id} style={{ background: 'var(--light-100)', border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px', opacity: f.resolved ? 0.6 : 1 }}>
+                <Card key={f.id} padding="none" style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px', opacity: f.resolved ? 0.6 : 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                     {f.resolved ? (
                       <StatusPill tone="success" size="sm">Resolved</StatusPill>
                     ) : (
                       <StatusPill tone={f.kind === 'blocked' ? 'danger' : 'warning'} size="sm">{fm.label}</StatusPill>
                     )}
-                    <span style={{ color: 'var(--dark-60)', fontSize: 12, fontWeight: 500, letterSpacing: '0.04em' }}>{f.source.toUpperCase()}</span>
+                    <Text variant="metadata" color="var(--dark-60)">{f.source}</Text>
                     <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                       <Avatar src={PEOPLE[f.owner].img} fallback={PEOPLE[f.owner].short.slice(0, 2)} size={16} />
-                      <span style={{ fontSize: 11.5, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>Yesterday</span>
+                      <Text variant="metadata" color="var(--dark-40)" style={{ fontVariantNumeric: 'tabular-nums' }}>Yesterday</Text>
                     </span>
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: f.resolved ? 'var(--dark-50)' : 'var(--dark-90)', lineHeight: 1.35, letterSpacing: '-0.1px', textDecoration: f.resolved ? 'line-through' : 'none' }}>
+                  <Text variant="largeList" color={f.resolved ? 'var(--dark-50)' : 'var(--dark-90)'} style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', textDecoration: f.resolved ? 'line-through' : 'none' }}>
                     {f.text}
-                  </div>
+                  </Text>
                   {!f.resolved && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
                       <Button variant="secondary" size="sm" onPress={() => navigate(f.cta.to)}>{f.cta.label}</Button>
                     </div>
                   )}
-                </div>
+                </Card>
               );
             })}
 
@@ -1820,7 +1782,7 @@ export function LivingDocRoute() {
                 const WIcon = w.icon;
                 const isApproved = approvedWork.has(w.id);
                 return (
-                  <div key={w.id} style={{ background: 'var(--light-100)', border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}>
+                  <Card key={w.id} padding="none" style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                       {isApproved ? (
                         <StatusPill tone="success" size="sm">Approved</StatusPill>
@@ -1831,29 +1793,29 @@ export function LivingDocRoute() {
                       ) : (
                         <StatusPill tone="info" size="sm">Insight</StatusPill>
                       )}
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--dark-60)', fontSize: 12, fontWeight: 500, letterSpacing: '0.04em' }}>
+                      <Text variant="metadata" color="var(--dark-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                         <WIcon /> {w.sourceLabel}
-                      </span>
+                      </Text>
                       <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                         <Avatar src={PEOPLE[w.assignee].img} fallback={PEOPLE[w.assignee].short.slice(0, 2)} size={16} />
-                        <span style={{ fontSize: 11.5, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{w.time}</span>
+                        <Text variant="metadata" color="var(--dark-40)" style={{ fontVariantNumeric: 'tabular-nums' }}>{w.time}</Text>
                       </span>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: w.body ? 6 : 0 }}>{w.title}</div>
-                    {w.body && <div style={{ fontSize: 13.5, color: 'var(--dark-60)', lineHeight: 1.55 }}>{w.body}</div>}
+                    <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: w.body ? 6 : 0 }}>{w.title}</Text>
+                    {w.body && <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.55 }}>{w.body}</Text>}
 
                     {/* what the draft responds to */}
                     {w.quote && (
-                      <div style={{ marginTop: 10, background: 'var(--dark-4)', borderRadius: 8, padding: '9px 12px', fontSize: 12.5, color: 'var(--dark-70)', lineHeight: 1.5 }}>
-                        {w.quote}
+                      <div style={{ marginTop: 10, background: 'var(--dark-4)', borderRadius: 8, padding: '9px 12px' }}>
+                        <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5 }}>{w.quote}</Text>
                       </div>
                     )}
 
                     {/* the draft itself — judge it right here */}
                     {w.excerpt && (
-                      <div style={{ marginTop: 10, borderLeft: '2px solid var(--action-40)', paddingLeft: 11 }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--dark-40)', marginBottom: 3 }}>Draft</div>
-                        <div style={{ fontSize: 12.5, color: 'var(--dark-70)', lineHeight: 1.5 }}>{w.excerpt}</div>
+                      <div style={{ marginTop: 10, borderLeft: '2px solid var(--focus-20)', paddingLeft: 11 }}>
+                        <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 3 }}>Draft</Text>
+                        <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5 }}>{w.excerpt}</Text>
                       </div>
                     )}
 
@@ -1863,29 +1825,31 @@ export function LivingDocRoute() {
                         {w.thumbs.map((src, ti) => (
                           <span key={ti} style={{ width: 40, height: 40, borderRadius: 6, backgroundImage: `url('${src}')`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
                         ))}
-                        <span style={{ width: 40, height: 40, borderRadius: 6, background: 'var(--dark-6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--dark-40)', flexShrink: 0 }}>+2</span>
+                        <span style={{ width: 40, height: 40, borderRadius: 6, background: 'var(--dark-6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Text variant="label" color="var(--dark-40)">+2</Text>
+                        </span>
                       </div>
                     )}
 
                     {/* stakes */}
                     {w.statusLine && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9, fontSize: 12, fontWeight: 500, color: 'var(--dark-50)' }}>
+                      <Text variant="metadata" color="var(--dark-50)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9 }}>
                         <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><Clock1 /></span> {w.statusLine}
-                      </div>
+                      </Text>
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
                       {isApproved ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12.5, fontWeight: 600, color: 'var(--positive-60)' }}>
+                        <Text variant="metadata" color="var(--positive-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                           <Check2 /> Approved — publishing on schedule
-                        </span>
+                        </Text>
                       ) : (
                         <>
                           {w.remind && (
                             reminded ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12.5, fontWeight: 600, color: 'var(--positive-60)', marginRight: 'auto' }}>
+                              <Text variant="metadata" color="var(--positive-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginRight: 'auto' }}>
                                 <Check2 /> Reminder sent
-                              </span>
+                              </Text>
                             ) : (
                               <Button variant="secondary" size="sm" onPress={remindClient}>Remind Sarah</Button>
                             )
@@ -1897,7 +1861,7 @@ export function LivingDocRoute() {
                         </>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 );
               })}
           </div>
@@ -1905,8 +1869,8 @@ export function LivingDocRoute() {
 
         {/* RR — activity as a timeline */}
         <div style={{ width: 320, flexShrink: 0, position: 'sticky', top: 12 }}>
-          <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '16px 16px 8px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)', marginBottom: 14 }}>Activity</div>
+          <Card padding="none" style={{ borderRadius: 12, padding: '16px 16px 8px' }}>
+            <Text variant="smallList" style={{ display: 'block', marginBottom: 14 }}>Activity</Text>
             <div>
               {activity.map((a, i) => (
                 <div key={a.id} style={{ display: 'flex', gap: 11 }}>
@@ -1916,16 +1880,16 @@ export function LivingDocRoute() {
                     {i < activity.length - 1 && <div style={{ width: 1.5, flex: 1, background: 'var(--dark-8)', margin: '3px 0' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0, paddingBottom: i < activity.length - 1 ? 16 : 8 }}>
-                    <div style={{ fontSize: 12.5, color: 'var(--dark-80)', lineHeight: 1.45 }}>{a.text}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--dark-40)', marginTop: 2 }}>
+                    <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.45 }}>{a.text}</Text>
+                    <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 2 }}>
                       {a.time}
-                      {a.sub && !published && <span style={{ color: 'var(--action-60)', fontWeight: 500 }}> · {a.sub}</span>}
-                    </div>
+                      {a.sub && !published && <span style={{ color: 'var(--focus-50)', fontWeight: 500 }}> · {a.sub}</span>}
+                    </Text>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
         </div>
         )}
@@ -1935,41 +1899,41 @@ export function LivingDocRoute() {
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 14 }}>
             {INSIGHT_STATS.map((s) => (
-              <div key={s.label} style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ fontSize: 11.5, color: 'var(--dark-40)' }}>{s.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 600, color: 'var(--dark-100)', marginTop: 4, letterSpacing: '-0.01em' }}>{s.value}</div>
-                <div style={{ fontSize: 12, marginTop: 2 }}>
+              <Card key={s.label} padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
+                <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block' }}>{s.label}</Text>
+                <Heading level={2} style={{ margin: '4px 0 0' }}>{s.value}</Heading>
+                <Text variant="metadata" style={{ display: 'block', marginTop: 2 }}>
                   <span style={{ color: 'var(--positive-60)', fontWeight: 600 }}>{s.delta}</span>
                   <span style={{ color: 'var(--dark-40)' }}> · {s.caption}</span>
-                </div>
-              </div>
+                </Text>
+              </Card>
             ))}
           </div>
-          <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
+          <Card padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>Reports</span>
+              <Text variant="smallList">Reports</Text>
               {!clientView && (
                 <Button variant="primary" size="xs" onPress={() => showToast({ message: 'June report queued — the agent assembles it from campaign results' })}>
                   Generate June report
                 </Button>
               )}
             </div>
-            <div style={{ fontSize: 11.5, color: 'var(--dark-40)', marginBottom: 8 }}>
+            <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 8 }}>
               Assembled by the agent monthly · shared with CertaPro from here
-            </div>
+            </Text>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {REPORTS.map((r, i) => (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i < REPORTS.length - 1 ? '1px solid var(--dark-6)' : 'none' }}>
                   <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><File /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{r.title}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--dark-40)', marginTop: 1 }}>{r.meta}</div>
+                    <Text variant="smallList" style={{ display: 'block' }}>{r.title}</Text>
+                    <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 1 }}>{r.meta}</Text>
                   </div>
                   <Button variant="secondary" size="xs" onPress={() => showToast({ message: `Opening ${r.title.toLowerCase()}…` })}>View</Button>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
         )}
       </div>
