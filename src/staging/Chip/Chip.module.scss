@@ -6,7 +6,7 @@
   gap: 4px;
   cursor: pointer;
   border: 1px solid transparent;
-  background: var(--dark-4);
+  background: var(--dark-2);
   color: var(--dark-90);
   font-family: 'Sohne', sans-serif;
   white-space: nowrap;
@@ -98,8 +98,8 @@
 /* Variants — picked from prod's redesign-mode treatment. The selected
    modifier (.selected) below applies on top of the variant. */
 .variant-default {
-  background: var(--dark-4);
-  border-color: var(--dark-4);
+  background: var(--dark-2);
+  border-color: var(--dark-8);
   color: var(--dark-90);
   font-weight: 400;
 }

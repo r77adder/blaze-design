@@ -1,0 +1,61 @@
+@use '../../tokens/typography' as *;
+
+.root {
+  display: inline-block;
+  box-sizing: border-box;
+  width: auto;
+  background: var(--light-100);
+  border: 1px solid var(--dark-8);
+  border-radius: 8px;
+  color: var(--dark-90);
+  font-family: 'Sohne', sans-serif;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+
+  &::placeholder {
+    color: var(--dark-40);
+  }
+
+  &:hover {
+    border-color: var(--dark-15);
+  }
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--dark-40);
+    box-shadow: 0 0 0 3px var(--dark-4);
+  }
+
+  &:disabled {
+    background: var(--dark-2);
+    color: var(--dark-40);
+    cursor: not-allowed;
+  }
+}
+
+.fullWidth {
+  display: block;
+  width: 100%;
+}
+
+.size-sm {
+  padding: 8px 12px;
+  font-size: 13px;
+  letter-spacing: 0.26px;
+}
+
+.size-md {
+  padding: 10px 14px;
+  font-size: 14px;
+  letter-spacing: 0.28px;
+}
+
+.invalid {
+  border-color: var(--red-70);
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--red-70);
+    box-shadow: 0 0 0 3px rgba(188, 1, 11, 0.12);
+  }
+}

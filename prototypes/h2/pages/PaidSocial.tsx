@@ -1,11 +1,11 @@
 import { useState, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Button, Heading, IconButton, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { StatusPill, TabChip } from '@/staging';
 import MetaBrand from '@/icons/20/MetaBrand';
 import MoreDots from '@/icons/20/MoreDots';
 import Plus from '@/icons/20/Plus';
-import ChevronDown from '@/icons/20/ChevronDown';
 import ChevronRightSmall from '@/icons/20/ChevronRightSmall';
 import ArrowUpSm from '@/icons/20/ArrowUpSm';
 import Brand from '@/icons/20/Brand';
@@ -14,10 +14,12 @@ import Globe from '@/icons/20/Globe';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
+import { useMetaCampaign } from '../meta-campaign/meta-campaign-context';
+import type { AdSet } from '../meta-campaign/concept/types';
 
 // ─── TYPES ─────────────────────────────────────────────────────────────
 
-type Status =
+export type Status =
   | 'on-track'
   | 'spending-too-fast'
   | 'winner'
@@ -28,19 +30,19 @@ type Status =
 
 type SubTab = 'campaigns' | 'market-intelligence';
 
-interface FatigueSignal {
+export interface FatigueSignal {
   label: string;
   value: string;
   tone: 'negative' | 'warning';
 }
 
-interface FatigueCreative {
+export interface FatigueCreative {
   name: string;
   imageUrl: string;
   caption: string;
 }
 
-interface FatigueFlag {
+export interface FatigueFlag {
   ageDays: number;
   signal: string; // short pill text e.g. "CTR -32% past 7d"
   // The new modal renders these directly:
@@ -49,7 +51,7 @@ interface FatigueFlag {
   signals: FatigueSignal[];
 }
 
-interface Ad {
+export interface Ad {
   id: string;
   name: string;
   thumb: string; // gradient
@@ -57,13 +59,22 @@ interface Ad {
   spent: number;
   results: number;
   costPerResult: number;
+  /** Total impressions served (raw count). */
+  impressions: number;
+  /** Click-through rate as a percentage value, e.g. 4.5 means 4.5%. */
+  ctr: number;
   status: Status;
   enabled: boolean;
   flagged?: boolean;
   fatigue?: FatigueFlag;
+  /** Optional concept this ad belongs to. Set by AddAdsModal when the user
+   *  picks a target concept on the review step. Read by the concept-grouped
+   *  AdsTable on the detail page so the added ad lands in the right
+   *  concept's bucket without mutating the campaign's adSets structure. */
+  conceptId?: string;
 }
 
-interface Campaign {
+export interface Campaign {
   id: string;
   name: string;
   budget: number;
@@ -73,13 +84,25 @@ interface Campaign {
   status: Status;
   enabled: boolean;
   flagged?: boolean;
+  /** Legacy flat ad list — pre-hierarchy seed data and the AddAdsModal flow
+   *  still populate this. New campaigns also populate `adSets[0]` and the
+   *  detail page synthesizes a default ad set + default concept when the
+   *  field is absent.
+   *
+   *  AddAdsModal-added ads carry an optional `conceptId` so the
+   *  concept-grouped AdsTable can place them in the right concept group
+   *  without mutating the original adSets structure. */
   ads?: Ad[];
+  /** Meta-aligned hierarchy: Campaign > Ad set > Concept > Variant. Optional
+   *  so existing seed `CAMPAIGNS` keep type-checking; Unit 10 backfills these
+   *  via a read-time synthesizer. */
+  adSets?: AdSet[];
   fatigue?: FatigueFlag;
 }
 
 // ─── DATA ──────────────────────────────────────────────────────────────
 
-const CAMPAIGNS: Campaign[] = [
+export const CAMPAIGNS: Campaign[] = [
   {
     id: 'spring-exterior',
     name: 'Spring Exterior Campaign',
@@ -95,11 +118,13 @@ const CAMPAIGNS: Campaign[] = [
         id: 'spring-exterior-ad-1',
         name: 'Exterior — Reel A',
         // Painter on a ladder finishing an exterior — Austin home.
-        thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=80',
+        thumb: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=200&q=80',
         budget: 50,
         spent: 980,
         results: 18,
         costPerResult: 54.4,
+        impressions: 32400,
+        ctr: 4.8,
         status: 'winner',
         enabled: true,
         flagged: true,
@@ -108,7 +133,7 @@ const CAMPAIGNS: Campaign[] = [
           signal: 'CTR -28% past 7d',
           currentAd: {
             name: 'Exterior — Reel A',
-            imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+            imageUrl: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
             caption: 'Crew painting Westlake home · static · 1080×1350',
           },
           proposedAd: {
@@ -130,11 +155,13 @@ const CAMPAIGNS: Campaign[] = [
         id: 'spring-exterior-ad-2',
         name: 'Exterior — Static B',
         // Clean modern Austin home exterior shot.
-        thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=80',
+        thumb: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=200&q=80',
         budget: 40,
         spent: 920,
         results: 14,
         costPerResult: 65.7,
+        impressions: 28700,
+        ctr: 3.1,
         status: 'testing',
         enabled: true,
         flagged: true,
@@ -143,7 +170,7 @@ const CAMPAIGNS: Campaign[] = [
           signal: 'Cost/lead +42% past 5d',
           currentAd: {
             name: 'Exterior — Static B',
-            imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+            imageUrl: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
             caption: 'Finished exterior hero · static · 1080×1080',
           },
           proposedAd: {
@@ -169,8 +196,108 @@ const CAMPAIGNS: Campaign[] = [
         spent: 940,
         results: 6,
         costPerResult: 156.7,
+        impressions: 18100,
+        ctr: 1.6,
         status: 'over-budget',
         enabled: true,
+      },
+    ],
+    // Demo hierarchy: each concept lives in its own ad set (1 concept =
+    // 1 ad set is the v1 default). Spring Exterior shows two ad sets
+    // testing different angles against the same campaign budget.
+    adSets: [
+      {
+        id: 'spring-exterior-adset-owner-led',
+        name: 'Spring Exterior – Owner-led trust',
+        performanceGoal: 'maximize-leads',
+        conversionEvent: 'Lead',
+        pixelId: 'pxl_blaze_certapro_austin',
+        pixelName: 'CertaPro Austin Pixel',
+        websiteUrl: 'https://certapro.com/austin',
+        ageMin: 30,
+        ageMax: 64,
+        gender: 'all',
+        language: 'English (US)',
+        locations: ['Austin, TX · 25mi'],
+        concepts: [
+          {
+            id: 'spring-exterior-concept-owner-led',
+            name: 'Owner-led trust',
+            rationale: 'Mixed slate around the trust angle — a past winner replay alongside a competitor-inspired reel for variance.',
+            intendedAudience: 'Austin homeowners 30–65, home-improvement intent',
+            valueProp: 'Trust signal from a recent neighborhood transformation',
+            offerAngle: 'Free in-home estimate from the same crew',
+            keyMessage: 'Faded exteriors, transformed in days',
+            copy: {
+              primaryText: '1,200 Austin homes painted since 2008. Owner-led visits, fixed-price quotes, and a 2-year guarantee.',
+              headline: 'Faded exteriors, transformed in days',
+              description: '',
+              cta: 'Get quote',
+            },
+            variants: [
+              {
+                id: 'spring-exterior-ad-1',
+                sourceType: 'proven',
+                sourceRefId: 'proven-westlake-reel',
+                sourceMetric: '4.8% CTR',
+                format: 'Reel',
+                image: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
+                included: true,
+              },
+              {
+                id: 'spring-exterior-ad-2',
+                sourceType: 'competitor',
+                sourceRefId: 'five-star-reel',
+                sourceMetric: '3.4x ROAS',
+                format: 'Static',
+                image: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
+                included: true,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'spring-exterior-adset-before-after',
+        name: 'Spring Exterior – Before / after',
+        performanceGoal: 'maximize-leads',
+        conversionEvent: 'Lead',
+        pixelId: 'pxl_blaze_certapro_austin',
+        pixelName: 'CertaPro Austin Pixel',
+        websiteUrl: 'https://certapro.com/austin',
+        ageMin: 30,
+        ageMax: 64,
+        gender: 'all',
+        language: 'English (US)',
+        locations: ['Austin, TX · 25mi'],
+        concepts: [
+          {
+            id: 'spring-exterior-concept-before-after',
+            name: 'Before / after transformation',
+            rationale: 'Theme tested against the owner-led angle. Slate mixes a Tarrytown organic post that already performed with a Blaze-generated neighbor-proof story.',
+            intendedAudience: 'Same audience, scroll-stopper visual-led',
+            valueProp: 'Visual proof of the transformation in a single scroll',
+            offerAngle: 'See the change before you book',
+            keyMessage: 'Spot the difference — your house, three days apart',
+            copy: {
+              primaryText: 'Cedar Park, Tarrytown, Westlake — see what 3 days with our crew looks like.',
+              headline: 'Your house, three days apart',
+              description: '',
+              cta: 'Get quote',
+            },
+            variants: [
+              {
+                id: 'spring-exterior-ad-3',
+                sourceType: 'organic',
+                sourceRefId: 'organic-tarrytown-beforeafter',
+                sourceMetric: '9.2% engagement',
+                format: 'Carousel',
+                image: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=80',
+                included: true,
+              },
+            ],
+          },
+        ],
       },
     ],
   },
@@ -256,6 +383,7 @@ export function PaidSocialRoute() {
 
 function PaidSocialRouteInner() {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('campaigns');
+  const { start } = useMetaCampaign();
 
   const topbarCenter = (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -279,7 +407,7 @@ function PaidSocialRouteInner() {
   const topbarRight = (
     <>
       {activeSubTab === 'campaigns' && (
-        <Button variant="secondary" size="md" frontIcon={Plus}>
+        <Button variant="secondary" size="md" frontIcon={Plus} onPress={start}>
           New campaign
         </Button>
       )}
@@ -320,17 +448,10 @@ function collectFatigues(): FatigueBannerItem[] {
 }
 
 function PaidSocialBody() {
-  // The "Spring Exterior Campaign" is expanded by default. Designers can
-  // collapse it / expand others for the demo.
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(['spring-exterior']));
-
-  const toggleExpanded = (id: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const { createdCampaigns } = useMetaCampaign();
+  // Campaigns created via the New-campaign flow sort to the top, above the
+  // seed data.
+  const rows = [...createdCampaigns, ...CAMPAIGNS];
 
   const fatigues = collectFatigues();
 
@@ -347,24 +468,17 @@ function PaidSocialBody() {
           background: 'var(--light-100)',
           border: '1px solid var(--dark-8)',
           borderRadius: 12,
-          overflow: 'hidden',
+          // `overflow: clip` (not hidden) — prevents the browser from auto-scrolling
+          // the table sideways when a child takes focus, which was hiding the
+          // campaign-name click target and silently breaking detail navigation.
+          overflowX: 'clip',
+          overflowY: 'visible',
         }}
       >
         <TableHeader />
-        {CAMPAIGNS.map((c) => {
-          const isExpanded = expanded.has(c.id) && !!c.ads?.length;
-          return (
-            <div key={c.id}>
-              <CampaignRow
-                campaign={c}
-                expandable={!!c.ads?.length}
-                expanded={isExpanded}
-                onToggleExpand={() => toggleExpanded(c.id)}
-              />
-              {isExpanded && c.ads?.map((ad) => <AdRow key={ad.id} ad={ad} />)}
-            </div>
-          );
-        })}
+        {rows.map((c) => (
+          <CampaignRow key={c.id} campaign={c} />
+        ))}
       </div>
 
     </div>
@@ -518,17 +632,7 @@ function HeaderCell({ children }: { children: ReactNode }) {
 
 // ─── CAMPAIGN ROW ──────────────────────────────────────────────────────
 
-function CampaignRow({
-  campaign,
-  expandable,
-  expanded,
-  onToggleExpand,
-}: {
-  campaign: Campaign;
-  expandable: boolean;
-  expanded: boolean;
-  onToggleExpand: () => void;
-}) {
+function CampaignRow({ campaign }: { campaign: Campaign }) {
   const [enabled, setEnabled] = useState(campaign.enabled);
   return (
     <div
@@ -545,28 +649,43 @@ function CampaignRow({
         <Toggle checked={enabled} onChange={() => setEnabled((v) => !v)} />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-        <ExpandHandle
-          expandable={expandable}
-          expanded={expanded}
-          onClick={onToggleExpand}
-        />
-        <span
-          aria-hidden
+        <Link
+          to={`/h2/paid-social/${campaign.id}`}
           style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
+            gap: 10,
+            minWidth: 0,
+            flex: 1,
+            color: 'var(--dark-90)',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            padding: '4px 6px',
+            margin: '-4px -6px',
+            borderRadius: 6,
+            transition: 'background-color 120ms ease',
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
         >
-          <MetaBrand size={20} />
-        </span>
-        <Text
-          variant="largeList"
-          style={{ color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis' }}
-        >
-          {campaign.name}
-        </Text>
+          <span
+            aria-hidden
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <MetaBrand size={20} />
+          </span>
+          <Text
+            variant="largeList"
+            style={{ color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {campaign.name}
+          </Text>
+        </Link>
       </div>
       <TwoLineCell value={formatMoney(campaign.budget)} sub="daily" />
       <TwoLineCell value={formatMoney(campaign.spent)} sub="total" />
@@ -582,54 +701,6 @@ function CampaignRow({
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <TypeFlag flagged={!!campaign.flagged} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <IconButton aria-label="Row actions" variant="ghost" size="sm" icon={MoreDots} />
-      </div>
-    </div>
-  );
-}
-
-// ─── AD ROW (nested) ───────────────────────────────────────────────────
-
-function AdRow({ ad }: { ad: Ad }) {
-  const [enabled, setEnabled] = useState(ad.enabled);
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: COLS,
-        gap: 12,
-        alignItems: 'center',
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--dark-8)',
-        background: 'var(--dark-2)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Toggle checked={enabled} onChange={() => setEnabled((v) => !v)} />
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, paddingLeft: 40 }}>
-        <AdThumb thumb={ad.thumb} name={ad.name} />
-        <Text
-          variant="smallList"
-          style={{ color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis' }}
-        >
-          {ad.name}
-        </Text>
-      </div>
-      <TwoLineCell value={formatMoney(ad.budget)} sub="daily" />
-      <TwoLineCell value={formatMoney(ad.spent)} sub="total" />
-      <TwoLineCell value={String(ad.results)} sub="estimate requests" />
-      <TwoLineCell value={formatMoney(ad.costPerResult)} sub="per lead" />
-      <div>
-        <StatusChip status={ad.status} />
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        {ad.fatigue ? <FatigueFlagPill fatigue={ad.fatigue} adName={ad.name} /> : null}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <TypeFlag flagged={!!ad.flagged} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <IconButton aria-label="Row actions" variant="ghost" size="sm" icon={MoreDots} />
@@ -688,44 +759,6 @@ function TwoLineCell({ value, sub }: { value: string; sub: string }) {
   );
 }
 
-function ExpandHandle({
-  expandable,
-  expanded,
-  onClick,
-}: {
-  expandable: boolean;
-  expanded: boolean;
-  onClick: () => void;
-}) {
-  if (!expandable) {
-    return <span style={{ width: 20, height: 20, flexShrink: 0 }} />;
-  }
-  const Icon = expanded ? ChevronDown : ChevronRightSmall;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={expanded ? 'Collapse campaign' : 'Expand campaign'}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 20,
-        height: 20,
-        flexShrink: 0,
-        background: 'transparent',
-        border: 'none',
-        padding: 0,
-        cursor: 'pointer',
-        color: 'var(--dark-60)',
-        borderRadius: 4,
-      }}
-    >
-      <Icon size={16} />
-    </button>
-  );
-}
-
 // ─── FATIGUE FLAG PILL ─────────────────────────────────────────────────
 
 function FatigueFlagPill({ fatigue, adName }: { fatigue: FatigueFlag; adName: string }) {
@@ -757,7 +790,7 @@ interface FatigueRefreshModalProps {
   adName: string;
 }
 
-function FatigueRefreshModal({
+export function FatigueRefreshModal({
   close,
   fatigue,
   adName,
@@ -940,7 +973,7 @@ const STATUS_STYLES: Record<Status, StatusStyle> = {
   'spending-slowly': { label: 'Spending slowly', tone: 'neutral' },
 };
 
-function StatusChip({ status }: { status: Status }) {
+export function StatusChip({ status }: { status: Status }) {
   const s = STATUS_STYLES[status];
   return (
     <StatusPill tone={s.tone} size="sm">
@@ -1010,7 +1043,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 
 // ─── HELPERS ───────────────────────────────────────────────────────────
 
-function formatMoney(n: number): string {
+export function formatMoney(n: number): string {
   if (n === 0) return '$0';
   if (Number.isInteger(n)) return `$${n.toLocaleString()}`;
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -1037,8 +1070,8 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     id: 'mi-s-1',
     peer: 'Five Star Painting of South Austin',
     metric: '3.2x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+    observedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
     observedSummary: 'Owner-led testimonial · "187 reviews" stat in first 2s.',
     adaptedSummary: 'John Bunnell voice-over · "Painted 1,200 Austin homes since 2008".',
     observed:
@@ -1077,7 +1110,7 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     peer: 'College Pro Painters',
     metric: 'CTR 5.6%',
     observedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
     observedSummary: 'UGC compilation · 5 customer clips.',
     adaptedSummary: 'Stitch from 5 top-rated CertaPro Austin reviews.',
     observed:
@@ -1090,7 +1123,7 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     peer: 'Austin Custom Painting',
     metric: '2.9x ROAS',
     observedImage: 'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+    adaptedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
     observedSummary: 'Color consult walkthrough · handwritten swatch overlay.',
     adaptedSummary: 'Free color consultation with every CertaPro estimate.',
     observed:
@@ -1102,7 +1135,7 @@ const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
     id: 'mi-s-6',
     peer: 'Sherwin-Williams Pro Painters',
     metric: 'CTR 4.1%',
-    observedImage: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&q=80',
+    observedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
     adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
     observedSummary: 'Static paint-chip diagram with arrows + CTA.',
     adaptedSummary: 'Texas-heat paint guide · CertaPro callouts.',

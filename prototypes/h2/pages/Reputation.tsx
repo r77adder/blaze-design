@@ -103,7 +103,7 @@ interface TopicRow {
 /**
  * Renders the brand mark for a source.
  * - Google / Instagram / TikTok / Facebook / Twitter come from our 20px icon lib.
- * - Yelp uses its public favicon from yelpassets.com.
+ * - Yelp uses its public favicon from yelp.com.
  * - Reddit uses redditstatic.com favicon.
  * - Anything else falls back to a first-letter monogram on `var(--dark-90)`.
  */
@@ -117,7 +117,7 @@ function SourceLogo({ source, label }: { source: Source; label: string }) {
   if (source === 'yelp') {
     return (
       <img
-        src="https://yelpassets.com/img/yelp_logo_180x180.png"
+        src="https://www.yelp.com/favicon.ico"
         alt=""
         width={size}
         height={size}

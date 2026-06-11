@@ -1,0 +1,69 @@
+@use '../../tokens/typography' as *;
+
+.root {
+  display: inline-flex;
+  border: 1px solid var(--dark-8);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--light-100);
+}
+
+.fullWidth {
+  display: flex;
+  width: 100%;
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--dark-60);
+  border: none;
+  cursor: pointer;
+  font-family: 'Sohne', sans-serif;
+  transition: background-color 120ms ease, color 120ms ease;
+
+  &:hover:not(.selected) {
+    background: var(--dark-2);
+    color: var(--dark-90);
+  }
+}
+
+.fullWidth .segment {
+  flex: 1;
+}
+
+.size-sm .segment {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.26px;
+}
+
+.size-md .segment {
+  height: 34px;
+  padding: 0 16px;
+  font-size: 14px;
+  letter-spacing: 0.28px;
+}
+
+.size-sm .iconOnly {
+  width: 32px;
+  padding: 0;
+}
+
+.size-md .iconOnly {
+  width: 38px;
+  padding: 0;
+}
+
+.selected {
+  background: var(--dark-90);
+  color: var(--light-100);
+}
+
+.label {
+  white-space: nowrap;
+}

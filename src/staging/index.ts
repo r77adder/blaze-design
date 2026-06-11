@@ -30,6 +30,9 @@ export type { CardProps, CardPadding } from './Card';
 export { Chip } from './Chip';
 export type { ChipProps, ChipSize, ChipVariant, ChipIconProps } from './Chip';
 
+export { Checkbox } from './Checkbox';
+export type { CheckboxProps } from './Checkbox';
+
 export { NavSection } from './NavSection';
 export type { NavSectionProps } from './NavSection';
 
@@ -72,5 +75,15 @@ export type { CalloutProps, CalloutTone } from './Callout';
 export { Tabs } from './Tabs';
 export type { TabsRootProps, TabsTabProps, TabsVariant } from './Tabs';
 
+export { TextField } from './TextField';
+export type { TextFieldProps, TextFieldSize } from './TextField';
+
 export { Select } from './Select';
 export type { SelectProps, SelectOption, SelectSize } from './Select';
+
+export { SegmentedControl } from './SegmentedControl';
+export type {
+  SegmentedControlProps,
+  SegmentedOption,
+  SegmentedControlSize,
+} from './SegmentedControl';

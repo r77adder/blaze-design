@@ -10,7 +10,7 @@ const COMPETITORS = [
     range: '$$',
     address: '5821 Burnet Rd, Austin, TX',
     hours: 'Open · Closes 6 PM',
-    photo: 'https://images.unsplash.com/photo-1572125675722-238a4f1f8ea4?w=160&q=75',
+    photo: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=160&q=75',
   },
   {
     name: 'Paper Moon Painting',

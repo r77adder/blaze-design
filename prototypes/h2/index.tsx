@@ -40,6 +40,9 @@ import { LandscapePage } from './competitor-tracking/pages/Landscape';
 import { CompetitorDetailPage } from './competitor-tracking/pages/CompetitorDetail';
 import { MetaAdsPage } from './competitor-tracking/pages/MetaAds';
 import { GoogleAdsPage } from './competitor-tracking/pages/GoogleAds';
+import { MetaCampaignProvider } from './meta-campaign/meta-campaign-context';
+import { MetaCampaignModal } from './meta-campaign/MetaCampaignModal';
+import { PaidSocialDetailRoute } from './pages/PaidSocialDetail';
 
 /**
  * H2 mega-prototype. Wraps every sub-page in <H2Layout> (sidebar + topbar)
@@ -69,9 +72,12 @@ export default function H2() {
             <SavedCardsProvider>
               <ModalStack>
                 <DevStateProvider>
-                  <ClientViewProvider>
-                    <H2RoutedShell />
-                  </ClientViewProvider>
+                  <MetaCampaignProvider>
+                    <ClientViewProvider>
+                      <H2RoutedShell />
+                    </ClientViewProvider>
+                    <MetaCampaignModal />
+                  </MetaCampaignProvider>
                   <DevStatePanel />
                 </DevStateProvider>
                 <Toaster />
@@ -117,6 +123,7 @@ function H2RoutedShell() {
       <Route path="/seo-aeo" element={<SeoAeoRoute />} />
       <Route path="/influencer-content" element={<InfluencerContentRoute />} />
       <Route path="/paid-social" element={<PaidSocialRoute />} />
+      <Route path="/paid-social/:campaignId" element={<PaidSocialDetailRoute />} />
       <Route path="/paid-search" element={<PaidSearchRoute />} />
       <Route path="/landing-pages" element={<LandingPagesRoute />} />
       <Route path="/reputation" element={<ReputationRoute />} />
