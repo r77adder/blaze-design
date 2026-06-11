@@ -125,10 +125,11 @@ export function HomeScreen({
             <div style={{
               width: 32, height: 32, borderRadius: 37, flexShrink: 0,
               background: '#45164a', overflow: 'hidden',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {ASSETS.workspaceAvatar
                 ? <img src={ASSETS.workspaceAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : null}
+                : <span style={{ fontFamily: font, fontSize: 13, fontWeight: 500, color: '#ffffff', lineHeight: 1 }}>R</span>}
             </div>
             <span style={{ fontFamily: font, fontSize: 18, fontWeight: 400, lineHeight: 1.4, color: 'var(--ios-dark-90)' }}>
               Radiant Health

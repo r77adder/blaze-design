@@ -100,25 +100,28 @@ export function TabBar({ tabs, activeTab, onTabChange, showGradient = true, floa
   if (!showGradient) return capsule;
 
   return (
-    // Matches Figma outer container: 126 px tall, gradient fade from background-gray transparent
-    // to opaque so content scrolls cleanly under the tab bar (design.md §2.5).
-    // pointerEvents on the gradient area are none so it doesn't eat scroll gestures.
+    // 148 px tall floating gradient — 126 px from the Figma spec plus a
+    // 22 px iOS safe-area to clear the home indicator / swipe-up bar (so
+    // the capsule sits ~34 px above the phone's bottom edge rather than
+    // 12 px). pointerEvents on the gradient area are none so it doesn't
+    // eat scroll gestures.
     <div
       style={{
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: 126,
+        height: 148,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-end',
-        padding: '0 14px 12px',
+        padding: '0 14px 34px',
         background: 'linear-gradient(to bottom, rgba(247,247,247,0), var(--ios-background-gray) 60%)',
         pointerEvents: 'none',
       }}
     >
-      {/* Floating action button — dark pill, bottom: 107px, right: 24px */}
+      {/* Floating action button — dark pill, sits 22 px above the capsule
+          (container bottom-padding 34 + capsule top ~95 = 129). */}
       {floatingButton && (
         <button
           type="button"
@@ -126,7 +129,7 @@ export function TabBar({ tabs, activeTab, onTabChange, showGradient = true, floa
           onClick={floatingButton.onClick}
           style={{
             position: 'absolute',
-            bottom: 107,
+            bottom: 129,
             right: 24,
             background: 'rgba(0,0,0,0.9)',
             borderRadius: 99,

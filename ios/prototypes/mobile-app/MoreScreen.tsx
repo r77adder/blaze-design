@@ -1,5 +1,7 @@
-import { MenuItem, ToolbarButton } from '@ios/components';
+import { useState, useEffect, useRef } from 'react';
+import { ToolbarButton } from '@ios/components';
 import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
+import brandKitIcon from '@ios/icons/atom.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import folderIcon from '@ios/icons/folder.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
@@ -59,14 +61,72 @@ function Row({
   );
 }
 
-export function MoreScreen({ onOpenLearningLoop = () => {} }: { onOpenLearningLoop?: () => void } = {}) {
-  return (
-    <div style={{ fontFamily: font, background: '#f8f8f9', minHeight: '100%', paddingBottom: 16 }}>
+export function MoreScreen({
+  onBrandKitClick,
+  onOpenLearningLoop = () => {},
+}: {
+  onBrandKitClick?: () => void;
+  onOpenLearningLoop?: () => void;
+} = {}) {
+  // Show the bottom divider on the sticky header only once the user has
+  // scrolled past it (iOS Large Title behavior). We listen to scroll on the
+  // PhoneFrame's inner scroll container — IntersectionObserver wouldn't
+  // work here because its default root is the document viewport, but the
+  // actual scroll happens inside a nested div within the phone frame.
+  const [scrolled, setScrolled] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-      {/* Inline header — same background as content (no border, single shade) */}
-      <div style={{ height: 68, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '0 20px 12px', boxSizing: 'border-box' }}>
-        <span style={{ fontFamily: font, fontSize: 18, fontWeight: 400, color: 'var(--ios-dark-90)', lineHeight: 1.4 }}>More</span>
-        <ToolbarButton variant="credits" credits={96} />
+  useEffect(() => {
+    let el: HTMLElement | null = rootRef.current;
+    while (el && el !== document.body) {
+      const oy = getComputedStyle(el).overflowY;
+      if (oy === 'auto' || oy === 'scroll') break;
+      el = el.parentElement;
+    }
+    if (!el || el === document.body) return;
+    const handler = () => setScrolled((el as HTMLElement).scrollTop > 0);
+    handler();
+    el.addEventListener('scroll', handler, { passive: true });
+    return () => el!.removeEventListener('scroll', handler);
+  }, []);
+
+  return (
+    <div ref={rootRef} style={{ fontFamily: font, background: '#f8f8f9', minHeight: '100%', paddingBottom: 16 }}>
+
+      {/* Custom sticky header — mirrors ToolbarHeader variant="screen" layout
+          but with a scroll-aware bottom border (the lib component's border
+          is always-on). */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        width: '100%',
+        height: 68,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        padding: '0 20px 12px',
+        boxSizing: 'border-box',
+        background: 'rgba(247,247,247,0.85)',
+        backdropFilter: 'saturate(140%) blur(20px)',
+        WebkitBackdropFilter: 'saturate(140%) blur(20px)',
+        borderBottom: scrolled ? '1px solid var(--ios-dark-4)' : '1px solid transparent',
+        transition: 'border-color 120ms ease-out',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <span style={{
+            flex: 1,
+            fontFamily: font,
+            fontSize: 18,
+            fontWeight: 400,
+            lineHeight: 1.4,
+            color: 'var(--ios-dark-90)',
+            minWidth: 0,
+          }}>
+            More
+          </span>
+          <ToolbarButton variant="credits" credits={96} />
+        </div>
       </div>
 
       {/* scrollable content */}
@@ -74,6 +134,7 @@ export function MoreScreen({ onOpenLearningLoop = () => {} }: { onOpenLearningLo
 
         {/* tools — no section label */}
         <div style={CARD_STYLE}>
+          <Row icon={brandKitIcon}  label="Brand Kit"    separator onClick={onBrandKitClick} />
           <Row icon={lightningIcon} label="Integrations" separator />
           <Row icon={barGroupIcon}  label="Insights"     separator />
           <Row icon={lineChartIcon} label="Learning Loop" separator onClick={onOpenLearningLoop} />

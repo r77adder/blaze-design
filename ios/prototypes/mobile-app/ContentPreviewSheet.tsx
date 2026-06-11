@@ -7,13 +7,16 @@ import refreshIcon    from '@ios/icons/refresh.svg';
 import calendarIcon   from '@ios/icons/calendar-01.svg';
 import checkIcon      from '@ios/icons/check-02.svg';
 import moreDotsIcon   from '@ios/icons/more-dots.svg';
+import igHeartIcon    from '@ios/icons/heart-outline.svg';
+import igCommentIcon  from '@ios/icons/message-circle.svg';
+import igSendIcon     from '@ios/icons/send-01.svg';
 
 const font = 'var(--ios-font)';
 
-const IG_HEART    = 'https://www.figma.com/api/mcp/asset/76f9aece-d551-4a69-8410-e063599ad18d';
-const IG_COMMENT  = 'https://www.figma.com/api/mcp/asset/bd0b2bf7-1be4-4162-8ab8-497260db4046';
-const IG_SEND_IG  = 'https://www.figma.com/api/mcp/asset/b8079d5c-f706-48e9-8847-637e96242a1b';
-const IG_BOOKMARK = 'https://www.figma.com/api/mcp/asset/853f9e13-12c0-45ad-b65f-8b8fef4939f6';
+// Bookmark icon inlined as a data URL — no matching SVG in ios/icons/ and the iOS CLAUDE.md says use existing SVGs only
+const IG_BOOKMARK = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'
+);
 
 const FEEDBACK_REASONS = [
   'Wrong image',
@@ -148,8 +151,10 @@ export function ContentPreviewSheet({ post, hasPrev, hasNext, onClose, onPrev, o
           }}>
             {/* Avatar row */}
             <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 99, background: '#45164a', overflow: 'hidden', flexShrink: 0 }}>
-                <img src={ASSETS.workspaceAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ width: 32, height: 32, borderRadius: 99, background: '#45164a', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {ASSETS.workspaceAvatar
+                  ? <img src={ASSETS.workspaceAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontFamily: font, fontSize: 13, fontWeight: 500, color: '#ffffff', lineHeight: 1 }}>R</span>}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: font, fontSize: 12, fontWeight: 500, color: 'var(--ios-dark-90)', lineHeight: 1.3 }}>@radiant_health</div>
@@ -165,9 +170,9 @@ export function ContentPreviewSheet({ post, hasPrev, hasNext, onClose, onPrev, o
 
             {/* Action icons */}
             <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src={IG_HEART}    alt="" style={{ width: 24, height: 24 }} />
-              <img src={IG_COMMENT}  alt="" style={{ width: 24, height: 24 }} />
-              <img src={IG_SEND_IG}  alt="" style={{ width: 24, height: 24 }} />
+              <img src={igHeartIcon}   alt="" style={{ width: 24, height: 24 }} />
+              <img src={igCommentIcon} alt="" style={{ width: 24, height: 24 }} />
+              <img src={igSendIcon}    alt="" style={{ width: 24, height: 24 }} />
               <div style={{ marginLeft: 'auto' }}>
                 <img src={IG_BOOKMARK} alt="" style={{ width: 24, height: 24 }} />
               </div>

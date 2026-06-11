@@ -11,6 +11,10 @@
 export interface SelectionPillProps {
   label: string;
   selected?: boolean;
+  /** Optional numeric counter shown after the label as a dimmer, smaller
+   *  tabular-numeric chip. Mirrors the H2 prototype's TabChip pattern
+   *  (`src/staging/TabChip`). Omit (or set to undefined) to hide. */
+  count?: number;
   onClick?: () => void;
   disabled?: boolean;
 }
@@ -18,6 +22,7 @@ export interface SelectionPillProps {
 export function SelectionPill({
   label,
   selected = false,
+  count,
   onClick,
   disabled = false,
 }: SelectionPillProps) {
@@ -30,6 +35,7 @@ export function SelectionPill({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 6,
         padding: '8px 12px',
         borderRadius: 99,
         background: selected ? 'var(--ios-light-100)' : 'rgba(0,0,0,0.03)',
@@ -53,6 +59,20 @@ export function SelectionPill({
       >
         {label}
       </span>
+      {count !== undefined && (
+        <span
+          style={{
+            fontFamily: 'var(--ios-font)',
+            fontSize: 12,
+            fontWeight: 400,
+            lineHeight: 1,
+            color: 'var(--ios-dark-40)',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {count}
+        </span>
+      )}
     </button>
   );
 }

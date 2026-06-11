@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StatePicker, useStateContext, PhoneFrame } from '../_shell';
 import { TabBar, Sheet, Stepper } from '@ios/components';
 import type { TabItem } from '@ios/components';
@@ -7,6 +7,10 @@ import type { LLDataState } from './HomeScreen';
 import { CampaignsScreen } from './CampaignsScreen';
 import { BrandKitScreen } from './BrandKitScreen';
 import { MoreScreen } from './MoreScreen';
+import { LeadsScreen } from './LeadsScreen';
+import { LeadConversationScreen, LeadConversationComposer } from './LeadConversationScreen';
+import { StatusPickerSheet } from './StatusPickerSheet';
+import { getLead, type Status } from './leads-data';
 import { CampaignSettingsOverlay } from './CampaignSettingsOverlay';
 import { ASSETS } from './assets';
 
@@ -37,31 +41,89 @@ import homeIcon from '@ios/icons/home-04.svg';
 import homeFilledIcon from '@ios/icons/home-filled.svg';
 import calendarIcon from '@ios/icons/calendar-01.svg';
 import campaignsIcon from '@ios/icons/layers-05.svg';
-import brandKitIcon from '@ios/icons/atom.svg';
-import brandKitFilledIcon from '@ios/icons/brandkit_filled.svg';
+// Thin stroked variant — matches the weight of the other tab-bar icons
+// (the default `user-profile-group.svg` is a heavier filled glyph).
+import receptionistIcon from '@ios/icons/users.svg';
 import moreIcon from '@ios/icons/more-dots.svg';
 
-const TABS = ['home', 'calendar', 'campaigns', 'brand-kit', 'more'] as const;
-type Tab = (typeof TABS)[number];
+// Primary tabs shown in the bottom tab bar.
+const TABS = ['home', 'calendar', 'campaigns', 'receptionist', 'more'] as const;
+
+// All states the state context will accept (includes secondary sub-views like
+// brand-kit and lead-conversation that are pushed from a parent tab and don't
+// have their own tab in the tab bar).
+const ALL_STATES = [...TABS, 'brand-kit', 'lead-conversation'] as const;
+type AppState = (typeof ALL_STATES)[number];
 
 const TAB_ITEMS: TabItem[] = [
-  { id: 'home',       label: 'Home',      icon: homeIcon,      iconActive: homeFilledIcon },
-  { id: 'calendar',   label: 'Calendar',  icon: calendarIcon },
-  { id: 'campaigns',  label: 'Campaigns', icon: campaignsIcon },
-  { id: 'brand-kit',  label: 'Brand Kit', icon: brandKitIcon,  iconActive: brandKitFilledIcon },
-  { id: 'more',       label: 'More',      icon: moreIcon },
+  { id: 'home',         label: 'Home',         icon: homeIcon, iconActive: homeFilledIcon },
+  { id: 'calendar',     label: 'Calendar',     icon: calendarIcon },
+  { id: 'campaigns',    label: 'Campaigns',    icon: campaignsIcon },
+  { id: 'receptionist', label: 'Receptionist', icon: receptionistIcon },
+  { id: 'more',         label: 'More',         icon: moreIcon },
 ];
 
-function AppScreens({ onCampaignsSettings, showSkeleton, llState, onOpenLearningLoop, onApproveCampaign, unscheduledCount, onUnscheduled }: { onCampaignsSettings: () => void; showSkeleton?: boolean; llState: LLDataState; onOpenLearningLoop: () => void; onApproveCampaign: () => void; unscheduledCount: number; onUnscheduled: () => void }) {
+// Map a sub-view back to its parent tab so the tab bar stays highlighted on
+// the right tab while the user is deep in a secondary screen.
+function parentTab(state: string): string {
+  if (state === 'brand-kit')         return 'more';
+  if (state === 'lead-conversation') return 'receptionist';
+  return state;
+}
+
+interface AppScreensProps {
+  onCampaignsSettings: () => void;
+  showSkeleton?: boolean;
+  llState: LLDataState;
+  onOpenLearningLoop: () => void;
+  onApproveCampaign: () => void;
+  unscheduledCount: number;
+  onUnscheduled: () => void;
+  onBrandKitOpen: () => void;
+  onBrandKitClose: () => void;
+  onLeadOpen: (id: string) => void;
+  onLeadClose: () => void;
+  selectedLeadId: string | null;
+  onStatusEdit: (leadId: string) => void;
+  statusOverrides: Record<string, Status>;
+}
+
+function AppScreens({
+  onCampaignsSettings, showSkeleton,
+  llState, onOpenLearningLoop, onApproveCampaign,
+  unscheduledCount, onUnscheduled,
+  onBrandKitOpen, onBrandKitClose,
+  onLeadOpen, onLeadClose, selectedLeadId,
+  onStatusEdit, statusOverrides,
+}: AppScreensProps) {
   const { state } = useStateContext();
+
+  // The PhoneFrame wraps all screens in a single shared scroll container, so
+  // its scrollTop persists when the active screen swaps. Reset it to the top
+  // on every screen change — otherwise returning from a scrolled-down
+  // conversation leaves the leads list (or whatever screen) pre-scrolled.
+  const anchorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let el: HTMLElement | null = anchorRef.current;
+    while (el && el !== document.body) {
+      const oy = getComputedStyle(el).overflowY;
+      if (oy === 'auto' || oy === 'scroll') break;
+      el = el.parentElement;
+    }
+    if (el && el !== document.body) el.scrollTop = 0;
+  }, [state]);
+
   return (
     <>
-      {state === 'home'      && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} onApproveCampaign={onApproveCampaign} />}
-      {state === 'calendar'  && <CalendarScreen unscheduledCount={unscheduledCount} onUnscheduled={onUnscheduled} />}
-      {state === 'campaigns' && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} onCampaignClick={onApproveCampaign} />}
-      {state === 'brand-kit' && <BrandKitScreen />}
-      {state === 'more'      && <MoreScreen onOpenLearningLoop={onOpenLearningLoop} />}
-      <div style={{ height: 126 }} />
+      <div ref={anchorRef} style={{ height: 0 }} />
+      {state === 'home'              && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} onApproveCampaign={onApproveCampaign} />}
+      {state === 'calendar'          && <CalendarScreen unscheduledCount={unscheduledCount} onUnscheduled={onUnscheduled} />}
+      {state === 'campaigns'         && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} onCampaignClick={onApproveCampaign} />}
+      {state === 'receptionist'      && <LeadsScreen onLeadClick={onLeadOpen} onStatusEdit={onStatusEdit} statusOverrides={statusOverrides} />}
+      {state === 'lead-conversation' && selectedLeadId && <LeadConversationScreen leadId={selectedLeadId} onBack={onLeadClose} onStatusEdit={onStatusEdit} statusOverrides={statusOverrides} />}
+      {state === 'more'              && <MoreScreen onBrandKitClick={onBrandKitOpen} onOpenLearningLoop={onOpenLearningLoop} />}
+      {state === 'brand-kit'         && <BrandKitScreen onBack={onBrandKitClose} />}
+      <div style={{ height: 148 }} />
     </>
   );
 }
@@ -71,7 +133,7 @@ function AppTabBar({ onPlusClick }: { onPlusClick: () => void }) {
   return (
     <TabBar
       tabs={TAB_ITEMS}
-      activeTab={state}
+      activeTab={parentTab(state)}
       onTabChange={setState}
       floatingButton={
         (state === 'calendar' || state === 'campaigns')
@@ -94,6 +156,15 @@ export default function MobileApp() {
   const [strategyView, setStrategyView]         = useState<StrategyView>(null);
   const [showStrategyToast, setShowStrategyToast] = useState(false);
   const [showSkeleton, setShowSkeleton]         = useState(false);
+  const [selectedLeadId, setSelectedLeadId]     = useState<string | null>(null);
+
+  // Shared status-picker bottom sheet — opened from the swipe-left Status
+  // action on lead/booking rows and from the in-card Status action in the
+  // lead conversation. statusOverrides lets the user "change" a lead's
+  // status from any entry point and have it reflected everywhere without
+  // mutating the seed LEADS array.
+  const [statusEditLeadId, setStatusEditLeadId] = useState<string | null>(null);
+  const [statusOverrides, setStatusOverrides]   = useState<Record<string, Status>>({});
 
   // Learning Loop state ------------------------------------------------------
   const [llState, setLLState]                   = useState<LLDataState>('no-account');
@@ -201,63 +272,183 @@ export default function MobileApp() {
     </>
   );
 
-  // Footer slot — tab bar by default, sticky Connect when on LL empty,
-  // hidden during LL push view / lock screen / campaign approval flow
-  const llTabBarReplaced =
+  // Footer slot for AppBody to consume — three signals:
+  //  - llConnectFooter: render the LL "Connect Accounts" CTA when present
+  //  - hideFooter:      omit the footer entirely (LL push view / lock /
+  //                     campaign approval flow takes over the whole frame)
+  //  - default:         AppBody renders its own <AppTabBar> with the
+  //                     leadReturnTab-aware activeTab mapping
+  const llConnectFooter =
     llView === 'll' && llState === 'no-account'
       ? <LLConnectFooter onConnect={() => setLLState('collecting')} />
-      : llView === 'll' || llView === 'lock' || campaignFlowOpen
-        ? undefined
-        : <AppTabBar onPlusClick={() => setPlusPopoverOpen(v => !v)} />;
+      : null;
+  const hideFooter = llView === 'll' || llView === 'lock' || campaignFlowOpen;
 
   return (
-    <StatePicker states={TABS} defaultState="home">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
-        <PhoneFrame
-          footer={llTabBarReplaced}
-          overlay={
-            <>
-              {calOverlay ?? campOverlay ?? strategyOverlay ?? plusPopover ?? null}
-              {llOverlay}
-              <CampToast show={showCampToast} />
-              <DefaultsToast show={showDefaultsToast} />
-              <StrategyToast show={showStrategyToast} />
-            </>
-          }
-        >
-          {llView === 'tabs' && !campaignFlowOpen && (
-            <AppScreens
-              onCampaignsSettings={() => setCampSettingsOpen(true)}
-              showSkeleton={showSkeleton}
-              onApproveCampaign={() => setCampaignFlowOpen(true)}
-              unscheduledCount={unschedPosts.length}
-              onUnscheduled={() => setUnschedView('drawer')}
-              llState={llState}
-              onOpenLearningLoop={() => setLLView('ll')}
-            />
-          )}
-          {llView === 'll' && llState === 'no-account' && (
-            <LLLandingScreen onBack={() => setLLView('tabs')} />
-          )}
-          {llView === 'll' && llState !== 'no-account' && (
-            <LearningsScreen
-              state={llState as 'collecting' | 'active'}
-              onBack={() => setLLView('tabs')}
-              notifAccepted={notifAccepted}
-              onOpenNotifyMe={() => setLLModal('notify-me')}
-            />
-          )}
-          {llView === 'lock' && (
-            <LockScreen
-              onOpenNotification={() => { setLLState('active'); setLLView('ll'); }}
-            />
-          )}
-          {campaignFlowOpen && (
-            <CampaignApprovalFlow onClose={() => setCampaignFlowOpen(false)} />
-          )}
-        </PhoneFrame>
-      </div>
+    <StatePicker states={ALL_STATES} defaultState="home">
+      <AppBody
+        llView={llView}
+        llState={llState}
+        campaignFlowOpen={campaignFlowOpen}
+        onOpenLearningLoop={() => setLLView('ll')}
+        onLLBack={() => setLLView('tabs')}
+        onLLLockOpen={() => { setLLState('active'); setLLView('ll'); }}
+        onLLConnect={() => setLLState('collecting')}
+        onApproveCampaign={() => setCampaignFlowOpen(true)}
+        onCampaignClose={() => setCampaignFlowOpen(false)}
+        onCampaignsSettings={() => setCampSettingsOpen(true)}
+        unscheduledCount={unschedPosts.length}
+        onUnscheduled={() => setUnschedView('drawer')}
+        onPlusClick={() => setPlusPopoverOpen(v => !v)}
+        notifAccepted={notifAccepted}
+        onOpenNotifyMe={() => setLLModal('notify-me')}
+        showSkeleton={showSkeleton}
+        showCampToast={showCampToast}
+        showDefaultsToast={showDefaultsToast}
+        showStrategyToast={showStrategyToast}
+        selectedLeadId={selectedLeadId}
+        onLeadOpen={setSelectedLeadId}
+        onLeadClose={() => setSelectedLeadId(null)}
+        calOverlay={calOverlay}
+        campOverlay={campOverlay}
+        strategyOverlay={strategyOverlay}
+        plusPopover={plusPopover}
+        llOverlay={llOverlay}
+        llConnectFooter={llConnectFooter}
+        hideFooter={hideFooter}
+        statusEditLeadId={statusEditLeadId}
+        onStatusEdit={setStatusEditLeadId}
+        onStatusEditClose={() => setStatusEditLeadId(null)}
+        onStatusPick={(leadId, next) => setStatusOverrides(prev => ({ ...prev, [leadId]: next }))}
+        statusOverrides={statusOverrides}
+      />
     </StatePicker>
+  );
+}
+
+// Lives inside <StatePicker> so it can read/write the current state — needed
+// to push and pop the secondary sub-views (`brand-kit`, `lead-conversation`)
+// that aren't represented in the tab bar but ARE valid app states.
+interface AppBodyProps {
+  llView: 'tabs' | 'll' | 'lock';
+  llState: LLDataState;
+  campaignFlowOpen: boolean;
+  onOpenLearningLoop: () => void;
+  onLLBack: () => void;
+  onLLLockOpen: () => void;
+  onLLConnect: () => void;
+  onApproveCampaign: () => void;
+  onCampaignClose: () => void;
+  onCampaignsSettings: () => void;
+  unscheduledCount: number;
+  onUnscheduled: () => void;
+  onPlusClick: () => void;
+  notifAccepted: boolean;
+  onOpenNotifyMe: () => void;
+  showSkeleton: boolean;
+  showCampToast: boolean;
+  showDefaultsToast: boolean;
+  showStrategyToast: boolean;
+  selectedLeadId: string | null;
+  onLeadOpen: (id: string | null) => void;
+  onLeadClose: () => void;
+  calOverlay: React.ReactNode;
+  campOverlay: React.ReactNode;
+  strategyOverlay: React.ReactNode;
+  plusPopover: React.ReactNode;
+  llOverlay: React.ReactNode;
+  /** Sticky LL "Connect Accounts" CTA, when relevant. */
+  llConnectFooter: React.ReactNode;
+  /** True when the LL push view / lock screen / campaign approval flow
+   *  should take the whole frame and the footer should be omitted. */
+  hideFooter: boolean;
+  /** Lead whose status the picker is currently editing — null when closed. */
+  statusEditLeadId: string | null;
+  onStatusEdit: (leadId: string) => void;
+  onStatusEditClose: () => void;
+  onStatusPick: (leadId: string, next: Status) => void;
+  /** Map of lead id → newly-picked status (overrides the seed lead.status). */
+  statusOverrides: Record<string, Status>;
+}
+
+function AppBody(props: AppBodyProps) {
+  const { state, setState } = useStateContext();
+  // While a lead conversation is open we swap whatever the LL footer would be
+  // for the chat composer — feels like a real iOS messaging detail screen.
+  // The composer starts empty (PR55): the AI's proposed reply lives in its
+  // own block in the thread, and the summary in a card at the top.
+  const footer = (() => {
+    if (state === 'lead-conversation') {
+      return <LeadConversationComposer key={props.selectedLeadId ?? 'none'} />;
+    }
+    if (props.hideFooter) return undefined;
+    if (props.llConnectFooter) return props.llConnectFooter;
+    return <AppTabBar onPlusClick={props.onPlusClick} />;
+  })();
+  // Resolve which lead the status picker is editing → its current effective
+  // status (override if present, else the seed value).
+  const statusEditLead = props.statusEditLeadId ? getLead(props.statusEditLeadId) : undefined;
+  const statusEditCurrent = statusEditLead
+    ? (props.statusOverrides[statusEditLead.id] ?? statusEditLead.status)
+    : null;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
+      <PhoneFrame
+        footer={footer}
+        overlay={
+          <>
+            {props.calOverlay ?? props.campOverlay ?? props.strategyOverlay ?? props.plusPopover ?? null}
+            {props.llOverlay}
+            <CampToast show={props.showCampToast} />
+            <DefaultsToast show={props.showDefaultsToast} />
+            <StrategyToast show={props.showStrategyToast} />
+            <StatusPickerSheet
+              visible={props.statusEditLeadId !== null}
+              current={statusEditCurrent}
+              onClose={props.onStatusEditClose}
+              onPick={(next) => { if (props.statusEditLeadId) props.onStatusPick(props.statusEditLeadId, next); }}
+            />
+          </>
+        }
+      >
+        {props.llView === 'tabs' && !props.campaignFlowOpen && (
+          <AppScreens
+            onCampaignsSettings={props.onCampaignsSettings}
+            showSkeleton={props.showSkeleton}
+            onApproveCampaign={props.onApproveCampaign}
+            unscheduledCount={props.unscheduledCount}
+            onUnscheduled={props.onUnscheduled}
+            llState={props.llState}
+            onOpenLearningLoop={props.onOpenLearningLoop}
+            onBrandKitOpen={() => setState('brand-kit')}
+            onBrandKitClose={() => setState('more')}
+            onLeadOpen={(id) => { props.onLeadOpen(id); setState('lead-conversation'); }}
+            onLeadClose={() => { props.onLeadClose(); setState('receptionist'); }}
+            selectedLeadId={props.selectedLeadId}
+            onStatusEdit={props.onStatusEdit}
+            statusOverrides={props.statusOverrides}
+          />
+        )}
+        {props.llView === 'll' && props.llState === 'no-account' && (
+          <LLLandingScreen onBack={props.onLLBack} />
+        )}
+        {props.llView === 'll' && props.llState !== 'no-account' && (
+          <LearningsScreen
+            state={props.llState as 'collecting' | 'active'}
+            onBack={props.onLLBack}
+            notifAccepted={props.notifAccepted}
+            onOpenNotifyMe={props.onOpenNotifyMe}
+          />
+        )}
+        {props.llView === 'lock' && (
+          <LockScreen onOpenNotification={props.onLLLockOpen} />
+        )}
+        {props.campaignFlowOpen && (
+          <CampaignApprovalFlow onClose={props.onCampaignClose} />
+        )}
+      </PhoneFrame>
+    </div>
   );
 }
 

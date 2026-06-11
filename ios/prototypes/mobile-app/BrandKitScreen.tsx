@@ -95,15 +95,24 @@ function CardSubtitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function BrandKitScreen() {
+export function BrandKitScreen({ onBack }: { onBack?: () => void } = {}) {
   return (
     <div style={{ fontFamily: font, background: '#f8f8f9', minHeight: '100%' }}>
 
-      <ToolbarHeader
-        variant="screen"
-        title="Brand Kit"
-        rightButtons={<ToolbarButton variant="credits" credits={96} />}
-      />
+      {onBack ? (
+        <ToolbarHeader
+          variant="default"
+          leftButton="back"
+          onLeftPress={onBack}
+          title="Brand Kit"
+        />
+      ) : (
+        <ToolbarHeader
+          variant="screen"
+          title="Brand Kit"
+          rightButtons={<ToolbarButton variant="credits" credits={96} />}
+        />
+      )}
 
       {/* Content */}
       <div style={{ padding: '16px 20px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
