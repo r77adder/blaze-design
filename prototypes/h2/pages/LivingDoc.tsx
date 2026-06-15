@@ -214,7 +214,7 @@ const SEED_AGENT_TASKS: AgentTask[] = [
   {
     id: 'p3', text: 'Apply Wave 2 change requests', status: 'review', assignee: 'petar',
     source: 'Client approvals', why: 'Sarah’s change notes wait on this — turnaround target is 24h.',
-    output: { label: 'Review reworked posts', to: '/h2/approvals' },
+    output: { label: 'Review reworked posts', to: '/approval-v2' },
     detail: 'Rework anything Sarah flags in client approvals.',
     plan: [
       'Watch client approvals for incoming change notes',
@@ -339,7 +339,7 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
     ],
     statusLine: '2 of 6 opened since Jun 1 — June schedule slips if not approved by Jun 9',
     remind: true,
-    cta: { label: 'Open approvals', to: '/h2/approvals' },
+    cta: { label: 'Open approvals', to: '/approval-v2' },
   },
   {
     id: 'w4', kind: 'flag', sourceLabel: 'Paid Social', icon: Cursor04, assignee: 'alex', time: 'Yesterday',
@@ -1294,7 +1294,7 @@ export function LivingDocRoute() {
                   {APPROVAL_PENDING_COUNT} item{APPROVAL_PENDING_COUNT === 1 ? '' : 's'} {clientView ? 'need your approval' : 'waiting on CertaPro'}
                 </Text>
                 <div style={{ marginTop: 'auto', paddingTop: 7 }}>
-                  <Button variant="secondary" size="xs" frontIcon={Approvals} onPress={() => navigate('/h2/approvals')}>
+                  <Button variant="secondary" size="xs" frontIcon={Approvals} onPress={() => navigate('/approval-v2')}>
                     {clientView ? 'Review & approve' : 'Open approvals'}
                   </Button>
                 </div>

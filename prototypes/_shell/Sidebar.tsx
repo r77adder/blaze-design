@@ -146,7 +146,10 @@ export const H2_SECTIONS: SidebarSection[] = [
   {
     // Home is the Living Doc — the shared client doc is the account's
     // center of gravity. The old dashboard home lives on under WIP.
-    items: [{ label: 'Home', icon: Home2, href: '/h2/living-doc' }],
+    items: [
+      { label: 'Home', icon: Home2, href: '/h2/living-doc' },
+      { label: 'Approvals', icon: Approvals, href: '/approval-v2' },
+    ],
   },
   {
     label: 'Awareness',
@@ -255,6 +258,9 @@ export function Sidebar({
 
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  // When the current route matches an item's href, that href wins — don't let the
+  // default `activeLabel` (Home) also light up.
+  const pathMatchesAnyHref = resolved.some(s => s.items.some(i => i.href === pathname));
 
   return (
     <aside className={styles.sidebar}>
@@ -273,7 +279,7 @@ export function Sidebar({
               <NavItemEntry
                 key={item.label}
                 item={item}
-                activeLabel={activeLabel}
+                activeLabel={pathMatchesAnyHref ? '' : activeLabel}
                 pathname={pathname}
                 navigate={navigate}
               />
