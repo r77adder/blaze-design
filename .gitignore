@@ -8,3 +8,7 @@ module/
 .ladle/build/
 playwright-report/
 test-results/
+
+# Prototype `lib/` folders are source, not library build output — keep them.
+!prototypes/**/lib/
+!prototypes/**/lib/**

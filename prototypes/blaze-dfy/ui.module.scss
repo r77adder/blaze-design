@@ -1,0 +1,60 @@
+/* Native <input type="color"> restyled as a clean rounded color chip: no
+ * browser swatch border, rounded fill. The swatch border + wrapper padding
+ * live on ::-webkit-color-swatch pseudo-elements, which inline styles can't
+ * reach — hence this module. */
+.colorSwatch {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.colorSwatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorSwatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 10px;
+}
+
+.colorSwatch::-moz-color-swatch {
+  border: none;
+  border-radius: 10px;
+}
+
+/* Multi-line field — the lib has no standard textarea, so this mirrors the
+ * TextField chrome (8px radius, --dark-8 border, Sohne body, hover/focus). */
+.textArea {
+  font-family: 'Sohne', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.28px;
+  line-height: 1.5;
+  color: var(--dark-90);
+  background: var(--light-100);
+  border: 1px solid var(--dark-8);
+  border-radius: 8px;
+  padding: 9px 12px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 120ms ease;
+}
+
+.textArea::placeholder {
+  color: var(--dark-40);
+}
+
+.textArea:hover {
+  border-color: var(--dark-15);
+}
+
+.textArea:focus {
+  border-color: var(--dark-40);
+}

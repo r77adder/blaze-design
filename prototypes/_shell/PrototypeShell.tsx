@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import styles from './PrototypeShell.module.scss';
-import { Sidebar, type SidebarNavItem, type SidebarSection } from './Sidebar';
+import { Sidebar, type SidebarNavItem, type SidebarSection, type SidebarFooterItem } from './Sidebar';
 import { TopBar } from './TopBar';
 import { StatePickerControls } from './StatePicker';
 
@@ -21,6 +21,11 @@ export interface PrototypeShellProps {
   sidebarActiveLabel?: string;
   /** Workspace name shown in the sidebar header. Defaults to "Acme Co". */
   workspaceName?: string;
+  /** Optional — makes the sidebar workspace selector clickable (account/
+   *  workspace switcher). When omitted the selector is inert. */
+  onWorkspacePress?: () => void;
+  /** Replaces the sidebar's default Invite / Help footer rows. */
+  sidebarFooterItems?: SidebarFooterItem[];
   /** Remove the default 24px content padding so the child can own the full
    *  area (used by detail views with their own internal chrome / sticky
    *  composers). */
@@ -36,6 +41,8 @@ export function PrototypeShell({
   sidebarItems,
   sidebarActiveLabel,
   workspaceName,
+  onWorkspacePress,
+  sidebarFooterItems,
   fullBleed,
   children,
 }: PrototypeShellProps) {
@@ -46,6 +53,8 @@ export function PrototypeShell({
         items={sidebarItems}
         activeLabel={sidebarActiveLabel}
         workspaceName={workspaceName}
+        onWorkspacePress={onWorkspacePress}
+        footerItems={sidebarFooterItems}
       />
       <div className={styles.main}>
         <TopBar

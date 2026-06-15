@@ -52,6 +52,16 @@ export interface SidebarNavItem {
   href?: string;
 }
 
+/** Footer row at the very bottom of the sidebar. When `footerItems` is passed
+ *  to <Sidebar>, these replace the default Invite / Help rows. `href` navigates
+ *  via React Router (no full reload); `onClick` is an escape hatch. */
+export interface SidebarFooterItem {
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+  href?: string;
+  onClick?: () => void;
+}
+
 export interface SidebarSection {
   /** Optional uppercase label rendered above the section's items. Omit for
    *  the unlabeled top group (Home etc). */
@@ -189,6 +199,11 @@ export interface SidebarProps {
   items?: SidebarNavItem[];
   /** Workspace name shown in the sidebar header selector. */
   workspaceName?: string;
+  /** Optional — makes the workspace selector clickable (e.g. to open an
+   *  account/workspace switcher). When omitted the selector is inert. */
+  onWorkspacePress?: () => void;
+  /** Replaces the default Invite / Help footer rows when provided. */
+  footerItems?: SidebarFooterItem[];
 }
 
 function NavItemEntry({ item, activeLabel, pathname, navigate }: {
@@ -229,6 +244,8 @@ export function Sidebar({
   sections,
   items,
   workspaceName = 'Acme Co',
+  onWorkspacePress,
+  footerItems,
 }: SidebarProps) {
   const resolved: SidebarSection[] = sections
     ? sections
@@ -242,7 +259,7 @@ export function Sidebar({
   return (
     <aside className={styles.sidebar}>
       <div className={styles.headerSlot}>
-        <WorkspaceSelector workspaceName={workspaceName} />
+        <WorkspaceSelector workspaceName={workspaceName} onPress={onWorkspacePress} />
       </div>
       <nav className={styles.nav}>
         {resolved.map((section, idx) => (
@@ -265,8 +282,22 @@ export function Sidebar({
         ))}
       </nav>
       <div className={styles.footer}>
-        <BottomItem icon={UserProfileAdd}>Invite Team Members</BottomItem>
-        <BottomItem icon={Help}>Help & Learn Blaze</BottomItem>
+        {footerItems
+          ? footerItems.map((f) => (
+              <BottomItem
+                key={f.label}
+                icon={f.icon}
+                onClick={() => { if (f.href) navigate(f.href); f.onClick?.(); }}
+              >
+                {f.label}
+              </BottomItem>
+            ))
+          : (
+            <>
+              <BottomItem icon={UserProfileAdd}>Invite Team Members</BottomItem>
+              <BottomItem icon={Help}>Help & Learn Blaze</BottomItem>
+            </>
+          )}
       </div>
     </aside>
   );
