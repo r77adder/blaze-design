@@ -13,6 +13,7 @@ import Play3 from '@/icons/20/Play3';
 import Trash2 from '@/icons/20/Trash2';
 import { ChannelGlyph } from '../SdrDetail';
 import { H2Layout } from '../H2Layout';
+import { ComplianceSection } from './SdrCompliance';
 import { ALL_CHANNELS, SOURCE_LABELS, type Channel } from '../sdr-data';
 import {
   AFTER_HOURS_OPTIONS,
@@ -52,7 +53,7 @@ import {
   type Vertical,
 } from '../sdr-settings-data';
 
-type SettingsSubTab = 'triggers' | 'agent' | 'outcomes' | 'notifications';
+type SettingsSubTab = 'triggers' | 'agent' | 'outcomes' | 'notifications' | 'compliance';
 
 // ── Agent config ──────────────────────────────────────────────────────────
 
@@ -195,6 +196,7 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
     { id: 'agent',         label: 'Agent',         sub: 'What the AI does' },
     { id: 'outcomes',      label: 'Outcomes',      sub: 'What gets delivered' },
     { id: 'notifications', label: 'Notifications', sub: 'How you stay in the loop' },
+    { id: 'compliance',    label: 'Compliance',    sub: 'A2P / 10DLC registration' },
   ];
 
   return (
@@ -213,7 +215,8 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
         alignItems: 'flex-start',
         maxWidth: 1200,
         margin: '0 auto',
-        padding: '8px 24px 60px',
+        // compliance owns a flush sticky footer, so it drops the bottom gutter
+        padding: subTab === 'compliance' ? '8px 24px 0' : '8px 24px 60px',
       }}
     >
       {/* Main settings content */}
@@ -251,6 +254,7 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
           {subTab === 'notifications' && (
             <NotificationsSection onConfigureEscalations={() => setSubTab('outcomes')} />
           )}
+          {subTab === 'compliance' && <ComplianceSection />}
         </FolderTabPanel>
       </div>
 
