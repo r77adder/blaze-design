@@ -148,7 +148,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     // center of gravity. The old dashboard home lives on under WIP.
     items: [
       { label: 'Home', icon: Home2, href: '/h2/living-doc' },
-      { label: 'Approvals', icon: Approvals, href: '/approval-v2' },
+      { label: 'Approvals', icon: Approvals, href: '/h2/approvals' },
     ],
   },
   {
