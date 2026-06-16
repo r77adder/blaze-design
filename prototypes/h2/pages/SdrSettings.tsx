@@ -1,6 +1,6 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { Button, Heading, IconButton, Modal, Text, useModals, type StackModalProps } from '@/components';
-import { Avatar, Chip, Pill, Select, StatusPill, useToast } from '@/staging';
+import { Avatar, Chip, Pill, Select, StatusPill, TextField as DSTextField, useToast } from '@/staging';
 import Close from '@/icons/20/Close';
 import Lock3 from '@/icons/20/Lock3';
 import ChevronDown from '@/icons/20/ChevronDown';
@@ -52,7 +52,7 @@ import {
   type Vertical,
 } from '../sdr-settings-data';
 
-type SettingsSubTab = 'triggers' | 'agent' | 'outcomes';
+type SettingsSubTab = 'triggers' | 'agent' | 'outcomes' | 'notifications';
 
 // ── Agent config ──────────────────────────────────────────────────────────
 
@@ -191,9 +191,10 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
   };
 
   const tabs: { id: SettingsSubTab; label: string; sub: string }[] = [
-    { id: 'triggers', label: 'Triggers', sub: 'When it runs' },
-    { id: 'agent',    label: 'Agent',    sub: 'What the AI does' },
-    { id: 'outcomes', label: 'Outcomes', sub: 'What gets delivered' },
+    { id: 'triggers',      label: 'Triggers',      sub: 'When it runs' },
+    { id: 'agent',         label: 'Agent',         sub: 'What the AI does' },
+    { id: 'outcomes',      label: 'Outcomes',      sub: 'What gets delivered' },
+    { id: 'notifications', label: 'Notifications', sub: 'How you stay in the loop' },
   ];
 
   return (
@@ -246,6 +247,9 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
           )}
           {subTab === 'outcomes' && (
             <OutcomesSection settings={settings} setSettings={setSettings} />
+          )}
+          {subTab === 'notifications' && (
+            <NotificationsSection onConfigureEscalations={() => setSubTab('outcomes')} />
           )}
         </FolderTabPanel>
       </div>
@@ -1988,6 +1992,313 @@ function OutcomesSection({ settings, setSettings }: SectionProps) {
           />
         </div>
       </SectionShell>
+    </>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// NOTIFICATIONS TAB — Events · Recipients · Quiet hours · Daily summary
+// ══════════════════════════════════════════════════════════════════════════
+
+// Push is a simple on/off. SMS and Email are each tri-state: off, real-time per
+// event, or rolled into the daily summary (configured in "Daily summary" below).
+type DeliveryMode = 'off' | 'realtime' | 'digest';
+
+interface NotifyEvent {
+  id: string;
+  label: string;
+  description: string;
+}
+
+const DELIVERY_MODES: { value: DeliveryMode; label: string }[] = [
+  { value: 'off',      label: 'Off' },
+  { value: 'realtime', label: 'Real-time' },
+  { value: 'digest',   label: 'Digest' },
+];
+
+const NOTIFY_EVENTS: NotifyEvent[] = [
+  { id: 'new-lead',   label: 'New qualified lead',     description: 'The AI captured a new lead with contact info and intent.' },
+  { id: 'booking',    label: 'Booking confirmed',      description: 'A prospect booked an appointment or estimate.' },
+  { id: 'reschedule', label: 'Booking changed',        description: 'A booked appointment was rescheduled.' },
+  { id: 'reminder',   label: 'Booking reminder',       description: 'A reminder went out ahead of an upcoming appointment.' },
+  { id: 'cancel',     label: 'Lead canceled booking',  description: 'A prospect canceled a booked appointment.' },
+  { id: 'message',    label: 'Customer left a message', description: 'The AI took a message for the team to follow up on.' },
+  { id: 'completed',  label: 'Conversation completed',  description: 'The AI wrapped up a conversation and logged the outcome.' },
+];
+
+interface EventNotify {
+  push: boolean;
+  sms: DeliveryMode;
+  email: DeliveryMode;
+}
+
+type NotifyMatrix = Record<string, EventNotify>;
+
+const DEFAULT_NOTIFY_MATRIX: NotifyMatrix = {
+  'new-lead':  { push: true,  sms: 'off',      email: 'digest'   },
+  booking:     { push: true,  sms: 'realtime', email: 'realtime' },
+  reschedule:  { push: true,  sms: 'off',      email: 'digest'   },
+  reminder:    { push: true,  sms: 'off',      email: 'digest'   },
+  cancel:      { push: true,  sms: 'realtime', email: 'realtime' },
+  message:     { push: true,  sms: 'off',      email: 'realtime' },
+  completed:   { push: false, sms: 'off',      email: 'digest'   },
+};
+
+interface NotifyRecipient {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+const DEFAULT_NOTIFY_RECIPIENTS: NotifyRecipient[] = [
+  { id: 'r-owner', name: 'John Bunnell', email: 'john@certapro.com',    phone: '+1 (512) 323-9000' },
+  { id: 'r-vp',    name: 'Matthew Tims', email: 'matthew@certapro.com', phone: '' },
+];
+
+const DIGEST_TIMES = [
+  { value: '07:00', label: '7:00 AM' },
+  { value: '08:00', label: '8:00 AM' },
+  { value: '09:00', label: '9:00 AM' },
+  { value: '18:00', label: '6:00 PM' },
+];
+
+interface NotificationsConfig {
+  matrix: NotifyMatrix;
+  recipients: NotifyRecipient[];
+  quietHoursEnabled: boolean;
+  quietFrom: string;
+  quietTo: string;
+  digestTime: string;
+}
+
+const DEFAULT_NOTIFICATIONS_CONFIG: NotificationsConfig = {
+  matrix: DEFAULT_NOTIFY_MATRIX,
+  recipients: DEFAULT_NOTIFY_RECIPIENTS,
+  quietHoursEnabled: true,
+  quietFrom: '21:00',
+  quietTo: '07:00',
+  digestTime: '08:00',
+};
+
+// A single matrix cell — a clickable checkbox using the shared lib glyphs.
+function ChannelCheck({ checked, onToggle, ariaLabel }: { checked: boolean; onToggle: () => void; ariaLabel: string }) {
+  const Icon = checked ? CheckboxChecked : CheckboxLight;
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      onClick={onToggle}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 32, height: 32, border: 'none', background: 'none', cursor: 'pointer', padding: 0,
+        opacity: checked ? 1 : 0.55, transition: 'opacity 120ms ease',
+      }}
+    >
+      <Icon size={20} />
+    </button>
+  );
+}
+
+function NotificationsSection({ onConfigureEscalations }: { onConfigureEscalations: () => void }) {
+  const [config, setConfig] = useState<NotificationsConfig>(DEFAULT_NOTIFICATIONS_CONFIG);
+  const update = (mut: (c: NotificationsConfig) => NotificationsConfig) => setConfig((prev) => mut(prev));
+
+  const togglePush = (eventId: string) =>
+    update((c) => ({
+      ...c,
+      matrix: { ...c.matrix, [eventId]: { ...c.matrix[eventId], push: !c.matrix[eventId].push } },
+    }));
+
+  const setMode = (eventId: string, channel: 'sms' | 'email', mode: DeliveryMode) =>
+    update((c) => ({
+      ...c,
+      matrix: { ...c.matrix, [eventId]: { ...c.matrix[eventId], [channel]: mode } },
+    }));
+
+  const digestEvents = NOTIFY_EVENTS.filter(
+    (ev) => config.matrix[ev.id].sms === 'digest' || config.matrix[ev.id].email === 'digest',
+  );
+
+  const addRecipient = () =>
+    update((c) => ({ ...c, recipients: [...c.recipients, { id: `r-${Date.now()}`, name: '', email: '', phone: '' }] }));
+  const updateRecipient = (id: string, field: 'name' | 'email' | 'phone', value: string) =>
+    update((c) => ({ ...c, recipients: c.recipients.map((r) => (r.id === id ? { ...r, [field]: value } : r)) }));
+  const removeRecipient = (id: string) =>
+    update((c) => ({ ...c, recipients: c.recipients.filter((r) => r.id !== id) }));
+
+  const EVENT_GRID = '1fr 56px 102px 102px';
+  const RECIPIENT_GRID = '1fr 1fr 1fr 32px';
+
+  return (
+    <>
+      {/* ── Notification events ── */}
+      <SectionShell
+        title="Notify me when…"
+        sub="Pick which receptionist activity pings you, and how. SMS and email can arrive in real-time, or be rolled into a once-a-day digest."
+      >
+        <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: EVENT_GRID, gap: 12, padding: '10px 16px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 13, color: 'var(--dark-60)' }}>
+            <span>Event</span>
+            <span style={{ textAlign: 'center' }}>Push</span>
+            <span style={{ textAlign: 'center' }}>SMS</span>
+            <span style={{ textAlign: 'center' }}>Email</span>
+          </div>
+          {NOTIFY_EVENTS.map((ev) => (
+            <div
+              key={ev.id}
+              style={{
+                display: 'grid', gridTemplateColumns: EVENT_GRID, gap: 12, padding: '14px 16px', alignItems: 'center',
+                borderBottom: '1px solid var(--dark-8)',
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <Heading level={5} style={{ margin: 0 }}>{ev.label}</Heading>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{ev.description}</div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <ChannelCheck
+                  checked={config.matrix[ev.id].push}
+                  onToggle={() => togglePush(ev.id)}
+                  ariaLabel={`${ev.label} — Push`}
+                />
+              </div>
+              <Select
+                size="sm"
+                fullWidth
+                value={config.matrix[ev.id].sms}
+                onChange={(v) => setMode(ev.id, 'sms', v as DeliveryMode)}
+                options={DELIVERY_MODES}
+                aria-label={`${ev.label} — SMS delivery`}
+              />
+              <Select
+                size="sm"
+                fullWidth
+                value={config.matrix[ev.id].email}
+                onChange={(v) => setMode(ev.id, 'email', v as DeliveryMode)}
+                options={DELIVERY_MODES}
+                aria-label={`${ev.label} — email delivery`}
+              />
+            </div>
+          ))}
+
+          {/* Escalation + complaint are combined here — they don't have simple
+              per-channel toggles; their contact + rules live under Outcomes. */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Heading level={5} style={{ margin: 0 }}>Escalations</Heading>
+                <StatusPill tone="danger" size="sm">Urgent</StatusPill>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>
+                A caller needs a human, or the AI flags a complaint or urgent issue. Contact and rules are set under Outcomes.
+              </div>
+            </div>
+            <Button variant="secondary" size="sm" endIcon={ArrowRight} onPress={onConfigureEscalations}>
+              Manage escalations
+            </Button>
+          </div>
+        </div>
+      </SectionShell>
+
+      <SectionDivider />
+
+      {/* ── Recipients ── */}
+      <SectionShell
+        title="Recipients"
+        sub="Push notifications reach anyone signed in to the Blaze app. SMS and email alerts go to the people below."
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: RECIPIENT_GRID, gap: 8, padding: '0 2px', fontSize: 12, color: 'var(--dark-60)' }}>
+            <span>Name</span>
+            <span>Email</span>
+            <span>Phone (SMS)</span>
+            <span aria-hidden />
+          </div>
+          {config.recipients.map((r) => (
+            <div key={r.id} style={{ display: 'grid', gridTemplateColumns: RECIPIENT_GRID, gap: 8, alignItems: 'center' }}>
+              <DSTextField size="md" fullWidth type="text"  value={r.name}  onChange={(v) => updateRecipient(r.id, 'name', v)}  placeholder="Full name"        aria-label="Recipient name" />
+              <DSTextField size="md" fullWidth type="email" value={r.email} onChange={(v) => updateRecipient(r.id, 'email', v)} placeholder="name@example.com"  aria-label="Recipient email" />
+              <DSTextField size="md" fullWidth type="tel"   value={r.phone} onChange={(v) => updateRecipient(r.id, 'phone', v)} placeholder="+1 (512) 555-0000" aria-label="Recipient phone" />
+              <IconButton
+                variant="tertiary"
+                size="md"
+                icon={Trash2}
+                aria-label="Remove recipient"
+                onPress={() => removeRecipient(r.id)}
+              />
+            </div>
+          ))}
+          <div>
+            <Button variant="secondary" size="sm" frontIcon={Plus} onPress={addRecipient}>
+              Add recipient
+            </Button>
+          </div>
+        </div>
+      </SectionShell>
+
+      <SectionDivider />
+
+      {/* ── Quiet hours ── */}
+      <SectionShell
+        title="Quiet hours"
+        sub="Hold non-urgent notifications overnight and deliver them in the morning. Escalations always break through."
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, maxWidth: 700 }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
+            <div>
+              <Heading level={5}>Pause non-urgent notifications</Heading>
+              <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>Quietly batch routine pings during off hours.</div>
+            </div>
+            <Toggle checked={config.quietHoursEnabled} onChange={(v) => update((c) => ({ ...c, quietHoursEnabled: v }))} />
+          </div>
+          {config.quietHoursEnabled && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>From</span>
+                <DSTextField size="md" type="time" value={config.quietFrom} onChange={(v) => update((c) => ({ ...c, quietFrom: v }))} aria-label="Quiet hours start" style={{ width: 120 }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>To</span>
+                <DSTextField size="md" type="time" value={config.quietTo} onChange={(v) => update((c) => ({ ...c, quietTo: v }))} aria-label="Quiet hours end" style={{ width: 120 }} />
+              </div>
+            </div>
+          )}
+        </div>
+      </SectionShell>
+
+      <SectionDivider />
+
+      {/* ── Daily Digest ── */}
+      <section>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+          {/* headline + subheadline — the count is folded into the description */}
+          <div style={{ minWidth: 0 }}>
+            <Heading level={3} style={{ marginBottom: 4 }}>Daily Digest</Heading>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
+              {digestEvents.length === 0
+                ? 'No events are set to Digest yet — set an event’s SMS or Email to “Digest” above to start batching it here.'
+                : `${digestEvents.length} event${digestEvents.length === 1 ? '' : 's'} set to “Digest” (SMS or email) ${digestEvents.length === 1 ? 'is' : 'are'} batched into one email a day to all recipients, instead of pinging in real-time.`}
+            </Text>
+          </div>
+          {/* send time — to the right of the headline/subheadline */}
+          {digestEvents.length > 0 && (
+            <div style={{ flexShrink: 0, width: 180 }}>
+              <FieldLabel>Send at</FieldLabel>
+              <Select fullWidth value={config.digestTime} onChange={(v) => update((c) => ({ ...c, digestTime: v }))} options={DIGEST_TIMES} aria-label="Daily digest send time" />
+            </div>
+          )}
+        </div>
+        {digestEvents.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+            {digestEvents.map((ev) => (
+              <Pill key={ev.id} size="xs">{ev.label}</Pill>
+            ))}
+          </div>
+        )}
+      </section>
     </>
   );
 }
