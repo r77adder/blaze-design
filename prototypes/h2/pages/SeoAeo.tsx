@@ -1,9 +1,10 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Heading, IconButton, Modal, Text } from '@/components';
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowRefresh,
   ArrowRight,
   ChevronDown,
   BarChart,
@@ -14,8 +15,10 @@ import {
   File02,
   Filter,
   Globe,
+  GrabHandle,
   LinkAngled,
   Map02,
+  MoreDots,
   Marker03,
   Microphone,
   Plus,
@@ -25,58 +28,137 @@ import {
   Share,
   Star,
   Stars,
+  Trash2,
 } from '@/icons/20';
 import { Check as CheckSm } from '@/icons/16';
-import { StatusPill, TabChip, Tabs, Toggle } from '@/staging';
+import { GoHighLevelBrand, WixBrand, WordPressBrand } from '@/icons/35';
+import { Chip, StatusPill, TabChip, Tabs, Toggle } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
-import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 
-type SeoAeoTab = 'dashboard' | 'analytics' | 'seo-analytics' | 'settings';
+type SeoAeoTab = 'dashboard' | 'analytics' | 'how-it-works' | 'settings';
+type AnalyticsSubTab = 'seo' | 'aeo';
 
 // ─── DASHBOARD DATA ───────────────────────────────────────────────────
 
 type DifficultyLevel = 'Easy' | 'Medium' | 'Hard';
-type PostStatus = 'Review' | 'Queued';
+type PostStatus = 'Review' | 'Queued' | 'Posted' | 'Failed';
+/** Why a Failed row failed — drives its recovery CTA. */
+type FailReason = 'publish' | 'generation';
 type TopicCluster = 'Best Painters in Austin' | 'Interior Paint Colors' | 'Cabinet Painting Cost Guide' | 'Exterior Painting in Texas Heat';
 
-interface ContentRow {
-  num: number;
-  cluster: TopicCluster;
+interface PostRow {
   keyword: string;
   title: string;
   searchVol: string;
   aiVol: string;
   difficulty: DifficultyLevel;
   scheduled: string;
-  aeoGain: string;
   status: PostStatus;
+  failReason?: FailReason;
 }
 
-const CONTENT_ROWS: ContentRow[] = [
-  { num: 1, cluster: 'Best Painters in Austin',           keyword: 'best painters austin 2026',            title: 'The 7 best painters in Austin for 2026',                       searchVol: '14.2K', aiVol: '9.9K', difficulty: 'Hard',   scheduled: 'May 19', aeoGain: '+0.5 pts', status: 'Review'  },
-  { num: 2, cluster: 'Best Painters in Austin',           keyword: 'house painters austin TX',             title: 'How to choose a house painter in Austin without getting burned', searchVol: '5.4K',  aiVol: '3.2K', difficulty: 'Medium', scheduled: 'May 22', aeoGain: '+0.4 pts', status: 'Queued'  },
-  { num: 3, cluster: 'Best Painters in Austin',           keyword: 'painter near me',                      title: 'Why "painter near me" matters more than you think',             searchVol: '1.2K',  aiVol: '480',  difficulty: 'Easy',   scheduled: 'May 26', aeoGain: '+0.3 pts', status: 'Queued'  },
-  { num: 4, cluster: 'Interior Paint Colors',             keyword: 'interior painting austin',             title: 'Interior paint colors trending in Austin homes this year',      searchVol: '9.1K',  aiVol: '6.8K', difficulty: 'Medium', scheduled: 'May 28', aeoGain: '+0.4 pts', status: 'Review'  },
-  { num: 5, cluster: 'Interior Paint Colors',             keyword: 'low-VOC interior paint',               title: 'Low-VOC interior paint: what families and pet owners should know', searchVol: '6.3K', aiVol: '4.1K', difficulty: 'Easy',  scheduled: 'Jun 2',  aeoGain: '+0.3 pts', status: 'Queued'  },
-  { num: 6, cluster: 'Cabinet Painting Cost Guide',       keyword: 'cabinet painting austin',              title: 'Cabinet painting cost in Austin — refinish vs replace in 2026',  searchVol: '7.8K',  aiVol: '5.5K', difficulty: 'Medium', scheduled: 'Jun 5',  aeoGain: '+0.4 pts', status: 'Queued'  },
-  { num: 7, cluster: 'Cabinet Painting Cost Guide',       keyword: 'kitchen cabinet refinishing',          title: 'How long does a cabinet refinishing project actually take?',    searchVol: '3.2K',  aiVol: '2.1K', difficulty: 'Easy',   scheduled: 'Jun 9',  aeoGain: '+0.3 pts', status: 'Queued'  },
-  { num: 8, cluster: 'Exterior Painting in Texas Heat',   keyword: 'exterior painting austin',             title: '8 exterior paint colors that survive Texas heat',               searchVol: '5.9K',  aiVol: '3.8K', difficulty: 'Medium', scheduled: 'Jun 12', aeoGain: '+0.4 pts', status: 'Queued'  },
+interface ClusterGroup {
+  cluster: TopicCluster;
+  seedKeyword: string;
+  seedSearchVol: string;
+  seedAiVol: string;
+  firstScheduled: string;
+  status: PostStatus;
+  posts: PostRow[];
+}
+
+const CLUSTER_GROUPS: ClusterGroup[] = [
+  {
+    cluster: 'Best Painters in Austin',
+    seedKeyword: 'best painters austin 2026',
+    seedSearchVol: '14.2K', seedAiVol: '9.9K',
+    firstScheduled: 'May 19', status: 'Review',
+    posts: [
+      { keyword: 'house painters austin TX',      title: 'How to choose a house painter in Austin without getting burned', searchVol: '5.4K',  aiVol: '3.2K', difficulty: 'Medium', scheduled: 'May 22', status: 'Review' },
+      { keyword: 'painter near me',               title: 'Why "painter near me" matters more than you think',             searchVol: '1.2K',  aiVol: '480',  difficulty: 'Easy',   scheduled: 'May 26', status: 'Review' },
+      { keyword: 'residential painters austin',   title: 'Residential painters in Austin: what sets the best apart',      searchVol: '880',   aiVol: '310',  difficulty: 'Easy',   scheduled: 'May 30', status: 'Queued' },
+      { keyword: 'how to hire a painter',         title: 'How to hire a painter: 8 questions to ask before signing',      searchVol: '720',   aiVol: '260',  difficulty: 'Easy',   scheduled: 'Jun 3',  status: 'Queued' },
+      { keyword: 'painter reviews austin',        title: 'Austin painter reviews: what customers actually care about',     searchVol: '640',   aiVol: '190',  difficulty: 'Easy',   scheduled: 'Jun 7',  status: 'Queued' },
+      { keyword: 'commercial painters austin',    title: 'Commercial painting in Austin: what facilities managers should know', searchVol: '2.9K', aiVol: '1.7K', difficulty: 'Medium', scheduled: 'May 14', status: 'Failed', failReason: 'publish' },
+      { keyword: 'cheap painters austin',         title: 'Are cheap painters in Austin worth it? What to watch for',      searchVol: '1.1K',  aiVol: '520',  difficulty: 'Easy',   scheduled: 'May 12', status: 'Failed', failReason: 'generation' },
+    ],
+  },
+  {
+    cluster: 'Interior Paint Colors',
+    seedKeyword: 'interior painting austin',
+    seedSearchVol: '9.1K', seedAiVol: '6.8K',
+    firstScheduled: 'May 28', status: 'Review',
+    posts: [
+      { keyword: 'low-VOC interior paint',        title: 'Low-VOC interior paint: what families and pet owners should know', searchVol: '6.3K', aiVol: '4.1K', difficulty: 'Easy',   scheduled: 'Jun 2',  status: 'Queued' },
+      { keyword: 'best interior paint colors',    title: 'Best interior paint colors for Austin homes in 2026',              searchVol: '4.8K', aiVol: '2.9K', difficulty: 'Medium', scheduled: 'Jun 9',  status: 'Queued' },
+      { keyword: 'paint color consultation',      title: 'What to expect from a paint color consultation',                   searchVol: '2.1K', aiVol: '1.4K', difficulty: 'Easy',   scheduled: 'Jun 13', status: 'Queued' },
+      { keyword: 'accent wall ideas austin',      title: 'Accent wall ideas that work in Texas homes',                       searchVol: '1.5K', aiVol: '820',  difficulty: 'Easy',   scheduled: 'Jun 17', status: 'Queued' },
+    ],
+  },
+  {
+    cluster: 'Cabinet Painting Cost Guide',
+    seedKeyword: 'cabinet painting austin',
+    seedSearchVol: '7.8K', seedAiVol: '5.5K',
+    firstScheduled: 'Jun 5', status: 'Posted',
+    posts: [
+      { keyword: 'kitchen cabinet refinishing',   title: 'How long does a cabinet refinishing project actually take?',      searchVol: '3.2K', aiVol: '2.1K', difficulty: 'Easy',   scheduled: 'Jun 9',  status: 'Queued' },
+      { keyword: 'cabinet paint vs stain',        title: 'Cabinet paint vs stain: which holds up better in a kitchen?',    searchVol: '2.4K', aiVol: '1.6K', difficulty: 'Easy',   scheduled: 'Jun 14', status: 'Queued' },
+      { keyword: 'refinish kitchen cabinets cost', title: 'How much does it cost to refinish kitchen cabinets in Austin?', searchVol: '1.9K', aiVol: '1.1K', difficulty: 'Easy',   scheduled: 'Jun 18', status: 'Queued' },
+    ],
+  },
+  {
+    cluster: 'Exterior Painting in Texas Heat',
+    seedKeyword: 'exterior painting austin',
+    seedSearchVol: '5.9K', seedAiVol: '3.8K',
+    firstScheduled: 'Jun 12', status: 'Queued',
+    posts: [
+      { keyword: 'best exterior paint for heat',  title: 'Best exterior paint for Texas heat — what actually holds up',    searchVol: '3.1K', aiVol: '1.9K', difficulty: 'Easy',   scheduled: 'Jun 16', status: 'Queued' },
+      { keyword: 'exterior paint colors austin',  title: '8 exterior paint colors that survive Texas heat',                searchVol: '2.2K', aiVol: '1.3K', difficulty: 'Medium', scheduled: 'Jun 20', status: 'Queued' },
+      { keyword: 'stucco painting austin',        title: 'Stucco painting in Austin: what to know before you start',       searchVol: '1.4K', aiVol: '780',  difficulty: 'Easy',   scheduled: 'Jun 24', status: 'Queued' },
+      { keyword: 'deck staining austin',          title: 'Deck staining in Austin — timing, products, and cost',           searchVol: '980',  aiVol: '510',  difficulty: 'Easy',   scheduled: 'Jun 28', status: 'Queued' },
+    ],
+  },
 ];
 
-// Neutral palette for difficulty — the table reads as data, not status
-// changes, so we keep tones quiet (no yellow/orange).
 const DIFFICULTY_TONE: Record<DifficultyLevel, StatusPillTone> = {
   Hard:   'neutral',
   Medium: 'neutral',
   Easy:   'neutral',
 };
 
+// Status pill colors: Queued = grey (neutral), Review = yellow (custom
+// override below), Posted = purple (accent), Failed = red (danger).
 const STATUS_TONE: Record<PostStatus, StatusPillTone> = {
-  Review: 'accent',
   Queued: 'neutral',
+  Review: 'warning',
+  Posted: 'accent',
+  Failed: 'danger',
 };
+
+/** Chronological order, oldest (top) → newest (bottom): already-published
+ *  or failed posts first, then the one in review, then future queued ones. */
+const STATUS_ORDER: Record<PostStatus, number> = { Posted: 0, Failed: 1, Review: 2, Queued: 3 };
+
+/** Status pill with the right tone per status. Review gets a yellow
+ *  override (the pill component has no yellow tone — use the --status-review
+ *  token directly). */
+function StatusPillFor({ status }: { status: PostStatus }) {
+  if (status === 'Review') {
+    return (
+      <StatusPill tone="warning" style={{ background: 'rgba(237, 182, 44, 0.14)', borderColor: 'rgba(237, 182, 44, 0.32)', color: '#946a00' }}>
+        Review
+      </StatusPill>
+    );
+  }
+  return <StatusPill tone={STATUS_TONE[status]}>{status}</StatusPill>;
+}
+
+/** Posted rows are locked — they can't be reordered or deleted. */
+function isLocked(status: PostStatus) {
+  return status === 'Posted';
+}
 
 type ClusterFilter = 'all' | TopicCluster;
 
@@ -805,77 +887,473 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
   );
 }
 
+// ─── SETUP CHECKLIST ─────────────────────────────────────────────────
+
+/** Persistent setup banner shown at the top of the page (above tabs) until
+ *  all steps are complete. Steps are: connect blog → configure structure →
+ *  fix profile inconsistencies. */
+function SetupChecklist({ onLearnMore, onConfigureStructure, onFixProfile, onConnectBlog }: {
+  onLearnMore: () => void;
+  onConfigureStructure: () => void;
+  onFixProfile: () => void;
+  onConnectBlog: () => void;
+}) {
+  const steps = [
+    {
+      num: 1,
+      title: 'Learn more about how blog works',
+      desc: 'See how Blaze writes and publishes posts that rank on Google and get cited by AI engines.',
+      action: onLearnMore,
+    },
+    {
+      num: 2,
+      title: 'Set your posting frequency',
+      desc: 'Choose how many posts per week and which days they go live.',
+      action: onConfigureStructure,
+    },
+    {
+      num: 3,
+      title: 'Connect accounts to publish and get insights',
+      desc: 'Link your blog and analytics accounts so Blaze can publish automatically and track performance.',
+      action: onConnectBlog,
+    },
+  ];
+
+  return (
+    <div style={{ borderRadius: 12, background: 'var(--dark-2)', border: '1px solid var(--dark-4)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--dark-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertTriangle size={16} color="var(--status-connect)" />
+          <Text variant="secondary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>
+            Complete setup before Blaze can generate content · 3 steps remaining
+          </Text>
+        </div>
+        <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
+          Under 5 minutes total
+        </Text>
+      </div>
+      {steps.map((step, i) => (
+        <button
+          key={step.num}
+          type="button"
+          onClick={step.action}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '12px 16px',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: i < steps.length - 1 ? '1px solid var(--dark-4)' : 'none',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            textAlign: 'left',
+            width: '100%',
+            transition: 'background-color 120ms ease',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--dark-4)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+        >
+          <Text variant="metadata" style={{ color: 'var(--dark-40)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 16 }}>
+            {step.num}.
+          </Text>
+          <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500, flexShrink: 0 }}>
+            {step.title}
+          </Text>
+          <Text variant="metadata" style={{ color: 'var(--dark-60)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {step.desc}
+          </Text>
+          <ArrowRight size={16} color="var(--dark-40)" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ─── DASHBOARD TAB ────────────────────────────────────────────────────
 
-/** Row in the "Posts Blaze will generate for you" table. View button only
- *  appears on hover, anchored next to the title. */
-function PostsTableRow({
-  row,
-  isReview,
-  tdStyle,
-  onView,
-}: {
-  row: ContentRow;
-  isReview: boolean;
-  tdStyle: React.CSSProperties;
-  onView: () => void;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const titleColor = 'var(--dark-90)';
+function AddKeywordRow({ tdStyle, onAdd }: { tdStyle: React.CSSProperties; onAdd: () => void }) {
   return (
-    <tr onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-      <td style={{ ...tdStyle, color: 'var(--dark-40)' }}>{row.num}</td>
-      {/* Combined Title / Topic / Keyword cell — title is the lead, topic
-          + keyword line collapse beneath at 12px since they're repetitive
-          across rows. View / Approve buttons only appear on hover here so
-          the Action column can go away entirely. */}
-      <td style={tdStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div style={{ minWidth: 0 }}>
-            <Text variant="secondary" style={{ display: 'block', color: titleColor }}>
-              {row.title}
-            </Text>
-            <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
-              {row.cluster} · "{row.keyword}"
-            </Text>
-          </div>
-          <div style={{ display: 'flex', gap: 6, opacity: hovered ? 1 : 0, transition: 'opacity 120ms', flexShrink: 0 }}>
-            {isReview ? (
-              <>
-                <Button size="sm" variant="secondary">Approve</Button>
-                <Button size="sm" variant="secondary" onClick={onView}>View</Button>
-              </>
-            ) : (
-              <Button size="sm" variant="secondary">Generate</Button>
-            )}
-          </div>
+    <tr style={{ background: 'var(--dark-2)' }}>
+      <td style={{ ...tdStyle, borderBottom: '1px solid var(--dark-4)' }} />
+      <td colSpan={5} style={{ ...tdStyle, borderBottom: '1px solid var(--dark-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Button variant="secondary" size="sm" frontIcon={Plus} onPress={onAdd}>
+            Add a keyword
+          </Button>
         </div>
-      </td>
-      <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-        <span style={{ color: 'var(--dark-60)' }}>{row.searchVol}</span>
-        <span style={{ color: 'var(--dark-15)', margin: '0 4px' }}>/</span>
-        <span style={{ color: 'var(--dark-90)' }}>{row.aiVol}</span>
-      </td>
-      <td style={tdStyle}>
-        <StatusPill tone={DIFFICULTY_TONE[row.difficulty]}>{row.difficulty}</StatusPill>
-      </td>
-      <td style={{ ...tdStyle, color: 'var(--dark-60)' }}>{row.scheduled}</td>
-      <td style={tdStyle}>
-        <StatusPill tone={STATUS_TONE[row.status]}>{row.status}</StatusPill>
       </td>
     </tr>
   );
 }
 
-function DashboardTab() {
-  const navigate = useNavigate();
-  const [clusterFilter, setClusterFilter] = useState<ClusterFilter>('all');
-  const [activeModal, setActiveModal] = useState<'configure' | 'view-post' | null>(null);
-  const [viewPostRow, setViewPostRow] = useState<ContentRow | null>(null);
+/** Row "..." menu — Post Now / Mark as Posted, shown on Review rows. */
+function RowMoreMenu({ onPostNow, onMarkPosted }: { onPostNow: () => void; onMarkPosted: () => void }) {
+  const [open, setOpen] = useState(false);
+  const items: { label: string; action: () => void }[] = [
+    { label: 'Post Now', action: onPostNow },
+    { label: 'Mark as Posted', action: onMarkPosted },
+  ];
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex' }}>
+      <IconButton icon={MoreDots} variant="ghost" size="sm" aria-label="More actions" onPress={() => setOpen((v) => !v)} />
+      {open && (
+        <>
+          <span onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 20 }} />
+          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 21, minWidth: 160, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.10)', padding: 4, display: 'flex', flexDirection: 'column' }}>
+            {items.map((it) => (
+              <button
+                key={it.label}
+                type="button"
+                onClick={() => { setOpen(false); it.action(); }}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 10px', background: 'transparent', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--dark-4)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                {it.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </span>
+  );
+}
 
-  const filtered = clusterFilter === 'all'
-    ? CONTENT_ROWS
-    : CONTENT_ROWS.filter((r) => r.cluster === clusterFilter);
+/** Hover tooltip wrapper — used to explain disabled actions. */
+function Tooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <span style={{ position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, whiteSpace: 'nowrap', background: 'var(--dark-90)', color: 'var(--light-100)', fontSize: 12, lineHeight: 1.4, padding: '6px 8px', borderRadius: 6, zIndex: 30, pointerEvents: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.18)' }}>
+          {label}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Credit cost shown inline on generate/regenerate actions. */
+function CreditBadge() {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 6, color: 'var(--dark-60)' }}>
+      <Stars size={14} color="var(--dark-60)" />16
+    </span>
+  );
+}
+
+/** Small drag-handle affordance shown at the left of a reorderable row. */
+function DragHandle({ visible }: { visible: boolean }) {
+  return (
+    <span style={{ width: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', opacity: visible ? 1 : 0, transition: 'opacity 120ms', flexShrink: 0 }}>
+      <GrabHandle size={14} color="var(--dark-40)" />
+    </span>
+  );
+}
+
+function ClusterTableRow({
+  group,
+  clusterNum,
+  expanded,
+  onToggle,
+  tdStyle,
+  onViewPost,
+  onAddKeyword,
+  onDragStart,
+  onDrop,
+  onDelete,
+  onMarkPosted,
+  onPostDragStart,
+  onPostDrop,
+  onPostDelete,
+  onPostMarkPosted,
+}: {
+  group: ClusterGroup;
+  clusterNum: number;
+  expanded: boolean;
+  onToggle: () => void;
+  tdStyle: React.CSSProperties;
+  onViewPost: () => void;
+  onAddKeyword: () => void;
+  onDragStart: () => void;
+  onDrop: () => void;
+  onDelete: () => void;
+  onMarkPosted: () => void;
+  onPostDragStart: (index: number) => void;
+  onPostDrop: (index: number) => void;
+  onPostDelete: (index: number) => void;
+  onPostMarkPosted: (index: number) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const postCount = group.posts.length + 1; // +1 for the seed post
+  const locked = isLocked(group.status);
+
+  return (
+    <>
+      {/* Cluster header row */}
+      <tr
+        draggable={!locked}
+        onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text', ''); onDragStart(); }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); onDrop(); }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={onToggle}
+        style={{ cursor: 'pointer', background: hovered ? 'var(--dark-2)' : 'var(--light-100)' }}
+      >
+        <td style={{ ...tdStyle, color: 'var(--dark-40)', verticalAlign: 'middle' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <DragHandle visible={hovered && !locked} />
+            <ChevronDown
+              size={14}
+              color="var(--dark-40)"
+              style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 150ms', flexShrink: 0 }}
+            />
+            {clusterNum}
+          </div>
+        </td>
+        <td style={tdStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Text variant="secondary" style={{ fontWeight: 600, color: 'var(--dark-90)' }}>{group.cluster}</Text>
+                <StatusPill tone="neutral" size="sm">Cluster</StatusPill>
+              </div>
+              <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
+                "{group.seedKeyword}" · {postCount} posts{group.status !== 'Posted' ? ' · Publish first to generate keyword posts' : ''}
+              </Text>
+            </div>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: hovered ? 1 : 0, transition: 'opacity 120ms', flexShrink: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {!locked && (
+                <IconButton icon={Trash2} variant="ghost" size="sm" aria-label="Delete cluster" onPress={onDelete} />
+              )}
+              {group.status === 'Review' && (
+                <RowMoreMenu onPostNow={onMarkPosted} onMarkPosted={onMarkPosted} />
+              )}
+              {group.status === 'Queued'
+                ? <Button size="sm" variant="secondary">Generate Post<CreditBadge /></Button>
+                : <Button size="sm" variant="secondary" endIcon={ArrowRight} onPress={onViewPost}>View Post</Button>}
+            </div>
+          </div>
+        </td>
+        <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: 'var(--dark-60)' }}>{group.seedSearchVol}</span>
+          <span style={{ color: 'var(--dark-15)', margin: '0 4px' }}>/</span>
+          <span style={{ color: 'var(--dark-90)' }}>{group.seedAiVol}</span>
+        </td>
+        <td style={{ ...tdStyle, color: 'var(--dark-40)' }}>—</td>
+        <td style={{ ...tdStyle, color: 'var(--dark-60)' }}>{group.firstScheduled}</td>
+        <td style={tdStyle}>
+          <StatusPillFor status={group.status} />
+        </td>
+      </tr>
+
+      {/* Child post rows */}
+      {expanded && group.posts.map((post, i) => (
+        <PostChildRow
+          key={post.keyword}
+          post={post}
+          index={i + 1}
+          clusterNum={clusterNum}
+          tdStyle={tdStyle}
+          pillarPublished={group.status === 'Posted'}
+          onView={onViewPost}
+          onDragStart={() => onPostDragStart(i)}
+          onDrop={() => onPostDrop(i)}
+          onDelete={() => onPostDelete(i)}
+          onMarkPosted={() => onPostMarkPosted(i)}
+        />
+      ))}
+
+      {/* Add keyword row */}
+      {expanded && (
+        <AddKeywordRow tdStyle={tdStyle} onAdd={onAddKeyword} />
+      )}
+    </>
+  );
+}
+
+function PostChildRow({
+  post,
+  index,
+  clusterNum,
+  tdStyle,
+  pillarPublished,
+  onView,
+  onDragStart,
+  onDrop,
+  onDelete,
+  onMarkPosted,
+}: {
+  post: PostRow;
+  index: number;
+  clusterNum: number;
+  tdStyle: React.CSSProperties;
+  pillarPublished: boolean;
+  onView: () => void;
+  onDragStart: () => void;
+  onDrop: () => void;
+  onDelete: () => void;
+  onMarkPosted: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const locked = isLocked(post.status);
+  const childTd: React.CSSProperties = {
+    ...tdStyle,
+    borderBottom: '1px solid var(--dark-4)',
+    background: hovered ? 'var(--dark-4)' : 'var(--dark-2)',
+  };
+
+  return (
+    <tr
+      draggable={!locked}
+      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text', ''); onDragStart(); }}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => { e.preventDefault(); onDrop(); }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <td style={{ ...childTd, color: 'var(--dark-40)', fontSize: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <DragHandle visible={hovered && !locked} />
+          {clusterNum}.{index}
+        </div>
+      </td>
+      <td style={childTd}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ paddingLeft: 4, minWidth: 0 }}>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)' }}>{post.title}</Text>
+            <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
+              "{post.keyword}"
+            </Text>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: hovered ? 1 : 0, transition: 'opacity 120ms', flexShrink: 0 }}>
+            {!locked && (
+              <IconButton icon={Trash2} variant="ghost" size="sm" aria-label="Delete keyword" onPress={onDelete} />
+            )}
+            {post.status === 'Review' && (
+              <RowMoreMenu onPostNow={onMarkPosted} onMarkPosted={onMarkPosted} />
+            )}
+            {post.status === 'Queued' && (
+              pillarPublished
+                ? <Button size="sm" variant="secondary">Generate Post<CreditBadge /></Button>
+                : (
+                  <Tooltip label="Available once the cluster post is published">
+                    <Button size="sm" variant="secondary" isDisabled>Generate Post<CreditBadge /></Button>
+                  </Tooltip>
+                )
+            )}
+            {(post.status === 'Review' || post.status === 'Posted') && <Button size="sm" variant="secondary" endIcon={ArrowRight} onPress={onView}>View Post</Button>}
+            {post.status === 'Failed' && (
+              post.failReason === 'generation'
+                ? <Button size="sm" variant="secondary" frontIcon={ArrowRefresh}>Regenerate<CreditBadge /></Button>
+                : <Button size="sm" variant="secondary" endIcon={ArrowRight}>Repost Now</Button>
+            )}
+          </div>
+        </div>
+      </td>
+      <td style={{ ...childTd, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ color: 'var(--dark-60)' }}>{post.searchVol}</span>
+        <span style={{ color: 'var(--dark-15)', margin: '0 4px' }}>/</span>
+        <span style={{ color: 'var(--dark-90)' }}>{post.aiVol}</span>
+      </td>
+      <td style={childTd}>
+        <StatusPill tone={DIFFICULTY_TONE[post.difficulty]}>{post.difficulty}</StatusPill>
+      </td>
+      <td style={{ ...childTd, color: 'var(--dark-60)' }}>{post.scheduled}</td>
+      <td style={childTd}>
+        {post.status === 'Queued' && !pillarPublished ? (
+          <Tooltip label="Available once the cluster post is published">
+            <StatusPill tone="neutral">Waiting on cluster</StatusPill>
+          </Tooltip>
+        ) : (
+          <StatusPillFor status={post.status} />
+        )}
+      </td>
+    </tr>
+  );
+}
+
+function DashboardTab({ onLearnMore, onScheduleFrequency, onAddCluster, onOpenAnalytics }: { onLearnMore: () => void; onScheduleFrequency: () => void; onAddCluster: () => void; onOpenAnalytics: (sub: 'seo' | 'aeo') => void }) {
+  const navigate = useNavigate();
+
+  const [activeModal, setActiveModal] = useState<'configure' | 'view-post' | 'connect-blog' | null>(null);
+  const [addKeywordCluster, setAddKeywordCluster] = useState<TopicCluster | null>(null);
+  // First cluster expanded by default so the nested structure is immediately visible
+  const [expandedClusters, setExpandedClusters] = useState<Set<TopicCluster>>(
+    new Set(['Best Painters in Austin'])
+  );
+
+  // Editable copy of the cluster data so rows can be reordered / deleted.
+  // Seeded in chronological order (Queued → Review → Posted) for both
+  // clusters and the keywords within them; drag can reorder from there.
+  const [groups, setGroups] = useState<ClusterGroup[]>(() => {
+    const byStatus = <T extends { status: PostStatus }>(arr: T[]) =>
+      [...arr].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
+    return byStatus(CLUSTER_GROUPS).map((g) => ({ ...g, posts: byStatus(g.posts) }));
+  });
+  // Tracks the row currently being dragged.
+  const dragRef = useRef<{ kind: 'cluster' | 'post'; cluster: TopicCluster; index: number } | null>(null);
+
+  function toggleCluster(cluster: TopicCluster) {
+    setExpandedClusters((prev) => {
+      const next = new Set(prev);
+      next.has(cluster) ? next.delete(cluster) : next.add(cluster);
+      return next;
+    });
+  }
+
+  function dropOnCluster(toCluster: TopicCluster) {
+    const d = dragRef.current;
+    dragRef.current = null;
+    if (!d || d.kind !== 'cluster') return;
+    setGroups((prev) => {
+      const arr = [...prev];
+      const from = arr.findIndex((g) => g.cluster === d.cluster);
+      const to = arr.findIndex((g) => g.cluster === toCluster);
+      if (from < 0 || to < 0 || from === to) return prev;
+      const [moved] = arr.splice(from, 1);
+      arr.splice(to, 0, moved);
+      return arr;
+    });
+  }
+
+  function dropOnPost(cluster: TopicCluster, toIndex: number) {
+    const d = dragRef.current;
+    dragRef.current = null;
+    if (!d || d.kind !== 'post' || d.cluster !== cluster) return;
+    setGroups((prev) => prev.map((g) => {
+      if (g.cluster !== cluster) return g;
+      const posts = [...g.posts];
+      if (d.index === toIndex) return g;
+      const [moved] = posts.splice(d.index, 1);
+      posts.splice(toIndex, 0, moved);
+      return { ...g, posts };
+    }));
+  }
+
+  function deleteCluster(cluster: TopicCluster) {
+    setGroups((prev) => prev.filter((g) => g.cluster !== cluster));
+  }
+
+  function deletePost(cluster: TopicCluster, index: number) {
+    setGroups((prev) => prev.map((g) => (g.cluster === cluster ? { ...g, posts: g.posts.filter((_, i) => i !== index) } : g)));
+  }
+
+  function markClusterPosted(cluster: TopicCluster) {
+    setGroups((prev) => prev.map((g) => (g.cluster === cluster ? { ...g, status: 'Posted' } : g)));
+  }
+
+  function markPostPosted(cluster: TopicCluster, index: number) {
+    setGroups((prev) => prev.map((g) => (g.cluster === cluster ? { ...g, posts: g.posts.map((p, i) => (i === index ? { ...p, status: 'Posted' } : p)) } : g)));
+  }
 
   // Table styles — borders use --dark-4 per design spec; cells share one
   // 13px text size and 400 weight unless explicitly bumped (numeric
@@ -902,57 +1380,65 @@ function DashboardTab() {
   return (
     <div style={{ padding: '24px 28px 80px', maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
 
-      {/* Setup banner — matches the Paid Social / Paid Search creative-fatigue
-          panel pattern: neutral dark-2 surface, dark-4 border, AlertTriangle
-          icon in status-connect carries the warning weight. No yellow/orange
-          palette on the chrome itself. */}
-      <div style={{ borderRadius: 12, background: 'var(--dark-2)', border: '1px solid var(--dark-4)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--dark-4)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <AlertTriangle size={16} color="var(--status-connect)" />
-            <Text variant="secondary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>
-              Complete setup before Blaze can generate content · 2 steps remaining
-            </Text>
+      <SetupChecklist
+        onLearnMore={onLearnMore}
+        onConnectBlog={() => setActiveModal('connect-blog')}
+        onConfigureStructure={onScheduleFrequency}
+        onFixProfile={() => navigate('/h2/organic-profile?tab=profile-consistency')}
+      />
+
+      {/* 4 insight metric cards — Local SEO card format */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
+        {([
+          { Ic: BarChart, label: 'Organic traffic',  value: '2,820', unit: '/mo',        delta: '↑ 8%',  foot: 'Growing — typical for month 2', sub: 'seo' },
+          { Ic: Search,   label: 'Avg. Google rank', value: '#7.4',  unit: undefined,    delta: '↑ 3.8', foot: 'Improved from #11.2',         sub: 'seo' },
+          { Ic: Stars,    label: 'AI citations',     value: '28',    unit: 'this week',  delta: '↑ 8',   foot: 'Your best week yet',          sub: 'aeo' },
+        ] as { Ic: typeof BarChart; label: string; value: string; unit?: string; delta: string; foot: string; sub: 'seo' | 'aeo' }[]).map((m) => {
+          const Ic = m.Ic;
+          return (
+            <button
+              key={m.label}
+              type="button"
+              onClick={() => onOpenAnalytics(m.sub)}
+              style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '16px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'block', width: '100%' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--dark-60)', display: 'inline-flex', alignItems: 'center', gap: 4, letterSpacing: '0.02em' }}>
+                  <Ic size={12} /> {m.label}
+                </span>
+                <ArrowRight size={14} color="var(--dark-40)" />
+              </div>
+              <div style={{ fontSize: 26, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                {m.value}
+                <span style={{ fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', padding: '4px 8px', borderRadius: 5, lineHeight: 1, background: 'var(--green-10)', color: 'var(--status-approved)' }}>{m.delta}</span>
+                {m.unit && <span style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>{m.unit}</span>}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 4 }}>{m.foot}</div>
+            </button>
+          );
+        })}
+
+        {/* Posts published card — same format, clickable to Settings */}
+        <button
+          type="button"
+          onClick={onScheduleFrequency}
+          style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '16px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'block', width: '100%' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--dark-60)', display: 'inline-flex', alignItems: 'center', gap: 4, letterSpacing: '0.02em' }}>
+              <Send size={12} /> Posts published
+            </span>
+            <ArrowRight size={14} color="var(--dark-40)" />
           </div>
-          <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
-            Under 5 minutes total
-          </Text>
-        </div>
-        {[
-          { num: 1, title: 'Answer-first structure + FAQ blocks', desc: 'Configure how every generated post is formatted so AI engines cite it more often.', pts: '+6 pts', cta: 'Configure', action: () => setActiveModal('configure') },
-          { num: 2, title: 'Fix profile inconsistencies', desc: 'Your business name and categories differ across platforms — fix these to improve entity matching.', pts: '+4 pts', cta: 'Fix now', action: () => navigate('/h2/organic-profile?tab=profile-consistency') },
-        ].map((step, i, arr) => (
-          <button
-            key={step.num}
-            type="button"
-            onClick={() => step.action()}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 16px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: i < arr.length - 1 ? '1px solid var(--dark-4)' : 'none',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              width: '100%',
-              transition: 'background-color 120ms ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--dark-4)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-          >
-            <Text variant="metadata" style={{ color: 'var(--dark-40)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 16 }}>
-              {step.num}.
-            </Text>
-            <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500, flexShrink: 0 }}>
-              {step.title}
-            </Text>
-            <Text variant="metadata" style={{ color: 'var(--dark-60)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {step.desc}
-            </Text>
-            <ArrowRight size={16} color="var(--dark-40)" />
-          </button>
-        ))}
+          <div style={{ fontSize: 26, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            14
+            <span style={{ fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', padding: '4px 8px', borderRadius: 5, lineHeight: 1, background: 'var(--dark-4)', color: 'var(--dark-60)' }}>4 / wk</span>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 14, height: 14, borderRadius: 3, background: '#21759B', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'var(--light-100)', flexShrink: 0 }}>W</span>
+            www.bestpainter.com
+          </div>
+        </button>
       </div>
 
       {/* Section heading + filter live on the same row — filter sits to the
@@ -966,23 +1452,25 @@ function DashboardTab() {
             High-AEO-value keywords where CertaPro Austin isn't being cited · 20 posts across 4 topic clusters
           </Text>
         </div>
-        <ClusterFilterChips active={clusterFilter} onChange={setClusterFilter} />
+        <Button variant="secondary" size="sm" frontIcon={Plus} onPress={onAddCluster}>
+          Add topic cluster
+        </Button>
       </div>
 
       <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
           <colgroup>
-            <col style={{ width: 36 }} />
+            <col style={{ width: 72 }} />
             <col />
-            <col style={{ width: 130 }} />
+            <col style={{ width: 140 }} />
             <col style={{ width: 100 }} />
             <col style={{ width: 100 }} />
-            <col style={{ width: 100 }} />
+            <col style={{ width: 160 }} />
           </colgroup>
           <thead>
             <tr>
               <th style={thStyle}>#</th>
-              <th style={thStyle}>Title / topic</th>
+              <th style={thStyle}>Cluster / keyword</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Search / AI vol.</th>
               <th style={thStyle}>Difficulty</th>
               <th style={thStyle}>Scheduled</th>
@@ -990,24 +1478,34 @@ function DashboardTab() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((row) => {
-              const isReview = row.status === 'Review';
-              return (
-                <PostsTableRow
-                  key={row.num}
-                  row={row}
-                  isReview={isReview}
-                  tdStyle={tdStyle}
-                  onView={() => { setViewPostRow(row); setActiveModal('view-post'); }}
-                />
-              );
-            })}
+            {groups.map((group, i) => (
+              <ClusterTableRow
+                key={group.cluster}
+                group={group}
+                clusterNum={i + 1}
+                expanded={expandedClusters.has(group.cluster)}
+                onToggle={() => toggleCluster(group.cluster)}
+                tdStyle={tdStyle}
+                onViewPost={() => setActiveModal('view-post')}
+                onAddKeyword={() => setAddKeywordCluster(group.cluster)}
+                onDragStart={() => { dragRef.current = { kind: 'cluster', cluster: group.cluster, index: i }; }}
+                onDrop={() => dropOnCluster(group.cluster)}
+                onDelete={() => deleteCluster(group.cluster)}
+                onMarkPosted={() => markClusterPosted(group.cluster)}
+                onPostDragStart={(idx) => { dragRef.current = { kind: 'post', cluster: group.cluster, index: idx }; }}
+                onPostDrop={(idx) => dropOnPost(group.cluster, idx)}
+                onPostDelete={(idx) => deletePost(group.cluster, idx)}
+                onPostMarkPosted={(idx) => markPostPosted(group.cluster, idx)}
+              />
+            ))}
           </tbody>
         </table>
       </div>
 
+      {activeModal === 'connect-blog' && <ConnectBlogModal onClose={() => setActiveModal(null)} />}
       {activeModal === 'configure' && <ConfigureModal onClose={() => setActiveModal(null)} />}
-      {activeModal === 'view-post' && <ViewPostModal row={viewPostRow} onClose={() => setActiveModal(null)} />}
+      {activeModal === 'view-post' && <ViewPostModal row={null} onClose={() => setActiveModal(null)} />}
+      {addKeywordCluster && <AddKeywordsModal cluster={addKeywordCluster} onClose={() => setAddKeywordCluster(null)} />}
     </div>
   );
 }
@@ -1078,6 +1576,21 @@ function AnalyticsTab() {
 
   return (
     <div style={{ padding: '24px 28px 80px', maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+
+      {/* Caution banner — AEO data is directional */}
+      <div style={{ borderRadius: 12, background: 'var(--dark-2)', border: '1px solid var(--dark-4)', padding: '14px 16px', display: 'flex', gap: 12 }}>
+        <span style={{ flexShrink: 0, display: 'inline-flex', marginTop: 1 }}>
+          <AlertTriangle size={16} color="var(--status-connect)" />
+        </span>
+        <div>
+          <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)' }}>
+            AEO is a rapidly evolving area — interpret this data with caution
+          </Text>
+          <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.6, marginTop: 2 }}>
+            Blaze uses proven SEO best practices as its foundation, with a small amount of weight given to AEO signals (configurable in Settings). AI engines like ChatGPT and Google AI Overviews are unpredictable. They update their citation behavior frequently and may not always behave the way our data reflects. Treat AEO metrics as directional, not definitive.
+          </Text>
+        </div>
+      </div>
 
       {/* 4 Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
@@ -1290,7 +1803,7 @@ function AnalyticsTab() {
         {/* Citation Map — title outside the bordered card. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
-            <Heading level={3} style={{ display: 'block' }}>Content → Citation Map</Heading>
+            <Heading level={3} style={{ display: 'block' }}>Top Citations Generated</Heading>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>Which content is generating AI citations</Text>
           </div>
           <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, overflow: 'hidden', background: 'var(--light-100)' }}>
@@ -1343,9 +1856,9 @@ const AI_SURFACES = [
 
 /** Section block for the Settings tab. Title + subtitle sit OUTSIDE the
  *  bordered card so the chrome is just the content. */
-function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+function SectionCard({ id, title, subtitle, children }: { id?: string; title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div id={id} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div>
         <Heading level={3} style={{ display: 'block' }}>{title}</Heading>
         {subtitle && <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>{subtitle}</Text>}
@@ -1370,167 +1883,281 @@ function ToggleRow({ label, desc, defaultOn = false }: { label: string; desc: st
   );
 }
 
+const TARGET_COUNTRIES = ['United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France'];
+
+/** Target country select — custom popover with a checkmark on the active row. */
+function TargetCountrySelect({ onChange }: { onChange?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('United States');
+  return (
+    <div style={{ position: 'relative', maxWidth: 280 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, height: 40, border: '1px solid var(--dark-8)', borderRadius: 8, padding: '0 12px', background: 'var(--light-100)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)' }}
+      >
+        {value}
+        <ChevronDown size={16} color="var(--dark-60)" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }} />
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 20 }} />
+          <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 21, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.10)', padding: 6, display: 'flex', flexDirection: 'column' }}>
+            {TARGET_COUNTRIES.map((c) => {
+              const sel = c === value;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => { if (c !== value) onChange?.(); setValue(c); setOpen(false); }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '9px 10px', background: sel ? 'var(--dark-2)' : 'transparent', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+                  onMouseEnter={(e) => { if (!sel) e.currentTarget.style.background = 'var(--dark-2)'; }}
+                  onMouseLeave={(e) => { if (!sel) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: sel ? 600 : 400 }}>{c}</span>
+                  {sel && (
+                    <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--dark-90)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <CheckSm size={11} color="var(--light-100)" />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function SetupTab() {
-  const [selectedClusters, setSelectedClusters] = useState<Set<string>>(
-    new Set(['Best Painters in Austin', 'Interior Paint Colors', 'Cabinet Painting Cost Guide'])
-  );
-  const [selectedSurfaces, setSelectedSurfaces] = useState<Set<string>>(
-    new Set(['chatgpt', 'google'])
-  );
-  const [structure, setStructure] = useState<'answer-first' | 'traditional'>('answer-first');
-  const [faq, setFaq] = useState<'end' | 'inline' | 'off'>('end');
-  const [schema, setSchema] = useState<'both' | 'faq-only' | 'none'>('both');
+  const [planActive, setPlanActive] = useState(true);
+  const [blogConnected, setBlogConnected] = useState(false);
+  const [showConnect, setShowConnect] = useState(false);
+  const [autoApprove, setAutoApprove] = useState(false);
+  // Becomes true the moment any setting changes; drives the Save/Cancel footer.
+  const [dirty, setDirty] = useState(false);
 
-  function toggleCluster(label: string) {
-    setSelectedClusters(prev => {
-      const next = new Set(prev);
-      next.has(label) ? next.delete(label) : next.add(label);
-      return next;
-    });
-  }
-
-  function toggleSurface(id: string) {
-    setSelectedSurfaces(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
+  // Plan banner copy + pill depend on active and whether a blog is connected.
+  const bannerCopy = !planActive
+    ? 'Your SEO/AEO plan is paused — Blaze will not write or publish content until you turn your plan on.'
+    : blogConnected
+      ? 'SEO/AEO is active. Blaze is automatically writing and publishing blog content.'
+      : 'SEO/AEO is active. Connect your blog to start publishing.';
 
   return (
-    <div style={{ padding: '24px 28px 24px', maxWidth: 780, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+    <div style={{ padding: '24px 28px 96px', maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
 
-      {/* Brand Description */}
-      <SectionCard
-        title="Brand description"
-        subtitle="Pulled from your Brand Kit. Blaze embeds this in every generated post so AI engines recognize CertaPro Painters of Austin as an authoritative source."
-      >
-        <div style={{ background: 'var(--dark-4)', border: '1px solid var(--dark-4)', borderRadius: 8, padding: '14px 16px' }}>
-          <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.6 }}>
-            CertaPro Painters of Austin is your local painting contractor serving homeowners and commercial properties across the Austin metro. We handle interior and exterior painting, cabinet refinishing, color consultation, deck & fence staining, drywall repair, power washing, stucco repair, and wood rot repair. We make the process easy and convenient — clear estimates, respectful crews, and finishes that last.
-          </Text>
+      {/* Plan active / paused control */}
+      <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, background: 'var(--light-100)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>{bannerCopy}</Text>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          {!planActive ? (
+            <StatusPill tone="neutral">Paused</StatusPill>
+          ) : blogConnected ? (
+            <StatusPill tone="success">Active</StatusPill>
+          ) : (
+            <StatusPill
+              tone="warning"
+              onClick={() => setShowConnect(true)}
+              style={{ cursor: 'pointer', background: 'rgba(237, 182, 44, 0.14)', borderColor: 'rgba(237, 182, 44, 0.32)', color: '#946a00' }}
+            >
+              Connect
+            </StatusPill>
+          )}
+          <Toggle checked={planActive} onChange={(v) => { setPlanActive(v); setDirty(true); }} aria-label="SEO/AEO plan active" />
         </div>
-        <Button variant="ghost" size="sm" endIcon={ArrowRight} style={{ marginTop: 10 }}>
-          Edit in Brand Kit
-        </Button>
-      </SectionCard>
+      </div>
 
-      {/* Seed Topic Clusters */}
-      <SectionCard
-        title="Seed topic clusters"
-        subtitle="Select the clusters Blaze will generate SEO/AEO content for. Recommendations are based on AI search volume and citation gap analysis."
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {SEED_CLUSTERS.map((cluster, i) => {
-            const selected = selectedClusters.has(cluster.label);
-            return (
-              <div
-                key={cluster.label}
-                onClick={() => toggleCluster(cluster.label)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '13px 0',
-                  borderBottom: i < SEED_CLUSTERS.length - 1 ? '1px solid var(--dark-4)' : undefined,
-                  cursor: 'pointer',
-                }}
-              >
-                {selected ? (
-                  <CheckboxChecked size={20} />
-                ) : (
-                  <span style={{ width: 20, height: 20, borderRadius: 4, border: '1px solid var(--dark-15)', flexShrink: 0, display: 'block' }} />
-                )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{cluster.label}</div>
-                  <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 1 }}>{cluster.reason}</div>
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>{cluster.keywords} keywords</div>
-              </div>
-            );
-          })}
+      {showConnect && <ConnectBlogModal onClose={() => { setShowConnect(false); setBlogConnected(true); }} />}
+
+      {/* Frequency settings + auto-approve */}
+      <SectionCard title="Blog post settings">
+        {/* Auto-approve */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingBottom: 20, marginBottom: 20, borderBottom: '1px solid var(--dark-4)' }}>
+          <div>
+            <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)' }}>Auto-approve posts</Text>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
+              Blaze publishes posts automatically on their scheduled date. Turn off to review and approve each post before it goes live.
+            </Text>
+          </div>
+          <Toggle checked={autoApprove} onChange={(v) => { setAutoApprove(v); setDirty(true); }} aria-label="Auto-approve posts" />
         </div>
-        <button style={{ marginTop: 14, background: 'none', border: '1px dashed var(--dark-15)', borderRadius: 8, padding: '10px 16px', cursor: 'pointer', color: 'var(--dark-60)', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', width: '100%' }}>
-          + Add custom cluster
-        </button>
-      </SectionCard>
 
-      {/* Target AI Surfaces */}
-      <SectionCard
-        title="Target AI surfaces"
-        subtitle="All three use compatible citation signals — a single post can earn citations across all of them simultaneously."
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {AI_SURFACES.map((surface, i) => {
-            const selected = selectedSurfaces.has(surface.id);
-            return (
-              <div
-                key={surface.id}
-                onClick={() => toggleSurface(surface.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '13px 0',
-                  borderBottom: i < AI_SURFACES.length - 1 ? '1px solid var(--dark-4)' : undefined,
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={{
-                  width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-                  border: selected ? `1px solid ${surface.color}` : '1px solid var(--dark-4)',
-                  background: selected ? surface.color : 'transparent',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {selected && <span style={{ color: 'var(--light-100)', fontSize: 11, fontWeight: 800, lineHeight: 1 }}>✓</span>}
-                </div>
-                <div style={{
-                  width: 32, height: 32, borderRadius: 8,
-                  background: selected ? `${surface.color}18` : 'var(--dark-4)',
-                  border: `1px solid ${selected ? surface.color + '40' : 'var(--dark-8)'}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16, flexShrink: 0,
-                  color: surface.color,
-                  transition: 'all 0.15s',
-                }}>
-                  {surface.icon}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{surface.label}</div>
-                  <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 1 }}>{surface.desc}</div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Blog account */}
+        <div style={{ marginBottom: 20 }}>
+          <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 8 }}>Blog account</Text>
+          <button style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', border: '1px solid var(--dark-8)', borderRadius: 8, background: 'var(--light-100)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)' }}>
+            <Globe size={16} color="var(--dark-60)" />
+            Connect Account
+            <ChevronDown size={14} color="var(--dark-60)" />
+          </button>
+        </div>
+
+        {/* Posting cadence */}
+        <PostingCadencePicker onChange={() => setDirty(true)} />
+
+        {/* Target country */}
+        <div style={{ borderTop: '1px solid var(--dark-4)', marginTop: 20, paddingTop: 20 }}>
+          <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 8 }}>Target country</Text>
+          <TargetCountrySelect onChange={() => setDirty(true)} />
         </div>
       </SectionCard>
 
-      {/* Answer-first structure & FAQ blocks */}
-      <SectionCard
-        title="Answer-first structure & FAQ blocks"
-        subtitle="Choose how Blaze structures every generated post. These settings affect how often you get cited by both Google and AI search engines."
-      >
-        <StructureSettingsContent
-          structure={structure} setStructure={setStructure}
-          faq={faq} setFaq={setFaq}
-          schema={schema} setSchema={setSchema}
-        />
-      </SectionCard>
+      {/* Save / Cancel footer — shown only when there are unsaved changes */}
+      {dirty && (
+        <div
+          style={{
+            position: 'fixed', bottom: 0, left: 238, right: 0, zIndex: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+            padding: '16px 28px',
+            background: 'var(--light-100)', borderTop: '1px solid var(--dark-8)',
+            boxShadow: '0 -4px 16px rgba(0,0,0,0.04)',
+          }}
+        >
+          <Button variant="ghost" onPress={() => setDirty(false)}>Cancel</Button>
+          <Button variant="primary" onPress={() => setDirty(false)}>Save Changes</Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
-      {/* Generation settings */}
-      <SectionCard title="Generation settings" subtitle="Control how Blaze generates and publishes SEO/AEO content.">
-        <div style={{ marginTop: -12 }}>
-          <ToggleRow
-            label="Auto-publish"
-            desc="Blaze publishes approved posts automatically on their scheduled date. Turn off to require manual approval before each post goes live."
-            defaultOn={false}
-          />
-          <div style={{ paddingTop: 12 }}>
-            <ToggleRow
-              label="Include freshness signals"
-              desc="Adds the current year to post titles and headings. Improves AI citation rate. Posts are flagged for quarterly refresh."
-              defaultOn={true}
-            />
+// ─── HOW IT WORKS TAB ─────────────────────────────────────────────────
+
+/** "How we write blogs that get cited by AI" — annotated post mockup.
+ *  Shared between the How-it-works tab and the cold-state accordion. */
+function HowWeWriteContent() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 0, position: 'relative' }}>
+      {/* Left: annotation items, each sized to line up with a mockup region */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {[
+          { label: 'Answer-first', desc: 'Every post leads with the direct answer in the first 2–3 sentences. AI engines pull from the top of the page — leading with the answer makes your content more likely to be quoted.', height: 130 },
+          { label: 'HowTo schema markup', desc: 'Blaze adds structured data so Google can render rich results and AI engines can parse your content more reliably.', height: 130 },
+          { label: 'FAQ blocks at the end', desc: "A Q&A section closes each post. These map to Google's FAQ schema and give AI engines a list of clean, quotable answers.", height: 110 },
+        ].map((item) => (
+          <div
+            key={item.label}
+            style={{ display: 'flex', alignItems: 'flex-start', gap: 12, height: item.height, paddingRight: 24, paddingTop: 16 }}
+          >
+            <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--dark-4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+              <CheckSm size={12} color="var(--dark-60)" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Text variant="secondary" style={{ fontWeight: 500, color: 'var(--dark-90)', display: 'block' }}>{item.label}</Text>
+              <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.6, marginTop: 4, display: 'block' }}>{item.desc}</Text>
+            </div>
+            <div style={{ alignSelf: 'center', width: 24, height: 1, background: 'var(--dark-15)', flexShrink: 0 }} />
+          </div>
+        ))}
+      </div>
+
+      {/* Right: blog post mockup */}
+      <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, overflow: 'hidden', background: 'var(--light-100)', flexShrink: 0 }}>
+        {/* Answer-first region */}
+        <div style={{ borderBottom: '1px solid var(--dark-4)', height: 130, display: 'flex', flexDirection: 'column', background: 'var(--dark-2)', overflow: 'hidden' }}>
+          <div style={{ height: 52, background: 'var(--dark-8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>Image</Text>
+          </div>
+          <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ height: 8, borderRadius: 2, background: 'var(--dark-15)', width: '90%' }} />
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '100%' }} />
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '80%' }} />
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '95%' }} />
           </div>
         </div>
+
+        {/* Schema markup region */}
+        <div style={{ borderBottom: '1px solid var(--dark-4)', height: 130, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <div style={{ border: '1.5px dashed var(--dark-15)', borderRadius: 6, padding: '6px 8px', flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '100%' }} />
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '85%' }} />
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '95%' }} />
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '70%' }} />
+            <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '90%' }} />
+            <Text variant="metadata" style={{ color: 'var(--dark-40)', marginTop: 2 }}>schema</Text>
+          </div>
+        </div>
+
+        {/* FAQ region */}
+        <div style={{ height: 110, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <Text variant="metadata" style={{ color: 'var(--dark-60)', fontWeight: 500 }}>FAQ</Text>
+          {[90, 75, 85].map((w, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 12, height: 12, borderRadius: 3, border: '1px solid var(--dark-15)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CheckSm size={9} color="var(--dark-40)" />
+              </span>
+              <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: `${w}%` }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Collapsible version of the above for the cold-state landing. */
+function HowWeWriteAccordion() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', background: 'var(--light-100)' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', gap: 12 }}
+      >
+        <span>
+          <Text variant="secondary" style={{ fontWeight: 600, color: 'var(--dark-90)', display: 'block' }}>How we write blogs that get cited by AI</Text>
+          <Text variant="metadata" style={{ color: 'var(--dark-60)', display: 'block', marginTop: 2 }}>Every post follows the same structure — designed so Google ranks it and AI engines quote it.</Text>
+        </span>
+        <ChevronDown size={18} color="var(--dark-60)" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }} />
+      </button>
+      {open && <div style={{ borderTop: '1px solid var(--dark-4)', padding: '20px' }}><HowWeWriteContent /></div>}
+    </div>
+  );
+}
+
+function HowItWorksTab({ onBackToDashboard }: { onBackToDashboard: () => void }) {
+  return (
+    <div style={{ padding: '24px 28px 80px', maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+
+      {/* How SEO/AEO plan works */}
+      <SectionCard title="How the SEO/AEO plan works">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24 }}>
+          {[
+            { Icon: Stars,    label: 'What Blaze does',          desc: 'Blaze researches the keywords your customers are searching for, writes blog posts optimized for Google and AI search engines, and publishes them to your site on a consistent schedule — without you lifting a finger.' },
+            { Icon: BarChart, label: 'What to expect',           desc: 'SEO takes time. Most businesses start to see ranking movement in months 2–3 and meaningful organic traffic growth by month 4–6. AI citations can appear sooner — sometimes within weeks of publishing.' },
+            { Icon: Send,     label: 'How to get results faster', desc: 'Publish more consistently — even weekly posts compound quickly. Connect your blog to auto-publish so nothing sits in draft. The more content Blaze publishes, the faster your authority builds.' },
+          ].map((item) => {
+            const Icon = item.Icon;
+            return (
+              <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--dark-4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon size={20} color="var(--dark-90)" />
+                </div>
+                <Text variant="secondary" style={{ fontWeight: 500, color: 'var(--dark-90)', display: 'block' }}>{item.label}</Text>
+                <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.6, display: 'block' }}>{item.desc}</Text>
+              </div>
+            );
+          })}
+        </div>
       </SectionCard>
 
+      {/* Answer-first structure & FAQ blocks — educational */}
+      <SectionCard
+        id="how-we-write"
+        title="How we write blogs that get cited by AI"
+        subtitle="Every post Blaze writes follows the same structure — designed so Google ranks it and AI engines quote it. Here's how each post is built."
+      >
+        <HowWeWriteContent />
+      </SectionCard>
+
+      <div>
+        <Button variant="secondary" frontIcon={ArrowLeft} onPress={onBackToDashboard}>
+          Go back to Dashboard
+        </Button>
+      </div>
     </div>
   );
 }
@@ -1753,58 +2380,6 @@ function SeoAnalyticsTab() {
         </div>
       </div>
 
-      {/* 3 ── Conversions from Organic — title + stat outside the card. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <Heading level={3} style={{ display: 'block' }}>Conversions from Organic</Heading>
-            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>Visitors from search taking a valuable action</Text>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <span style={{ fontSize: 28, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>142</span>
-            <Text variant="secondary" style={{ color: 'var(--green-50)' }}>↑ +12% vs. last month</Text>
-          </div>
-        </div>
-        <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, overflow: 'hidden', background: 'var(--light-100)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={thStyle}>Conversion event</th>
-              <th style={{ ...thStyle, width: 130 }}>Source</th>
-              <th style={{ ...thStyle, width: 100, textAlign: 'right' }}>Conversions</th>
-              <th style={{ ...thStyle, width: 90, textAlign: 'right' }}>Conv. rate</th>
-              <th style={{ ...thStyle, width: 100 }}>Trend</th>
-            </tr>
-          </thead>
-          <tbody>
-            {CONVERSION_ROWS.map((r) => (
-              <tr key={r.event}>
-                <td style={{ ...tdStyle, fontWeight: 500 }}>{r.event}</td>
-                <td style={{ ...tdStyle, color: 'var(--dark-60)' }}>{r.source}</td>
-                <td style={{ ...tdStyle, textAlign: 'right' }}>{r.conversions}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--dark-60)' }}>{r.convRate}</td>
-                <td style={{ ...tdStyle, color: r.trendUp ? 'var(--green-50)' : 'var(--dark-40)' }}>{r.trend}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div style={{ padding: '12px 20px', borderTop: '1px solid var(--dark-4)', display: 'flex', gap: 24 }}>
-          <div>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)', display: 'block' }}>Overall conv. rate</Text>
-            <Text variant="secondary" style={{ fontWeight: 600, color: 'var(--dark-90)' }}>2.9%</Text>
-          </div>
-          <div>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)', display: 'block' }}>Organic share of all conversions</Text>
-            <Text variant="secondary" style={{ fontWeight: 600, color: 'var(--dark-90)' }}>38%</Text>
-          </div>
-          <div>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)', display: 'block' }}>Top converting page</Text>
-            <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>/austin/blog/best-painters-austin</Text>
-          </div>
-        </div>
-        </div>
-      </div>
-
       {/* 4 ── Backlinks / Referring Domains — title + stats outside the card. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1871,23 +2446,113 @@ function SeoAnalyticsTab() {
 
 // ─── ONBOARDING FLOW ─────────────────────────────────────────────────
 
-const ONBOARDING_CLUSTERS: { label: string; keywords: number; kd: number; vol: string; defaultChecked: boolean }[] = [
-  { label: 'Best Painters in Austin',           keywords: 13, kd: 3.0,  vol: '40.5k', defaultChecked: true  },
-  { label: 'Interior Paint Colors',             keywords: 8,  kd: 7.0,  vol: '74k',   defaultChecked: true  },
-  { label: 'Cabinet Painting Cost Guide',       keywords: 11, kd: 0.0,  vol: '3.6k',  defaultChecked: true  },
-  { label: 'Exterior Painting in Texas Heat',   keywords: 13, kd: 16.0, vol: '6.6k',  defaultChecked: false },
-  { label: 'HOA & Commercial Repaints',         keywords: 9,  kd: 4.0,  vol: '12.1k', defaultChecked: false },
-  { label: 'How to Find an Austin Painter',     keywords: 11, kd: 11.0, vol: '301k',  defaultChecked: false },
+const ONBOARDING_CLUSTERS: { label: string; keywords: number; difficulty: DifficultyLevel; vol: string; aiVol: string; defaultChecked: boolean }[] = [
+  { label: 'Best Painters in Austin',           keywords: 13, difficulty: 'Easy',   vol: '40.5k', aiVol: '9.9k',  defaultChecked: true  },
+  { label: 'Interior Paint Colors',             keywords: 8,  difficulty: 'Medium', vol: '74k',   aiVol: '6.8k',  defaultChecked: true  },
+  { label: 'Cabinet Painting Cost Guide',       keywords: 11, difficulty: 'Easy',   vol: '3.6k',  aiVol: '2.1k',  defaultChecked: true  },
+  { label: 'Exterior Painting in Texas Heat',   keywords: 13, difficulty: 'Hard',   vol: '6.6k',  aiVol: '3.8k',  defaultChecked: false },
+  { label: 'HOA & Commercial Repaints',         keywords: 9,  difficulty: 'Easy',   vol: '12.1k', aiVol: '4.2k',  defaultChecked: false },
+  { label: 'How to Find an Austin Painter',     keywords: 11, difficulty: 'Medium', vol: '301k',  aiVol: '18.2k', defaultChecked: false },
 ];
 
-const PLATFORM_OPTIONS = [
-  { id: 'wordpress', label: 'WordPress',  icon: '◼', color: '#21759B' },
-  { id: 'wix',       label: 'Wix',        icon: 'W', color: '#000000' },
-  { id: 'webflow',   label: 'Webflow',    icon: '⬡', color: '#4353FF' },
-  { id: 'custom',    label: 'Custom/API', icon: '⌥', color: '#6B7280' },
+const PLATFORM_OPTIONS: { id: string; label: string; Brand?: typeof WordPressBrand; icon?: string; color?: string }[] = [
+  { id: 'wordpress',   label: 'WordPress',   Brand: WordPressBrand },
+  { id: 'wix',         label: 'Wix',         Brand: WixBrand },
+  { id: 'gohighlevel', label: 'GoHighLevel', Brand: GoHighLevelBrand },
+  { id: 'zapier',      label: 'Zapier' },
 ];
 
-type OnboardingStep = 'landing' | 'clusters' | 'platform' | 'done';
+/** Zapier asterisk mark — inlined here because the lib has no Zapier brand
+ *  icon and src/icons is eng-protected. Brand orange #FF4F00. */
+function ZapierLogo({ size = 28 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <g stroke="#FF4F00" strokeWidth={3.2} strokeLinecap="round">
+        <line x1="12" y1="3.5" x2="12" y2="20.5" />
+        <line x1="4.6" y1="7.75" x2="19.4" y2="16.25" />
+        <line x1="4.6" y1="16.25" x2="19.4" y2="7.75" />
+      </g>
+    </svg>
+  );
+}
+
+/** Renders a platform's brand logo, or a neutral tinted glyph box for
+ *  platforms without a brand mark. */
+function PlatformLogo({ p, size = 28 }: { p: (typeof PLATFORM_OPTIONS)[number]; size?: number }) {
+  if (p.id === 'zapier') return <ZapierLogo size={size} />;
+  if (p.Brand) {
+    const Brand = p.Brand;
+    return <Brand size={size} />;
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: 7, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: p.color, flexShrink: 0 }}>
+      {p.icon}
+    </div>
+  );
+}
+
+const DAYS_OF_WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
+
+/** Posting cadence control — a posts-per-week stepper plus a day-of-week
+ *  picker. Self-contained state; used in onboarding and Settings. */
+function PostingCadencePicker({ onChange }: { onChange?: () => void }) {
+  const [postsPerWeek, setPostsPerWeek] = useState(4);
+  const [selectedDays, setSelectedDays] = useState<Set<number>>(new Set([1, 3, 5])); // M, W, F
+
+  function toggleDay(i: number) {
+    onChange?.();
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 40 }}>
+      {/* Posts per week stepper */}
+      <div>
+        <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 8 }}>Posts per week</Text>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <Button variant="secondary" size="sm" onPress={() => { onChange?.(); setPostsPerWeek((v) => Math.max(1, v - 1)); }} aria-label="Decrease">−</Button>
+          <input
+            readOnly
+            value={postsPerWeek}
+            aria-label="Posts per week"
+            style={{ width: 48, height: 32, textAlign: 'center', border: '1px solid var(--dark-8)', borderRadius: 8, fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', fontFamily: 'inherit', background: 'var(--light-100)' }}
+          />
+          <Button variant="secondary" size="sm" onPress={() => { onChange?.(); setPostsPerWeek((v) => Math.min(7, v + 1)); }} aria-label="Increase">+</Button>
+        </div>
+        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 12 }}>
+          {postsPerWeek * 20} credits / week
+        </Text>
+      </div>
+
+      {/* Days to post */}
+      <div>
+        <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 8 }}>Days to post</Text>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {DAYS_OF_WEEK.map((day, i) => (
+            <Chip
+              key={`${day}-${i}`}
+              size="sm"
+              selected={selectedDays.has(i)}
+              onSelectionChange={() => toggleDay(i)}
+              style={{ width: 36, height: 36, borderRadius: '50%', padding: 0, justifyContent: 'center' }}
+            >
+              {day}
+            </Chip>
+          ))}
+        </div>
+        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 8 }}>
+          {postsPerWeek} post{postsPerWeek !== 1 ? 's' : ''} will be spread across your selected days.
+        </Text>
+      </div>
+    </div>
+  );
+}
+
+type OnboardingStep = 'landing' | 'clusters' | 'platform';
 
 function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState<OnboardingStep>('landing');
@@ -1895,6 +2560,7 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
     new Set(ONBOARDING_CLUSTERS.filter((c) => c.defaultChecked).map((c) => c.label))
   );
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [resetFocus, setResetFocus] = useState(false);
 
   function toggleCluster(label: string) {
     setSelectedClusters((prev) => {
@@ -1910,252 +2576,498 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 
   if (step === 'landing') {
     return (
-      <H2Layout title="SEO Relevance Plan">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '72vh', padding: '40px 24px', textAlign: 'center' }}>
+      <H2Layout title="SEO/AEO">
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 28px 64px' }}>
 
-          {/* Hero card */}
-          <div style={{ width: 560, maxWidth: '100%', height: 288, borderRadius: 16, background: 'var(--green-50)', marginBottom: 32, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', padding: '0 36px', gap: 24 }}>
-            {/* Mock blog post card */}
-            <div style={{ width: 210, background: 'var(--light-100)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.22)', flexShrink: 0 }}>
-              <div style={{ height: 80, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>📝</div>
-              <div style={{ padding: '12px 14px' }}>
-                <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--dark-90)', lineHeight: 1.4, marginBottom: 4 }}>The 7 best painters in Austin for 2026</div>
-                <div style={{ fontSize: 10, color: 'var(--dark-60)' }}>July 8, 2026</div>
-                <div style={{ fontSize: 10, color: 'var(--dark-60)', marginTop: 4, lineHeight: 1.5 }}>Hiring a painter in Austin is more than picking the lowest bid. The right crew balances prep work, paint quality, and...</div>
-              </div>
+          {/* Hero */}
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <div
+              style={{
+                width: 60, height: 60, borderRadius: 16,
+                background: 'var(--dark-4)', border: '1px solid var(--dark-8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px',
+              }}
+            >
+              <Search size={28} color="var(--dark-60)" />
             </div>
+            <Heading level={1} style={{ marginBottom: 12 }}>
+              Rank on Google and get cited by AI
+            </Heading>
+            <Text variant="secondary" style={{ display: 'block', maxWidth: 480, margin: '0 auto', lineHeight: 1.65 }}>
+              Blaze writes and publishes a steady stream of blog posts that signal to Google and AI search engines that your site is the authority in your space.
+            </Text>
+          </div>
 
-            {/* Right side: platform icons + trend arrow */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
-                <div style={{ width: 46, height: 46, background: 'var(--light-100)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.18)', fontWeight: 800, fontSize: 15, color: '#000' }}>W</div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <div style={{ width: 40, height: 40, background: 'var(--light-100)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.18)', fontSize: 18 }}>📊</div>
-                  <div style={{ width: 40, height: 40, background: 'var(--light-100)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.18)', fontSize: 18 }}>🌐</div>
+          {/* Primary CTA — moved up from the sticky footer so it lives with the hero copy */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48 }}>
+            <Button variant="primary" size="lg" endIcon={ArrowRight} onPress={() => setStep('clusters')}>
+              Set Up My SEO/AEO Plan
+            </Button>
+          </div>
+
+          {/* How Blaze does it */}
+          <div style={{ marginBottom: 40 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-60)', textAlign: 'center', marginBottom: 16, letterSpacing: '0.02em' }}>
+              How Blaze does it
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              {(
+                [
+                  {
+                    icon: Search,
+                    title: 'Win the right keywords',
+                    desc: 'Blaze researches what your customers search or ask AI, then prioritizes your topic clusters.',
+                  },
+                  {
+                    icon: Send,
+                    title: 'Publish blog posts consistently',
+                    desc: 'Automatically write & publish optimized blog posts structured for search engines and AI.',
+                  },
+                  {
+                    icon: Stars,
+                    title: 'Earn rankings & AI citations',
+                    desc: 'Consistent posts compound into search and AI authority. Climb Google rankings and get cited by ChatGPT, AI Overviews, and more.',
+                  },
+                ] as { icon: typeof Search; title: string; desc: string }[]
+              ).map(({ icon: Ic, title, desc }) => (
+                <div key={title} style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '20px 18px' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--dark-4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                    <Ic size={18} color="var(--dark-60)" />
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6, lineHeight: 1.3 }}>{title}</div>
+                  <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</div>
                 </div>
-              </div>
-              <svg width="88" height="56" viewBox="0 0 88 56" fill="none">
-                <polyline points="4,52 22,42 38,30 54,18 70,8 82,3" stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-                <polyline points="75,1 82,3 80,10" stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-              </svg>
+              ))}
             </div>
           </div>
 
-          <Heading level={1} style={{ marginBottom: 12, lineHeight: 1.15, maxWidth: 460 }}>
-            Let Blaze grow your blog traffic for you
-          </Heading>
-          <div style={{ fontSize: 15, color: 'var(--dark-60)', lineHeight: 1.65, maxWidth: 520, marginBottom: 28 }}>
-            Choose a topic and Blaze automatically writes and publishes a set of related posts. Together they signal to Google and AI search engines that your site is an authority — and your rankings climb.
+          {/* How we write blogs — collapsed accordion to avoid overwhelm */}
+          <div style={{ marginBottom: 40 }}>
+            <HowWeWriteAccordion />
           </div>
 
-          {/* SEO + AEO value props */}
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 32 }}>
-            {[
-              { icon: '📈', label: 'SEO Rankings', bg: '#dcfce7' },
-              { icon: '✦', label: 'AI Citations', bg: '#ede9fe' },
-              { icon: '🏆', label: 'Brand Authority', bg: '#fef9c3' },
-            ].map((item, i, arr) => (
-              <Fragment key={item.label}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 44, height: 44, background: item.bg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{item.icon}</div>
-                  <Text variant="metadata" style={{ fontWeight: 500, color: 'var(--dark-60)' }}>{item.label}</Text>
-                </div>
-                {i < arr.length - 1 && <span style={{ color: 'var(--dark-15)', fontSize: 20 }}>→</span>}
-              </Fragment>
-            ))}
+          {/* Upsell — DFY content strategy. Photo bleeds above the banner. */}
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex', alignItems: 'center', gap: 20,
+              borderRadius: 12,
+              padding: '18px 24px 18px 124px',
+              minHeight: 88,
+              background: 'linear-gradient(100deg, #b9d9f4 0%, #d6e9f8 55%, #e7f1fa 100%)',
+            }}
+          >
+            {/* Photo — cutout PNG anchored to the bottom-left so the head extends above the banner */}
+            <div
+              role="img"
+              aria-label=""
+              style={{
+                position: 'absolute', left: 4, bottom: 0,
+                width: 116, height: 138,
+                backgroundImage: `url("${import.meta.env.BASE_URL}salesperson.png")`,
+                backgroundSize: 'contain',
+                backgroundPosition: 'bottom center',
+                backgroundRepeat: 'no-repeat',
+                pointerEvents: 'none',
+              }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
+              <Heading level={5}>Want results faster?</Heading>
+              <Text variant="secondary">Have a Blaze content strategist build and manage your SEO/AEO plan 1:1.</Text>
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <Button variant="secondary" endIcon={ArrowRight} onPress={() => setStep('clusters')}>
+                Talk to a content expert 1:1
+              </Button>
+            </div>
           </div>
+        </div>
 
-          <Button variant="primary" size="lg" onPress={() => setStep('clusters')}>
-            Set Up My SEO Plan
+      </H2Layout>
+    );
+  }
+
+  // ── Step: pick topic clusters ──────────────────────────────────────
+  if (step === 'clusters') {
+    const canConfirm = selectedClusters.size === 3;
+    return (
+      <H2Layout title="SEO/AEO">
+        <div style={{ maxWidth: 880, margin: '0 auto', padding: '48px 28px 120px' }}>
+          <Heading level={1} style={{ marginBottom: 12 }}>What should your business be known for?</Heading>
+          <Text variant="secondary" style={{ display: 'block', lineHeight: 1.65, marginBottom: 8 }}>
+            Blaze groups your content into topic clusters — a main keyword and all the related questions people ask around it. Publishing multiple posts on the same topic is far more effective than random one-off posts, because it signals to Google that you're a genuine authority on the subject.
+          </Text>
+          <Text variant="secondary" style={{ display: 'block', lineHeight: 1.65, marginBottom: 28 }}>
+            We've pre-selected 3 clusters based on what people are searching for in your market. Confirm them or swap in your own.
+          </Text>
+
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)' }}>Topic cluster</th>
+                <th style={{ paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)', width: 110 }}>Difficulty</th>
+                <th style={{ paddingBottom: 10, textAlign: 'right', fontSize: 12, color: 'var(--dark-40)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)', width: 140 }}>Search / AI vol.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ONBOARDING_CLUSTERS.map((c) => {
+                const checked = selectedClusters.has(c.label);
+                const canAdd = checked || selectedClusters.size < 3;
+                return (
+                  <tr
+                    key={c.label}
+                    onClick={() => canAdd && toggleCluster(c.label)}
+                    style={{ cursor: canAdd ? 'pointer' : 'default', opacity: !canAdd ? 0.4 : 1 }}
+                  >
+                    <td style={{ padding: '16px 0', borderBottom: '1px solid var(--dark-4)', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        {checked ? (
+                          <CheckboxChecked size={22} />
+                        ) : (
+                          <span style={{ width: 22, height: 22, borderRadius: 5, border: '1px solid var(--dark-15)', flexShrink: 0, display: 'block' }} />
+                        )}
+                        <span style={{ fontSize: 15, color: 'var(--dark-90)', fontWeight: 600 }}>
+                          {c.label}
+                          <span style={{ color: 'var(--dark-40)', fontWeight: 400, fontSize: 13 }}> · {c.keywords} keywords</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 0', borderBottom: '1px solid var(--dark-4)', textAlign: 'left', fontSize: 14, color: 'var(--dark-60)', verticalAlign: 'middle' }}>{c.difficulty}</td>
+                    <td style={{ padding: '16px 0', borderBottom: '1px solid var(--dark-4)', textAlign: 'right', fontSize: 14, verticalAlign: 'middle', fontVariantNumeric: 'tabular-nums' }}>
+                      <span style={{ color: 'var(--dark-60)' }}>{c.vol}</span>
+                      <span style={{ color: 'var(--dark-15)', margin: '0 4px' }}>/</span>
+                      <span style={{ color: 'var(--dark-90)' }}>{c.aiVol}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Sticky footer CTA */}
+        <div style={{ position: 'fixed', bottom: 0, left: 238, right: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '16px 28px', background: 'var(--light-100)', borderTop: '1px solid var(--dark-8)', boxShadow: '0 -4px 16px rgba(0,0,0,0.04)' }}>
+          <Button variant="ghost" onPress={() => setResetFocus(true)}>
+            Reset My Topic Focus
           </Button>
+          <Button variant="primary" size="lg" endIcon={ArrowRight} isDisabled={!canConfirm} onPress={() => canConfirm && setStep('platform')}>
+            Confirm {selectedClusters.size} cluster{selectedClusters.size !== 1 ? 's' : ''}
+          </Button>
+        </div>
+        {resetFocus && <ResetTopicFocusModal onClose={() => setResetFocus(false)} />}
+      </H2Layout>
+    );
+  }
+
+  // ── Step: choose publishing platform ───────────────────────────────
+  if (step === 'platform') {
+    return (
+      <H2Layout title="SEO/AEO">
+        <div style={{ maxWidth: 880, margin: '0 auto', padding: '48px 28px 120px' }}>
+          <Heading level={1} style={{ marginBottom: 12 }}>Where should Blaze publish?</Heading>
+          <Text variant="secondary" style={{ display: 'block', lineHeight: 1.65, marginBottom: 28 }}>
+            Blaze writes the posts. To put them live on your site automatically, it needs to connect to your blog or CMS. Select your platform below.
+          </Text>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+            {PLATFORM_OPTIONS.map((p) => {
+              const selected = selectedPlatform === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPlatform(p.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, border: `1px solid ${selected ? 'var(--dark-90)' : 'var(--dark-8)'}`, background: 'var(--light-100)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                >
+                  <PlatformLogo p={p} size={28} />
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{p.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', lineHeight: 1.6 }}>
+            Not sure which platform your site uses? Check with your web developer or look in your website admin panel. You can also skip this and connect later in Settings — but posts will stay in draft until you do.
+          </Text>
+
+        </div>
+
+        {/* Sticky footer CTA */}
+        <div style={{ position: 'fixed', bottom: 0, left: 238, right: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '16px 28px', background: 'var(--light-100)', borderTop: '1px solid var(--dark-8)', boxShadow: '0 -4px 16px rgba(0,0,0,0.04)' }}>
+          <Button variant="ghost" frontIcon={ArrowLeft} onPress={() => setStep('clusters')}>Back</Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Button variant="ghost" onPress={onComplete}>Skip for now</Button>
+            <Button variant="primary" size="lg" endIcon={ArrowRight} isDisabled={!selectedPlatform} onPress={() => selectedPlatform && onComplete()}>
+              Continue
+            </Button>
+          </div>
         </div>
       </H2Layout>
     );
   }
 
-  // Modal content per step
-  let modalContent: React.ReactNode;
+  return null;
+}
 
-  if (step === 'clusters') {
-    const canConfirm = selectedClusters.size === 3;
-    modalContent = (
-      <>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-          <Heading level={3}>Pick 3 topic clusters to rank for.</Heading>
-          <IconButton icon={Close} variant="ghost" onPress={() => setStep('landing')} aria-label="Close onboarding" />
+// ─── PLAN ACTIVE MODAL (post-onboarding confirmation) ─────────────────
+
+function PlanActiveModal({ onClose }: { onClose: () => void }) {
+  return (
+    <ModalBackdrop onClose={onClose} size="sm">
+      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}>
+        <IconButton icon={Close} variant="ghost" size="sm" aria-label="Close" onPress={onClose} />
+      </div>
+      <Modal.Content compact={false}>
+        {/* Icon badge */}
+        <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(4, 175, 0, 0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+          <CheckSm size={20} color="var(--status-approved)" />
         </div>
-        <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.6, marginBottom: 20 }}>
-          <p style={{ margin: '0 0 8px' }}>Topic clusters are groups of related posts linked to one main topic. Publishing around the same subject signals authority to Google — helping you rank higher.</p>
-          <p style={{ margin: 0 }}>We've pre-selected 3 clusters based on search volume and competition. Confirm or swap them out.</p>
+
+        <Heading level={3} style={{ display: 'block', marginBottom: 8 }}>Your SEO/AEO plan is active</Heading>
+        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.6, marginBottom: 24 }}>
+          Blaze is writing your first batch of posts now. Your first draft will be ready for review shortly.
+        </Text>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
+          {[
+            '3 topic clusters confirmed',
+            'Blog integration — connect in Settings to go live',
+            'Weekly posting schedule set — adjust in Settings',
+          ].map((text) => (
+            <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--dark-90)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CheckSm size={12} color="var(--light-100)" />
+              </span>
+              <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>{text}</Text>
+            </div>
+          ))}
         </div>
+
+        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-40)', lineHeight: 1.6 }}>
+          SEO is a long game — most businesses start seeing traction around month 3, then it compounds. Blaze runs in the background so you don't have to think about it.
+        </Text>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent>
+          <Modal.FooterButton variant="primary" onPress={onClose}>Go to My SEO/AEO Plan</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </ModalBackdrop>
+  );
+}
+
+// ─── RESET TOPIC FOCUS MODAL ──────────────────────────────────────────
+
+/** Lets the user search a new overall focus to regenerate the cluster
+ *  suggestions. Opened from the cluster picker / Add-topic-cluster modal. */
+function ResetTopicFocusModal({ onClose }: { onClose: () => void }) {
+  const [topic, setTopic] = useState('');
+
+  const fieldStyle: React.CSSProperties = {
+    width: '100%', height: 38, border: '1px solid var(--dark-8)', borderRadius: 8,
+    padding: '0 12px', fontSize: 14, fontFamily: 'inherit', color: 'var(--dark-90)',
+    background: 'var(--light-100)', boxSizing: 'border-box',
+  };
+
+  return (
+    <ModalBackdrop onClose={onClose} size="md">
+      <Modal.Header
+        title="Reset my topic focus"
+        headingLevel={3}
+        onClose={onClose}
+        subHeader={
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.6 }}>
+            Search for a new overall focus, and we'll generate new topic clusters around it.
+          </Text>
+        }
+      />
+      <Modal.Content compact={false}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 16 }}>
+          <div>
+            <Text variant="metadata" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>Topic</Text>
+            <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. ai marketing" style={fieldStyle} />
+          </div>
+          <div>
+            <Text variant="metadata" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>Results for</Text>
+            <button style={{ ...fieldStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+              United States
+              <ChevronDown size={14} color="var(--dark-60)" />
+            </button>
+          </div>
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterButton slot="left" variant="ghost" onPress={onClose}>Back</Modal.FooterButton>
+        <Modal.FooterContent>
+          <Modal.FooterButton variant="primary" onPress={onClose}>Discover Topic Clusters</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </ModalBackdrop>
+  );
+}
+
+// ─── CONNECT BLOG MODAL ───────────────────────────────────────────────
+
+function ConnectBlogModal({ onClose }: { onClose: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <ModalBackdrop onClose={onClose} size="sm">
+      <Modal.Header
+        title="Connect your blog"
+        headingLevel={4}
+        onClose={onClose}
+        subHeader={
+          <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
+            Blaze will publish directly to your site on schedule. Select your platform to connect.
+          </Text>
+        }
+      />
+      <Modal.Content compact={false}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: -8 }}>
+          {PLATFORM_OPTIONS.map((p) => {
+            const isSelected = selected === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => setSelected(p.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '14px 16px', borderRadius: 12,
+                  border: `1px solid ${isSelected ? 'var(--dark-90)' : 'var(--dark-8)'}`,
+                  background: 'var(--light-100)',
+                  cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                }}
+              >
+                <PlatformLogo p={p} size={28} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{p.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent>
+          <Modal.FooterButton variant="primary" isDisabled={!selected} onPress={onClose}>
+            Connect
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </ModalBackdrop>
+  );
+}
+
+// ─── ADD KEYWORDS MODAL ───────────────────────────────────────────────
+
+const KEYWORD_SUGGESTIONS: { keyword: string; difficulty: DifficultyLevel; searchVol: string; aiVol: string; defaultChecked: boolean }[] = [
+  { keyword: 'affordable painters austin',    difficulty: 'Medium', searchVol: '4.4k', aiVol: '2.6k', defaultChecked: true  },
+  { keyword: 'licensed painting contractor',  difficulty: 'Easy',   searchVol: '2.1k', aiVol: '1.2k', defaultChecked: false },
+  { keyword: 'painting quote austin',         difficulty: 'Easy',   searchVol: '1.8k', aiVol: '980',  defaultChecked: false },
+  { keyword: 'eco-friendly painters',         difficulty: 'Medium', searchVol: '1.3k', aiVol: '740',  defaultChecked: true  },
+  { keyword: 'same-day painting estimate',    difficulty: 'Easy',   searchVol: '920',  aiVol: '510',  defaultChecked: true  },
+  { keyword: 'painters near downtown austin', difficulty: 'Easy',   searchVol: '760',  aiVol: '420',  defaultChecked: true  },
+];
+
+function AddKeywordsModal({ cluster, onClose }: { cluster: TopicCluster; onClose: () => void }) {
+  const [selected, setSelected] = useState<Set<string>>(
+    new Set(KEYWORD_SUGGESTIONS.filter((k) => k.defaultChecked).map((k) => k.keyword)),
+  );
+
+  function toggle(keyword: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(keyword) ? next.delete(keyword) : next.add(keyword);
+      return next;
+    });
+  }
+
+  const thStyle: React.CSSProperties = {
+    paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)',
+    fontWeight: 500, borderBottom: '1px solid var(--dark-4)',
+  };
+
+  return (
+    <ModalBackdrop onClose={onClose} size="md">
+      <Modal.Header
+        title="Add more keywords"
+        headingLevel={3}
+        onClose={onClose}
+        subHeader={
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.6 }}>
+            Select keywords to add to your {cluster} cluster. Blaze will automatically generate and publish a blog post for each one, helping you rank for more searches over time.
+          </Text>
+        }
+      />
+      <Modal.Content compact={false}>
+        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>Topic cluster</Text>
+        <Text variant="secondary" style={{ display: 'block', fontWeight: 600, color: 'var(--dark-90)', marginBottom: 16 }}>{cluster}</Text>
+
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)', fontWeight: 600, borderBottom: '1px solid var(--dark-4)' }}>Topic cluster</th>
-              <th style={{ paddingBottom: 10, textAlign: 'right', fontSize: 12, color: 'var(--dark-40)', fontWeight: 600, borderBottom: '1px solid var(--dark-4)', paddingRight: 20 }}>KD</th>
-              <th style={{ paddingBottom: 10, textAlign: 'right', fontSize: 12, color: 'var(--dark-40)', fontWeight: 600, borderBottom: '1px solid var(--dark-4)' }}>Vol.</th>
+              <th style={thStyle}>Keyword</th>
+              <th style={{ ...thStyle, width: 110 }}>Difficulty</th>
+              <th style={{ ...thStyle, textAlign: 'right', width: 130 }}>Search / AI vol.</th>
             </tr>
           </thead>
           <tbody>
-            {ONBOARDING_CLUSTERS.map((c) => {
-              const checked = selectedClusters.has(c.label);
-              const canAdd = checked || selectedClusters.size < 3;
+            {KEYWORD_SUGGESTIONS.map((k) => {
+              const checked = selected.has(k.keyword);
               return (
-                <tr
-                  key={c.label}
-                  onClick={() => canAdd && toggleCluster(c.label)}
-                  style={{ cursor: canAdd ? 'pointer' : 'default', opacity: !canAdd ? 0.4 : 1 }}
-                >
-                  <td style={{ padding: '13px 0', borderBottom: '1px solid var(--dark-4)', verticalAlign: 'middle' }}>
+                <tr key={k.keyword} onClick={() => toggle(k.keyword)} style={{ cursor: 'pointer' }}>
+                  <td style={{ padding: '14px 0', borderBottom: '1px solid var(--dark-4)', verticalAlign: 'middle' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       {checked ? (
                         <CheckboxChecked size={20} />
                       ) : (
                         <span style={{ width: 20, height: 20, borderRadius: 4, border: '1px solid var(--dark-15)', flexShrink: 0, display: 'block' }} />
                       )}
-                      <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: checked ? 600 : 400 }}>
-                        {c.label}
-                        <span style={{ color: 'var(--dark-40)', fontWeight: 400, fontSize: 12 }}> including {c.keywords} ke...</span>
-                      </span>
+                      <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>{k.keyword}</Text>
                     </div>
                   </td>
-                  <td style={{ padding: '13px 20px 13px 0', borderBottom: '1px solid var(--dark-4)', textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', verticalAlign: 'middle' }}>{c.kd.toFixed(1)}</td>
-                  <td style={{ padding: '13px 0', borderBottom: '1px solid var(--dark-4)', textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', verticalAlign: 'middle' }}>{c.vol}</td>
+                  <td style={{ padding: '14px 0', borderBottom: '1px solid var(--dark-4)', fontSize: 14, color: 'var(--dark-60)', verticalAlign: 'middle' }}>{k.difficulty}</td>
+                  <td style={{ padding: '14px 0', borderBottom: '1px solid var(--dark-4)', textAlign: 'right', fontSize: 14, verticalAlign: 'middle', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ color: 'var(--dark-60)' }}>{k.searchVol}</span>
+                    <span style={{ color: 'var(--dark-15)', margin: '0 4px' }}>/</span>
+                    <span style={{ color: 'var(--dark-90)' }}>{k.aiVol}</span>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 }}>
-          <Button
-            variant="ghost"
-            onPress={() => setSelectedClusters(new Set(ONBOARDING_CLUSTERS.filter((c) => c.defaultChecked).map((c) => c.label)))}
-          >
-            Reset My Topic Focus
-          </Button>
-          <Button
-            variant="primary"
-            isDisabled={!canConfirm}
-            onPress={() => canConfirm && setStep('platform')}
-          >
-            Confirm {selectedClusters.size === 3 ? '3' : selectedClusters.size} Topic Cluster{selectedClusters.size !== 1 ? 's' : ''}
-          </Button>
-        </div>
-      </>
-    );
-  } else if (step === 'platform') {
-    modalContent = (
-      <>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-          <Heading level={3}>Connect your publishing platform</Heading>
-          <IconButton icon={Close} variant="ghost" onPress={() => setStep('landing')} aria-label="Close onboarding" />
-        </div>
-        <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.6, marginBottom: 24 }}>
-          Blaze will publish directly to your site on schedule. Select your platform to connect.
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
-          {PLATFORM_OPTIONS.map((p) => {
-            const selected = selectedPlatform === p.id;
-            return (
-              <button
-                key={p.id}
-                onClick={() => setSelectedPlatform(p.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 10, border: `1px solid ${selected ? 'var(--dark-90)' : 'var(--dark-4)'}`, background: selected ? 'var(--light-100)' : 'var(--dark-4)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.15s' }}
-              >
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: `${p.color}18`, border: `1px solid ${p.color}35`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: p.color, flexShrink: 0 }}>
-                  {p.icon}
-                </div>
-                <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--dark-90)' }}>{p.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Button variant="ghost" frontIcon={ArrowLeft} onPress={() => setStep('clusters')}>
-            Back
-          </Button>
-          <Button
-            variant="primary"
-            isDisabled={!selectedPlatform}
-            endIcon={ArrowRight}
-            onPress={() => selectedPlatform && setStep('done')}
-          >
-            Continue
-          </Button>
-        </div>
-      </>
-    );
-  } else {
-    const platformLabel = PLATFORM_OPTIONS.find((p) => p.id === selectedPlatform)?.label ?? 'Platform';
-    modalContent = (
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 52, marginBottom: 16 }}>🎉</div>
-        <Heading level={3} style={{ marginBottom: 10 }}>You're all set!</Heading>
-        <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.65, maxWidth: 360, margin: '0 auto 28px' }}>
-          Blaze is generating your first batch of SEO + AEO-optimized posts. Expect your first post ready for review shortly.
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left', maxWidth: 320, margin: '0 auto 32px' }}>
-          {[
-            `${selectedClusters.size} topic clusters confirmed`,
-            `${platformLabel} connected`,
-            'Generation schedule set — weekly cadence',
-          ].map((text) => (
-            <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#dcfce7', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'var(--green-50)', flexShrink: 0 }}>✓</span>
-              <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 500 }}>{text}</span>
-            </div>
-          ))}
-        </div>
-        <Button variant="primary" size="lg" endIcon={ArrowRight} onPress={onComplete}>
-          Go to my SEO plan
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <H2Layout title="SEO Relevance Plan">
-      <ModalBackdrop onClose={() => setStep('landing')} size="md">
-        <Modal.Content compact={false}>{modalContent}</Modal.Content>
-      </ModalBackdrop>
-    </H2Layout>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent>
+          <Modal.FooterButton variant="primary" isDisabled={selected.size === 0} onPress={onClose}>
+            Add {selected.size > 0 ? selected.size : ''} keyword{selected.size === 1 ? '' : 's'}
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </ModalBackdrop>
   );
 }
 
 // ─── ADD CLUSTER MODAL ────────────────────────────────────────────────
 
-const ADD_CLUSTER_ROWS: {
-  label: string;
-  keywords: number;
-  kd: number;
-  searchVol: string;
-  aiVol: string;
-  recommended?: boolean;
-}[] = [
-  { label: 'How to Find an Austin Painter',       keywords: 11, kd: 11.0, searchVol: '301k',  aiVol: '18.2k', recommended: true  },
-  { label: 'Deck & Fence Staining in Austin',     keywords: 9,  kd:  6.0, searchVol: '22.3k', aiVol: '9.1k',  recommended: true  },
-  { label: 'Stucco Repair & Repainting',          keywords: 12, kd:  5.0, searchVol: '12.4k', aiVol: '7.8k',  recommended: false },
-  { label: 'Wood Rot Repair Before Painting',     keywords: 8,  kd:  3.0, searchVol: '8.1k',  aiVol: '5.2k',  recommended: false },
-  { label: 'Color Consultation for Austin Homes', keywords: 10, kd:  2.0, searchVol: '5.9k',  aiVol: '4.4k',  recommended: false },
-  { label: 'HOA & Commercial Repaints',           keywords: 11, kd:  0.0, searchVol: '3.6k',  aiVol: '2.1k',  recommended: false },
-  { label: 'Power Washing Before Painting',       keywords: 7,  kd:  4.0, searchVol: '2.8k',  aiVol: '1.9k',  recommended: false },
-];
-
 function AddClusterModal({ onClose }: { onClose: () => void }) {
-  const [selected, setSelected] = useState<string | null>(ADD_CLUSTER_ROWS[0].label);
-  const [showAll, setShowAll] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [resetFocus, setResetFocus] = useState(false);
 
-  const visible = showAll ? ADD_CLUSTER_ROWS : ADD_CLUSTER_ROWS.slice(0, 6);
-  const hidden = ADD_CLUSTER_ROWS.length - 6;
+  function toggle(label: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
+  }
 
   const thStyle: React.CSSProperties = {
-    fontSize: 12,
-    fontWeight: 600,
-    color: 'var(--dark-40)',
-    paddingBottom: 10,
-    borderBottom: '1px solid var(--dark-4)',
-    textAlign: 'left',
+    paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)',
+    fontWeight: 500, borderBottom: '1px solid var(--dark-4)',
   };
+
+  if (resetFocus) return <ResetTopicFocusModal onClose={() => setResetFocus(false)} />;
 
   return (
     <ModalBackdrop onClose={onClose} size="md">
@@ -2176,70 +3088,50 @@ function AddClusterModal({ onClose }: { onClose: () => void }) {
       />
       <Modal.Content compact={false}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ ...thStyle, width: '50%' }}>Topic cluster</th>
-                <th style={{ ...thStyle, textAlign: 'right', paddingRight: 20 }}>KD</th>
-                <th style={{ ...thStyle, textAlign: 'right', paddingRight: 20 }}>Search Vol.</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>AI Vol.</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((row) => {
-                const isSelected = selected === row.label;
-                const cellBorder = isSelected ? '1px solid var(--dark-90)' : '1px solid var(--dark-4)';
-                return (
-                  <tr
-                    key={row.label}
-                    onClick={() => setSelected(isSelected ? null : row.label)}
-                    style={{ cursor: 'pointer', background: isSelected ? 'var(--light-100)' : 'var(--dark-4)' }}
-                  >
-                    <td style={{ padding: '14px 12px', borderBottom: cellBorder, verticalAlign: 'middle' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <Text variant="primary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>{row.label}</Text>
-                        {row.recommended && (
-                          <StatusPill tone="success" size="sm">Top pick</StatusPill>
-                        )}
-                      </div>
-                      <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>including {row.keywords} keywords</Text>
-                    </td>
-                    <td style={{ padding: '14px 20px 14px 0', textAlign: 'right', fontSize: 14, color: 'var(--dark-60)', borderBottom: cellBorder, fontVariantNumeric: 'tabular-nums' }}>
-                      {row.kd.toFixed(1)}
-                    </td>
-                    <td style={{ padding: '14px 20px 14px 0', textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', borderBottom: cellBorder, fontVariantNumeric: 'tabular-nums' }}>
-                      {row.searchVol}
-                    </td>
-                    <td style={{ padding: '14px 0', textAlign: 'right', fontSize: 14, color: 'var(--dark-90)', borderBottom: cellBorder, fontVariantNumeric: 'tabular-nums' }}>
-                      {row.aiVol}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {!showAll && hidden > 0 && (
-            <Button variant="ghost" size="sm" endIcon={ChevronDown} style={{ marginTop: 12 }} onPress={() => setShowAll(true)}>
-              See {hidden} more
-            </Button>
-          )}
-
+          <thead>
+            <tr>
+              <th style={thStyle}>Topic cluster</th>
+              <th style={{ ...thStyle, width: 110 }}>Difficulty</th>
+              <th style={{ ...thStyle, textAlign: 'right', width: 130 }}>Search / AI vol.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ONBOARDING_CLUSTERS.map((c) => {
+              const checked = selected.has(c.label);
+              return (
+                <tr key={c.label} onClick={() => toggle(c.label)} style={{ cursor: 'pointer' }}>
+                  <td style={{ padding: '14px 0', borderBottom: '1px solid var(--dark-4)', verticalAlign: 'middle' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {checked ? (
+                        <CheckboxChecked size={20} />
+                      ) : (
+                        <span style={{ width: 20, height: 20, borderRadius: 4, border: '1px solid var(--dark-15)', flexShrink: 0, display: 'block' }} />
+                      )}
+                      <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 600 }}>
+                        {c.label}
+                        <span style={{ color: 'var(--dark-40)', fontWeight: 400, fontSize: 12 }}> · {c.keywords} keywords</span>
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '14px 0', borderBottom: '1px solid var(--dark-4)', fontSize: 14, color: 'var(--dark-60)', verticalAlign: 'middle' }}>{c.difficulty}</td>
+                  <td style={{ padding: '14px 0', borderBottom: '1px solid var(--dark-4)', textAlign: 'right', fontSize: 14, verticalAlign: 'middle', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ color: 'var(--dark-60)' }}>{c.vol}</span>
+                    <span style={{ color: 'var(--dark-15)', margin: '0 4px' }}>/</span>
+                    <span style={{ color: 'var(--dark-90)' }}>{c.aiVol}</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </Modal.Content>
       <Modal.Footer>
-        <Modal.FooterButton
-          slot="left"
-          variant="ghost"
-          onPress={() => setSelected(ADD_CLUSTER_ROWS[0].label)}
-        >
-          Reset recommendation
+        <Modal.FooterButton slot="left" variant="ghost" onPress={() => setResetFocus(true)}>
+          Reset My Topic Focus
         </Modal.FooterButton>
         <Modal.FooterContent>
-          <Modal.FooterButton
-            variant="primary"
-            isDisabled={!selected}
-            onPress={onClose}
-          >
-            Add topic cluster
+          <Modal.FooterButton variant="primary" isDisabled={selected.size === 0} onPress={onClose}>
+            Add {selected.size > 0 ? selected.size : ''} {selected.size === 1 ? 'cluster' : 'clusters'}
           </Modal.FooterButton>
         </Modal.FooterContent>
       </Modal.Footer>
@@ -2257,65 +3149,73 @@ export function SeoAeoRoute() {
   const { getState, setState } = useDevState();
   const devState = getState('/h2/seo-aeo');
   const [tab, setTab] = useState<SeoAeoTab>('dashboard');
+  const [analyticsSubTab, setAnalyticsSubTab] = useState<AnalyticsSubTab>('seo');
   const [showAddCluster, setShowAddCluster] = useState(false);
+  // After finishing onboarding we flip to steady and show the "plan active"
+  // confirmation as a modal over the live dashboard.
+  const [showPlanActive, setShowPlanActive] = useState(false);
 
   if (devState === 'cold') {
-    return <OnboardingFlow onComplete={() => setState('/h2/seo-aeo', 'steady')} />;
+    return (
+      <OnboardingFlow
+        onComplete={() => {
+          setState('/h2/seo-aeo', 'steady');
+          setShowPlanActive(true);
+        }}
+      />
+    );
   }
 
   const topbarCenter = (
     <div style={{ display: 'flex', gap: 4 }}>
       <TabChip selected={tab === 'dashboard'} onSelect={() => setTab('dashboard')}>Dashboard</TabChip>
-      <TabChip selected={tab === 'seo-analytics'} onSelect={() => setTab('seo-analytics')}>SEO Analytics</TabChip>
-      <TabChip selected={tab === 'analytics'} onSelect={() => setTab('analytics')}>AEO Analytics</TabChip>
+      <TabChip selected={tab === 'analytics'} onSelect={() => setTab('analytics')}>Analytics</TabChip>
       <TabChip selected={tab === 'settings'} onSelect={() => setTab('settings')}>Settings</TabChip>
     </div>
   );
 
-  // Auto-publish lives inside Settings — see SetupTab. Topbar keeps the
-  // Add-topic-cluster + Generate-report actions for the SEO/AEO data tabs.
-  const topbarRight = tab === 'settings' ? null : (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Button variant="tertiary" onClick={() => setShowAddCluster(true)}>
-        <Plus size={16} />
-        Add topic cluster
-      </Button>
-      <GenerateReportButton />
+  // "How it works" sits on the left, just after the SEO/AEO heading.
+  const topbarTitle = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <span style={{ fontFamily: "'Sohne', sans-serif", fontWeight: 500, fontSize: 16, color: 'var(--dark-90)' }}>SEO/AEO</span>
+      <TabChip selected={tab === 'how-it-works'} onSelect={() => setTab('how-it-works')}>How it works</TabChip>
     </div>
   );
 
   return (
-    <H2Layout topbarCenter={topbarCenter} topbarRight={topbarRight ?? undefined}>
+    <H2Layout title={topbarTitle} topbarCenter={topbarCenter}>
       {tab === 'dashboard' ? (
-        <DashboardTab />
+        <DashboardTab
+          onAddCluster={() => setShowAddCluster(true)}
+          onOpenAnalytics={(sub) => {
+            setAnalyticsSubTab(sub);
+            setTab('analytics');
+            setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
+          }}
+          onLearnMore={() => {
+            setTab('how-it-works');
+            setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
+          }}
+          onScheduleFrequency={() => {
+            setTab('settings');
+            setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
+          }}
+        />
       ) : tab === 'analytics' ? (
-        <AnalyticsTab />
-      ) : tab === 'seo-analytics' ? (
-        <SeoAnalyticsTab />
+        <>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '12px 20px', margin: '-24px -24px 0', position: 'sticky', top: -24, zIndex: 10, background: 'var(--default-bg)', borderBottom: '1px solid var(--dark-4)' }}>
+            <TabChip selected={analyticsSubTab === 'seo'} onSelect={() => setAnalyticsSubTab('seo')}>SEO</TabChip>
+            <TabChip selected={analyticsSubTab === 'aeo'} onSelect={() => setAnalyticsSubTab('aeo')}>AEO</TabChip>
+          </div>
+          {analyticsSubTab === 'seo' ? <SeoAnalyticsTab /> : <AnalyticsTab />}
+        </>
+      ) : tab === 'how-it-works' ? (
+        <HowItWorksTab onBackToDashboard={() => setTab('dashboard')} />
       ) : (
         <SetupTab />
       )}
       {showAddCluster && <AddClusterModal onClose={() => setShowAddCluster(false)} />}
-      {tab === 'settings' && (
-        <div
-          style={{
-            position: 'sticky',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'var(--light-100)',
-            borderTop: '1px solid var(--dark-4)',
-            padding: 16,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: 8,
-            marginTop: 'auto',
-          }}
-        >
-          <Button variant="ghost">Cancel</Button>
-          <Button variant="primary">Save settings</Button>
-        </div>
-      )}
+      {showPlanActive && <PlanActiveModal onClose={() => setShowPlanActive(false)} />}
     </H2Layout>
   );
 }

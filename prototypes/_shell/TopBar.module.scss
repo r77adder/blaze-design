@@ -1,4 +1,5 @@
 .topbar {
+  position: relative;
   height: 60px;
   flex-shrink: 0;
   // `--dark-4` matches prod's TopBar.module.scss border-bottom
@@ -28,6 +29,9 @@
   gap: 12px;
 }
 
+// Absolutely centered in the full header so the tab strip stays centered
+// regardless of how wide the left (title) or right (chrome) clusters are —
+// matching prod's TopBar.
 .center {
   position: absolute;
   left: 50%;
