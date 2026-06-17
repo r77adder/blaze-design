@@ -775,6 +775,20 @@ const SCRIPT_MAX_CHARS = 600;
 // Switching the content type also swaps the reference image + topic so an
 // AI Avatar Video shows a presenter and a video-style script rather than a
 // still-life, and reverts to a still seed when switched back.
+// Credit cost per content type — avatar video matches the 15 shown in the
+// regenerate CTA; video formats cost more than static posts.
+const CREDIT_COST_BY_TYPE: Record<ContentTypeId, number> = {
+  still: 2,
+  carousel: 4,
+  'feed-video': 10,
+  'ai-avatar': 15,
+  'short-video': 10,
+  story: 8,
+  blog: 5,
+  email: 2,
+};
+const postCredits = (p: NewPostDraft) => CREDIT_COST_BY_TYPE[p.contentType] ?? 0;
+
 function applyContentType(draft: NewPostDraft, id: ContentTypeId): NewPostDraft {
   if (id === 'ai-avatar') return { ...draft, contentType: id, refImage: AVATAR_IMAGE, topic: AVATAR_TOPIC };
   if (draft.contentType === 'ai-avatar') return { ...draft, contentType: id, refImage: AI_SEEDS[0].refImage, topic: AI_SEEDS[0].topic };
@@ -2162,6 +2176,7 @@ export function NewPostModal({
     );
 
   const count = posts.length;
+  const totalCredits = posts.reduce((sum, p) => sum + postCredits(p), 0);
 
   const selectedCampaign = CAMPAIGNS.find((c) => c.id === campaignId) ?? null;
   const activeCampaigns = CAMPAIGNS.filter((c) => c.status === 'active');
@@ -2267,7 +2282,13 @@ export function NewPostModal({
         </Modal.FooterContent>
         <Modal.FooterContent slot="right">
           <Modal.FooterButton variant="primary" onPress={() => onCreate(posts)}>
-            Create {count} {count === 1 ? 'Post' : 'Posts'}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              Create {count} {count === 1 ? 'Post' : 'Posts'}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                <CreditsSparkle size={14} />
+                {totalCredits}
+              </span>
+            </span>
           </Modal.FooterButton>
         </Modal.FooterContent>
       </Modal.Footer>
