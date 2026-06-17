@@ -1,9 +1,9 @@
 import { Button, Heading, Text } from '@/components';
 import { ArrowRight } from '@/icons/20';
 
-// Drop the salesperson asset into public/salesperson.png — Vite serves /public
-// at the site root, so this path resolves to <site>/salesperson.png.
-const HEADSHOT = '/salesperson.png';
+// Drop the salesperson asset into public/salesperson.png. Resolve against
+// Vite's BASE_URL so it works under a deployed sub-path, not just the root.
+const HEADSHOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/salesperson.png`;
 
 interface ExpertUpsellBannerProps {
   onTalk: () => void;

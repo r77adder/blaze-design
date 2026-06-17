@@ -762,7 +762,12 @@ const CAPTION_STYLES = CAPTION_STYLE_OPTIONS.map((o) => o.name);
 // `object-fit: contain` letterboxing blends seamlessly.
 const CAPTION_BG = 'rgb(174, 175, 178)';
 const CAPTION_IMG_BY_NAME = Object.fromEntries(CAPTION_STYLE_OPTIONS.map((o) => [o.name, o.img]));
-const captionImg = (name: string): string | undefined => CAPTION_IMG_BY_NAME[name];
+// Resolve against Vite's BASE_URL so the previews work under a deployed
+// sub-path (the prototypes site is served under a base, not the domain root).
+const captionImg = (name: string): string | undefined => {
+  const path = CAPTION_IMG_BY_NAME[name];
+  return path ? import.meta.env.BASE_URL.replace(/\/$/, '') + path : undefined;
+};
 
 // Fixed script length cap (duration is no longer a setting).
 const SCRIPT_MAX_CHARS = 600;
