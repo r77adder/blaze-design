@@ -17,6 +17,7 @@ import Emails from '@/icons/20/Emails';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import StillImageIcon from '../StillImageIcon';
 import { H2Layout } from '../H2Layout';
+import { AvatarVideoPreview } from '../AvatarVideoPreview';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
 import { OrganicSocialColdView } from './ColdViews';
@@ -484,6 +485,12 @@ function OrganicSocialRouteInner() {
   const isCold = getState('/h2/organic-social') === 'cold';
   const [posts, setPosts] = useState<Post[]>(SEED_POSTS);
   const [weekOffset, setWeekOffset] = useState(0);
+  // AI Avatar Video cards open a full content preview (not just a toast).
+  const [previewPost, setPreviewPost] = useState<Post | null>(null);
+  const openPost = (p: Post) => {
+    if (p.contentType === 'avatar-video') setPreviewPost(p);
+    else showToast({ message: `Open · ${p.title.slice(0, 40)}` });
+  };
   // Tab lives in the URL (?tab=insights etc.) so deep-links and cross-page
   // tabbing (Campaigns's topbar links back here with the param set) work.
   const tab = parseSubtab(searchParams.get('tab'));
@@ -602,6 +609,10 @@ function OrganicSocialRouteInner() {
   }
 
   return (
+    <>
+    {previewPost && (
+      <AvatarVideoPreview post={previewPost} onClose={() => setPreviewPost(null)} />
+    )}
     <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />} fullBleed>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--default-bg)' }}>
         <div
@@ -710,7 +721,7 @@ function OrganicSocialRouteInner() {
                 day={d}
                 posts={byDay[d.key]}
                 isCurrentWeek={isCurrentWeek}
-                onOpenPost={(p) => showToast({ message: `Open · ${p.title.slice(0, 40)}` })}
+                onOpenPost={openPost}
               />
             ))}
           </div>
@@ -718,6 +729,7 @@ function OrganicSocialRouteInner() {
       </div>
 
     </H2Layout>
+    </>
   );
 }
 

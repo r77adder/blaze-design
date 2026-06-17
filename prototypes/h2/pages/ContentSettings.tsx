@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { Heading, Text } from '@/components';
-import { Chip, TabChip } from '@/staging';
+import { Heading, ModalStack, Text, useModals } from '@/components';
+import { Chip, TabChip, Toggle } from '@/staging';
+import { CaptionStylePickerModal } from '../CreatePostFlow';
 import Sliders from '@/icons/16/Sliders';
 import FileMultiple from '@/icons/16/Templates';
 import ChevronDown from '@/icons/16/ChevronDown';
@@ -9,11 +10,15 @@ import AI from '@/icons/20/AI';
 import ContentMix from '@/icons/16/ContentMix';
 import Brand from '@/icons/20/Brand';
 import ShieldChecked from '@/icons/20/ShieldChecked';
-import UserProfileCircle from '@/icons/16/UserProfileCircle';
+import VideoOn from '@/icons/20/VideoOn';
+import Note2 from '@/icons/20/Note2';
+import Voice from '@/icons/20/Voice';
+import Caption from '@/icons/20/Caption';
+import Play3 from '@/icons/20/Play3';
 import { H2Layout } from '../H2Layout';
 import { AvatarsTab } from '../AvatarsTab';
 
-type Tab = 'general' | 'avatars' | 'blogs';
+type Tab = 'general' | 'video' | 'blogs';
 
 export function ContentSettingsRoute() {
   const [tab, setTab] = useState<Tab>('general');
@@ -25,10 +30,10 @@ export function ContentSettingsRoute() {
           General
         </span>
       </TabChip>
-      <TabChip selected={tab === 'avatars'} onSelect={() => setTab('avatars')}>
+      <TabChip selected={tab === 'video'} onSelect={() => setTab('video')}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <UserProfileCircle size={14} />
-          Avatars
+          <VideoOn size={14} />
+          Video
         </span>
       </TabChip>
       <TabChip selected={tab === 'blogs'} onSelect={() => setTab('blogs')}>
@@ -44,10 +49,165 @@ export function ContentSettingsRoute() {
     <H2Layout title="Content Preferences" topbarCenter={tabs}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '8px 4px 80px' }}>
         {tab === 'general' && <GeneralTab />}
-        {tab === 'avatars' && <AvatarsTab />}
+        {tab === 'video' && <VideoTab />}
         {tab === 'blogs' && <BlogsTab />}
       </div>
     </H2Layout>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Video tab — Video Preferences on top, Avatars section below
+// ---------------------------------------------------------------------------
+
+function VideoTab() {
+  return (
+    <>
+      <VideoPreferencesSection />
+      <AvatarsTab />
+    </>
+  );
+}
+
+function VideoPreferencesSection() {
+  return (
+    <ModalStack>
+      <VideoPreferencesBody />
+    </ModalStack>
+  );
+}
+
+function VideoPreferencesBody() {
+  const { openModal } = useModals();
+  const [music, setMusic] = useState(true);
+  const [narrations, setNarrations] = useState(true);
+  const [captions, setCaptions] = useState(true);
+  const [captionStyle, setCaptionStyle] = useState('Whisper');
+  const openCaptionPicker = () =>
+    openModal(CaptionStylePickerModal, {
+      captions,
+      captionStyle,
+      onSelect: ({ captions: on, style }) => {
+        setCaptions(on);
+        if (on) setCaptionStyle(style);
+      },
+    });
+  return (
+    <Section title="Video Preferences">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <PreferenceRow
+          icon={Note2}
+          title="Include music"
+          description="Include a backing track to your videos."
+          checked={music}
+          onChange={setMusic}
+        />
+        <RowDivider />
+        <PreferenceRow
+          icon={Voice}
+          title="Narrations"
+          checked={narrations}
+          onChange={setNarrations}
+          control={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button type="button" aria-label="Play voice sample" style={iconBtnStyle}>
+                <Play3 size={18} color="var(--dark-60)" />
+              </button>
+              <FakeSelect value="Kore • Firm" width={150} />
+            </div>
+          }
+        />
+        <RowDivider />
+        <PreferenceRow
+          icon={Caption}
+          title="Captions"
+          checked={captions}
+          onChange={setCaptions}
+          control={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: 'var(--dark-90)',
+                  borderRadius: 6,
+                  padding: '5px 8px',
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand)', whiteSpace: 'nowrap' }}>
+                  Caption preview
+                </span>
+              </span>
+              <button type="button" onClick={openCaptionPicker} style={fakeSelectStyle(130)}>
+                <span>{captions ? captionStyle : 'No caption'}</span>
+                <ChevronDown size={16} color="var(--dark-60)" />
+              </button>
+            </div>
+          }
+        />
+      </div>
+    </Section>
+  );
+}
+
+const iconBtnStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 32,
+  height: 32,
+  border: 'none',
+  background: 'transparent',
+  borderRadius: 8,
+  cursor: 'pointer',
+};
+
+function RowDivider() {
+  return <div style={{ height: 1, background: 'var(--dark-8)' }} />;
+}
+
+function PreferenceRow({
+  icon: Icon,
+  title,
+  description,
+  checked,
+  onChange,
+  control,
+}: {
+  icon: React.ComponentType<{ size?: number; color?: string }>;
+  title: string;
+  description?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  control?: ReactNode;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 0' }}>
+      <span
+        aria-hidden
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 36,
+          height: 36,
+          flexShrink: 0,
+          borderRadius: 8,
+          background: 'rgba(124, 92, 252, 0.10)',
+          color: 'var(--purple)',
+        }}
+      >
+        <Icon size={20} color="var(--purple)" />
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
+        <Text style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{title}</Text>
+        {description && (
+          <Text style={{ color: 'var(--dark-60)', fontSize: 12 }}>{description}</Text>
+        )}
+      </div>
+      {control}
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
   );
 }
 
@@ -126,12 +286,6 @@ function GeneralTab() {
       </Section>
 
       <ContentModificationSection />
-
-      <Section title="Video Preferences">
-        <Text style={{ color: 'var(--dark-60)', fontSize: 14 }}>
-          Configure default duration, aspect ratios, and captioning behavior for generated videos.
-        </Text>
-      </Section>
     </>
   );
 }
@@ -357,24 +511,25 @@ function SubField({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+const fakeSelectStyle = (width?: number): CSSProperties => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 8,
+  padding: '8px 10px 8px 12px',
+  border: '1px solid var(--dark-8)',
+  borderRadius: 8,
+  background: 'var(--light-100)',
+  fontFamily: "'Sohne', sans-serif",
+  fontSize: 14,
+  color: 'var(--dark-90)',
+  cursor: 'pointer',
+  minWidth: width ?? 160,
+});
+
 function FakeSelect({ value, width }: { value: string; width?: number }) {
-  const style: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    padding: '8px 10px 8px 12px',
-    border: '1px solid var(--dark-8)',
-    borderRadius: 8,
-    background: 'var(--light-100)',
-    fontFamily: "'Sohne', sans-serif",
-    fontSize: 14,
-    color: 'var(--dark-90)',
-    cursor: 'pointer',
-    minWidth: width ?? 160,
-  };
   return (
-    <button type="button" style={style}>
+    <button type="button" style={fakeSelectStyle(width)}>
       <span>{value}</span>
       <ChevronDown size={16} color="var(--dark-60)" />
     </button>

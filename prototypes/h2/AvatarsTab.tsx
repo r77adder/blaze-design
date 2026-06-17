@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Button,
   Heading,
@@ -713,7 +713,18 @@ export function AvatarsTab() {
 
 function AvatarsTabBody() {
   const [avatars, setAvatars] = useState<AvatarProfile[]>(AVATARS_SEED);
+  const [playing, setPlaying] = useState<string | null>(null);
+  const playTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openModal } = useModals();
+
+  const togglePlay = (id: string) => {
+    if (playTimer.current) clearTimeout(playTimer.current);
+    setPlaying((cur) => {
+      if (cur === id) return null;
+      playTimer.current = setTimeout(() => setPlaying(null), 2200);
+      return id;
+    });
+  };
 
   const updateAvatar = (id: string, patch: Partial<AvatarProfile>) => {
     setAvatars((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -773,7 +784,7 @@ function AvatarsTabBody() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
           gap: 14,
         }}
       >
@@ -784,6 +795,8 @@ function AvatarsTabBody() {
             name={avatar.name}
             desc={avatar.summary}
             onClick={() => openEdit(avatar)}
+            playing={playing === avatar.id}
+            onPlay={() => togglePlay(avatar.id)}
           />
         ))}
         <AddAvatarTile onClick={openCreate} />
