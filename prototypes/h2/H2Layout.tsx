@@ -14,7 +14,7 @@ const LABEL_TO_TOOL_ID: Record<string, ToolId> = Object.fromEntries(
 ) as Record<string, ToolId>;
 
 const PAGE_TITLES: Record<string, string> = {
-  '/h2': 'Home (old)',
+  '/h2': 'Home',
   '/h2/organic-social': 'Organic Campaigns',
   '/h2/organic-profile': 'Local SEO',
   '/h2/ranking': 'Ranking',
@@ -31,7 +31,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/h2/content-settings': 'Content Preferences',
   '/h2/tools': 'Meta Strategy',
   '/h2/dfy-campaigns': 'DFY Campaign',
-  '/h2/living-doc': 'Home',
+  '/h2/living-doc': 'Living Doc',
   '/h2/approvals': 'Approvals',
   '/h2/competitor-tracking': 'Competitor Tracking',
   '/h2/competitor-tracking/landscape': 'Competitive Landscape',

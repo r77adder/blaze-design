@@ -144,10 +144,9 @@ const DEFAULT_SECTIONS: SidebarSection[] = [
  */
 export const H2_SECTIONS: SidebarSection[] = [
   {
-    // Home is the Living Doc — the shared client doc is the account's
-    // center of gravity. The old dashboard home lives on under WIP.
+    // Home is the dashboard at /h2.
     items: [
-      { label: 'Home', icon: Home2, href: '/h2/living-doc' },
+      { label: 'Home', icon: Home2, href: '/h2' },
       { label: 'Approvals', icon: Approvals, href: '/h2/approvals' },
     ],
   },
@@ -179,7 +178,6 @@ export const H2_SECTIONS: SidebarSection[] = [
     items: [
       { label: 'Ranking', icon: LineChartUp02, href: '/h2/ranking' },
       { label: 'DFY Campaign', icon: Brainstorm, href: '/h2/dfy-campaigns' },
-      { label: 'Home (old)', icon: Home2, href: '/h2' },
     ],
   },
   {

@@ -1234,14 +1234,6 @@ export function LivingDocRoute() {
   const topbarRight = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <AvatarStack ids={['sarah', 'tom', 'alex']} size={24} />
-      <Button
-        variant={clientView ? 'primary' : 'secondary'}
-        size="sm"
-        frontIcon={EyeOpen}
-        onPress={() => setClientView(!clientView)}
-      >
-        {clientView ? 'Exit client view' : 'View as client'}
-      </Button>
     </div>
   );
 
