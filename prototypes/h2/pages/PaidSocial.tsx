@@ -10,10 +10,9 @@ import ChevronRightSmall from '@/icons/20/ChevronRightSmall';
 import ArrowUpSm from '@/icons/20/ArrowUpSm';
 import Brand from '@/icons/20/Brand';
 import BrandFilled from '@/icons/20/BrandFilled';
-import Globe from '@/icons/20/Globe';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import { H2Layout } from '../H2Layout';
-import { GenerateReportButton } from '../GenerateReportButton';
+import { PaidSocialInsightsView } from '../insights/PaidSocialInsights';
 import { useMetaCampaign } from '../meta-campaign/meta-campaign-context';
 import type { AdSet } from '../meta-campaign/concept/types';
 
@@ -28,7 +27,7 @@ export type Status =
   | 'over-budget'
   | 'spending-slowly';
 
-type SubTab = 'campaigns' | 'market-intelligence';
+type SubTab = 'campaigns' | 'insights';
 
 export interface FatigueSignal {
   label: string;
@@ -390,7 +389,7 @@ function PaidSocialRouteInner() {
       {(
         [
           { key: 'campaigns', label: 'Campaigns' },
-          { key: 'market-intelligence', label: 'Market Intelligence' },
+          { key: 'insights', label: 'Insights' },
         ] as const
       ).map((t) => (
         <TabChip
@@ -411,14 +410,13 @@ function PaidSocialRouteInner() {
           New campaign
         </Button>
       )}
-      <GenerateReportButton />
     </>
   );
 
   return (
     <H2Layout topbarCenter={topbarCenter} topbarRight={topbarRight}>
       {activeSubTab === 'campaigns' && <PaidSocialBody />}
-      {activeSubTab === 'market-intelligence' && <MarketIntelligenceView />}
+      {activeSubTab === 'insights' && <PaidSocialInsightsView />}
     </H2Layout>
   );
 }
@@ -1047,396 +1045,4 @@ export function formatMoney(n: number): string {
   if (n === 0) return '$0';
   if (Number.isInteger(n)) return `$${n.toLocaleString()}`;
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-// ─── MARKET INTELLIGENCE VIEW ──────────────────────────────────────────
-
-interface MarketIntelCard {
-  id: string;
-  peer: string;
-  metric: string;
-  observedImage: string;
-  adaptedImage: string;
-  observedSummary: string;
-  adaptedSummary: string;
-  observed: string;
-  adapted: string;
-}
-
-// Unsplash photo IDs chosen for distinct lifestyle/product/people images
-// suitable for social-feed creative previews.
-const MARKET_INTEL_SOCIAL: MarketIntelCard[] = [
-  {
-    id: 'mi-s-1',
-    peer: 'Five Star Painting of South Austin',
-    metric: '3.2x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
-    observedSummary: 'Owner-led testimonial · "187 reviews" stat in first 2s.',
-    adaptedSummary: 'John Bunnell voice-over · "Painted 1,200 Austin homes since 2008".',
-    observed:
-      'Owner-led testimonial with a review-count stat hook in the first 2 seconds — close-up framing, daylight, hand-held delivery to feel unscripted.',
-    adapted:
-      'John Bunnell (CertaPro Austin owner) voice-over, opening with "1,200 Austin homes painted since 2008 — here\'s how we do it." Same close-up framing, in our brand palette.',
-  },
-  {
-    id: 'mi-s-2',
-    peer: 'Paper Moon Painting',
-    metric: 'CTR 4.8%',
-    observedImage: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=80',
-    observedSummary: 'Split-screen exterior before/after carousel.',
-    adaptedSummary: 'Three-frame: faded siding → prep → fresh repaint.',
-    observed:
-      'Split-screen "before/after" carousel showing a full exterior repaint. Heavy-grain still + on-brand sans typography.',
-    adapted:
-      'Three-frame carousel: faded west-facing siding → prep + caulk → fresh CertaPro exterior. Re-shot in CertaPro brand palette.',
-  },
-  {
-    id: 'mi-s-3',
-    peer: 'WOW 1 DAY PAINTING Austin',
-    metric: '2.4x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
-    observedSummary: 'Narrative reel with hand-drawn timeline overlays.',
-    adaptedSummary: 'Matthew Tims walks through a 4-day exterior schedule.',
-    observed:
-      'Narrative reel with hand-drawn timeline overlays and ambient soundtrack. Calm, slow pacing — feels editorial, not promotional.',
-    adapted:
-      'Matthew Tims (VP Residential) narrates the day-by-day exterior repaint timeline, on-brand serif typography, same ambient soundtrack.',
-  },
-  {
-    id: 'mi-s-4',
-    peer: 'College Pro Painters',
-    metric: 'CTR 5.6%',
-    observedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
-    observedSummary: 'UGC compilation · 5 customer clips.',
-    adaptedSummary: 'Stitch from 5 top-rated CertaPro Austin reviews.',
-    observed:
-      'UGC compilation — 5 customer clips stitched with one shared caption. Quick cuts, natural audio, captions burnt-in.',
-    adapted:
-      'Pull from the 5 highest-rated CertaPro Austin Google reviews, stitched into a 20s reel with our caption style and brand-safe music.',
-  },
-  {
-    id: 'mi-s-5',
-    peer: 'Austin Custom Painting',
-    metric: '2.9x ROAS',
-    observedImage: 'https://images.unsplash.com/photo-1572025442646-866d16c84a54?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=600&q=80',
-    observedSummary: 'Color consult walkthrough · handwritten swatch overlay.',
-    adaptedSummary: 'Free color consultation with every CertaPro estimate.',
-    observed:
-      'Color consultant walks a homeowner through swatches on a kitchen wall, handwritten swatch overlay. Soft natural light, single take.',
-    adapted:
-      'CertaPro consultant runs a free color consult in a Cedar Park kitchen, scribbled "free with every estimate" note on frame, our brand palette.',
-  },
-  {
-    id: 'mi-s-6',
-    peer: 'Sherwin-Williams Pro Painters',
-    metric: 'CTR 4.1%',
-    observedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
-    adaptedImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
-    observedSummary: 'Static paint-chip diagram with arrows + CTA.',
-    adaptedSummary: 'Texas-heat paint guide · CertaPro callouts.',
-    observed:
-      'Static "paint chip diagram" with hand-drawn arrows and a strong CTA. Single frame designed to stop the scroll.',
-    adapted:
-      'CertaPro Austin "best paints for Texas heat" breakdown with on-brand callouts, in our editorial style.',
-  },
-];
-
-function MarketIntelligenceView() {
-  return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '20px 28px 60px' }}>
-      <div style={{ marginBottom: 32 }}>
-        <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
-          Successful ad creative from peer businesses, adapted for your brand. Click a card to compare side-by-side.
-        </Text>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 16,
-        }}
-      >
-        {MARKET_INTEL_SOCIAL.map((card) => (
-          <MarketIntelCardView key={card.id} card={card} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MarketIntelCardView({ card }: { card: MarketIntelCard }) {
-  const { openModal } = useModals();
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={() => openModal(MarketIntelComparisonModal, { card })}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: 'var(--light-100)',
-        border: `1px solid ${hovered ? 'var(--dark-15)' : 'var(--dark-8)'}`,
-        boxShadow: hovered ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-        borderRadius: 12,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: 0,
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        textAlign: 'left',
-        transition: 'border-color 160ms ease, box-shadow 160ms ease',
-      }}
-    >
-      {/* header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--dark-8)',
-        }}
-      >
-        <Globe size={16} color="var(--dark-60)" />
-        <Text variant="smallList" style={{ color: 'var(--dark-60)' }}>
-          Observed at:
-        </Text>
-        <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-          {card.peer}
-        </Text>
-        <span
-          style={{
-            marginLeft: 'auto',
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '4px 8px',
-            borderRadius: 999,
-            background: 'rgba(4, 175, 0, 0.10)',
-            color: 'var(--status-approved)',
-            fontSize: 12,
-            fontWeight: 500,
-            lineHeight: 1,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {card.metric}
-        </span>
-      </div>
-
-      {/* preview area — stock image teaser */}
-      <div
-        aria-hidden
-        style={{
-          height: 260,
-          background: `var(--dark-4) center / cover no-repeat url(${card.observedImage})`,
-          position: 'relative',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 12,
-            left: 12,
-            padding: '4px 8px',
-            borderRadius: 4,
-            background: 'rgba(0,0,0,0.5)',
-            color: 'var(--light-100)',
-            fontSize: 12,
-            fontWeight: 500,
-          }}
-        >
-          Ad preview
-        </div>
-      </div>
-
-      {/* body — trimmed summary, no CTAs */}
-      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-        <div>
-          <Text
-            variant="metadata"
-            style={{
-              color: 'var(--dark-60)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              fontSize: 12,
-              display: 'block',
-              marginBottom: 4,
-            }}
-          >
-            Observed
-          </Text>
-          <Text variant="smallList" style={{ color: 'var(--dark-90)' }}>
-            {card.observedSummary}
-          </Text>
-        </div>
-        <div>
-          <Text
-            variant="metadata"
-            style={{
-              color: 'var(--dark-60)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              fontSize: 12,
-              display: 'block',
-              marginBottom: 4,
-            }}
-          >
-            Adapted for CertaPro Austin
-          </Text>
-          <Text variant="smallList" style={{ color: 'var(--dark-90)' }}>
-            {card.adaptedSummary}
-          </Text>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-// ─── MARKET INTELLIGENCE COMPARISON MODAL ──────────────────────────────
-
-interface MarketIntelComparisonModalProps {
-  card: MarketIntelCard;
-}
-
-function MarketIntelComparisonModal({
-  close,
-  card,
-}: StackModalProps & MarketIntelComparisonModalProps) {
-  return (
-    <Modal.Root size="lg" aria-labelledby="mi-comparison-title">
-      <Modal.Header
-        title="Compare creative"
-        id="mi-comparison-title"
-        onClose={close}
-        compact={false}
-      />
-      <Modal.Content compact={false}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 16,
-          }}
-        >
-          <ComparisonPanel
-            heading={`Observed at: ${card.peer}`}
-            metricPill={card.metric}
-            image={card.observedImage}
-            label="Observed"
-            body={card.observed}
-          />
-          <ComparisonPanel
-            heading="Proposed for CertaPro Austin"
-            image={card.adaptedImage}
-            label="Adapted"
-            body={card.adapted}
-          />
-        </div>
-      </Modal.Content>
-      <Modal.Footer>
-        <Modal.FooterContent slot="left">
-          <Modal.FooterButton variant="ghost" onPress={close}>
-            Skip
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-        <Modal.FooterContent slot="right">
-          <Modal.FooterButton variant="primary" onPress={close}>
-            Add to campaign
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-      </Modal.Footer>
-    </Modal.Root>
-  );
-}
-
-function ComparisonPanel({
-  heading,
-  metricPill,
-  image,
-  label,
-  body,
-}: {
-  heading: string;
-  metricPill?: string;
-  image: string;
-  label: string;
-  body: string;
-}) {
-  return (
-    <div
-      style={{
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--dark-8)',
-        }}
-      >
-        <Globe size={16} color="var(--dark-60)" />
-        <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-          {heading}
-        </Text>
-        {metricPill && (
-          <span
-            style={{
-              marginLeft: 'auto',
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '4px 8px',
-              borderRadius: 999,
-              background: 'rgba(4, 175, 0, 0.10)',
-              color: 'var(--status-approved)',
-              fontSize: 12,
-              fontWeight: 500,
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {metricPill}
-          </span>
-        )}
-      </div>
-      <div
-        aria-hidden
-        style={{
-          height: 280,
-          background: `var(--dark-4) center / cover no-repeat url(${image})`,
-        }}
-      />
-      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        <Text
-          variant="metadata"
-          style={{
-            color: 'var(--dark-60)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.04em',
-            fontSize: 12,
-            display: 'block',
-          }}
-        >
-          {label}
-        </Text>
-        <Text variant="smallList" style={{ color: 'var(--dark-90)', lineHeight: 1.55 }}>
-          {body}
-        </Text>
-      </div>
-    </div>
-  );
 }
