@@ -4,8 +4,8 @@ import { H2Layout } from '../H2Layout';
 import { useClientView } from '../client-view-context';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import { Toast } from '@/staging';
-import { Approvals as ApprovalsIcon, Check2, EyeOpen, Edit3, ArrowLeft, ArrowRight, ArrowCurveLeftDown, XCircleContained, Globe, CalendarEdit, Settings, Star, Calendar1, Marker03, Cursor04, BarChartSquare, MessageChat01 } from '@/icons/20';
-import { ChevronDown, ChevronRight } from '@/icons/16';
+import { Approvals as ApprovalsIcon, Check2, EyeOpen, Edit3, ArrowLeft, ArrowRight, ArrowCurveLeftDown, XCircleContained, Globe, CalendarEdit, Settings, Star, Calendar1, Marker03, Cursor04, BarChartSquare, MessageChat01, VideoOn } from '@/icons/20';
+import { ChevronDown, ChevronRight, Iphone02 } from '@/icons/16';
 
 // ── Image assets (Figma + Unsplash fallbacks) ─────────────────────────────────
 const IMG_AVATAR = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&auto=format&fit=crop&crop=faces';
@@ -372,16 +372,8 @@ function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
         <path d="M14.875 14.25L11.5 13.125V8.42087M20.5 12C20.5 7.02944 16.4706 3 11.5 3C6.52944 3 2.5 7.02944 2.5 12C2.5 16.9706 6.52944 21 11.5 21C12.0768 21 12.6409 20.9457 13.1875 20.8421M15.4375 18.1875L17.125 19.875L21.625 15.375" stroke="#FF37CA" strokeOpacity="0.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     );
-    case 'short': return (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-        <path d="M10.3333 5H13.6667M6 4.5V19.5C6 20.8807 6.89543 22 8 22H16C17.1046 22 18 20.8807 18 19.5V4.50001C18 3.1193 17.1046 2.00002 16 2.00001L8 2C6.89543 2 6 3.11929 6 4.5Z" stroke="#00AAFF" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
-    case 'feed-video': return (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-        <path d="M12.1055 8.83333H9.3555M15.8752 14.3867L20.5252 16.6771C21.0072 16.9705 21.513 16.7976 21.5 16.1856L21.4674 8.09104C21.4262 7.42667 21.0341 7.24539 20.4568 7.55242L15.8621 9.64057M5.25 18.5H13.6055C14.8481 18.5 15.8555 17.5051 15.8555 16.2778L15.8752 13.4275L15.8555 7.72222C15.8555 6.49492 14.8481 5.5 13.6055 5.5H5.25C4.00736 5.5 3 6.49492 3 7.72222V16.2778C3 17.5051 4.00736 18.5 5.25 18.5Z" stroke="#6A00FF" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
+    case 'short': return <Iphone02 size={size} color="#00AAFF" />;
+    case 'feed-video': return <VideoOn size={size} color="#6A00FF" />;
     case 'email': return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <path d="M4.6875 6.75L11.3596 11.5403C11.7449 11.8168 12.2551 11.8168 12.6404 11.5403L19.3125 6.75M5.25 19H18.75C19.9926 19 21 17.9553 21 16.6667V7.33333C21 6.04467 19.9926 5 18.75 5H5.25C4.00736 5 3 6.04467 3 7.33333V16.6667C3 17.9553 4.00736 19 5.25 19Z" stroke="#FFAE00" strokeLinecap="round" strokeLinejoin="round"/>

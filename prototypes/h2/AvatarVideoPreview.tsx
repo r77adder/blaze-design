@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, useModals } from '@/components';
 import { ArrowLeft, ArrowRight, Approvals as ApprovalsIcon } from '@/icons/20';
-import { ScriptSettingsModal, makeAvatarDraft, type NewPostDraft } from './CreatePostFlow';
+import { ScriptSettingsModal, makeAvatarDraft, type NewPostDraft, type ContentTypeId } from './CreatePostFlow';
 
 /**
  * Full-screen content preview for an AI Avatar Video calendar card.
@@ -102,11 +102,20 @@ function VideoFrame({ face, caption }: { face: string | null; caption: string })
   );
 }
 
-export function AvatarVideoPreview({ post, onClose }: { post: PreviewPost; onClose: () => void }) {
+export function AvatarVideoPreview({
+  post,
+  onClose,
+  contentType = 'ai-avatar',
+}: {
+  post: PreviewPost;
+  onClose: () => void;
+  contentType?: ContentTypeId;
+}) {
   const { openModal } = useModals();
   const [chatInput, setChatInput] = useState('');
   // One draft seeds the modal; edits there flow back so the preview reflects them.
-  const [draft, setDraft] = useState<NewPostDraft>(() => makeAvatarDraft());
+  // contentType keys the regenerate CTA/label to the video format.
+  const [draft, setDraft] = useState<NewPostDraft>(() => makeAvatarDraft({ contentType }));
 
   const openRegenerate = () =>
     openModal(ScriptSettingsModal, {

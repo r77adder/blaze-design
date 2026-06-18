@@ -12,7 +12,9 @@ import ClockBackward from '@/icons/20/ClockBackward';
 import Filter from '@/icons/20/Filter';
 import FileMultiple from '@/icons/20/FileMultiple';
 import Document from '@/icons/20/Document';
-import Video from '@/icons/20/Video';
+import UserProfileSquare from '@/icons/20/UserProfileSquare';
+import VideoOn from '@/icons/20/VideoOn';
+import Iphone02 from '@/icons/16/Iphone02';
 import Emails from '@/icons/20/Emails';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import StillImageIcon from '../StillImageIcon';
@@ -45,7 +47,7 @@ type Status = 'scheduled' | 'draft' | 'review' | 'approved';
 type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 // Calendar cards are typed by *content kind* (what the post renders as),
 // independent of the platform it ships to.
-type ContentKind = 'still' | 'carousel' | 'blog' | 'avatar-video';
+type ContentKind = 'still' | 'carousel' | 'blog' | 'avatar-video' | 'feed-video' | 'short-video';
 
 interface Post {
   day: DayKey;
@@ -64,7 +66,18 @@ const CONTENT_META: Record<ContentKind, { label: string; icon: typeof FileMultip
   still: { label: 'Still Image', icon: StillImageIcon, color: 'var(--red-70)' },
   carousel: { label: 'Carousel', icon: FileMultiple, color: 'var(--status-connect)' },
   blog: { label: 'Blog Post', icon: Document, color: 'var(--status-approved)' },
-  'avatar-video': { label: 'AI Avatar Video', icon: Video, color: 'var(--purple)' },
+  'avatar-video': { label: 'AI Avatar Video', icon: UserProfileSquare, color: '#4F62F8' },
+  'feed-video': { label: 'Video Feed Post', icon: VideoOn, color: '#6A00FF' },
+  'short-video': { label: 'Short Form Video', icon: Iphone02, color: '#00AAFF' },
+};
+
+// Video card kinds share the play badge + content preview.
+const VIDEO_KINDS = new Set<ContentKind>(['avatar-video', 'feed-video', 'short-video']);
+// Map a calendar card kind back to the create-flow content type for the preview.
+const KIND_TO_CT: Partial<Record<ContentKind, ContentTypeId>> = {
+  'avatar-video': 'ai-avatar',
+  'feed-video': 'feed-video',
+  'short-video': 'short-video',
 };
 
 const TODAY: DayKey = 'thu';
@@ -82,6 +95,8 @@ const SEED_POSTS: Post[] = [
   { day: 'wed', time: '2:00 PM', platform: 'x', type: 'Post', contentType: 'still', title: 'What a free estimate actually covers — the six things every Austin homeowner should expect.', thumb: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=70', status: 'review', source: 'Estimate FAQ' },
   { day: 'thu', time: '10:00 AM', platform: 'instagram', type: 'Reel', contentType: 'avatar-video', title: 'A day on the crew — exterior repaint in Westlake.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=70', status: 'approved', source: 'Crew Spotlights' },
   { day: 'thu', time: '5:00 PM', platform: 'tiktok', type: 'Short', contentType: 'carousel', title: 'Cabinet refinish vs replace — what it really costs in Austin.', thumb: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=70', status: 'approved', source: 'Cabinet Refresh May' },
+  { day: 'tue', time: '11:00 AM', platform: 'instagram', type: 'Reel', contentType: 'feed-video', title: 'Color of the week — Tarrytown trim in warm white.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=70', status: 'approved', source: 'Color Trends 2026' },
+  { day: 'fri', time: '6:00 PM', platform: 'tiktok', type: 'Short', contentType: 'short-video', title: 'Three exterior colors that survive Texas summers.', thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', status: 'review', source: 'Color Trends 2026' },
   { day: 'fri', time: '11:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Friday reveal — Lakeway exterior, 4 days from prep to finish.', thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', status: 'review', source: 'Color Trends 2026' },
   { day: 'fri', time: '3:00 PM', platform: 'linkedin', type: 'Post', contentType: 'blog', title: 'What we learned running an HOA repaint with 14 buildings on one timeline', body: 'Fourteen buildings, one timeline, zero missed handoffs. What coordinating an HOA-scale repaint taught us about sequencing crews and keeping color approvals moving.', thumb: 'https://images.unsplash.com/photo-1448630360428-65456885c650?w=600&q=70', status: 'approved', source: 'HOA Round Rock' },
   { day: 'sat', time: '9:00 AM', platform: 'instagram', type: 'Carousel', contentType: 'carousel', title: 'Weekend project — 5 small interior paint refreshes that change a room.', thumb: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=70', status: 'approved', source: 'Color Trends 2026' },
@@ -309,7 +324,7 @@ function PostCard({ post, dayFull, onOpen }: { post: Post; dayFull: string; onOp
             </svg>
           </span>
         )}
-        {post.contentType === 'avatar-video' && (
+        {VIDEO_KINDS.has(post.contentType) && (
           <span
             style={{
               position: 'absolute',
@@ -461,8 +476,8 @@ const CT_TO_KIND: Record<ContentTypeId, ContentKind> = {
   still: 'still',
   carousel: 'carousel',
   blog: 'blog',
-  'feed-video': 'avatar-video',
-  'short-video': 'avatar-video',
+  'feed-video': 'feed-video',
+  'short-video': 'short-video',
   'ai-avatar': 'avatar-video',
   story: 'still',
   email: 'blog',
@@ -488,7 +503,7 @@ function OrganicSocialRouteInner() {
   // AI Avatar Video cards open a full content preview (not just a toast).
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
   const openPost = (p: Post) => {
-    if (p.contentType === 'avatar-video') setPreviewPost(p);
+    if (VIDEO_KINDS.has(p.contentType)) setPreviewPost(p);
     else showToast({ message: `Open · ${p.title.slice(0, 40)}` });
   };
   // Tab lives in the URL (?tab=insights etc.) so deep-links and cross-page
@@ -611,7 +626,7 @@ function OrganicSocialRouteInner() {
   return (
     <>
     {previewPost && (
-      <AvatarVideoPreview post={previewPost} onClose={() => setPreviewPost(null)} />
+      <AvatarVideoPreview post={previewPost} contentType={KIND_TO_CT[previewPost.contentType] ?? 'ai-avatar'} onClose={() => setPreviewPost(null)} />
     )}
     <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />} fullBleed>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--default-bg)' }}>

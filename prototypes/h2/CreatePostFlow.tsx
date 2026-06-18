@@ -19,6 +19,8 @@ import Edit3 from '@/icons/20/Edit3';
 import Settings from '@/icons/20/Settings';
 import InformationCircleSmall from '@/icons/16/InformationCircleSmall';
 import UserProfileSquare from '@/icons/20/UserProfileSquare';
+import VideoOn from '@/icons/20/VideoOn';
+import Iphone02 from '@/icons/16/Iphone02';
 import StillImageIcon from './StillImageIcon';
 
 /**
@@ -82,7 +84,7 @@ export const CONTENT_TYPES: ContentTypeDef[] = [
     id: 'feed-video',
     label: 'Video Feed Post',
     menuLabel: 'Video feed posts',
-    color: 'var(--purple)',
+    color: '#6A00FF',
     glyph: (
       <>
         <rect x="3" y="5" width="18" height="14" rx="3" />
@@ -94,7 +96,7 @@ export const CONTENT_TYPES: ContentTypeDef[] = [
     id: 'ai-avatar',
     label: 'AI Avatar Video',
     menuLabel: 'AI Avatar Video',
-    color: 'var(--purple)',
+    color: '#4F62F8',
     isNew: true,
     glyph: (
       <>
@@ -109,7 +111,7 @@ export const CONTENT_TYPES: ContentTypeDef[] = [
     id: 'short-video',
     label: 'Short Form Video',
     menuLabel: 'Short form videos',
-    color: 'var(--status-posting)',
+    color: '#00AAFF',
     glyph: (
       <>
         <rect x="6" y="2" width="12" height="20" rx="3" />
@@ -157,6 +159,11 @@ export const CONTENT_TYPES: ContentTypeDef[] = [
 
 const CONTENT_BY_ID = Object.fromEntries(CONTENT_TYPES.map((c) => [c.id, c])) as Record<ContentTypeId, ContentTypeDef>;
 
+// Avatar-driven video formats — all share the Script & Settings + regenerate
+// experience (avatar, script, captions) and the calendar content preview.
+const VIDEO_TYPES = new Set<ContentTypeId>(['ai-avatar', 'feed-video', 'short-video']);
+const isVideoType = (id: ContentTypeId) => VIDEO_TYPES.has(id);
+
 function ContentGlyph({ def, size = 18 }: { def: ContentTypeDef; size?: number }) {
   // "Still Image" ships as a fill-based brand asset, so render the dedicated
   // component instead of the stroke glyph. All other types stay stroke-based.
@@ -165,6 +172,12 @@ function ContentGlyph({ def, size = 18 }: { def: ContentTypeDef; size?: number }
   }
   if (def.id === 'ai-avatar') {
     return <UserProfileSquare size={size} color={def.color} />;
+  }
+  if (def.id === 'feed-video') {
+    return <VideoOn size={size} color={def.color} />;
+  }
+  if (def.id === 'short-video') {
+    return <Iphone02 size={size} color={def.color} />;
   }
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke={def.color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
@@ -790,8 +803,8 @@ const CREDIT_COST_BY_TYPE: Record<ContentTypeId, number> = {
 const postCredits = (p: NewPostDraft) => CREDIT_COST_BY_TYPE[p.contentType] ?? 0;
 
 function applyContentType(draft: NewPostDraft, id: ContentTypeId): NewPostDraft {
-  if (id === 'ai-avatar') return { ...draft, contentType: id, refImage: AVATAR_IMAGE, topic: AVATAR_TOPIC };
-  if (draft.contentType === 'ai-avatar') return { ...draft, contentType: id, refImage: AI_SEEDS[0].refImage, topic: AI_SEEDS[0].topic };
+  if (isVideoType(id)) return { ...draft, contentType: id, refImage: AVATAR_IMAGE, topic: AVATAR_TOPIC };
+  if (isVideoType(draft.contentType)) return { ...draft, contentType: id, refImage: AI_SEEDS[0].refImage, topic: AI_SEEDS[0].topic };
   return { ...draft, contentType: id };
 }
 
@@ -1468,6 +1481,12 @@ export function ScriptSettingsModal({
   const estSeconds = Math.max(1, Math.round(script.length / 15));
   const estDuration = `${Math.floor(estSeconds / 60)}:${String(estSeconds % 60).padStart(2, '0')}`;
   const avatarName = AVATAR_NAME_BY_IMG[refImage] ?? 'Custom avatar';
+  // Label + credit cost adapt to the video content type (AI Avatar Video,
+  // Video Feed Post, Short Form Video).
+  const typeLabel = CONTENT_BY_ID[draft.contentType]?.label ?? 'AI Avatar Video';
+  const regenCredits = CREDIT_COST_BY_TYPE[draft.contentType] ?? 15;
+  // Only AI Avatar Video uses an angle + a chosen avatar; Feed/Short video skip both.
+  const isAvatarFlow = draft.contentType === 'ai-avatar';
   // Product-reaction is the only angle that needs a product image.
   const needsProduct = ANGLE_BY_ID[angle]?.needsProduct ?? false;
   const save = () => {
@@ -1493,7 +1512,7 @@ export function ScriptSettingsModal({
     <Modal.Root size="lg" aria-labelledby="script-settings-title" data-testid="script-settings-modal">
       {/* compact header → no divider, large 26px title, floating close (matches prod). */}
       <Modal.Header
-        title={mode === 'regenerate' ? 'Regenerate AI Avatar Video' : 'Script & Settings'}
+        title={mode === 'regenerate' ? `Regenerate ${typeLabel}` : 'Script & Settings'}
         id="script-settings-title"
         onClose={close}
         compact
@@ -1508,11 +1527,12 @@ export function ScriptSettingsModal({
             <div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Heading level={3} style={{ margin: '0 0 4px' }}>Script Inputs</Heading>
-                <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--dark-60)' }}>Angle and topic drive the script. Change either and regenerate to get a new draft.</p>
+                <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--dark-60)' }}>{isAvatarFlow ? 'Angle and topic drive the script. Change either and regenerate to get a new draft.' : 'Topic drives the script. Change it and regenerate to get a new draft.'}</p>
 
                 {/* Generation inputs grouped in a gray box, separate from the script. */}
                 <div style={{ background: 'var(--dark-2)', borderRadius: 10, padding: 12, marginBottom: 16 }}>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'stretch' }}>
+                    {isAvatarFlow && (
                     <div style={{ width: 200, flexShrink: 0 }}>
                       <Text variant="label" style={labelStyle}>Angle</Text>
                       <FieldDropdown
@@ -1557,6 +1577,7 @@ export function ScriptSettingsModal({
                         )
                       )}
                     </div>
+                    )}
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                       <Text variant="label" style={labelStyle}>Topic</Text>
                       <Textarea
@@ -1632,7 +1653,8 @@ export function ScriptSettingsModal({
 
                 {/* Avatar + Caption — matching cards. */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {/* Avatar card — thumbnail, name, voice play + Change. */}
+                  {/* Avatar card — thumbnail, name, voice play + Change. AI Avatar Video only. */}
+                  {isAvatarFlow && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
                     <div style={{ width: 80, height: 80, borderRadius: 8, flexShrink: 0, backgroundColor: 'var(--dark-8)', backgroundImage: refImage ? `url('${refImage}')` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -1650,6 +1672,7 @@ export function ScriptSettingsModal({
                       <Button variant="secondary" size="sm" onPress={openAvatarPicker}>Change</Button>
                     </div>
                   </div>
+                  )}
 
                   {/* Caption card — current style preview, label, Change. */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
@@ -1684,10 +1707,10 @@ export function ScriptSettingsModal({
           <Modal.FooterButton variant="primary" onPress={save} isDisabled={regenerating}>
             {mode === 'regenerate' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                Regenerate AI Avatar Video
+                Regenerate {typeLabel}
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                   <CreditsSparkle size={14} />
-                  15
+                  {regenCredits}
                 </span>
               </span>
             ) : (
@@ -1753,7 +1776,7 @@ function PostRow({
   dateOptions: string[];
 }) {
   const { openModal } = useModals();
-  const isAvatar = draft.contentType === 'ai-avatar';
+  const isVideo = isVideoType(draft.contentType);
   const openAvatarPicker = () =>
     openModal(AvatarPickerModal, { value: draft.refImage, onSelect: (img) => onChange({ ...draft, refImage: img }) });
   const openImagePicker = () =>
@@ -1778,9 +1801,9 @@ function PostRow({
       {/* reference image */}
       {draft.refImage ? (
         <div
-          onClick={isAvatar ? openAvatarPicker : openImagePicker}
+          onClick={isVideo ? openAvatarPicker : openImagePicker}
           role="button"
-          aria-label={isAvatar ? 'Change avatar' : 'Change reference image'}
+          aria-label={isVideo ? 'Change avatar' : 'Change reference image'}
           style={{
             position: 'relative',
             flexShrink: 0,
@@ -1807,7 +1830,7 @@ function PostRow({
               fontSize: 12,
             }}
           >
-            {isAvatar ? 'Change avatar' : 'Reference image'}
+            {isVideo ? 'Change avatar' : 'Reference image'}
             <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="#fff" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 20h4L19 9l-4-4L4 16v4z" />
               <path d="M14 6l4 4" />
@@ -1855,7 +1878,7 @@ function PostRow({
             <ContentTypeField value={draft.contentType} onChange={(id) => onChange(applyContentType(draft, id))} />
             <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>Posting on</span>
             <DatePicker value={draft.date} onChange={(d) => onChange({ ...draft, date: d })} />
-            {isAvatar && (
+            {isVideo && (
               <button
                 type="button"
                 onClick={openScriptSettings}
@@ -1902,7 +1925,7 @@ function PostRow({
         />
 
         {/* add context (left) — or the avatar script microcopy */}
-        {isAvatar ? (
+        {isVideo ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--dark-40)', fontSize: 12 }}>
             <InformationCircleSmall size={16} color="var(--dark-40)" />
             Topic seeds the script. Review and edit in Script &amp; Settings.
