@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { createPortal } from 'react-dom';
 import { Button, Heading, IconButton, Modal, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { Card, StatusPill, TabChip } from '@/staging';
+import { Card, StatusPill, TabChip, Toggle } from '@/staging';
 import { Input, Textarea } from './_ui';
 import Plus from '@/icons/20/Plus';
 import ChevronDown from '@/icons/16/ChevronDown';
@@ -21,6 +21,7 @@ import InformationCircleSmall from '@/icons/16/InformationCircleSmall';
 import UserProfileSquare from '@/icons/20/UserProfileSquare';
 import VideoOn from '@/icons/20/VideoOn';
 import Iphone02 from '@/icons/16/Iphone02';
+import Note2 from '@/icons/20/Note2';
 import StillImageIcon from './StillImageIcon';
 
 /**
@@ -676,14 +677,16 @@ function makeBlankDraft(date: string): NewPostDraft {
 // calendar's "Regenerate Video" flow to seed the Script & Settings modal from
 // an existing post. Overrides (topic, date, refImage…) come in via `partial`.
 export function makeAvatarDraft(partial: Partial<NewPostDraft> = {}): NewPostDraft {
+  const contentType = partial.contentType ?? 'ai-avatar';
   return {
     id: nextId(),
-    contentType: 'ai-avatar',
+    contentType,
     topic: AVATAR_TOPIC,
-    refImage: AVATAR_IMAGE,
+    // AI Avatar Video shows a presenter; Feed/Short video use a non-person scene.
+    refImage: contentType === 'ai-avatar' ? AVATAR_IMAGE : REFERENCE_IMAGE,
     accounts: 5,
     date: DEFAULT_DATE_OPTIONS[0],
-    script: SCRIPTS_BY_DURATION[30][0],
+    script: SCRIPTS_BY_DURATION[15][0],
     durationSec: 30,
     captions: true,
     captionStyle: CAPTION_STYLES[0],
@@ -721,6 +724,18 @@ const AVATAR_NAME_BY_IMG: Record<string, string> = Object.fromEntries(
 );
 
 const AVATAR_IMAGE = MY_AVATARS[0].img;
+// Default reference image for Feed/Short video — a non-person scene.
+const REFERENCE_IMAGE = AI_SEEDS[0].refImage;
+
+// Derive a display file name from an image URL (last path segment + .jpg).
+const imageFileName = (url: string): string => {
+  try {
+    const seg = new URL(url).pathname.split('/').filter(Boolean).pop() || 'image';
+    return seg.includes('.') ? seg : `${seg}.jpg`;
+  } catch {
+    return 'reference.jpg';
+  }
+};
 const AVATAR_TOPIC =
   'When your coffee choice needs to match the moment, single origins make the decision feel personal.';
 
@@ -739,8 +754,9 @@ const SCRIPTS_BY_DURATION: Record<number, string[]> = {
   ],
 };
 
-// The variant pool the regenerate flow cycles through.
-const SCRIPT_VARIANTS = SCRIPTS_BY_DURATION[30];
+// The variant pool the regenerate flow cycles through. Short (≤160-char)
+// scripts so they fit the generated-script character limit.
+const SCRIPT_VARIANTS = SCRIPTS_BY_DURATION[15];
 
 // Caption render styles — each backed by an uploaded preview PNG served from
 // public/caption_style/. Names are descriptive of the look. "No caption" = off.
@@ -783,7 +799,7 @@ const captionImg = (name: string): string | undefined => {
 };
 
 // Fixed script length cap (duration is no longer a setting).
-const SCRIPT_MAX_CHARS = 600;
+const SCRIPT_MAX_CHARS = 160;
 
 // Switching the content type also swaps the reference image + topic so an
 // AI Avatar Video shows a presenter and a video-style script rather than a
@@ -803,7 +819,7 @@ const CREDIT_COST_BY_TYPE: Record<ContentTypeId, number> = {
 const postCredits = (p: NewPostDraft) => CREDIT_COST_BY_TYPE[p.contentType] ?? 0;
 
 function applyContentType(draft: NewPostDraft, id: ContentTypeId): NewPostDraft {
-  if (isVideoType(id)) return { ...draft, contentType: id, refImage: AVATAR_IMAGE, topic: AVATAR_TOPIC };
+  if (isVideoType(id)) return { ...draft, contentType: id, refImage: id === 'ai-avatar' ? AVATAR_IMAGE : REFERENCE_IMAGE, topic: AVATAR_TOPIC };
   if (isVideoType(draft.contentType)) return { ...draft, contentType: id, refImage: AI_SEEDS[0].refImage, topic: AI_SEEDS[0].topic };
   return { ...draft, contentType: id };
 }
@@ -1320,6 +1336,110 @@ function PhonePreview({
   );
 }
 
+// Reusable gray music thumbnail (note glyph + "Music"), matching the
+// stock-audio picker tiles.
+function MusicThumb({ size }: { size: number }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: 8, flexShrink: 0, background: 'var(--dark-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+      <Note2 size={Math.round(size * 0.3)} color="var(--dark-40)" />
+      <span style={{ fontSize: 10, color: 'var(--dark-40)' }}>Music</span>
+    </div>
+  );
+}
+
+// Stock background-music library (mocked) for the audio picker.
+const STOCK_AUDIO: { name: string; duration: string }[] = [
+  { name: 'Upbeat Indie Instrumental', duration: '1:28' },
+  { name: 'Inspiring Mission', duration: '2:58' },
+  { name: 'Road To Utah (Instrumental)', duration: '3:00' },
+  { name: 'Island Melodies', duration: '2:20' },
+  { name: 'Electrogaze', duration: '2:24' },
+  { name: 'Soul Slippin (No Vocals)', duration: '2:27' },
+  { name: 'Old Time Ads (Instrumental)', duration: '2:44' },
+  { name: 'Lofi Chill Funk (No Vocal)', duration: '3:00' },
+  { name: 'Galactic Sage (Only Drums)', duration: '2:03' },
+  { name: 'Cinematic Build', duration: '2:13' },
+  { name: 'Acoustic Morning', duration: '3:05' },
+  { name: 'Warm Sunrise', duration: '2:08' },
+];
+
+// A stock-audio tile. On hover the thumbnail reveals a play/pause control and
+// the duration is replaced by a "Select" CTA.
+function StockAudioTile({ track, onSelect }: { track: { name: string; duration: string }; onSelect: () => void }) {
+  const [hover, setHover] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => { setHover(false); setPlaying(false); }}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--dark-8)', borderRadius: 10, background: 'var(--light-100)', padding: 10 }}
+    >
+      <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: 'var(--dark-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+        {hover ? (
+          <button
+            type="button"
+            aria-label={playing ? `Pause ${track.name}` : `Play ${track.name}`}
+            onClick={() => setPlaying((p) => !p)}
+            style={{ position: 'absolute', inset: 0, border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+          >
+            <span style={{ width: 32, height: 32, borderRadius: 99, background: 'var(--dark-90)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {playing ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1.2" /><rect x="14" y="5" width="4" height="14" rx="1.2" /></svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5Z" /></svg>
+              )}
+            </span>
+          </button>
+        ) : (
+          <>
+            <Note2 size={16} color="var(--dark-40)" />
+            <span style={{ fontSize: 10, color: 'var(--dark-40)' }}>Music</span>
+          </>
+        )}
+      </div>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.name}</span>
+        {hover ? (
+          <Button variant="secondary" size="sm" onPress={onSelect}>Select</Button>
+        ) : (
+          <span style={{ display: 'block', fontSize: 12, color: 'var(--dark-60)' }}>{track.duration}</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+// Audio picker — Brand Kit upload + stock library. (The narration-script field
+// from the full design is intentionally omitted here.)
+function SelectAudioModal({
+  close,
+  onSelect,
+}: StackModalProps & { value: string; onSelect: (name: string) => void }) {
+  return (
+    <Modal.Root size="lg" aria-labelledby="select-audio-title" data-testid="select-audio-modal">
+      <Modal.Header title="Select audio" id="select-audio-title" onClose={close} compact />
+      <Modal.Content compact>
+        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 12 }}>From Brand Kit</div>
+        <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid var(--dark-15)', background: 'var(--light-100)', borderRadius: 8, padding: '8px 14px', fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)', cursor: 'pointer', marginBottom: 24 }}>
+          <svg width={18} height={18} viewBox="0 0 20 20" fill="none"><path d="M13.2357 14.3751H14.375C16.3084 14.3751 17.6563 12.9838 17.6563 11.25C17.6563 9.84758 16.7661 8.4856 15.4516 8.16777C15.4067 7.01874 14.8967 6.1607 14.1926 5.70813C13.5021 5.26425 12.6494 5.21033 11.8969 5.54942C11.2936 4.38376 10.1044 3.43774 8.54145 3.43774C6.21651 3.43774 4.5779 5.61334 4.69639 7.83225C3.34714 8.19246 2.34375 9.50049 2.34375 11.0548C2.34375 12.8863 3.73334 14.3751 5.44268 14.3751H6.71875" stroke="var(--dark-90)" strokeWidth="1.4" strokeLinecap="round" /><path d="M10 8.90649V16.5627M10 8.90649L7.26562 11.6409M10 8.90649L12.7344 11.6409" stroke="var(--dark-90)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          Upload Audio
+        </button>
+
+        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 12 }}>Stock audio</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--dark-8)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--dark-40)" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+          <span style={{ fontSize: 14, color: 'var(--dark-40)' }}>Search for audio…</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          {STOCK_AUDIO.map((t) => (
+            <StockAudioTile key={t.name} track={t} onSelect={() => { onSelect(t.name); close(); }} />
+          ))}
+        </div>
+      </Modal.Content>
+    </Modal.Root>
+  );
+}
+
 // Caption-style picker — preview cards (incl. "No caption"), opened from the
 // caption box's Change button.
 export function CaptionStylePickerModal({
@@ -1419,6 +1539,10 @@ export function ScriptSettingsModal({
   const [prevScript, setPrevScript] = useState<{ text: string; idx: number } | null>(null);
   // Mocked avatar voice playback state.
   const [voicePlaying, setVoicePlaying] = useState(false);
+  // Feed/Short video only: narration (AI voiceover) is off by default and gates
+  // the generated script; background music picked from a short list.
+  const [narration, setNarration] = useState(false);
+  const [music, setMusic] = useState(STOCK_AUDIO[0].name);
   const timers = useRef<number[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -1459,6 +1583,10 @@ export function ScriptSettingsModal({
   };
   const openAvatarPicker = () =>
     openModal(AvatarPickerModal, { value: refImage, onSelect: (img) => setRefImage(img) });
+  const openImagePicker = () =>
+    openModal(SelectSourceModal, { value: refImage, onSelect: (img) => setRefImage(img) });
+  const openMusicPicker = () =>
+    openModal(SelectAudioModal, { value: music, onSelect: (name) => setMusic(name) });
   const openProductPicker = () =>
     openModal(SelectSourceModal, { value: productImage, onSelect: (img) => setProductImage(img) });
   const openCaptionPicker = () =>
@@ -1476,10 +1604,13 @@ export function ScriptSettingsModal({
     const t = window.setTimeout(() => setVoicePlaying(false), 2200);
     timers.current.push(t);
   };
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const playMusic = () => {
+    setMusicPlaying((p) => !p);
+    const t = window.setTimeout(() => setMusicPlaying(false), 2200);
+    timers.current.push(t);
+  };
   const scriptMax = SCRIPT_MAX_CHARS;
-  // Rough spoken runtime estimate (~15 characters per second).
-  const estSeconds = Math.max(1, Math.round(script.length / 15));
-  const estDuration = `${Math.floor(estSeconds / 60)}:${String(estSeconds % 60).padStart(2, '0')}`;
   const avatarName = AVATAR_NAME_BY_IMG[refImage] ?? 'Custom avatar';
   // Label + credit cost adapt to the video content type (AI Avatar Video,
   // Video Feed Post, Short Form Video).
@@ -1487,6 +1618,8 @@ export function ScriptSettingsModal({
   const regenCredits = CREDIT_COST_BY_TYPE[draft.contentType] ?? 15;
   // Only AI Avatar Video uses an angle + a chosen avatar; Feed/Short video skip both.
   const isAvatarFlow = draft.contentType === 'ai-avatar';
+  // Avatar always has a script; Feed/Short only when narration (voiceover) is on.
+  const showScript = isAvatarFlow || narration;
   // Product-reaction is the only angle that needs a product image.
   const needsProduct = ANGLE_BY_ID[angle]?.needsProduct ?? false;
   const save = () => {
@@ -1512,7 +1645,7 @@ export function ScriptSettingsModal({
     <Modal.Root size="lg" aria-labelledby="script-settings-title" data-testid="script-settings-modal">
       {/* compact header → no divider, large 26px title, floating close (matches prod). */}
       <Modal.Header
-        title={mode === 'regenerate' ? `Regenerate ${typeLabel}` : 'Script & Settings'}
+        title={mode === 'regenerate' ? `Regenerate ${typeLabel}` : isAvatarFlow ? 'Script & Settings' : 'Video Settings'}
         id="script-settings-title"
         onClose={close}
         compact
@@ -1526,8 +1659,8 @@ export function ScriptSettingsModal({
             {/* Generate */}
             <div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Heading level={3} style={{ margin: '0 0 4px' }}>Script Inputs</Heading>
-                <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--dark-60)' }}>{isAvatarFlow ? 'Angle and topic drive the script. Change either and regenerate to get a new draft.' : 'Topic drives the script. Change it and regenerate to get a new draft.'}</p>
+                <Heading level={3} style={{ margin: '0 0 4px' }}>{isAvatarFlow ? 'Script inputs' : 'Video inputs'}</Heading>
+                <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--dark-60)' }}>{isAvatarFlow ? 'Angle and topic drive the script. Change either and regenerate to get a new draft.' : narration ? 'Topic drives the script. Change it and regenerate to get a new draft.' : 'Change the topic to generate a new video.'}</p>
 
                 {/* Generation inputs grouped in a gray box, separate from the script. */}
                 <div style={{ background: 'var(--dark-2)', borderRadius: 10, padding: 12, marginBottom: 16 }}>
@@ -1589,16 +1722,37 @@ export function ScriptSettingsModal({
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button variant="secondary" size="sm" endIcon={ArrowDown} onPress={regenerateScript} isDisabled={regenerating}>
-                      Regenerate script
-                    </Button>
-                  </div>
+                  {showScript && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button variant="secondary" size="sm" endIcon={ArrowDown} onPress={regenerateScript} isDisabled={regenerating}>
+                        Regenerate script
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
+                {!isAvatarFlow && (
+                  <>
+                    <div style={{ height: 1, background: 'var(--dark-8)', margin: '16px 0' }} />
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 4 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Heading level={3} style={{ margin: 0 }}>Narration</Heading>
+                        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--dark-60)' }}>AI voiceover read from the script below.</p>
+                      </div>
+                      <Toggle checked={narration} onChange={setNarration} />
+                    </div>
+                  </>
+                )}
+
+                {showScript && (
+                <>
                 {/* Script field — label + undo, then textarea */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px' }}>
-                  <Heading level={3} style={{ margin: 0 }}>Generated script</Heading>
+                  {isAvatarFlow ? (
+                    <Heading level={3} style={{ margin: 0 }}>Generated script</Heading>
+                  ) : (
+                    <Text variant="label" style={{ margin: 0 }}>Generated script</Text>
+                  )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {justUpdated && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--status-approved)' }}>
@@ -1632,10 +1786,12 @@ export function ScriptSettingsModal({
                   )}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                  <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>
-                    Est. duration ~{estDuration}
+                  <span style={{ fontSize: 12, color: script.length > scriptMax ? 'var(--red-70)' : 'var(--dark-40)' }}>
+                    {script.length}/{scriptMax}
                   </span>
                 </div>
+                </>
+                )}
               </div>
             </div>
 
@@ -1648,7 +1804,7 @@ export function ScriptSettingsModal({
           <div style={{ width: 320, flexShrink: 0 }}>
             <div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Heading level={3} style={{ margin: '0 0 4px' }}>Video Style</Heading>
+                <Heading level={3} style={{ margin: '0 0 4px' }}>Video style</Heading>
                 <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--dark-60)' }}>How the finished video looks. These don't change the script.</p>
 
                 {/* Avatar + Caption — matching cards. */}
@@ -1674,7 +1830,41 @@ export function ScriptSettingsModal({
                   </div>
                   )}
 
-                  {/* Caption card — current style preview, label, Change. */}
+                  {/* Reference image card — Feed/Short video. Change opens the image picker. */}
+                  {!isAvatarFlow && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
+                    <div style={{ width: 80, height: 80, borderRadius: 8, flexShrink: 0, backgroundColor: 'var(--dark-8)', backgroundImage: refImage ? `url('${refImage}')` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Reference image</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{imageFileName(refImage)}</div>
+                    </div>
+                    <Button variant="secondary" size="sm" onPress={openImagePicker}>Change</Button>
+                  </div>
+                  )}
+
+                  {/* Music card — Feed/Short video. */}
+                  {!isAvatarFlow && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
+                    <MusicThumb size={80} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Music</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{music}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <IconButton
+                        icon={musicPlaying ? Pause : Play3}
+                        size="sm"
+                        variant="secondary"
+                        aria-label={musicPlaying ? 'Pause music' : 'Play music'}
+                        onPress={playMusic}
+                      />
+                      <Button variant="secondary" size="sm" onPress={openMusicPicker}>Change</Button>
+                    </div>
+                  </div>
+                  )}
+
+                  {/* Caption card — captions accompany the script, so hidden when narration is off. */}
+                  {showScript && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
                     <div style={{ width: 80, height: 80, borderRadius: 8, flexShrink: 0, overflow: 'hidden', background: captions && captionImg(captionStyle) ? CAPTION_BG : 'var(--dark-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
                       {captions && captionImg(captionStyle) ? (
@@ -1689,6 +1879,7 @@ export function ScriptSettingsModal({
                     </div>
                     <Button variant="secondary" size="sm" onPress={openCaptionPicker}>Change</Button>
                   </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1777,6 +1968,9 @@ function PostRow({
 }) {
   const { openModal } = useModals();
   const isVideo = isVideoType(draft.contentType);
+  // Only AI Avatar Video uses a presenter avatar + script microcopy; Feed/Short
+  // video use a reference image and "Video Settings".
+  const isAvatar = draft.contentType === 'ai-avatar';
   const openAvatarPicker = () =>
     openModal(AvatarPickerModal, { value: draft.refImage, onSelect: (img) => onChange({ ...draft, refImage: img }) });
   const openImagePicker = () =>
@@ -1801,9 +1995,9 @@ function PostRow({
       {/* reference image */}
       {draft.refImage ? (
         <div
-          onClick={isVideo ? openAvatarPicker : openImagePicker}
+          onClick={isAvatar ? openAvatarPicker : openImagePicker}
           role="button"
-          aria-label={isVideo ? 'Change avatar' : 'Change reference image'}
+          aria-label={isAvatar ? 'Change avatar' : 'Change reference image'}
           style={{
             position: 'relative',
             flexShrink: 0,
@@ -1830,7 +2024,7 @@ function PostRow({
               fontSize: 12,
             }}
           >
-            {isVideo ? 'Change avatar' : 'Reference image'}
+            {isAvatar ? 'Change avatar' : 'Reference image'}
             <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="#fff" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 20h4L19 9l-4-4L4 16v4z" />
               <path d="M14 6l4 4" />
@@ -1898,7 +2092,7 @@ function PostRow({
                 }}
               >
                 <Settings size={15} color="var(--dark-90)" />
-                Script &amp; Settings
+                {isAvatar ? 'Script & Settings' : 'Video Settings'}
               </button>
             )}
           </div>
@@ -1924,11 +2118,11 @@ function PostRow({
           style={{ fontSize: 16, lineHeight: 1.5 }}
         />
 
-        {/* add context (left) — or the avatar script microcopy */}
+        {/* All video types show the script microcopy; non-video shows Add context. */}
         {isVideo ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--dark-40)', fontSize: 12 }}>
             <InformationCircleSmall size={16} color="var(--dark-40)" />
-            Topic seeds the script. Review and edit in Script &amp; Settings.
+            Topic seeds the script. Review and edit in {isAvatar ? 'Script & Settings' : 'Video Settings'}.
           </div>
         ) : (
           <button
