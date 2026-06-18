@@ -22,6 +22,18 @@ const emptyDocs = (): BrandScan['docs'] => [
   { id: 'audiences', label: 'Target audiences', kind: 'Target audiences', status: 'empty' },
 ];
 
+/** All brand docs uploaded — live accounts have a complete brand kit. */
+const filledDocs = (): BrandScan['docs'] =>
+  emptyDocs().map((d) => ({ ...d, fileName: `${d.id}.pdf`, status: 'uploaded' as const }));
+
+/** ISO date `days` from today — keeps live contract end dates relative to now
+ *  so the renewal-warning demo stays evergreen as the calendar moves. */
+function isoInDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 export const accounts: Account[] = [
   {
     id: 'woody-creek',
@@ -239,6 +251,151 @@ export const accounts: Account[] = [
         { hex: '#F4F1E9', name: 'Cream' },
       ],
       docs: emptyDocs(),
+    },
+  },
+
+  /* ─── Live accounts (onboarding complete, in steady state) ──────────────── */
+  {
+    id: 'peak-state-roofing',
+    name: 'Peak State Roofing',
+    industry: 'Roofing & exterior contracting',
+    location: 'Boise, ID',
+    website: 'peakstateroofing.com',
+    domain: 'peakstateroofing.com',
+    accent: '#1F3A5F',
+    poc: { name: 'Dale Werner', email: 'dale@peakstateroofing.com', phone: '(208) 555-0117', role: 'Owner' },
+    am: { name: 'Dana Whitfield', initials: 'DW' },
+    status: 'live',
+    invitedDaysAgo: 178,
+    invitedDate: '2025-12-21',
+    phase: 3,
+    stepLabel: 'Live, Monthly content & paid ads',
+    progressPct: 100,
+    aiNextStep: 'Contract renews soon — confirm renewal with Dale before the 6-month term ends, then lock the summer ad budget.',
+    phases: phases(3, 'complete'),
+    contractTerm: 6,
+    contractEndDate: isoInDays(17),
+    brand: {
+      website: 'peakstateroofing.com',
+      logos: [
+        { id: 'primary', bg: '#1F3A5F', label: 'Primary' },
+        { id: 'mark', bg: '#E8821E', label: 'Mark' },
+      ],
+      fonts: [
+        { family: 'Barlow Condensed', role: 'Display' },
+        { family: 'Inter', role: 'Body' },
+      ],
+      colors: [
+        { hex: '#1F3A5F', name: 'Slate Navy' },
+        { hex: '#E8821E', name: 'Safety Orange' },
+        { hex: '#C2CCD6', name: 'Fog' },
+      ],
+      docs: filledDocs(),
+    },
+  },
+  {
+    id: 'lumen-family-dental',
+    name: 'Lumen Family Dental',
+    industry: 'Dental practice',
+    location: 'Raleigh, NC',
+    website: 'lumenfamilydental.com',
+    domain: 'lumenfamilydental.com',
+    accent: '#0E9AA7',
+    poc: { name: 'Dr. Amara Osei', email: 'amara@lumenfamilydental.com', phone: '(919) 555-0184', role: 'Practice Owner' },
+    am: { name: 'Priya Shah', initials: 'PS' },
+    status: 'live',
+    invitedDaysAgo: 339,
+    invitedDate: '2025-07-14',
+    phase: 3,
+    stepLabel: 'Live, SEO & reputation',
+    progressPct: 100,
+    aiNextStep: 'Renewal window is open — the 12-month contract ends within the month. Send Amara the year-in-review before the renewal call.',
+    phases: phases(3, 'complete'),
+    contractTerm: 12,
+    contractEndDate: isoInDays(27),
+    brand: {
+      website: 'lumenfamilydental.com',
+      logos: [{ id: 'primary', bg: '#0E9AA7', label: 'Primary' }],
+      fonts: [
+        { family: 'DM Serif Display', role: 'Display' },
+        { family: 'Mulish', role: 'Body' },
+      ],
+      colors: [
+        { hex: '#0E9AA7', name: 'Lagoon' },
+        { hex: '#11324D', name: 'Deep Navy' },
+        { hex: '#EAF6F6', name: 'Mist' },
+      ],
+      docs: filledDocs(),
+    },
+  },
+  {
+    id: 'cedar-pine-interiors',
+    name: 'Cedar & Pine Interiors',
+    industry: 'Interior design & home staging',
+    location: 'Portland, OR',
+    website: 'cedarandpine.studio',
+    domain: 'cedarandpine.studio',
+    accent: '#2EB872',
+    poc: { name: 'Nora Vance', email: 'nora@cedarandpine.studio', phone: '(503) 555-0151', role: 'Principal Designer' },
+    am: { name: 'Marcus Lee', initials: 'ML' },
+    status: 'live',
+    invitedDaysAgo: 121,
+    invitedDate: '2026-02-16',
+    phase: 3,
+    stepLabel: 'Live, Organic social & email',
+    progressPct: 100,
+    aiNextStep: 'Approve the spring lookbook wave and review last month’s engagement lift before the next content sprint.',
+    phases: phases(3, 'complete'),
+    contractTerm: 12,
+    contractEndDate: isoInDays(159),
+    brand: {
+      website: 'cedarandpine.studio',
+      logos: [{ id: 'primary', bg: '#2E3D31', label: 'Primary' }],
+      fonts: [
+        { family: 'Fraunces', role: 'Display' },
+        { family: 'Work Sans', role: 'Body' },
+      ],
+      colors: [
+        { hex: '#2E3D31', name: 'Pine' },
+        { hex: '#2EB872', name: 'Sprout' },
+        { hex: '#E8E2D5', name: 'Linen' },
+      ],
+      docs: filledDocs(),
+    },
+  },
+  {
+    id: 'summit-strength',
+    name: 'Summit Strength Co.',
+    industry: 'Strength gym & coaching',
+    location: 'Salt Lake City, UT',
+    website: 'summitstrength.co',
+    domain: 'summitstrength.co',
+    accent: '#C8553D',
+    poc: { name: 'Reggie Park', email: 'reggie@summitstrength.co', phone: '(801) 555-0139', role: 'Owner' },
+    am: { name: 'Dana Whitfield', initials: 'DW' },
+    status: 'live',
+    invitedDaysAgo: 84,
+    invitedDate: '2026-03-25',
+    phase: 3,
+    stepLabel: 'Live, Paid social & UGC',
+    progressPct: 100,
+    aiNextStep: 'Refresh the UGC creator brief for Q3 and keep the membership-drive ads pacing to budget.',
+    phases: phases(3, 'complete'),
+    contractTerm: 6,
+    contractEndDate: isoInDays(288),
+    brand: {
+      website: 'summitstrength.co',
+      logos: [{ id: 'primary', bg: '#1A1A1A', label: 'Primary' }],
+      fonts: [
+        { family: 'Archivo Expanded', role: 'Display' },
+        { family: 'Archivo', role: 'Body' },
+      ],
+      colors: [
+        { hex: '#1A1A1A', name: 'Carbon' },
+        { hex: '#C8553D', name: 'Ember' },
+        { hex: '#F0EDE8', name: 'Chalk' },
+      ],
+      docs: filledDocs(),
     },
   },
 ];

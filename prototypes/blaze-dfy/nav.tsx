@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, Text } from '@/components';
-import { TabChip } from '@/staging';
+import { Button, Text, useModals } from '@/components';
+import { TabChip, useToast } from '@/staging';
 import { PrototypeShell } from '../_shell';
 import type { SidebarSection } from '../_shell/Sidebar';
-import { getAccounts } from './lib/api';
+import { getAccounts, handoffAccount } from './lib/api';
+import { HandoffModal } from './Handoff';
+import { ApprovalSettingsModal } from './Approvals';
 import HomeIcon from '@/icons/20/Home';
 import Insights from '@/icons/20/BarChartSquare';
 import ClipboardCheck from '@/icons/20/Approvals';
@@ -13,6 +15,7 @@ import Clapperboard from '@/icons/20/Star';
 import Palette from '@/icons/20/Brand';
 import Calendar from '@/icons/20/Calendar1';
 import ArrowLeft from '@/icons/20/ArrowLeft';
+import ArrowSwitchHorizontal from '@/icons/20/ArrowSwitchHorizontal';
 import Lightning from '@/icons/20/Lightning';
 import Settings from '@/icons/20/Settings';
 import type { Account } from './lib/types';
@@ -61,8 +64,9 @@ export interface Step { key: string; label: string; hidden?: boolean }
 export const STEPS: Record<string, Step[]> = {
   // Home tab strip (rendered in the topbar, no step numbers). Workstream is
   // AM-only — filtered out for the client view in WorkspaceShell.
+  // Overview is hidden for now — Workstream is the default landing tab and is
+  // shown to both AM and client (each gets a different feed in Home).
   home: [
-    { key: 'overview', label: 'Overview' },
     { key: 'work', label: 'Workstream' },
     { key: 'insights', label: 'Insights' },
   ],
@@ -87,6 +91,11 @@ export const STEPS: Record<string, Step[]> = {
     { key: 'scorecard', label: 'Scorecard' },
     { key: 'blaze-plan', label: 'Blaze Plan' },
   ],
+  // Settings tabs — customer details vs the billing record. No step numbers.
+  settings: [
+    { key: 'general', label: 'General' },
+    { key: 'billing', label: 'Billing' },
+  ],
 };
 
 interface NavDef { label: string; icon: React.ComponentType<{ size?: number }>; section: string }
@@ -97,6 +106,7 @@ interface NavGroup { label?: string; items: NavDef[] }
 const AM_SECTIONS: NavGroup[] = [
   { items: [
     { label: 'Home', icon: HomeIcon, section: 'home' },
+    { label: 'Approvals', icon: ClipboardCheck, section: 'approvals' },
     { label: 'Content Calendar', icon: Calendar, section: 'calendar' },
   ] },
   { label: 'Onboarding', items: [
@@ -114,12 +124,12 @@ const AM_SECTIONS: NavGroup[] = [
 const CLIENT_SECTIONS: NavGroup[] = [
   { items: [
     { label: 'Home', icon: HomeIcon, section: 'home' },
+    { label: 'Approvals', icon: ClipboardCheck, section: 'approvals' },
     { label: 'Calendar', icon: Calendar, section: 'calendar' },
   ] },
   { label: 'Review', items: [
     { label: 'Strategy', icon: Compass, section: 'review-strategy' },
     { label: 'Creative', icon: Clapperboard, section: 'review-creative' },
-    { label: 'Weekly Content', icon: ClipboardCheck, section: 'approvals' },
   ] },
   { items: [
     { label: 'Performance', icon: Insights, section: 'insights' },
@@ -148,36 +158,52 @@ function StepTabs({ steps, active, onSelect, showIndex = true }: { steps: Step[]
 /** Common workspace chrome: PrototypeShell + DFY sidebar (react-router hrefs)
  *  + AM/Client switch + optional step tabs in the nav bar. */
 export function WorkspaceShell({
-  account, side, section, sub, creativeLocked, children,
+  account, side, section, sub, creativeLocked, onReload, topbarExtra, children,
 }: {
-  account: Account; side: Side; section: string; sub?: string; creativeLocked?: boolean; children: ReactNode;
+  account: Account; side: Side; section: string; sub?: string; creativeLocked?: boolean; onReload?: () => void; topbarExtra?: ReactNode; children: ReactNode;
 }) {
   const go = useGo();
+  const { openModal, closeModal } = useModals();
+  const { showToast } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const openHandoff = () => openModal(HandoffModal, {
+    account,
+    onConfirm: (amName: string, note: string) => {
+      handoffAccount(account.id, amName, note);
+      closeModal();
+      onReload?.();
+      showToast({ message: `Handed off to ${amName} — they now own this workspace` });
+    },
+  });
   const groups = side === 'am' ? AM_SECTIONS : CLIENT_SECTIONS;
   const allItems = groups.flatMap((g) => g.items);
   const active = allItems.find((n) => n.section === section)?.label ?? allItems[0].label;
   const steps = STEPS[section];
 
-  // Home uses the TabChip strip (rounded pill + count) — the same tab component
-  // the Living Doc home screen ships with; other sections keep the step tabs.
+  // Flat sections (Home / Settings / steady-state Strategy) render their sub-tabs
+  // as the standard TabChip strip — the same rounded-pill tab the rest of the app
+  // uses. Only the onboarding wizards (Strategy / Creative) get numbered step tabs,
+  // since those are a sequential flow.
+  const chipStrip = (withCounts: boolean) => (
+    <div style={{ display: 'inline-flex', gap: 6 }}>
+      {(steps ?? []).filter((st) => !st.hidden).map((st) => {
+        const count = withCounts
+          ? (st.key === 'meetings' ? HOME_TAB_COUNTS.meetings : st.key === 'work' ? (side === 'client' ? HOME_TAB_COUNTS.clientWork : HOME_TAB_COUNTS.work) : 0)
+          : 0;
+        return (
+          <TabChip key={st.key} selected={sub === st.key} count={count > 0 ? count : undefined} onSelect={() => go(`/${account.id}/${side}/${section}/${st.key}`)}>{st.label}</TabChip>
+        );
+      })}
+    </div>
+  );
+
   const topbarCenter = !sub ? undefined
-    : section === 'home'
-      ? (
-        <div style={{ display: 'inline-flex', gap: 6 }}>
-          {(steps ?? [])
-            .filter((st) => !(side === 'client' && st.key === 'work'))
-            .map((st) => {
-              const count = st.key === 'meetings' ? HOME_TAB_COUNTS.meetings : st.key === 'work' ? HOME_TAB_COUNTS.work : 0;
-              return (
-                <TabChip key={st.key} selected={sub === st.key} count={count > 0 ? count : undefined} onSelect={() => go(`/${account.id}/${side}/home/${st.key}`)}>{st.label}</TabChip>
-              );
-            })}
-        </div>
-      )
-      : steps
-        ? <StepTabs steps={steps} active={sub} showIndex={section !== 'plan'} onSelect={(k) => go(`/${account.id}/${side}/${section}/${k}`)} />
-        : undefined;
+    : section === 'home' ? chipStrip(true)
+    : section === 'settings' || section === 'plan' ? chipStrip(false)
+    : steps
+      ? <StepTabs steps={steps} active={sub} onSelect={(k) => go(`/${account.id}/${side}/${section}/${k}`)} />
+      : undefined;
 
   // Top "All accounts" link returns to the AM directory from anywhere; the rest
   // are the side-appropriate sections with router hrefs. Creative Review is
@@ -195,19 +221,32 @@ export function WorkspaceShell({
   return (
    <>
     <PrototypeShell
-      title={section === 'home' ? 'Home' : account.name}
+      title={active}
       workspaceName={account.name}
       onWorkspacePress={() => setMenuOpen((o) => !o)}
       sidebarSections={sidebarSections}
       sidebarActiveLabel={active}
-      sidebarFooterItems={[{ label: 'All accounts', icon: ArrowLeft, href: BASE }]}
+      sidebarFooterItems={[
+        { label: 'Handoff client', icon: ArrowSwitchHorizontal, onClick: openHandoff },
+        { label: 'All accounts', icon: ArrowLeft, href: BASE },
+      ]}
       topbarCenter={topbarCenter}
       topbarRight={
-        <div style={{ display: 'inline-flex', gap: 4, padding: 3, background: 'var(--dark-3)', borderRadius: 8 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          {topbarExtra}
+          {section === 'approvals' && side === 'am' && (
+            <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
+          )}
+          <div style={{ display: 'inline-flex', gap: 4, padding: 3, background: 'var(--dark-3)', borderRadius: 8 }}>
           {(['am', 'client'] as const).map((s) => {
             const on = s === side;
-            return <button key={s} onClick={() => go(`/${account.id}/${s}`)} style={{ border: on ? '1px solid var(--dark-8)' : '1px solid transparent', background: on ? 'var(--light-100)' : 'transparent', color: on ? 'var(--dark-90)' : 'var(--dark-60)', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>{s === 'am' ? 'AM' : 'Client'}</button>;
+            // Stay on the current section when it exists for both sides (Approvals,
+            // Calendar, Brand Kit, Home) — otherwise fall back to the side's root.
+            const shared = ['home', 'approvals', 'calendar', 'brand'].includes(section);
+            const to = shared ? `/${account.id}/${s}/${section}${sub ? `/${sub}` : ''}` : `/${account.id}/${s}`;
+            return <button key={s} onClick={() => go(to)} style={{ border: on ? '1px solid var(--dark-8)' : '1px solid transparent', background: on ? 'var(--light-100)' : 'transparent', color: on ? 'var(--dark-90)' : 'var(--dark-60)', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>{s === 'am' ? 'AM' : 'Client'}</button>;
           })}
+          </div>
         </div>
       }
     >

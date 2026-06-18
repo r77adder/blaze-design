@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Heading, Modal, Paragraph, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
@@ -14,6 +14,7 @@ import Star from '@/icons/20/Star';
 import Check2 from '@/icons/20/Check2';
 import ChevronDown from '@/icons/20/ChevronDown';
 import ChevronUp from '@/icons/20/ChevronUp';
+import ChevronRight from '@/icons/16/ChevronRight';
 import Comment from '@/icons/20/Comment';
 import Edit1 from '@/icons/20/Edit1';
 import EyeClosed from '@/icons/20/EyeClosed';
@@ -168,13 +169,16 @@ const CAMPAIGN_DRAFT = {
 // Each task carries its own plan; the AM reviews and approves them
 // one at a time. Nothing runs before its plan is approved.
 
-type AgentTaskStatus = 'review' | 'running' | 'done' | 'revising';
+type AgentTaskStatus = 'review' | 'running' | 'done' | 'revising' | 'ignored';
 
 interface AgentTask {
   id: string;
   text: string;
   detail: string;
   plan: string[];
+  /** Summary of the part of the call that triggered this action — shown in the
+   *  task detail so the AM sees the "why", not a fabricated plan. */
+  conversation: string;
   status: AgentTaskStatus;
   /** Team member who owns approving this plan (and reviewing its output). */
   assignee: PersonId;
@@ -182,68 +186,67 @@ interface AgentTask {
   source: string;
   /** The stakes — why this needs approval now, what it blocks. */
   why: string;
-  /** Where the finished work lands — surfaces as a "review output" CTA
-   *  on the done task so the team member can inspect what was produced. */
-  output?: { label: string; to: string };
+  /** Where the finished work / change landed — surfaces a "go to it" button on
+   *  the done task that deep-links to that workspace section. */
+  output?: { label: string; section: string };
 }
 
+// Every agent task here comes from one analyzed call — rendered as a single
+// Fathom meeting card with each task individually approvable.
 const SEED_AGENT_TASKS: AgentTask[] = [
   {
-    id: 'p1', text: 'Draft the 6 June wave posts', status: 'review', assignee: 'alex',
-    source: 'Organic Campaigns', why: 'June wave starts Jun 16 — drafts need to reach Sarah by Jun 10.',
-    output: { label: 'Review the 6 drafts', to: '/h2/dfy-campaigns' },
-    detail: 'Copy, platform captions and visual briefs from the “Crew Behind the Paint” theme.',
+    id: 'p1', text: 'Create the Summer Sale campaign (June–July)', status: 'review', assignee: 'alex',
+    source: 'Organic Campaigns', why: 'Sale runs Jun 20–Jul 31 — content should start landing the week before.',
+    conversation: 'Sarah: “Summer’s our big season — I want a real sale in June and July, push the exterior packages hard, maybe 20% off. Last year we left it too late and missed the window.” Alex: “We can build a 6-week wave that ramps into the final week.”',
+    output: { label: 'Review the Campaign', section: 'approvals' },
+    detail: 'A 6-week organic push across Instagram, Facebook & GBP — 3 posts/week ramping to daily in the final week, leading with the “20% off exterior packages” offer Sarah confirmed on the call.',
     plan: [
-      'Pull theme and voice from the brand brain + Jun 3 call notes',
-      'Write copy and platform-specific captions for all 6 posts',
-      'Write visual briefs referencing the matched Drive assets',
-      'Run a quality pass against the 4 failure modes before review',
+      'Build the June–July calendar at 3×/week, daily in the final week',
+      'Draft the hero offer posts plus supporting proof / testimonial posts',
+      'Pull matching Drive assets and write platform captions',
+      'Stage the full wave for client approval',
     ],
   },
   {
-    id: 'p2', text: 'Match Drive assets to each post', status: 'review', assignee: 'petar',
-    source: 'Organic Campaigns', why: 'Posts can’t finalize without assets — blocks drafting and scheduling.',
-    output: { label: 'Review asset matches', to: '/h2/campaigns?campaign=jw' },
-    detail: '9 of 12 matched so far — the 3 gaps need client photos.',
+    id: 'p2', text: 'Address the May campaign feedback', status: 'review', assignee: 'petar',
+    source: 'Creative', why: 'Sarah wants the reworks before the June wave so the look carries over.',
+    conversation: 'Sarah: “The May posts felt a bit stock-photo-y. Can we use our own crew shots instead? The colors looked cold too — warm them up. And the captions ran long, keep them tight.”',
+    output: { label: 'Review the Reworked Posts', section: 'approvals' },
+    detail: 'Sarah’s notes on the May wave: lead with real crew photos over stock, warm up the color grade, and cut the long captions to two lines. Rework the 4 flagged posts to match.',
     plan: [
-      'Scan the CertaPro Drive folder (12 assets, synced)',
-      'Pair best-fit photos to each post’s visual brief',
-      'Flag the gaps and draft the asset request for Sarah',
+      'Pull the 4 posts Sarah flagged in May',
+      'Swap stock for crew photos and apply the warmer grade',
+      'Trim captions to two lines',
+      'Resubmit with a changelog',
     ],
   },
   {
-    id: 'p3', text: 'Apply Wave 2 change requests', status: 'review', assignee: 'petar',
-    source: 'Client approvals', why: 'Sarah’s change notes wait on this — turnaround target is 24h.',
-    output: { label: 'Review reworked posts', to: '/h2/approvals' },
-    detail: 'Rework anything Sarah flags in client approvals.',
+    id: 'p3', text: 'Update the brand voice from the call', status: 'review', assignee: 'alex',
+    source: 'Brand Kit', why: 'Keeps every future generation on the voice Sarah described.',
+    output: { label: 'Open the Brand Kit', section: 'brand' },
+    conversation: 'Sarah: “However we write, it should sound like us — confident but neighborly, no jargon. And ease off the constant ‘limited time!’ urgency unless it’s an actual sale.”',
+    detail: 'Sarah described the voice as “confident, neighborly, no jargon” and asked us to drop urgency / discount framing outside of sales. Update the brand brain so every agent picks it up.',
     plan: [
-      'Watch client approvals for incoming change notes',
-      'Rework flagged posts using the note as direction',
-      'Resubmit to approvals with a changelog for Sarah',
-    ],
-  },
-  {
-    id: 'p4', text: 'Schedule approved Wave 2 posts', status: 'review', assignee: 'alex',
-    source: 'Organic Campaigns', why: 'The Jun 6 and Jun 9 slots only hold until Thursday.',
-    output: { label: 'View the calendar', to: '/h2/content-plan' },
-    detail: 'Fill the Jun 6 and Jun 9 calendar slots.',
-    plan: [
-      'Pick the best open slots from the posting calendar',
-      'Stage platform-specific captions per slot',
-      'Queue the posts and confirm in the calendar',
-    ],
-  },
-  {
-    id: 'p5', text: 'Refresh Overview + doc after publish', status: 'review', assignee: 'alex',
-    source: 'Living Doc', why: 'Keeps what Sarah sees in sync after every publish.',
-    detail: 'Keep the living doc current for CertaPro.',
-    plan: [
-      'Update the Overview section after each publish',
-      'Append new next steps from approvals and calls',
-      'Log every change to the activity feed',
+      'Update the voice + tone notes in the brand brain',
+      'Add “avoid urgency framing outside sales” to the guardrails',
+      'Re-run a sample post to confirm the new voice',
     ],
   },
 ];
+
+const FATHOM_MEETING = {
+  title: 'Jun 3 check-in with Sarah',
+  meta: 'Jun 3 · 32 min · analyzed by Fathom',
+  summary: 'Sarah greenlit a Summer Sale push, gave feedback on the May wave, and described how she wants the brand to sound. Blaze turned the call into the tasks below — approve any to set it running.',
+  transcript: [
+    { speaker: 'Alex · Blaze', text: 'Thanks for hopping on, Sarah. Want to start with summer plans?' },
+    { speaker: 'Sarah · CertaPro', text: 'Yeah — summer’s our big season. I want a real sale in June and July, push the exterior packages, maybe 20% off. Last year we left it too late.' },
+    { speaker: 'Alex · Blaze', text: 'Got it. We can build a 6-week wave that ramps into the final week. On the May posts — any feedback?' },
+    { speaker: 'Sarah · CertaPro', text: 'They felt a bit stock-photo-y. Can we use our own crew shots? The colors looked cold too, and the captions ran long.' },
+    { speaker: 'Alex · Blaze', text: 'We’ll rework those. Anything on overall voice?' },
+    { speaker: 'Sarah · CertaPro', text: 'It should sound like us — confident but neighborly, no jargon. And ease off the constant “limited time” urgency unless it’s an actual sale.' },
+  ],
+};
 
 // ─── TEAM FLAGS (right rail — what the agent can't resolve alone) ──
 // Escalations the agent raises while working: hard blockers it cannot
@@ -353,6 +356,86 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
     title: '“exterior painting austin” climbed to #4',
     body: 'Up 3 spots since the spring wave started — first-page traffic up 22% month over month. No action needed; worth mentioning on the Jun 16 call.',
     cta: { label: 'Open rankings', to: '/h2/seo-aeo' },
+  },
+];
+
+// ─── CLIENT REQUESTS (Workstream tab, AM side) ─────────────────────
+// Things the client sent back that now sit in the AM's queue — change
+// requests on content, scheduling asks. Each links into Approvals.
+interface ClientRequest {
+  id: string;
+  client: PersonId;
+  sourceLabel: string;
+  icon: React.ComponentType;
+  time: string;
+  title: string;
+  note: string;
+  cta: { label: string; section: string };
+}
+
+const CLIENT_REQUESTS: ClientRequest[] = [
+  {
+    id: 'cr1', client: 'sarah', sourceLabel: 'Change request', icon: Approvals, time: '2h ago',
+    title: 'Sarah requested changes on the June carousel',
+    note: '“Can the lead slide open with the sage Lakeway exterior instead of the navy one? That’s the look we want for summer.”',
+    cta: { label: 'Open Carousel', section: 'approvals/4' },
+  },
+];
+
+// ─── CLIENT WORKSTREAM (Workstream tab, client side) ───────────────
+// What the client sees: led by the few things needing their approval
+// (pointing into Approvals / content), then read-only updates on what
+// the Blaze team is handling — informational, nothing to action.
+type ClientWorkKind = 'approve' | 'info';
+interface ClientWorkItem {
+  id: string;
+  kind: ClientWorkKind;
+  sourceLabel: string;
+  icon: React.ComponentType;
+  time: string;
+  title: string;
+  body: string;
+  thumbs?: string[];
+  statusLine?: string;
+  cta?: { label: string; section: string };
+}
+
+const CLIENT_WORK: ClientWorkItem[] = [
+  {
+    id: 'cw1', kind: 'approve', sourceLabel: 'Approvals', icon: Approvals, time: 'Today',
+    title: '6 posts are ready for your approval',
+    body: 'The June “Crew Behind the Paint” wave — stills, a carousel and a reel — plus the June newsletter.',
+    thumbs: [
+      'https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=120&h=120&fit=crop',
+      'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=120&h=120&fit=crop',
+      'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=120&h=120&fit=crop',
+      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=120&h=120&fit=crop',
+    ],
+    statusLine: 'June schedule holds if approved by Jun 9',
+    cta: { label: 'Open Approvals', section: 'approvals' },
+  },
+  {
+    id: 'cw2', kind: 'approve', sourceLabel: 'Reputation', icon: Star, time: 'Today',
+    title: 'Approve the reply to your new 5★ review',
+    body: 'We drafted a thank-you to the Lakeway homeowner — give it a quick look before it posts.',
+    cta: { label: 'Review Reply', section: 'approvals' },
+  },
+  {
+    id: 'cw3', kind: 'info', sourceLabel: 'Your change request', icon: Edit1, time: 'Yesterday',
+    title: 'Your note on the June carousel is being applied',
+    body: 'The team is reworking the lead slide to open with the sage Lakeway exterior, like you asked. We’ll resurface it for approval when it’s ready.',
+    statusLine: 'No action needed — we’ll let you know when it’s ready',
+  },
+  {
+    id: 'cw4', kind: 'info', sourceLabel: 'SEO/AEO', icon: Globe, time: 'Yesterday',
+    title: '“exterior painting austin” climbed to #4',
+    body: 'Up 3 spots since spring — your first-page traffic is up 22% month over month.',
+    cta: { label: 'See Performance', section: 'home/insights' },
+  },
+  {
+    id: 'cw5', kind: 'info', sourceLabel: 'Organic Campaigns', icon: CalendarPost, time: 'Mon',
+    title: '2 posts went live this week',
+    body: 'Your team-intro still and the prep-process reel are now published — nothing needed from you.',
   },
 ];
 
@@ -905,81 +988,148 @@ function SpinnerIcon() {
   );
 }
 
-/** One task's plan — the AM reviews it here, approves to start the agent
- *  on just this task, or sends a change request back. */
-function AgentTaskModal({ close, task, onApprove, onRequestChanges }: StackModalProps & {
-  task: AgentTask;
-  onApprove: () => void;
-  onRequestChanges: (note: string) => void;
+/** The meeting — opened from the workstream card. Recaps the call, opens the
+ *  transcript, and lets the AM approve / ignore / request changes on each task
+ *  inline (no separate per-task screen). Holds local task state and syncs it
+ *  back to the workstream card via onTasksChange. */
+function MeetingModal({ close, meeting, initialTasks, onTasksChange, onOpenTranscript, onGoToOutput }: StackModalProps & {
+  meeting: typeof FATHOM_MEETING;
+  initialTasks: AgentTask[];
+  onTasksChange: (tasks: AgentTask[]) => void;
+  onOpenTranscript: () => void;
+  onGoToOutput: (section: string) => void;
 }) {
-  const [showNote, setShowNote] = useState(false);
-  const [note, setNote] = useState('');
-  const actionable = task.status === 'review';
+  const { showToast } = useToast();
+  const [tasks, setTasks] = useState(initialTasks);
+  const [active, setActive] = useState<{ id: string; prompt: string } | null>(null);
+  const [rewriting, setRewriting] = useState<string | null>(null);
+
+  // Mirror local task changes back to the card behind the modal.
+  useEffect(() => { onTasksChange(tasks); }, [tasks]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const visible = tasks.filter((t) => t.status !== 'ignored');
+
+  const approve = (id: string) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'running' as const } : t)));
+    showToast({ message: 'Agent is on it' });
+    setTimeout(() => setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'done' as const } : t))), 2200);
+  };
+  const ignore = (id: string) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'ignored' as const } : t)));
+    if (active?.id === id) setActive(null);
+    showToast({ message: 'Ignored — Blaze won’t action this' });
+  };
+  const submitPrompt = (id: string) => {
+    const p = (active?.prompt ?? '').trim();
+    if (!p) return;
+    setActive(null);
+    setRewriting(id);
+    setTimeout(() => {
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, detail: `Updated to reflect your note — “${p}”. ${t.detail}` } : t)));
+      setRewriting(null);
+    }, 1200);
+  };
 
   return (
-    <Modal.Root size="md" aria-labelledby="agent-task-title">
-      <Modal.Header title={task.text} id="agent-task-title" onClose={close} />
+    <Modal.Root size="md" aria-labelledby="meeting-title">
+      <Modal.Header title={meeting.title} id="meeting-title" onClose={close} />
       <Modal.Content>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', background: 'var(--focus-5)', border: '1px solid var(--focus-10)', borderRadius: 10, padding: '11px 13px' }}>
-            <span style={{ color: 'var(--focus-50)', display: 'inline-flex', marginTop: 1 }}><Stars /></span>
-            <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.55 }}>{task.detail}</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <StatusPill tone="info" size="sm">Meeting</StatusPill>
+            <Text variant="metadata" color="var(--dark-60)">{meeting.meta}</Text>
+            <span style={{ marginLeft: 'auto' }}><Button variant="secondary" size="sm" frontIcon={File} onPress={onOpenTranscript}>Transcript</Button></span>
           </div>
+          <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.6, display: 'block' }}>{meeting.summary}</Text>
 
-          <div>
-            <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 8 }}>Plan</Text>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {task.plan.map((step, i) => (
-                <div key={i} style={{ display: 'flex', gap: 11, padding: '8px 2px', borderBottom: i < task.plan.length - 1 ? '1px solid var(--dark-6)' : 'none' }}>
-                  <span style={{ width: 19, height: 19, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--dark-6)', color: 'var(--dark-50)' }}>
-                    <Text variant="label" color="var(--dark-50)">{i + 1}</Text>
-                  </span>
-                  <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.5 }}>{step}</Text>
+          <Text variant="label" color="var(--dark-40)" style={{ display: 'block' }}>Tasks from this call</Text>
+          {visible.map((t) => {
+            const isReview = t.status === 'review';
+            return (
+              <div key={t.id} style={{ border: '1px solid var(--dark-6)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Text variant="largeList" color="var(--dark-90)" style={{ display: 'block' }}>{t.text}</Text>
+                    <Text variant="metadata" color="var(--dark-60)">{t.source}</Text>
+                  </div>
+                  {t.status !== 'review' && (
+                    <StatusPill tone={t.status === 'done' ? 'success' : 'info'} size="sm">
+                      {t.status === 'running' ? 'Running' : 'Done'}
+                    </StatusPill>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <Text variant="metadata" color="var(--dark-40)" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Avatar src={PEOPLE[task.assignee].img} fallback={PEOPLE[task.assignee].short.slice(0, 2)} size={16} />
-            <span>
-              Approval owned by <strong style={{ fontWeight: 600, color: 'var(--dark-60)' }}>{PEOPLE[task.assignee].short}</strong> · created from the Jun 3 call · nothing client-facing runs before approval
-            </span>
-          </Text>
+                <div>
+                  <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 4 }}>From the call</Text>
+                  <Text variant="secondary" color="var(--dark-70)" style={{ lineHeight: 1.55, display: 'block' }}>{t.conversation}</Text>
+                </div>
 
-          {showNote && (
-            <TextArea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="What should the agent do differently on this task?"
-              autoFocus
-              style={{ border: '1.5px solid var(--focus-20)', background: 'var(--focus-5)', minHeight: 64 }}
-            />
-          )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'var(--focus-5)', border: '1px solid var(--focus-10)', borderRadius: 10, padding: '12px 14px' }}>
+                  <div>
+                    <Text variant="label" color="var(--focus-50)" style={{ display: 'block', marginBottom: 4 }}>What Blaze will do</Text>
+                    {rewriting === t.id
+                      ? <Text variant="secondary" color="var(--dark-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><SpinnerIcon /> Rewriting…</Text>
+                      : <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.55, display: 'block' }}>{t.detail}</Text>}
+                  </div>
+
+                  {active?.id === t.id && (
+                    <div>
+                      <TextArea value={active.prompt} onChange={(e) => setActive({ id: t.id, prompt: e.target.value })} placeholder="What should change?" autoFocus style={{ minHeight: 60 }} />
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+                        <Button variant="ghost" size="sm" onPress={() => setActive(null)}>Cancel</Button>
+                        <Button variant="secondary" size="sm" isDisabled={!active.prompt.trim()} onPress={() => submitPrompt(t.id)}>Rewrite Summary</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isReview && active?.id !== t.id && rewriting !== t.id && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <Button variant="ghost" size="sm" onPress={() => ignore(t.id)}>Ignore</Button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Button variant="secondary" size="sm" onPress={() => setActive({ id: t.id, prompt: '' })}>Request Changes</Button>
+                        <Button variant="primary" size="sm" frontIcon={Check2} className={styles.approveBtn} onPress={() => approve(t.id)}>Approve &amp; Start</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {t.status === 'done' && t.output && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      <Button variant="secondary" size="sm" onPress={() => { close(); onGoToOutput(t.output!.section); }}>{t.output.label}</Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {visible.length === 0 && <Text variant="secondary" color="var(--dark-40)">All tasks from this call have been handled.</Text>}
         </div>
       </Modal.Content>
       <Modal.Footer>
-        <Modal.FooterContent slot="left">
-          {actionable && (
-            showNote ? (
-              <Modal.FooterButton variant="secondary" size="md" isDisabled={!note.trim()} onPress={() => onRequestChanges(note.trim())}>
-                Send change request
-              </Modal.FooterButton>
-            ) : (
-              <Modal.FooterButton variant="ghost" size="md" onPress={() => setShowNote(true)}>
-                Request changes
-              </Modal.FooterButton>
-            )
-          )}
-        </Modal.FooterContent>
         <Modal.FooterContent slot="right">
-          {actionable ? (
-            <Modal.FooterButton variant="primary" size="md" frontIcon={Check2} onPress={onApprove}>
-              Approve & start
-            </Modal.FooterButton>
-          ) : (
-            <Modal.FooterButton variant="secondary" size="md" onPress={close}>Close</Modal.FooterButton>
-          )}
+          <Modal.FooterButton variant="secondary" size="md" onPress={close}>Close</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+function TranscriptModal({ close, meeting }: StackModalProps & { meeting: typeof FATHOM_MEETING }) {
+  return (
+    <Modal.Root size="md" aria-labelledby="transcript-title">
+      <Modal.Header title="Jun 3 call · transcript" id="transcript-title" onClose={close} />
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {meeting.transcript.map((line, i) => (
+            <div key={i}>
+              <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 2 }}>{line.speaker}</Text>
+              <Text variant="secondary" color="var(--dark-80)" style={{ lineHeight: 1.55, display: 'block' }}>{line.text}</Text>
+            </div>
+          ))}
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="secondary" size="md" onPress={close}>Close</Modal.FooterButton>
         </Modal.FooterContent>
       </Modal.Footer>
     </Modal.Root>
@@ -1088,6 +1238,8 @@ export const HOME_TAB_COUNTS = {
     SEED_AGENT_TASKS.filter((t) => t.status === 'review').length +
     SEED_TEAM_FLAGS.filter((f) => !f.resolved).length +
     ACCOUNT_WORK.filter((w) => w.kind !== 'insight').length,
+  // Client sees only the items that actually need them — their approvals.
+  clientWork: CLIENT_WORK.filter((i) => i.kind === 'approve').length,
 };
 
 /** Meeting browser — call summaries, decisions and comment threads. Lives as a
@@ -1160,9 +1312,14 @@ export function MeetingsView({ clientView }: { clientView: boolean }) {
   );
 }
 
-export function Home({ clientView, tab, onTabChange }: { clientView: boolean; tab: string; onTabChange: (t: string) => void }) {
+export function Home({ clientView, tab, onTabChange, onOpenSection }: { clientView: boolean; tab: string; onTabChange: (t: string) => void; onOpenSection?: (section: string) => void }) {
+  // Deep-link to a workspace section (e.g. the Approvals tab) or a home sub-tab.
+  const openSection = (section: string) => {
+    if (section.startsWith('home/')) onTabChange(section.slice('home/'.length));
+    else if (onOpenSection) onOpenSection(section);
+  };
   const { showToast } = useToast();
-  const { openModal, closeModal } = useModals();
+  const { openModal } = useModals();
   const navigate = useNavigate();
   const setTab = onTabChange;
   const [materialsTab, setMaterialsTab] = useState<'sources' | 'media'>('sources');
@@ -1235,37 +1392,16 @@ export function Home({ clientView, tab, onTabChange }: { clientView: boolean; ta
     showToast({ message: 'Thread resolved' });
   };
 
-  /** Approve one task's plan — the agent starts on just that task. */
-  const approveTask = (id: string) => {
-    const task = SEED_AGENT_TASKS.find((t) => t.id === id)!;
-    closeModal();
-    setAgentTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status: 'running' as const } : t)));
-    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'agent', text: `Agent started: “${task.text}”`, time: 'Just now' }, ...a]);
-    showToast({ message: `Agent is on it — ${task.text.toLowerCase()}` });
-    // Prototype-only: the task visibly completes a moment later.
-    setTimeout(() => {
-      setAgentTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status: 'done' as const } : t)));
-      if (task.output) {
-        setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'review', text: `“${task.text}” finished — output ready for review`, time: 'Just now' }, ...a]);
-      }
-    }, 2800);
-  };
-
-  const requestTaskChanges = (id: string, note: string) => {
-    const task = SEED_AGENT_TASKS.find((t) => t.id === id)!;
-    closeModal();
-    setAgentTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status: 'revising' as const } : t)));
-    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'agent', text: `Change request on “${task.text}” — agent revising the plan`, time: 'Just now' }, ...a]);
-    showToast({ message: 'Sent — the agent will revise this task’s plan' });
-  };
-
-  const openTaskModal = (task: AgentTask) => {
-    openModal(AgentTaskModal, {
-      task,
-      onApprove: () => approveTask(task.id),
-      onRequestChanges: (note: string) => requestTaskChanges(task.id, note),
-    });
-  };
+  // Task review (approve / ignore / request changes) all happens inside the
+  // meeting modal; it owns the per-task state and mirrors it back here.
+  const openTranscript = () => openModal(TranscriptModal, { meeting: FATHOM_MEETING });
+  const openMeetingModal = () => openModal(MeetingModal, {
+    meeting: FATHOM_MEETING,
+    initialTasks: agentTasks,
+    onTasksChange: (next: AgentTask[]) => setAgentTasks(next),
+    onOpenTranscript: openTranscript,
+    onGoToOutput: (section: string) => openSection(section),
+  });
 
   /** Approve every plan still in review — agent works through them in order. */
   const approveAllTasks = () => {
@@ -1294,6 +1430,7 @@ export function Home({ clientView, tab, onTabChange }: { clientView: boolean; ta
   const visibleMeetings = MEETINGS.filter((m) => !(clientView && m.pending && !published));
   const clientSteps = steps.filter((s) => s.owner === 'sarah' && !(s.fromPending && !published));
   const visibleActivity = clientView ? activity.filter((a) => CLIENT_VISIBLE_KINDS.includes(a.kind)) : activity;
+  const clientApproveCount = CLIENT_WORK.filter((i) => i.kind === 'approve').length;
   const openClientSteps = clientSteps.filter((s) => !s.done).length;
   const agentDone = agentTasks.filter((t) => t.status === 'done').length;
   const tasksToReview = agentTasks.filter((t) => t.status === 'review').length;
@@ -1638,8 +1775,8 @@ export function Home({ clientView, tab, onTabChange }: { clientView: boolean; ta
         {/* ── WORKSTREAM TAB — everything moving across the account, one
               filterable feed (old-Home card anatomy) + activity timeline. ── */}
         {tab === 'work' && !clientView && (
-        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', justifyContent: 'center', padding: '8px 4px 60px' }}>
-        <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: 720 }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '8px 4px 60px' }}>
+        <div>
 
           {/* Hero — mirrors old Home's greeting block */}
           <div style={{ padding: '16px 0 20px' }}>
@@ -1665,7 +1802,7 @@ export function Home({ clientView, tab, onTabChange }: { clientView: boolean; ta
               }}
               options={[
                 { value: 'all', label: 'All items' },
-                { value: 'plans', label: `Agent plans · ${agentTasks.length}` },
+                { value: 'plans', label: `Meeting tasks · ${agentTasks.length}` },
                 { value: 'signoffs', label: `Sign-offs · ${ACCOUNT_WORK.filter((w) => w.kind === 'signoff').length}` },
                 { value: 'flags', label: `Flags · ${teamFlags.length + ACCOUNT_WORK.filter((w) => w.kind === 'flag').length}` },
                 { value: 'insights', label: `Insights · ${ACCOUNT_WORK.filter((w) => w.kind === 'insight').length}` },
@@ -1677,7 +1814,7 @@ export function Home({ clientView, tab, onTabChange }: { clientView: boolean; ta
             <span style={{ flex: 1 }} />
             {tasksToReview > 0 && (workFilter === 'all' || workFilter === 'plans') && (
               <Button variant="primary" size="sm" frontIcon={Check2} className={styles.approveBtn} onPress={approveAllTasks}>
-                Approve all plans ({tasksToReview})
+                Approve All ({tasksToReview})
               </Button>
             )}
           </div>
@@ -1685,72 +1822,67 @@ export function Home({ clientView, tab, onTabChange }: { clientView: boolean; ta
           {/* THE feed — plans, flags, cross-product items, each with its own tag */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-            {/* Agent plans — each has a named approval owner */}
-            {(workFilter === 'all' || workFilter === 'plans') && agentTasks.filter((t) => personFilter === 'all' || t.assignee === personFilter).map((t) => {
-              const doneWithOutput = t.status === 'done' && t.output;
+            {/* Client requests — things the client sent back, now in the team's queue */}
+            {workFilter === 'all' && personFilter === 'all' && CLIENT_REQUESTS.map((r) => {
+              const RIcon = r.icon;
               return (
-                <Card
-                  key={t.id}
-                  padding="none"
-                  interactive
-                  onClick={() => openTaskModal(t)}
-                  className={styles.taskItem}
-                  style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}
-                >
-                  {/* meta: status is the pill; source carries the ✦ agent mark;
-                      assignee is just the avatar (name in tooltip) */}
+                <Card key={r.id} padding="none" style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    {t.status !== 'review' && (
-                      <StatusPill tone={t.status === 'done' ? 'success' : t.status === 'running' ? 'info' : 'warning'} size="sm">
-                        {t.status === 'running' ? 'Running' : t.status === 'revising' ? 'Revising' : doneWithOutput ? 'Done — review output' : 'Done'}
-                      </StatusPill>
-                    )}
+                    <StatusPill tone="accent" size="sm">Client request</StatusPill>
                     <Text variant="metadata" color="var(--dark-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      {t.source}
+                      <RIcon /> {r.sourceLabel}
                     </Text>
                     <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      {t.status === 'running' && <span style={{ color: 'var(--focus-50)', display: 'inline-flex' }}><SpinnerIcon /></span>}
-                      <Avatar src={PEOPLE[t.assignee].img} fallback={PEOPLE[t.assignee].short.slice(0, 2)} size={16} />
-                      <Text variant="metadata" color="var(--dark-40)" style={{ fontVariantNumeric: 'tabular-nums' }}>Yesterday</Text>
+                      <Avatar src={PEOPLE[r.client].img} fallback={PEOPLE[r.client].short.slice(0, 2)} size={16} />
+                      <Text variant="metadata" color="var(--dark-40)">{r.time}</Text>
                     </span>
                   </div>
-                  <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 6 }}>{t.text}</Text>
-                  <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.55 }}>{t.detail}</Text>
-
-                  {/* the plan itself — what you're actually approving */}
-                  {(t.status === 'review' || t.status === 'revising') && (
-                    <div style={{ marginTop: 10, borderLeft: '2px solid var(--dark-8)', paddingLeft: 11, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {t.plan.slice(0, 3).map((s, si) => (
-                        <Text key={si} variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.45 }}>
-                          <span style={{ color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{si + 1}.</span> {s}
-                        </Text>
-                      ))}
-                      {t.plan.length > 3 && (
-                        <Text variant="metadata" color="var(--dark-40)">+{t.plan.length - 3} more step{t.plan.length - 3 === 1 ? '' : 's'} — open for the full plan</Text>
-                      )}
-                    </div>
-                  )}
-
-                  {/* stakes — why this matters now */}
-                  <Text variant="metadata" color="var(--dark-50)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9 }}>
-                    <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><Clock1 /></span> {t.why}
-                  </Text>
-
-                  {(t.status === 'review' || doneWithOutput) && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }} onClick={(e) => e.stopPropagation()}>
-                      {t.status === 'review' ? (
-                        <>
-                          <Button variant="secondary" size="sm" onPress={() => openTaskModal(t)}>Details</Button>
-                          <Button variant="primary" size="sm" frontIcon={Check2} className={styles.approveBtn} onPress={() => approveTask(t.id)}>Approve & start</Button>
-                        </>
-                      ) : (
-                        <Button variant="secondary" size="sm" onPress={() => navigate(t.output!.to)}>{t.output!.label}</Button>
-                      )}
-                    </div>
-                  )}
+                  <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 10 }}>{r.title}</Text>
+                  <div style={{ background: 'var(--dark-4)', borderRadius: 8, padding: '9px 12px' }}>
+                    <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5 }}>{r.note}</Text>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+                    <Button variant="secondary" size="sm" onPress={() => openSection(r.cta.section)}>{r.cta.label}</Button>
+                  </div>
                 </Card>
               );
             })}
+
+            {/* Fathom meeting — one card; click it to review & act on the tasks in the modal */}
+            {(workFilter === 'all' || workFilter === 'plans') && personFilter === 'all' && (() => {
+              const meetingTasks = agentTasks.filter((t) => t.status !== 'ignored');
+              return (
+              <Card padding="none" interactive onClick={openMeetingModal} className={styles.taskItem} style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <StatusPill tone="info" size="sm">Meeting</StatusPill>
+                  <Text variant="metadata" color="var(--dark-60)">{FATHOM_MEETING.meta}</Text>
+                  <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <Text variant="metadata" color="var(--dark-40)">Yesterday</Text>
+                    <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><ChevronRight /></span>
+                  </span>
+                </div>
+                <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 6 }}>{FATHOM_MEETING.title}</Text>
+                <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.55 }}>{FATHOM_MEETING.summary}</Text>
+                <Text variant="metadata" color="var(--dark-50)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><Stars /></span> {meetingTasks.length} task{meetingTasks.length === 1 ? '' : 's'} Blaze can run from this call — open to review &amp; approve.
+                </Text>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
+                  {meetingTasks.map((t) => (
+                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--dark-6)' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Text variant="largeList" color="var(--dark-90)" style={{ display: 'block' }}>{t.text}</Text>
+                        <Text variant="metadata" color="var(--dark-60)">{t.source}</Text>
+                      </div>
+                      <StatusPill tone={t.status === 'done' ? 'success' : t.status === 'running' ? 'info' : 'warning'} size="sm">
+                        {t.status === 'running' ? 'Running' : t.status === 'done' ? 'Done' : 'Needs approval'}
+                      </StatusPill>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+              );
+            })()}
 
             {/* Team flags */}
             {(workFilter === 'all' || workFilter === 'flags') && teamFlags.filter((f) => personFilter === 'all' || f.owner === personFilter).map((f) => {
@@ -1874,30 +2006,69 @@ export function Home({ clientView, tab, onTabChange }: { clientView: boolean; ta
           </div>
         </div>
 
-        {/* RR — activity as a timeline */}
-        <div style={{ width: 320, flexShrink: 0, position: 'sticky', top: 12 }}>
-          <Card padding="none" style={{ borderRadius: 12, padding: '16px 16px 8px' }}>
-            <Text variant="smallList" style={{ display: 'block', marginBottom: 14 }}>Activity</Text>
-            <div>
-              {activity.map((a, i) => (
-                <div key={a.id} style={{ display: 'flex', gap: 11 }}>
-                  {/* glyph + connector line */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <ActivityGlyph kind={a.kind} />
-                    {i < activity.length - 1 && <div style={{ width: 1.5, flex: 1, background: 'var(--dark-8)', margin: '3px 0' }} />}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0, paddingBottom: i < activity.length - 1 ? 16 : 8 }}>
-                    <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.45 }}>{a.text}</Text>
-                    <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 2 }}>
-                      {a.time}
-                      {a.sub && !published && <span style={{ color: 'var(--focus-50)', fontWeight: 500 }}> · {a.sub}</span>}
-                    </Text>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
+        )}
+
+        {/* ── WORKSTREAM TAB (client) — approvals-led, read-mostly ── */}
+        {tab === 'work' && clientView && (
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '8px 4px 60px' }}>
+        <div>
+
+          <div style={{ padding: '16px 0 20px' }}>
+            <Heading level={3} style={{ margin: 0, lineHeight: 1.2 }}>Here's what's moving on your account.</Heading>
+            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 6, lineHeight: 1.5 }}>
+              {clientApproveCount} thing{clientApproveCount === 1 ? '' : 's'} need your approval. Everything else is your Blaze team keeping things moving — nothing for you to do.
+            </Text>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {CLIENT_WORK.map((item) => {
+              const CIcon = item.icon;
+              const isApprove = item.kind === 'approve';
+              return (
+                <Card key={item.id} padding="none" style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px', background: isApprove ? 'var(--light-100)' : 'var(--dark-2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    {isApprove
+                      ? <StatusPill tone="warning" size="sm">Needs your approval</StatusPill>
+                      : <StatusPill tone="neutral" size="sm">Update</StatusPill>}
+                    <Text variant="metadata" color="var(--dark-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <CIcon /> {item.sourceLabel}
+                    </Text>
+                    <span style={{ marginLeft: 'auto' }}>
+                      <Text variant="metadata" color="var(--dark-40)">{item.time}</Text>
+                    </span>
+                  </div>
+                  <Text variant="largeList" color={isApprove ? 'var(--dark-90)' : 'var(--dark-70)'} style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 6 }}>{item.title}</Text>
+                  <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.55 }}>{item.body}</Text>
+
+                  {item.thumbs && (
+                    <div style={{ display: 'flex', gap: 5, marginTop: 10 }}>
+                      {item.thumbs.map((src, ti) => (
+                        <span key={ti} style={{ width: 40, height: 40, borderRadius: 6, backgroundImage: `url('${src}')`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
+                      ))}
+                      <span style={{ width: 40, height: 40, borderRadius: 6, background: 'var(--dark-6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Text variant="label" color="var(--dark-40)">+2</Text>
+                      </span>
+                    </div>
+                  )}
+
+                  {item.statusLine && (
+                    <Text variant="metadata" color="var(--dark-50)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9 }}>
+                      <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><Clock1 /></span> {item.statusLine}
+                    </Text>
+                  )}
+
+                  {item.cta && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+                      <Button variant="secondary" size="sm" onPress={() => openSection(item.cta!.section)}>{item.cta.label}</Button>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
         </div>
         )}
 

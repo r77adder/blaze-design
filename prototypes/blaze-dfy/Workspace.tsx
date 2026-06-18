@@ -10,6 +10,8 @@ import { Strategy } from './Strategy';
 import { CreativeReview } from './CreativeReview';
 import { ClientPortal } from './ClientPortal';
 import { Settings, StrategyTab } from './Steady';
+import { ApprovalV2View, ApprovalsFilterControl } from './Approvals';
+import type { ApprovalTypeFilter, ApprovalStatusFilter } from './Approvals';
 import { useReview, type Phase } from './lib/review';
 
 export function Workspace() {
@@ -18,8 +20,15 @@ export function Workspace() {
   const [account, setAccount] = useState<Account | null | undefined>(null);
   const go = useGo();
   const { packet, strategyComplete } = useReview();
+  const [apprFilter, setApprFilter] = useState<{ type: ApprovalTypeFilter; status: ApprovalStatusFilter }>({ type: 'all', status: 'all' });
+  // AM→Client cover notes live here (not inside ApprovalV2View) so they survive
+  // the AM↔Client toggle and show up on the client's side of the same workspace.
+  const [campaignMessages, setCampaignMessages] = useState<Record<number, string>>({});
 
   useEffect(() => { setAccount(null); getAccount(accountId).then((a) => setAccount(a ?? undefined)); }, [accountId]);
+  // Re-pull the (mutated) in-session account without a full reset — used after
+  // a handoff so the new owner shows up live across the workspace.
+  const reload = () => getAccount(accountId).then((a) => { if (a) setAccount(a); });
 
   // Reset scroll on any section/sub-step change — the shell's content section
   // owns the scroll, so window.scrollTo alone isn't enough.
@@ -39,7 +48,7 @@ export function Workspace() {
   // landing on the phase shows the done/review hub instead.
   const phaseDefault = (sec === 'strategy' || sec === 'creative')
     ? (packet(sec as Phase) !== 'draft' ? 'done' : 'intro')
-    : sec === 'plan' ? 'scorecard' : sec === 'home' ? 'overview' : undefined;
+    : sec === 'plan' ? 'scorecard' : sec === 'home' ? 'work' : sec === 'settings' ? 'general' : undefined;
   const effSub = steps ? (sub && steps.some((s) => s.key === sub) ? sub : phaseDefault) : undefined;
   const s = side as Side;
 
@@ -47,7 +56,8 @@ export function Workspace() {
   const creativeUnlocked = account.phase >= 3 || strategyComplete;
 
   let content;
-  if (sec === 'home') content = <Home clientView={s === 'client'} tab={effSub ?? 'overview'} onTabChange={(t) => go(`/${account.id}/${s}/home/${t}`)} />;
+  if (sec === 'home') content = <Home clientView={s === 'client'} tab={effSub ?? 'work'} onTabChange={(t) => go(`/${account.id}/${s}/home/${t}`)} onOpenSection={(section) => go(`/${account.id}/${s}/${section}`)} />;
+  else if (sec === 'approvals') content = <ApprovalV2View clientView={s === 'client'} embedded initialReviewPostId={sub} typeFilter={apprFilter.type} statusFilter={apprFilter.status} campaignMessages={campaignMessages} onSendCampaignMessage={(id, message) => setCampaignMessages((m) => ({ ...m, [id]: message }))} />;
   else if (s === 'client') content = <ClientPortal account={account} section={sec} clientView={s === 'client'} />;
   // AM steady-state Brand Kit / Content Calendar reuse the shared portal views.
   else if (sec === 'brand' || sec === 'calendar') content = <ClientPortal account={account} section={sec} clientView={s === 'client'} />;
@@ -56,10 +66,14 @@ export function Workspace() {
     ? <CreativeReview account={account} sub={effSub!} go={go} />
     : <CreativeLocked account={account} go={go} />;
   else if (sec === 'plan') content = <StrategyTab account={account} sub={effSub!} />;
-  else if (sec === 'settings') content = <Settings account={account} go={go} />;
+  else if (sec === 'settings') content = <Settings account={account} go={go} sub={effSub} />;
   else content = <SectionStub label={sec} />;
 
-  return <WorkspaceShell account={account} side={s} section={sec} sub={effSub} creativeLocked={s === 'am' && !creativeUnlocked}>{content}</WorkspaceShell>;
+  const topbarExtra = sec === 'approvals' && s === 'am'
+    ? <ApprovalsFilterControl type={apprFilter.type} status={apprFilter.status} onChange={(n) => setApprFilter((f) => ({ ...f, ...n }))} />
+    : undefined;
+
+  return <WorkspaceShell account={account} side={s} section={sec} sub={effSub} creativeLocked={s === 'am' && !creativeUnlocked} onReload={reload} topbarExtra={topbarExtra}>{content}</WorkspaceShell>;
 }
 
 function CreativeLocked({ account, go }: { account: Account; go: Go }) {

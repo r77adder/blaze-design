@@ -55,6 +55,14 @@ export const ACCOUNT_MANAGERS: AccountManager[] = [
   { name: 'Priya Shah', initials: 'PS' },
 ];
 
+/** Transfer workspace ownership to another AM. A note (if given) becomes the
+ *  account's next step for the new owner. Mutates the in-session store. */
+export function handoffAccount(id: string, amName: string, note?: string): void {
+  const am = ACCOUNT_MANAGERS.find((m) => m.name === amName);
+  if (!am) return;
+  store = store.map((a) => (a.id === id ? { ...a, am, ...(note ? { aiNextStep: note } : {}) } : a));
+}
+
 export const ACCENT_SWATCHES = ['#664eff', '#0E9AA7', '#C8553D', '#2EB872', '#E8568A', '#1F3A5F'];
 
 export interface NewWorkspaceInput {
