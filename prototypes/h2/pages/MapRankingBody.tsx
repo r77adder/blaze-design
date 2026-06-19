@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Heading, Text } from '@/components';
-import { StatusPill, useToast } from '@/staging';
+import { Button, Heading, IconButton, Text, useModals } from '@/components';
+import { Chip, Select, StatusPill, useToast } from '@/staging';
+import type { SelectOption } from '@/staging';
 import ArrowRightSm from '@/icons/16/ArrowRightSm';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import ArrowRight from '@/icons/20/ArrowRight';
+import ArrowRotateLeft2 from '@/icons/20/ArrowRotateLeft2';
+import ArrowRotateRight from '@/icons/20/ArrowRotateRight';
 import Check from '@/icons/16/Check';
+import CheckboxLight from '@/icons/20/CheckboxLight';
+import CheckboxChecked from '@/icons/20/CheckboxChecked';
+import Plus from '@/icons/20/Plus';
+import Trash2 from '@/icons/20/Trash2';
 import PhoneCall01 from '@/icons/16/PhoneCall01';
 import Camera from '@/icons/20/Camera';
 import EyeOpen from '@/icons/20/EyeOpen';
@@ -24,6 +31,10 @@ import Twitter from '@/icons/20/Twitter';
 import YouTube from '@/icons/20/YouTube';
 import { useDevState } from '../dev-state-context';
 import { ExpertUpsellBanner } from './ExpertUpsellBanner';
+import { LocationPickerModal } from './LocationPickerModal';
+import { LocationSwitcher } from './LocationSwitcher';
+import { AUSTIN_LOCATIONS, fullAddress } from './locations';
+import type { BusinessLocation } from './locations';
 
 /**
  * Map Ranking experience body — extracted from the deleted `/h2/map-ranking`
@@ -47,12 +58,17 @@ import { ExpertUpsellBanner } from './ExpertUpsellBanner';
 
 const STORAGE_KEY = 'h2-map-ranking:setup-complete';
 
-type View = 'landing' | 'audit' | 'home';
+type View = 'connect' | 'auditing' | 'audit' | 'home';
+
+// Profile-completeness arc: the live profile audits at AUDIT_START_SCORE
+// (gaps found); once Blaze fills them it lands at AUDIT_FINAL_SCORE.
+const AUDIT_START_SCORE = 58;
+const AUDIT_FINAL_SCORE = 92;
 
 // ─── DATA ─────────────────────────────────────────────────────────────
 
 type FieldStatus = 'ok' | 'adjusted';
-type FieldEditor = 'single' | 'multi' | 'hours' | 'none';
+type FieldEditor = 'single' | 'multi' | 'hours' | 'none' | 'pills';
 
 export interface ProfileField {
   label: string;
@@ -61,6 +77,9 @@ export interface ProfileField {
   value: string;
   /** Which inline editor to render in edit mode. */
   editor: FieldEditor;
+  /** For the `pills` editor: comma-list items Blaze added, rendered with the
+   *  accent (purple) treatment to match the "Adjusted by Blaze" status pill. */
+  blazeAdded?: string[];
 }
 
 const SERVICES_DEFAULT =
@@ -94,13 +113,15 @@ export const PROFILE_FIELDS: ProfileField[] = [
     status: 'adjusted',
     value:
       'Painter, Commercial painter, House painter, Cabinet maker, Drywall contractor, Deck builder, Power washing service, Stucco contractor, Color consultant',
-    editor: 'multi',
+    editor: 'pills',
+    blazeAdded: ['Cabinet maker', 'Deck builder', 'Color consultant'],
   },
   {
     label: 'Services',
     status: 'adjusted',
     value: SERVICES_DEFAULT,
-    editor: 'multi',
+    editor: 'pills',
+    blazeAdded: ['Color consultation', 'Deck & fence staining', 'Wood rot repair'],
   },
   {
     label: 'Hours',
@@ -133,9 +154,6 @@ export const PROFILE_FIELDS: ProfileField[] = [
     editor: 'single',
   },
 ];
-
-const ADJUSTED_LABELS = new Set(PROFILE_FIELDS.filter((f) => f.status === 'adjusted').map((f) => f.label));
-const OK_FIELD_COUNT = PROFILE_FIELDS.filter((f) => f.status === 'ok').length;
 
 const PREVIEW_HOURS: { day: string; hours: string }[] = [
   { day: 'Mon', hours: '8 AM – 6 PM' },
@@ -199,11 +217,11 @@ export function MiniRing({ score, size = 72, stroke = 6 }: { score: number; size
 
 // ─── LANDING (cold-start intro screen) ───────────────────────────────
 
-function LandingView({ onStart }: { onStart: () => void }) {
+function LandingView({ onConnect }: { onConnect: () => void }) {
   const { showToast } = useToast();
   return (
     <>
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 28px 120px' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 28px 64px' }}>
       {/* Hero */}
       <div style={{ textAlign: 'center', marginBottom: 48 }}>
         <div
@@ -228,73 +246,12 @@ function LandingView({ onStart }: { onStart: () => void }) {
           variant="secondary"
           style={{ display: 'block', maxWidth: 480, margin: '0 auto', lineHeight: 1.65 }}
         >
-          Blaze manages your Google Business Profile so you show up when local customers search for painters in Austin.
+          Map Pack runs against your live Google Business Profile listing. Connect one to see your audit, suggestions, and ranking.
         </Text>
-      </div>
-
-      {/* Your Local SEO score */}
-      <div style={{ marginBottom: 40 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-          <MiniRing score={52} size={56} stroke={5} />
-          <div>
-            <Heading level={5} style={{ margin: 0 }}>Your Local SEO score</Heading>
-            <Text variant="secondary">
-              From your Blaze brand scorecard · here&apos;s what&apos;s holding your Map Pack ranking back.
-            </Text>
-          </div>
-        </div>
-        <div
-          style={{
-            background: 'var(--dark-2)',
-            border: '1px solid var(--dark-4)',
-            borderRadius: 12,
-            overflow: 'hidden',
-          }}
-        >
-          {(
-            [
-              {
-                title: 'Google changed your business name',
-                desc: 'Your profile now reads "CertaPro Painters Austin" — inconsistent naming weakens local ranking signals.',
-              },
-              {
-                title: 'Profile is only 72% complete',
-                desc: 'Phone number and business hours are still missing from your Google Business Profile.',
-              },
-              {
-                title: 'Name & categories differ across platforms',
-                desc: 'Google, Yelp, and LinkedIn list different business names and service categories.',
-              },
-              {
-                title: 'No fresh photos in 30+ days',
-                desc: 'Profiles that add project photos every month rank higher in the Map Pack.',
-              },
-              {
-                title: 'Review velocity is low',
-                desc: '1.2 new reviews/month vs. a 4+/month local benchmark, and you reply to fewer than 1 in 5.',
-              },
-            ] as { title: string; desc: string }[]
-          ).map(({ title, desc }, i, arr) => (
-            <div
-              key={title}
-              style={{
-                display: 'flex',
-                gap: 12,
-                padding: '12px 16px',
-                borderBottom: i < arr.length - 1 ? '1px solid var(--dark-4)' : 'none',
-              }}
-            >
-              <AlertTriangle size={16} color="var(--status-connect)" style={{ flexShrink: 0, marginTop: 1 }} />
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <Text variant="secondary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>
-                  {title}
-                </Text>
-                <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
-                  {desc}
-                </Text>
-              </div>
-            </div>
-          ))}
+        <div style={{ marginTop: 24 }}>
+          <Button variant="primary" size="lg" endIcon={ArrowRightSm} onPress={onConnect}>
+            Connect Google Business Profile
+          </Button>
         </div>
       </div>
 
@@ -375,66 +332,11 @@ function LandingView({ onStart }: { onStart: () => void }) {
       {/* Upsell — DFY */}
       <ExpertUpsellBanner onTalk={() => showToast({ message: 'Connecting you with a marketing expert…' })} />
       </div>
-
-      {/* Sticky footer CTA — keeps the primary action visible while scrolling the cold-state page */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 238,
-          right: 0,
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          gap: 16,
-          padding: '16px 28px',
-          background: 'var(--light-100)',
-          borderTop: '1px solid var(--dark-8)',
-          boxShadow: '0 -4px 16px rgba(0,0,0,0.04)',
-        }}
-      >
-        <Button variant="primary" size="lg" endIcon={ArrowRightSm} onPress={onStart}>
-          Set up my profile
-        </Button>
-      </div>
     </>
   );
 }
 
 // ─── CONFIRM (cold-start consolidated screen) ─────────────────────────
-
-type CadenceId = 'twice-week' | 'once-week' | 'twice-month';
-
-interface CadenceOption {
-  id: CadenceId;
-  label: string;
-  subtitle: string;
-  footer: string;
-  recommended?: boolean;
-}
-
-const CADENCE_OPTIONS: CadenceOption[] = [
-  {
-    id: 'twice-week',
-    label: 'Twice a week',
-    subtitle: 'Most active. Best for fast growth.',
-    footer: '8 posts/mo',
-  },
-  {
-    id: 'once-week',
-    label: 'Once a week',
-    subtitle: 'Keeps you fresh without overdoing it.',
-    footer: '4 posts/mo',
-    recommended: true,
-  },
-  {
-    id: 'twice-month',
-    label: 'Twice a month',
-    subtitle: 'Light touch. Stay present without much effort.',
-    footer: '2 posts/mo',
-  },
-];
 
 type PostStatus = 'needs-review' | 'scheduled' | 'published';
 
@@ -513,23 +415,114 @@ const PROPOSED_POSTS: ProposedPost[] = [
   },
 ];
 
+// ─── AUDITING (loading state after connecting the profile) ───────────
+
+function AuditingView({ onDone }: { onDone: () => void }) {
+  // Every profile field, in the same order as the Review page. ok fields read
+  // "Looks good" (green); adjusted fields read "Suggested" (purple) to match
+  // the status pills on the Review page.
+  const steps = PROFILE_FIELDS.map((f) => ({
+    field: f.label,
+    result: f.status === 'ok' ? 'Looks good' : 'Suggested',
+    suggested: f.status !== 'ok',
+  }));
+  const [done, setDone] = useState(0);
+
+  useEffect(() => {
+    const stepMs = 650;
+    const timers = steps.map((_, i) =>
+      window.setTimeout(() => setDone(i + 1), 600 + i * stepMs),
+    );
+    const finish = window.setTimeout(onDone, 600 + steps.length * stepMs + 1300);
+    return () => {
+      timers.forEach(window.clearTimeout);
+      window.clearTimeout(finish);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const score = Math.round(
+    AUDIT_START_SCORE + (done / steps.length) * (AUDIT_FINAL_SCORE - AUDIT_START_SCORE),
+  );
+
+  return (
+    <div style={{ maxWidth: 560, margin: '0 auto', padding: '64px 28px' }}>
+      <style>{`@keyframes audit-spin { to { transform: rotate(360deg); } }`}</style>
+
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 28 }}>
+        <div style={{ marginBottom: 20 }}>
+          <MiniRing score={score} size={72} stroke={6} />
+        </div>
+        <Heading level={2} style={{ marginBottom: 8 }}>Auditing your Google Business Profile</Heading>
+        <Text variant="secondary" style={{ color: 'var(--dark-60)', maxWidth: 420 }}>
+          Blaze is reviewing your live profile and filling in what&apos;s missing.
+        </Text>
+      </div>
+
+      <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', background: 'var(--light-100)' }}>
+        {steps.map((s, i) => {
+          const isDone = i < done;
+          const isActive = i === done;
+          return (
+            <div
+              key={s.field}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                borderBottom: i < steps.length - 1 ? '1px solid var(--dark-4)' : 'none',
+              }}
+            >
+              <span
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: '1.5px',
+                  borderStyle: 'solid',
+                  borderColor: isDone ? 'var(--status-approved)' : isActive ? 'var(--brand)' : 'var(--dark-15)',
+                  borderTopColor: isActive ? 'transparent' : isDone ? 'var(--status-approved)' : 'var(--dark-15)',
+                  background: isDone ? 'var(--status-approved)' : 'transparent',
+                  animation: isActive ? 'audit-spin 0.8s linear infinite' : 'none',
+                }}
+              >
+                {isDone && <Check size={11} color="var(--light-100)" />}
+              </span>
+              <Text variant="secondary" style={{ flex: 1, fontWeight: 500, color: isDone || isActive ? 'var(--dark-90)' : 'var(--dark-40)' }}>
+                {s.field}
+              </Text>
+              <Text variant="metadata" style={{ color: isDone ? (s.suggested ? 'var(--purple)' : 'var(--status-approved)') : 'var(--dark-40)' }}>
+                {isDone ? s.result : isActive ? 'Checking…' : ''}
+              </Text>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ConfirmStep({ onConfirm }: { onConfirm: () => void }) {
   // Lifted: per-field edited values. Each card reads/writes its own slot,
   // initialized lazily from the canonical PROFILE_FIELDS seeds.
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(PROFILE_FIELDS.map((f) => [f.label, f.value])),
   );
+  // Which connected location is being reviewed. Switching swaps the Google
+  // preview; the field cards below are the inline editing surface for it.
+  const [locationId, setLocationId] = useState(AUSTIN_LOCATIONS[0].id);
+  const location = AUSTIN_LOCATIONS.find((l) => l.id === locationId) ?? AUSTIN_LOCATIONS[0];
   const updateField = (label: string, next: string) =>
     setFieldValues((prev) => ({ ...prev, [label]: next }));
 
-  const [cadence, setCadence] = useState<CadenceId>('once-week');
-  const [savedAdjusted, setSavedAdjusted] = useState(() => new Set<string>());
-  const score = Math.round(((OK_FIELD_COUNT + savedAdjusted.size) / PROFILE_FIELDS.length) * 100);
   const handleFieldSave = (label: string, next: string) => {
     updateField(label, next);
-    if (ADJUSTED_LABELS.has(label)) {
-      setSavedAdjusted((prev) => new Set([...prev, label]));
-    }
   };
 
   return (
@@ -541,16 +534,19 @@ function ConfirmStep({ onConfirm }: { onConfirm: () => void }) {
           padding: '32px 28px 120px',
         }}
       >
-        {/* section: header with score ring */}
+        {/* section: header with completeness score */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 28, maxWidth: 760 }}>
-          <MiniRing score={score} size={80} stroke={7} />
+          <MiniRing score={AUDIT_FINAL_SCORE} size={80} stroke={7} />
           <div>
             <Heading level={1} style={{ marginBottom: 6 }}>
               Review your Google Business Profile.
             </Heading>
             <Text variant="secondary">
-              Here&apos;s what we have for each field. Edit anything before continuing — nothing publishes yet.
+              Blaze filled in the fields that were missing — your profile is now {AUDIT_FINAL_SCORE}% complete. Review and edit anything before continuing; nothing publishes yet.
             </Text>
+            <div style={{ marginTop: 14 }}>
+              <LocationSwitcher value={locationId} onChange={setLocationId} onEdit={() => {}} />
+            </div>
           </div>
         </div>
 
@@ -577,12 +573,12 @@ function ConfirmStep({ onConfirm }: { onConfirm: () => void }) {
 
           {/* RIGHT — sticky Google preview */}
           <div style={{ position: 'sticky', top: 24, minWidth: 0, maxHeight: 'calc(100vh - 48px)', overflowY: 'auto' }}>
-            <GooglePreview />
+            <GooglePreview location={location} />
           </div>
         </div>
 
-        {/* section: posting plan */}
-        <PostingPlanSection cadence={cadence} onCadenceChange={setCadence} />
+        {/* section: first posts */}
+        <PostingPlanSection />
       </div>
 
       {/* sticky primary CTA */}
@@ -679,7 +675,7 @@ export function ProfileFieldCard({
           {field.status === 'ok' ? (
             <StatusPill tone="success" size="sm">Looks good</StatusPill>
           ) : (
-            <StatusPill tone="accent" size="sm">Adjusted by Blaze</StatusPill>
+            <StatusPill tone="accent" size="sm">Suggested</StatusPill>
           )}
         </div>
         {!isEditing && (
@@ -705,15 +701,32 @@ export function ProfileFieldCard({
 
       {/* body — display OR inline editor */}
       {isEditing ? (
-        <InlineEditor
-          editor={field.editor}
-          value={draft}
-          onChange={setDraft}
-          onSave={save}
-          onCancel={cancel}
-          onRegenerate={regenerate}
-          isRegenerating={isRegenerating}
-        />
+        field.editor === 'pills' ? (
+          <PillEditor
+            value={draft}
+            onChange={setDraft}
+            onSave={save}
+            onCancel={cancel}
+            blazeAdded={field.blazeAdded ?? []}
+          />
+        ) : field.editor === 'hours' ? (
+          <HoursEditor
+            value={draft}
+            onChange={setDraft}
+            onSave={save}
+            onCancel={cancel}
+          />
+        ) : (
+          <InlineEditor
+            editor={field.editor}
+            value={draft}
+            onChange={setDraft}
+            onSave={save}
+            onCancel={cancel}
+            onRegenerate={regenerate}
+            isRegenerating={isRegenerating}
+          />
+        )
       ) : (
         <FieldDisplay editor={field.editor} value={value} />
       )}
@@ -725,11 +738,23 @@ export function ProfileFieldCard({
  *  everything else renders as plain text. */
 function FieldDisplay({ editor, value }: { editor: FieldEditor; value: string }) {
   if (editor === 'hours') {
-    const lines = value.split('\n').filter(Boolean);
+    const rows = value
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const idx = line.indexOf(':');
+        return {
+          day: idx >= 0 ? line.slice(0, idx).trim() : line.trim(),
+          hours: idx >= 0 ? line.slice(idx + 1).trim() : '',
+        };
+      });
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.5 }}>
-        {lines.map((line) => (
-          <span key={line}>{line}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 14, lineHeight: 1.5 }}>
+        {rows.map(({ day, hours }) => (
+          <div key={day} style={{ display: 'flex', gap: 12 }}>
+            <span style={{ width: 44, flexShrink: 0, color: 'var(--dark-90)' }}>{day}</span>
+            <span style={{ color: 'var(--dark-80)' }}>{hours}</span>
+          </div>
         ))}
       </div>
     );
@@ -809,125 +834,360 @@ function InlineEditor({
   );
 }
 
-// ─── POSTING PLAN ─────────────────────────────────────────────────────
-
-function PostingPlanSection({
-  cadence,
-  onCadenceChange,
+/** Comma-list edit control — each item is a removable pill; Blaze-suggested
+ *  items get the accent (purple) treatment. "+ Add" appends new ones;
+ *  "Remove suggestions" strips all the Blaze-suggested pills. */
+function PillEditor({
+  value,
+  onChange,
+  onSave,
+  onCancel,
+  blazeAdded,
 }: {
-  cadence: CadenceId;
-  onCadenceChange: (id: CadenceId) => void;
+  value: string;
+  onChange: (next: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  blazeAdded: string[];
 }) {
-  return (
-    <div style={{ marginTop: 40 }}>
-      <Heading level={3} style={{ marginBottom: 16 }}>
-        Posting plan
-      </Heading>
+  const items = value.split(',').map((s) => s.trim()).filter(Boolean);
+  const blazeSet = new Set(blazeAdded);
+  const hasSuggestions = items.some((s) => blazeSet.has(s));
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState('');
 
-      {/* Cadence */}
-      <div style={{ marginBottom: 32 }}>
-        <Text
-          variant="smallList"
-          style={{ display: 'block', color: 'var(--dark-90)', fontWeight: 500, marginBottom: 12 }}
-        >
-          Posting cadence
-        </Text>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-          {CADENCE_OPTIONS.map((opt) => {
-            const selected = cadence === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => onCadenceChange(opt.id)}
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: 6,
-                  padding: 16,
-                  background: 'var(--light-100)',
-                  border: `1.5px solid ${selected ? 'var(--dark-90)' : 'var(--dark-8)'}`,
-                  borderRadius: 10,
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'border-color 120ms ease',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {opt.recommended && (
-                  <span style={{ position: 'absolute', top: 12, right: 12 }}>
-                    <StatusPill tone="success" size="sm">Recommended</StatusPill>
-                  </span>
-                )}
-                <span
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 500,
-                    color: 'var(--dark-90)',
-                    letterSpacing: '0.05px',
-                  }}
-                >
-                  {opt.label}
-                </span>
-                <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>
-                  {opt.subtitle}
-                </span>
-                <span
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    color: 'var(--dark-60)',
-                    background: 'var(--dark-4)',
-                    padding: '4px 8px',
-                    borderRadius: 6,
-                  }}
-                >
-                  {opt.footer}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+  const remove = (s: string) => onChange(items.filter((x) => x !== s).join(', '));
+  const removeSuggestions = () => onChange(items.filter((s) => !blazeSet.has(s)).join(', '));
+  const restoreSuggestions = () =>
+    onChange([...items, ...blazeAdded.filter((b) => !items.includes(b))].join(', '));
+  const commitAdd = () => {
+    const v = draft.trim();
+    if (v && !items.some((s) => s.toLowerCase() === v.toLowerCase())) {
+      onChange([...items, v].join(', '));
+    }
+    setDraft('');
+    setAdding(false);
+  };
+
+  // Pill metrics per the design-system Figma spec: 28px tall, 10px before the
+  // text and 6px after (so the × lands ~9px from the right edge). These pills
+  // always have a delete and no leading icon, so the asymmetry is correct.
+  const pillStyle: React.CSSProperties = { height: 28, padding: '0 6px 0 10px' };
+  // Suggested (Blaze-added) pills get the accent purple treatment; everything
+  // else uses the Chip's default variant.
+  const blazeStyle: React.CSSProperties = {
+    ...pillStyle,
+    background: 'color-mix(in srgb, var(--purple) 10%, transparent)',
+    borderColor: 'color-mix(in srgb, var(--purple) 22%, transparent)',
+    color: 'var(--purple)',
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {items.map((s) => {
+          const blaze = blazeSet.has(s);
+          return (
+            <Chip
+              key={s}
+              size="md"
+              selected={false}
+              deletable
+              onDelete={() => remove(s)}
+              style={blaze ? blazeStyle : pillStyle}
+            >
+              {s}
+            </Chip>
+          );
+        })}
+
+        {adding ? (
+          <input
+            autoFocus
+            type="text"
+            value={draft}
+            placeholder="Add item"
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitAdd}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitAdd();
+              if (e.key === 'Escape') {
+                setDraft('');
+                setAdding(false);
+              }
+            }}
+            style={{
+              height: 28,
+              padding: '0 10px',
+              fontSize: 14,
+              fontFamily: 'inherit',
+              border: '1px solid var(--dark-15)',
+              borderRadius: 6,
+              outline: 'none',
+              color: 'var(--dark-90)',
+              minWidth: 120,
+            }}
+          />
+        ) : (
+          <Chip size="md" variant="add" onClick={() => setAdding(true)} style={{ height: 28, padding: '0 8px' }}>
+            Add
+          </Chip>
+        )}
       </div>
 
-      {/* First 4 posts */}
-      <div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 12,
-          }}
-        >
-          <Text
-            variant="smallList"
-            style={{ color: 'var(--dark-90)', fontWeight: 500 }}
-          >
-            Your first 4 posts
-          </Text>
-          <Button variant="tertiary" size="sm">
-            Regenerate
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div>
+          {blazeAdded.length > 0 &&
+            (hasSuggestions ? (
+              <Button variant="secondary" size="sm" frontIcon={ArrowRotateLeft2} onPress={removeSuggestions}>
+                Remove suggestions
+              </Button>
+            ) : (
+              <Button variant="secondary" size="sm" endIcon={ArrowRotateRight} onPress={restoreSuggestions}>
+                Restore suggestions
+              </Button>
+            ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="tertiary" size="sm" onPress={onCancel}>
+            Cancel
+          </Button>
+          <Button variant="primary" size="sm" onPress={onSave}>
+            Save
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-            gap: 12,
-          }}
-        >
-          {PROPOSED_POSTS.map((p) => (
-            <PostCard key={p.slot} post={p} />
-          ))}
-        </div>
+// ─── HOURS EDITOR ─────────────────────────────────────────────────────
 
-        <div style={{ marginTop: 16, fontSize: 12, color: 'var(--dark-60)' }}>
-          Drafted by Blaze · May 21, 2:34 PM
-        </div>
+interface HoursRange {
+  /** "9:00 AM", or "24 hours" (open all day — no close time). */
+  open: string;
+  close: string;
+}
+interface DayHours {
+  day: string;
+  closed: boolean;
+  ranges: HoursRange[];
+}
+
+/** Half-hour time options for the Opens/Closes selects, plus a leading
+ *  "24 hours" option for all-day on the Opens select. */
+const TIME_OPTIONS: SelectOption[] = (() => {
+  const opts: SelectOption[] = [];
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30]) {
+      const period = h < 12 ? 'AM' : 'PM';
+      const hr12 = h % 12 === 0 ? 12 : h % 12;
+      const label = `${hr12}:${m === 0 ? '00' : '30'} ${period}`;
+      opts.push({ value: label, label });
+    }
+  }
+  return opts;
+})();
+const OPEN_OPTIONS: SelectOption[] = [{ value: '24 hours', label: '24 hours' }, ...TIME_OPTIONS];
+
+/** "8 AM" → "8:00 AM"; leaves "8:30 AM" / "24 hours" untouched. */
+function normalizeTime(t: string): string {
+  const m = t.trim().match(/^(\d{1,2})\s*(AM|PM)$/i);
+  if (m) return `${m[1]}:00 ${m[2].toUpperCase()}`;
+  return t.trim();
+}
+
+function parseHours(value: string): DayHours[] {
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [day, ...rest] = line.split(':');
+      const body = rest.join(':').trim();
+      if (/^closed$/i.test(body)) return { day: day.trim(), closed: true, ranges: [] };
+      const ranges = body.split(',').map((seg) => {
+        const t = seg.trim();
+        if (/^24 hours$/i.test(t)) return { open: '24 hours', close: '' };
+        const [open, close] = t.split(/–|-/).map((x) => normalizeTime(x));
+        return { open: open ?? '9:00 AM', close: close ?? '6:00 PM' };
+      });
+      return { day: day.trim(), closed: false, ranges: ranges.length ? ranges : [{ open: '9:00 AM', close: '6:00 PM' }] };
+    });
+}
+
+function serializeHours(days: DayHours[]): string {
+  return days
+    .map((d) => {
+      if (d.closed || d.ranges.length === 0) return `${d.day}: Closed`;
+      const body = d.ranges.map((r) => (r.open === '24 hours' ? '24 hours' : `${r.open} – ${r.close}`)).join(', ');
+      return `${d.day}: ${body}`;
+    })
+    .join('\n');
+}
+
+/** Per-day hours editor modeled on the Google Business Profile control:
+ *  a "Closed" checkbox per day, Opens/Closes time selects, and +/trash to
+ *  add or remove time ranges. Built from Blaze Select / IconButton / icons. */
+function HoursEditor({
+  value,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  const [days, setDays] = useState<DayHours[]>(() => parseHours(value));
+
+  const commit = (next: DayHours[]) => {
+    setDays(next);
+    onChange(serializeHours(next));
+  };
+  const mutateDay = (i: number, fn: (d: DayHours) => DayHours) =>
+    commit(days.map((d, idx) => (idx === i ? fn(d) : d)));
+
+  const toggleClosed = (i: number) =>
+    mutateDay(i, (d) =>
+      d.closed
+        ? { ...d, closed: false, ranges: d.ranges.length ? d.ranges : [{ open: '9:00 AM', close: '6:00 PM' }] }
+        : { ...d, closed: true },
+    );
+  const setRange = (i: number, ri: number, key: keyof HoursRange, val: string) =>
+    mutateDay(i, (d) => ({ ...d, ranges: d.ranges.map((r, idx) => (idx === ri ? { ...r, [key]: val } : r)) }));
+  const addRange = (i: number) =>
+    mutateDay(i, (d) => ({ ...d, ranges: [...d.ranges, { open: '9:00 AM', close: '5:00 PM' }] }));
+  const removeRange = (i: number, ri: number) =>
+    mutateDay(i, (d) => ({ ...d, ranges: d.ranges.filter((_, idx) => idx !== ri) }));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {days.map((d, i) => {
+        // Day name + Closed checkbox — rendered on the first range row so it
+        // aligns with that row (not centered across multiple ranges). Width
+        // matches the spacer below for alignment.
+        const dayLabel = (
+          <>
+            <div style={{ width: 44, flexShrink: 0, fontSize: 14, color: 'var(--dark-90)' }}>{d.day}</div>
+            <button
+              type="button"
+              onClick={() => toggleClosed(i)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                width: 92,
+                flexShrink: 0,
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                fontFamily: 'inherit',
+                fontSize: 13,
+                color: 'var(--dark-80)',
+                cursor: 'pointer',
+              }}
+            >
+              {d.closed ? <CheckboxChecked size={20} /> : <CheckboxLight size={20} />}
+              Closed
+            </button>
+          </>
+        );
+
+        return (
+          <div key={d.day} style={{ padding: '7px 0' }}>
+            {d.closed ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 34 }}>
+                {dayLabel}
+                <span style={{ fontSize: 13, color: 'var(--dark-40)' }}>Closed all day</span>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {d.ranges.map((r, ri) => (
+                  <div key={ri} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 34 }}>
+                    {ri === 0 ? dayLabel : <div style={{ width: 144, flexShrink: 0 }} />}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Select
+                        value={r.open}
+                        onChange={(v) => setRange(i, ri, 'open', v)}
+                        options={OPEN_OPTIONS}
+                        size="sm"
+                        style={{ width: 94 }}
+                      />
+                      {r.open !== '24 hours' && (
+                        <>
+                          <span style={{ color: 'var(--dark-40)', fontSize: 13 }}>–</span>
+                          <Select
+                            value={r.close}
+                            onChange={(v) => setRange(i, ri, 'close', v)}
+                            options={TIME_OPTIONS}
+                            size="sm"
+                            style={{ width: 94 }}
+                          />
+                        </>
+                      )}
+                    </div>
+                    {ri === 0 ? (
+                      <IconButton icon={Plus} variant="tertiary" size="md" aria-label="Add hours" onPress={() => addRange(i)} />
+                    ) : (
+                      <IconButton icon={Trash2} variant="tertiary" size="md" aria-label="Remove hours" onPress={() => removeRange(i, ri)} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+        <Button variant="tertiary" size="sm" onPress={onCancel}>
+          Cancel
+        </Button>
+        <Button variant="primary" size="sm" onPress={onSave}>
+          Save
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── POSTING PLAN ─────────────────────────────────────────────────────
+
+/** The "first 4 posts" Blaze drafts for the profile — shown at the bottom of
+ *  the audit. (The posting-cadence selector was removed.) */
+function PostingPlanSection() {
+  return (
+    <div style={{ marginTop: 40 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 12,
+        }}
+      >
+        <Heading level={3}>Your first 4 posts</Heading>
+        <Button variant="tertiary" size="sm">
+          Regenerate
+        </Button>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+          gap: 12,
+        }}
+      >
+        {PROPOSED_POSTS.map((p) => (
+          <PostCard key={p.slot} post={p} />
+        ))}
+      </div>
+
+      <div style={{ marginTop: 16, fontSize: 12, color: 'var(--dark-60)' }}>
+        Drafted by Blaze · May 21, 2:34 PM
       </div>
     </div>
   );
@@ -1165,7 +1425,8 @@ function Avatar() {
   );
 }
 
-export function GooglePreview() {
+export function GooglePreview({ location }: { location?: BusinessLocation } = {}) {
+  const addressLine = location ? fullAddress(location) : '12444 Research Blvd, Austin, TX 78759';
   return (
     <div
       style={{
@@ -1264,7 +1525,7 @@ export function GooglePreview() {
             <Marker03 size={15} color="var(--dark-60)" />
           </div>
           <div style={{ fontSize: 13 }}>
-            <div style={{ color: 'var(--dark-80)' }}>12444 Research Blvd, Austin, TX 78759</div>
+            <div style={{ color: 'var(--dark-80)' }}>{addressLine}</div>
             <div style={{ color: '#1A73E8', marginTop: 3 }}>Edit your business information</div>
           </div>
         </div>
@@ -1955,40 +2216,12 @@ function HomeView() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--dark-4)' }}>
           <AlertTriangle size={16} color="var(--status-connect)" />
           <Text variant="secondary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>
-            Action needed to improve your Google ranking
+            Improve how your profile appears on Google
           </Text>
         </div>
-        {/* GBP name change row */}
-        <button
-          type="button"
-          onClick={() => navigate('/h2/organic-profile?tab=profile-preview')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '12px 16px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: '1px solid var(--dark-4)',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            textAlign: 'left',
-            width: '100%',
-            transition: 'background-color 120ms ease',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--dark-4)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-        >
-          <AlertTriangle size={14} color="var(--red-70)" style={{ flexShrink: 0 }} />
-          <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500, flexShrink: 0 }}>
-            Google changed your business name
-          </Text>
-          <Text variant="metadata" style={{ color: 'var(--dark-60)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            — &ldquo;CertaPro Painters Austin&rdquo;
-          </Text>
-          <ArrowRight size={16} color="var(--dark-40)" />
-        </button>
         {[
-          { title: 'Complete profile', desc: '2 items missing from your Google Business Profile', action: () => navigate('/h2/organic-profile?tab=profile-preview') },
-          { title: 'Fix profile inconsistencies', desc: 'Your business name and categories differ across platforms', action: () => onProfileConsistency ? onProfileConsistency() : navigate('/h2/organic-profile?tab=profile-consistency') },
+          { title: 'Review your profile', desc: '5 things to fix on your Google Business Profile', action: () => navigate('/h2/organic-profile?tab=profile-preview') },
+          { title: 'Add posts to your campaign', desc: 'You have 0 posts — add some to your Organic Campaign', action: () => navigate('/h2/organic-social') },
         ].map((item, i, arr) => (
           <button
             key={item.title}
@@ -2064,7 +2297,7 @@ function HomeView() {
       </div>
 
       {/* Maps Pack — full width */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 48 }}>
         <GoogleMapsPackPreview />
       </div>
 
@@ -2073,37 +2306,48 @@ function HomeView() {
         <ExpertUpsellBanner onTalk={() => showToast({ message: 'Connecting you with a marketing expert…' })} />
       </div>
 
-      {/* Upcoming posts */}
+      {/* Upcoming posts — empty state */}
       <div style={{ marginBottom: 32 }}>
+        <Heading level={3} style={{ margin: 0, marginBottom: 12 }}>
+          Upcoming posts
+        </Heading>
         <div
           style={{
+            border: '1px solid var(--dark-8)',
+            borderRadius: 12,
+            background: 'var(--dark-2)',
+            padding: '40px 24px',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 12,
+            gap: 16,
+            textAlign: 'center',
           }}
         >
-          <Heading level={3} style={{ margin: 0 }}>
-            Upcoming posts
-          </Heading>
-          <Button
-            variant="tertiary"
-            size="sm"
-            onPress={() => showToast({ message: 'Opening posts for review…' })}
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'var(--dark-4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            Review in Approvals
+            <Send1 size={18} color="var(--dark-60)" />
+          </div>
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', maxWidth: 340 }}>
+            Your upcoming posts will appear here once Blaze gets to work.
+          </Text>
+          <Button
+            variant="secondary"
+            size="sm"
+            endIcon={ArrowRightSm}
+            onPress={() => navigate('/h2/organic-social')}
+          >
+            Add posts to your campaign
           </Button>
-        </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-            gap: 12,
-          }}
-        >
-          {PROPOSED_POSTS.map((p) => (
-            <PostCard key={p.slot} post={p} />
-          ))}
         </div>
       </div>
 
@@ -2206,32 +2450,34 @@ export function MapRankingBody({ devStatePath, onProfileConsistency }: MapRankin
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { getState, setState: setDevState } = useDevState();
+  const { openModal } = useModals();
   const devState = getState(devStatePath);
 
   // Initial view derives from localStorage on first render. The `?reset=1`
-  // query param wipes that flag and forces 'landing'.
+  // query param wipes that flag and forces the disconnected 'connect' step.
   const [view, setView] = useState<View>(() => {
-    if (typeof window === 'undefined') return 'landing';
+    if (typeof window === 'undefined') return 'connect';
     if (searchParams.get('reset') === '1') {
       try {
         window.localStorage.removeItem(STORAGE_KEY);
       } catch {
         /* ignore quota / private-mode errors */
       }
-      return 'landing';
+      return 'connect';
     }
     try {
-      return window.localStorage.getItem(STORAGE_KEY) === '1' ? 'home' : 'landing';
+      return window.localStorage.getItem(STORAGE_KEY) === '1' ? 'home' : 'connect';
     } catch {
-      return 'landing';
+      return 'connect';
     }
   });
 
-  // Sync dev-state toggle → view. Cold lands on 'landing'; steady on 'home'.
+  // Sync dev-state toggle → view. Cold lands on the disconnected 'connect'
+  // step; steady jumps to 'home'.
   useEffect(() => {
     setView((prev) => {
-      if (devState === 'cold') return 'landing';
-      if (prev === 'landing' || prev === 'audit') return 'home';
+      if (devState === 'cold') return 'connect';
+      if (prev === 'connect' || prev === 'auditing' || prev === 'audit') return 'home';
       return prev;
     });
   }, [devState]);
@@ -2257,7 +2503,14 @@ export function MapRankingBody({ devStatePath, onProfileConsistency }: MapRankin
 
   return (
     <>
-      {view === 'landing' && <LandingView onStart={() => setView('audit')} />}
+      {view === 'connect' && (
+        <LandingView
+          onConnect={() =>
+            openModal(LocationPickerModal, { onConfirm: () => setView('auditing') })
+          }
+        />
+      )}
+      {view === 'auditing' && <AuditingView onDone={() => setView('audit')} />}
       {view === 'audit' && <ConfirmStep onConfirm={handleConfirm} />}
       {view === 'home' && <HomeView />}
     </>

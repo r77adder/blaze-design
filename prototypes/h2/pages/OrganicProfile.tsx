@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Heading, Text } from '@/components';
+import { Button, Heading, IconButton, Text } from '@/components';
 import { TabChip } from '@/staging';
 import {
   AlertTriangle,
@@ -20,14 +20,22 @@ import PhoneCall01 from '@/icons/16/PhoneCall01';
 import { H2Layout } from '../H2Layout';
 import { useDevState } from '../dev-state-context';
 import { MapRankingBody, GooglePreview, PROFILE_FIELDS, ProfileFieldCard, MiniRing } from './MapRankingBody';
+import { LocationSwitcher } from './LocationSwitcher';
+import { AUSTIN_LOCATIONS, photoUrl, fullAddress } from './locations';
+import type { BusinessLocation } from './locations';
 
 type OrganicProfileTab = 'dashboard' | 'profile-preview' | 'profile-consistency';
 
 // ─── GOOGLE MAPS PREVIEW ─────────────────────────────────────────────
 
-function GoogleMapsPreview() {
+function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
   const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'about'>('overview');
   const [adDismissed, setAdDismissed] = useState(false);
+
+  const addressLine = location ? fullAddress(location) : '12444 Research Blvd, Austin, TX 78759';
+  const headerPhoto = location
+    ? photoUrl(location, 760, 360)
+    : 'https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg';
 
   const starBars = [
     { label: '5', pct: 78 },
@@ -42,7 +50,7 @@ function GoogleMapsPreview() {
       {/* Header photo */}
       <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>
         <img
-          src="https://pub-9fc1f065f07e441b8f35365c774f09ae.r2.dev/uploads/sites/1368/2026/04/AfterIMG_0384-scaled.jpeg"
+          src={headerPhoto}
           alt=""
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
@@ -183,7 +191,7 @@ function GoogleMapsPreview() {
             {/* Address + website */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
               <div style={{ flexShrink: 0, marginTop: 1 }}><Marker03 size={15} color="var(--dark-60)" /></div>
-              <span style={{ fontSize: 13, color: 'var(--dark-80)' }}>12444 Research Blvd, Austin, TX 78759</span>
+              <span style={{ fontSize: 13, color: 'var(--dark-80)' }}>{addressLine}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
               <div style={{ flexShrink: 0, marginTop: 1 }}><Globe size={15} color="var(--dark-60)" /></div>
@@ -321,7 +329,7 @@ function GoogleMapsPreview() {
             <div style={{ borderTop: '1px solid var(--dark-8)', marginBottom: 14 }} />
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
               <div style={{ flexShrink: 0 }}><Marker03 size={15} color="var(--dark-60)" /></div>
-              <span style={{ fontSize: 13, color: 'var(--dark-80)' }}>12444 Research Blvd, Austin, TX 78759</span>
+              <span style={{ fontSize: 13, color: 'var(--dark-80)' }}>{addressLine}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
               <div style={{ flexShrink: 0 }}><Globe size={15} color="var(--dark-60)" /></div>
@@ -340,7 +348,7 @@ function GoogleMapsPreview() {
 
 // ─── PROFILE EDITOR VIEW ─────────────────────────────────────────────
 
-function ProfileEditorView({ onBack }: { onBack: () => void }) {
+function ProfileEditorView({ location, onBack }: { location: BusinessLocation; onBack: () => void }) {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(PROFILE_FIELDS.map((f) => [f.label, f.value])),
   );
@@ -350,30 +358,16 @@ function ProfileEditorView({ onBack }: { onBack: () => void }) {
   return (
     <>
       <div style={{ padding: '24px 28px 120px', maxWidth: 780, margin: '0 auto' }}>
-        {/* Back link */}
-        <button
-          type="button"
-          onClick={onBack}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            fontFamily: 'inherit',
-            fontSize: 13,
-            color: 'var(--dark-60)',
-            cursor: 'pointer',
-            marginBottom: 20,
-          }}
-        >
-          <ArrowLeft size={14} />
-          Profile Preview
-        </button>
-
         <div style={{ marginBottom: 24 }}>
-          <Heading level={3} style={{ display: 'block', marginBottom: 4 }}>Edit Business Profile</Heading>
+          <Heading level={2} style={{ display: 'block', marginBottom: 8 }}>Edit Business Profile</Heading>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Marker03 size={15} color="var(--dark-60)" style={{ flexShrink: 0 }} />
+            <Text variant="secondary" style={{ color: 'var(--dark-80)' }}>
+              <span style={{ fontWeight: 500 }}>{location.neighborhood}</span>
+              {' · '}
+              {fullAddress(location)}
+            </Text>
+          </div>
           <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
             Changes sync to your Google Business Profile. Nothing publishes until you save.
           </Text>
@@ -417,7 +411,16 @@ function ProfileEditorView({ onBack }: { onBack: () => void }) {
 
 // ─── PROFILE PREVIEW TAB ─────────────────────────────────────────────
 
-function ProfilePreviewTab({ onEdit }: { onEdit: () => void }) {
+function ProfilePreviewTab({
+  value,
+  onChange,
+  onEdit,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+  onEdit: () => void;
+}) {
+  const location = AUSTIN_LOCATIONS.find((l) => l.id === value) ?? AUSTIN_LOCATIONS[0];
   return (
     <div style={{ padding: '24px 28px 80px', maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 28 }}>
       {/* GBP change alert */}
@@ -441,14 +444,12 @@ function ProfilePreviewTab({ onEdit }: { onEdit: () => void }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <MiniRing score={72} size={64} stroke={5} />
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
             <Heading level={3} style={{ display: 'block' }}>How your profile appears on Google</Heading>
-            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>
-              Previews reflect the Business Profile fields you reviewed in the Dashboard tab.
-            </Text>
+            <LocationSwitcher value={value} onChange={onChange} onEdit={onEdit} />
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -465,13 +466,13 @@ function ProfilePreviewTab({ onEdit }: { onEdit: () => void }) {
           <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', fontWeight: 500, marginBottom: 10 }}>
             Google Search
           </Text>
-          <GooglePreview />
+          <GooglePreview location={location} />
         </div>
         <div>
           <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', fontWeight: 500, marginBottom: 10 }}>
             Google Maps
           </Text>
-          <GoogleMapsPreview />
+          <GoogleMapsPreview location={location} />
         </div>
       </div>
     </div>
@@ -644,6 +645,10 @@ export function OrganicProfileRoute() {
   const initialTab = (searchParams.get('tab') as OrganicProfileTab | null) ?? 'dashboard';
   const [tab, setTab] = useState<OrganicProfileTab>(initialTab);
   const [editingProfile, setEditingProfile] = useState(false);
+  // Which location's profile is being viewed/edited. Lifted here so the editor
+  // topbar can name the profile being edited.
+  const [locationId, setLocationId] = useState(AUSTIN_LOCATIONS[0].id);
+  const location = AUSTIN_LOCATIONS.find((l) => l.id === locationId) ?? AUSTIN_LOCATIONS[0];
   // In the cold (setup) state the sub-tabs are meaningless, so hide them.
   const { getState } = useDevState();
   const isCold = getState('/h2/organic-profile') === 'cold';
@@ -667,16 +672,35 @@ export function OrganicProfileRoute() {
     </div>
   );
 
+  // Detail-view header for the editor: back button + the profile being edited,
+  // mirroring the back-button cluster used on other H2 detail pages.
+  const editorTitle = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back to profile" onPress={() => setEditingProfile(false)} />
+      <span aria-hidden style={{ width: 1, height: 16, background: 'var(--dark-15)' }} />
+      <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
+        {location.name}
+        <span style={{ color: 'var(--dark-60)', fontWeight: 400 }}>
+          {' · '}
+          {location.neighborhood}
+        </span>
+      </Text>
+    </div>
+  );
+
   return (
-    <H2Layout title="Local SEO" topbarCenter={isCold ? undefined : topbarCenter}>
+    <H2Layout
+      title={editingProfile ? editorTitle : 'Local SEO'}
+      topbarCenter={editingProfile || isCold ? undefined : topbarCenter}
+    >
       {tab === 'dashboard' ? (
         <MapRankingBody devStatePath="/h2/organic-profile" onProfileConsistency={() => handleTabChange('profile-consistency')} />
       ) : tab === 'profile-consistency' ? (
         <ProfileConsistencyTab />
       ) : editingProfile ? (
-        <ProfileEditorView onBack={() => setEditingProfile(false)} />
+        <ProfileEditorView location={location} onBack={() => setEditingProfile(false)} />
       ) : (
-        <ProfilePreviewTab onEdit={() => setEditingProfile(true)} />
+        <ProfilePreviewTab value={locationId} onChange={setLocationId} onEdit={() => setEditingProfile(true)} />
       )}
     </H2Layout>
   );
