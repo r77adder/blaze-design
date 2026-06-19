@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DEV_STATE_PATHS, useDevState, type DevState } from './dev-state-context';
 import { useOnboarding } from './onboarding/onboarding-context';
+import { useApprovalAudience } from './approval-audience-context';
 
 /**
  * Floating dev-only panel pinned to a corner of every H2 page. Designer can
@@ -41,6 +42,7 @@ export function DevStatePanel() {
   const navigate = useNavigate();
   const { getState, setState } = useDevState();
   const { active: onboardingActive, open: openOnboarding } = useOnboarding();
+  const { audience, setAudience } = useApprovalAudience();
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -176,6 +178,20 @@ export function DevStatePanel() {
           navigate('/h2');
           openOnboarding({ reset: true });
         }}
+      />
+      <Divider />
+      {/* Approvals audience: DFY (agency) vs DIY (self-serve customer). */}
+      <DevStateButton
+        label="steady"
+        text="DFY"
+        selected={audience === 'dfy'}
+        onClick={() => setAudience('dfy')}
+      />
+      <DevStateButton
+        label="steady"
+        text="DIY"
+        selected={audience === 'diy'}
+        onClick={() => setAudience('diy')}
       />
     </div>
   );

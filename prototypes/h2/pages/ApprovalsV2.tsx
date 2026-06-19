@@ -2,9 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { H2Layout } from '../H2Layout';
 import { useClientView } from '../client-view-context';
+import { useApprovalAudience } from '../approval-audience-context';
+import { useApprovalSettings } from '../approval-settings-context';
 import { Button, Modal, ModalStack, useModals } from '@/components';
-import { Toast } from '@/staging';
-import { Approvals as ApprovalsIcon, Check2, EyeOpen, Edit3, ArrowLeft, ArrowRight, ArrowCurveLeftDown, XCircleContained, Globe, CalendarEdit, Settings, Star, Calendar1, Marker03, Cursor04, BarChartSquare, MessageChat01, VideoOn } from '@/icons/20';
+import { Toast, Checkbox } from '@/staging';
+import { Approvals as ApprovalsIcon, Check2, EyeOpen, Edit3, ArrowLeft, ArrowRight, ArrowCurveLeftDown, XCircleContained, Globe, CalendarEdit, Settings, Star, Calendar1, Marker03, Cursor04, BarChartSquare, MessageChat01, VideoOn, Filter as FilterIcon } from '@/icons/20';
+import ChevronDownLg from '@/icons/20/ChevronDown';
 import { ChevronDown, ChevronRight, Iphone02 } from '@/icons/16';
 
 // ── Image assets (Figma + Unsplash fallbacks) ─────────────────────────────────
@@ -35,7 +38,7 @@ const red     = '#ae2222';
 const white   = '#ffffff';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type Status = 'pending' | 'approved' | 'rejected' | 'declined';
+type Status = 'pending' | 'approved' | 'rejected' | 'declined' | 'draft';
 type ContentType = 'still' | 'carousel' | 'story' | 'short' | 'feed-video' | 'email' | 'blog' | 'review' | 'comment' | 'local-seo' | 'paid-search-ad';
 
 interface Post {
@@ -143,16 +146,6 @@ const CAMPAIGNS: Campaign[] = [
         confidence: 78,
         timeAgo: '5h ago',
         engagementLabel: '3× normal · 6h',
-      },
-      {
-        id: 502, type: 'review', date: '2h ago', dateSort: '2026-10-15T07:00',
-        caption: 'Paint chipping after 6 months, no response',
-        reputationSource: 'google',
-        reputationHandle: 'Marissa K. · Austin, TX',
-        reputationRating: 1,
-        reputationTitle: 'Paint chipping after 6 months, no response',
-        reputationText: 'Interior was painted in November. Three doorways are chipping already and I\'ve called twice with no callback. Disappointed — the crew itself was great.',
-        timeAgo: '2h ago',
       },
       {
         id: 503, type: 'comment', date: '1d ago', dateSort: '2026-10-14T10:00',
@@ -305,13 +298,19 @@ function BadgeIcon({ badge }: { badge: string }) {
 // ── Status pill ───────────────────────────────────────────────────────────────
 const purple = '#7f24b7';
 
-function StatusPill({ status, dontPostReasons, isPast, resubmitNote, tooltipPlacement = 'above', viewerMode }: { status: Status; dontPostReasons?: string[]; isPast?: boolean; resubmitNote?: string; tooltipPlacement?: 'above' | 'below'; viewerMode?: 'internal' | 'client' }) {
+function StatusPill({ status, dontPostReasons, isPast, resubmitNote, tooltipPlacement = 'above', viewerMode, postedWhenApproved }: { status: Status; dontPostReasons?: string[]; isPast?: boolean; resubmitNote?: string; tooltipPlacement?: 'above' | 'below'; viewerMode?: 'internal' | 'client'; postedWhenApproved?: boolean }) {
   const isDontPost = status === 'rejected';
   const isDeclined = status === 'declined';
-  const isPosted  = isPast && status === 'approved';
+  const isDraft   = status === 'draft';
+  // DIY reputation: a posted reply reads as "Posted" rather than "Approved".
+  const isPosted  = (isPast || postedWhenApproved) && status === 'approved';
   const isFailed  = isPast && status === 'pending';
   const isResubmitted = !isPast && status === 'pending' && resubmitNote !== undefined;
   const cfg =
+    isDraft ? {
+      bg: white, overlay: 'rgba(117,124,138,0.1)',
+      border: 'rgba(117,124,138,0.3)', color: '#757c8a', label: 'Draft',
+    } :
     isPosted ? {
       bg: white, overlay: 'rgba(127,36,183,0.08)',
       border: 'rgba(127,36,183,0.25)', color: purple, label: 'Posted',
@@ -332,8 +331,8 @@ function StatusPill({ status, dontPostReasons, isPast, resubmitNote, tooltipPlac
       bg: white, overlay: 'rgba(174,34,34,0.08)',
       border: 'rgba(174,34,34,0.3)', color: '#ae2222', label: 'Changes Requested',
     } : isResubmitted ? {
-      bg: white, overlay: 'rgba(255,174,0,0.3)',
-      border: 'rgba(255,174,0,0.45)', color: '#7a4800', label: 'Review V2',
+      bg: white, overlay: 'rgba(1,121,207,0.1)',
+      border: 'rgba(1,121,207,0.25)', color: '#0179cf', label: 'Revised',
     } : {
       bg: white, overlay: 'rgba(255,174,0,0.3)',
       border: 'rgba(255,174,0,0.45)', color: '#7a4800', label: 'Review',
@@ -390,18 +389,24 @@ function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
 
 // ── Paid Search Ad card — Google search result preview ────────────────────────
 function PaidSearchCard({
-  post, internalStatus, onMarkReady, onReview,
+  post, internalStatus, onMarkReady, onUndo, onReview,
   mode = 'internal', clientStatus, onApprove, onRemoveApproval,
+  isPast, sent, returnedByClient, approvedByClient,
 }: {
   post: Post; internalStatus: InternalStatus;
-  onMarkReady: () => void; onReview: () => void;
+  onMarkReady: () => void; onUndo?: () => void; onReview: () => void;
   mode?: 'internal' | 'client';
   clientStatus?: Status; onApprove?: () => void; onRemoveApproval?: () => void;
+  isPast?: boolean; sent?: boolean; returnedByClient?: boolean; approvedByClient?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const isReady    = internalStatus === 'readyForClient';
   const isApproved = clientStatus === 'approved';
-  const dimmed     = mode === 'client' ? isApproved : isReady;
+  const dimmed     = mode === 'client' ? isApproved : false;
+  const cardOpacity = mode === 'client' ? (isApproved ? 0.65 : 1) : (sent ? 0.4 : 1);
+  // Per-creative checkbox controls inclusion in the client send (internal only).
+  const showCheckbox = mode === 'internal' && !isPast && !returnedByClient && !approvedByClient && !sent;
+  const hoverActive = hovered && !dimmed && !sent;
   const variants   = post.adVariants ?? [];
 
   return (
@@ -410,14 +415,24 @@ function PaidSearchCard({
         position: 'relative', width: 330, flexShrink: 0,
         background: white, border: `1px solid ${dark8}`, borderRadius: 10,
         overflow: 'hidden', cursor: 'pointer',
-        opacity: dimmed ? 0.65 : 1, transition: 'opacity 0.2s',
+        opacity: cardOpacity, transition: 'opacity 0.2s',
         display: 'flex', flexDirection: 'column',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {showCheckbox && (
+        <span
+          onClick={(e) => e.stopPropagation()}
+          title={isReady ? 'Will be sent to the client' : 'Excluded from the client send'}
+          style={{ position: 'absolute', top: 12, right: 12, zIndex: 6, display: 'inline-flex', alignItems: 'center' }}
+        >
+          <Checkbox checked={isReady} onChange={(next) => (next ? onMarkReady() : onUndo?.())} />
+        </span>
+      )}
+
       {/* Header: campaign goal + target */}
-      <div style={{ padding: '14px 14px 10px' }}>
+      <div style={{ padding: '14px 14px 10px', paddingRight: showCheckbox ? 44 : 14 }}>
         <p style={{ margin: '0 0 2px', fontSize: 12, color: dark60, fontFamily: F, lineHeight: 1.4 }}>
           {post.adCampaignGoal}
         </p>
@@ -445,22 +460,22 @@ function PaidSearchCard({
       {/* Status pill — bottom left */}
       <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 5 }}>
         {mode === 'internal'
-          ? <InternalStatusPill status={internalStatus} />
+          ? (returnedByClient
+              ? <StatusPill status={clientStatus === 'declined' ? 'declined' : 'rejected'} />
+              : approvedByClient
+                ? <StatusPill status="approved" />
+                : <InternalStatusPill status={sent ? 'inClientReview' : internalStatus} />)
           : <StatusPill status={clientStatus ?? 'pending'} viewerMode="client" />}
       </div>
 
       {/* Hover overlay */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', opacity: hovered && !dimmed ? 1 : 0, transition: 'opacity 0.18s', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, pointerEvents: hovered && !dimmed ? 'all' : 'none' }}>
-        <div style={{ transform: hovered && !dimmed ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(4px)', transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', opacity: hoverActive ? 1 : 0, transition: 'opacity 0.18s', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, pointerEvents: hoverActive ? 'all' : 'none' }}>
+        <div style={{ transform: hoverActive ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(4px)', transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           {mode === 'internal' ? (
-            <>
-              <Button variant="green" size="sm" frontIcon={Check2} onClick={(e) => { e.stopPropagation(); onMarkReady(); }}>
-                Ready for Client
-              </Button>
-              <Button variant="secondary" size="sm" frontIcon={Edit3} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-                Edit
-              </Button>
-            </>
+            /* Readiness is the header checkbox now; hover just offers Edit. */
+            <Button variant="secondary" size="sm" frontIcon={Edit3} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+              Edit
+            </Button>
           ) : (
             <>
               {!isApproved && (
@@ -514,18 +529,28 @@ function StarRating({ rating }: { rating: number }) {
 
 // ── Reputation card — full-width row, matches "Needs attention" Figma ────────
 function ReputationCard({
-  post, internalStatus, onMarkReady, onReview,
+  post, internalStatus, onMarkReady, onUndo, onReview,
   mode = 'internal', clientStatus, onApprove, onRemoveApproval,
+  isPast, sent, returnedByClient, approvedByClient, approveLabel = 'Approve', postedMode,
 }: {
   post: Post; internalStatus: InternalStatus;
-  onMarkReady: () => void; onReview: () => void;
+  onMarkReady: () => void; onUndo?: () => void; onReview: () => void;
   mode?: 'internal' | 'client';
   clientStatus?: Status; onApprove?: () => void; onRemoveApproval?: () => void;
+  isPast?: boolean; sent?: boolean; returnedByClient?: boolean; approvedByClient?: boolean;
+  /** Client-mode primary CTA label. DIY reputation uses "Post Reply". */
+  approveLabel?: string;
+  /** DIY reputation: approved replies read as "Posted" (purple pill). */
+  postedMode?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const isReady    = internalStatus === 'readyForClient';
   const isApproved = clientStatus === 'approved';
-  const dimmed     = mode === 'client' ? isApproved : isReady;
+  const dimmed     = mode === 'client' ? isApproved : false;
+  const cardOpacity = mode === 'client' ? (isApproved ? 0.65 : 1) : (sent ? 0.4 : 1);
+  // Per-creative checkbox controls inclusion in the client send (internal only).
+  const showCheckbox = mode === 'internal' && !isPast && !returnedByClient && !approvedByClient && !sent;
+  const hoverActive = hovered && !dimmed && !sent;
 
   return (
     <div
@@ -533,17 +558,26 @@ function ReputationCard({
         position: 'relative', width: 330, flexShrink: 0,
         background: white, border: `1px solid ${dark8}`, borderRadius: 10,
         overflow: 'hidden', cursor: 'pointer',
-        opacity: dimmed ? 0.65 : 1, transition: 'opacity 0.2s',
+        opacity: cardOpacity, transition: 'opacity 0.2s',
         display: 'flex', flexDirection: 'column',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Header: source badge + time */}
+      {/* Header: source badge + time + per-creative checkbox */}
       <div style={{ padding: '12px 12px 8px', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         <SourceBadge source={post.reputationSource} />
         {post.reputationRating !== undefined && <StarRating rating={post.reputationRating} />}
         <span style={{ fontSize: 11, color: dark40, fontFamily: F, marginLeft: 'auto' }}>{post.timeAgo}</span>
+        {showCheckbox && (
+          <span
+            onClick={(e) => e.stopPropagation()}
+            title={isReady ? 'Will be sent to the client' : 'Excluded from the client send'}
+            style={{ display: 'inline-flex', alignItems: 'center', zIndex: 6 }}
+          >
+            <Checkbox checked={isReady} onChange={(next) => (next ? onMarkReady() : onUndo?.())} />
+          </span>
+        )}
       </div>
 
       {/* Handle */}
@@ -586,8 +620,12 @@ function ReputationCard({
       {/* Status pill — bottom left */}
       <div style={{ position: 'absolute', bottom: 10, left: 12, zIndex: 5 }}>
         {mode === 'internal'
-          ? <InternalStatusPill status={internalStatus} />
-          : <StatusPill status={clientStatus ?? 'pending'} viewerMode="client" />}
+          ? (returnedByClient
+              ? <StatusPill status={clientStatus === 'declined' ? 'declined' : 'rejected'} />
+              : approvedByClient
+                ? <StatusPill status="approved" />
+                : <InternalStatusPill status={sent ? 'inClientReview' : internalStatus} />)
+          : <StatusPill status={clientStatus ?? 'pending'} viewerMode="client" postedWhenApproved={postedMode} />}
       </div>
 
       {/* Confidence pill — bottom right (internal mode only) */}
@@ -600,22 +638,18 @@ function ReputationCard({
       )}
 
       {/* Hover overlay */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', opacity: hovered ? 1 : 0, transition: 'opacity 0.18s', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, pointerEvents: hovered ? 'all' : 'none' }}>
-        <div style={{ transform: hovered ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(4px)', transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', opacity: hoverActive ? 1 : 0, transition: 'opacity 0.18s', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, pointerEvents: hoverActive ? 'all' : 'none' }}>
+        <div style={{ transform: hoverActive ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(4px)', transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           {mode === 'internal' ? (
-            <>
-              <Button variant="green" size="sm" frontIcon={Check2} onClick={(e) => { e.stopPropagation(); onMarkReady(); }}>
-                Ready for Client
-              </Button>
-              <Button variant="secondary" size="sm" frontIcon={Edit3} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-                Edit
-              </Button>
-            </>
+            /* Readiness is the header checkbox now; hover just offers Edit. */
+            <Button variant="secondary" size="sm" frontIcon={Edit3} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+              Edit
+            </Button>
           ) : (
             <>
               {!isApproved && (
                 <Button variant="green" size="sm" frontIcon={Check2} onClick={(e) => { e.stopPropagation(); onApprove?.(); }}>
-                  Approve
+                  {approveLabel}
                 </Button>
               )}
               {isApproved && (
@@ -636,10 +670,14 @@ function ReputationCard({
 
 // ── Content card — 245×378px, dark-2 bg, Figma spec ─────────────────────────
 function ContentCard({
-  post, status, dontPostReasons, resubmitNote, isPast, onApprove, onRemoveApproval, onReview,
+  post, status, dontPostReasons, resubmitNote, isPast, onApprove, onRemoveApproval, onReview, approveLabel, postedMode,
 }: {
   post: Post; status: Status; dontPostReasons?: string[]; resubmitNote?: string; isPast?: boolean;
   onApprove: () => void; onRemoveApproval: () => void; onReview: () => void;
+  /** Client-mode primary CTA label override (e.g. DIY reputation → "Post Reply"). */
+  approveLabel?: string;
+  /** DIY reputation: approved replies read as "Posted". */
+  postedMode?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const isApproved = status === 'approved';
@@ -685,6 +723,8 @@ function ContentCard({
         clientStatus={status}
         onApprove={onApprove}
         onRemoveApproval={onRemoveApproval}
+        approveLabel={approveLabel}
+        postedMode={postedMode}
       />
     );
   }
@@ -864,7 +904,7 @@ function ContentCard({
 
 // ── Campaign section ──────────────────────────────────────────────────────────
 function CampaignSection({
-  campaign, statuses, dontPostReasons, resubmitNotes, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast,
+  campaign, statuses, dontPostReasons, resubmitNotes, onApprove, onRemoveApproval, onReview, onApproveAll, justCompleted, defaultCollapsed, isPast, filterActive, message, approveLabel, approveAllLabel, postedMode,
 }: {
   campaign: Campaign;
   statuses: Record<number, Status>;
@@ -877,8 +917,19 @@ function CampaignSection({
   justCompleted?: boolean;
   defaultCollapsed?: boolean;
   isPast?: boolean;
+  /** A filter is active — force-expand so matching content is revealed. */
+  filterActive?: boolean;
+  /** Cover note the AM sent with the campaign — shown under the name (DFY). */
+  message?: string;
+  /** Per-card CTA label override (DIY reputation → "Post Reply"). */
+  approveLabel?: string;
+  /** Bulk CTA label override (DIY reputation → "Post All"). */
+  approveAllLabel?: string;
+  /** DIY reputation: the approved section + pills read as "Posted". */
+  postedMode?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
+  const isCollapsed = filterActive ? false : collapsed;
   const [animState, setAnimState] = useState<'idle' | 'animating' | 'collapsed'>('idle');
   const [approvedSectionCollapsed, setApprovedSectionCollapsed] = useState(false);
 
@@ -913,9 +964,9 @@ function CampaignSection({
           <button
             onClick={() => setCollapsed(c => !c)}
             style={{ display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20, border:'none', background:'transparent', cursor:'pointer', padding:0, flexShrink:0 }}
-            aria-label={collapsed ? 'Expand campaign' : 'Collapse campaign'}
+            aria-label={isCollapsed ? 'Expand campaign' : 'Collapse campaign'}
           >
-            {collapsed
+            {isCollapsed
               ? <ChevronRight size={16} color={dark40} />
               : <ChevronDown  size={16} color={dark40} />}
           </button>
@@ -972,7 +1023,7 @@ function CampaignSection({
                   }}
                 >
                   <ApprovalsIcon size={15} color={dark90} />
-                  Approve All
+                  {approveAllLabel ?? 'Approve All'}
                 </button>
               )}
             </>
@@ -980,8 +1031,16 @@ function CampaignSection({
         </div>
       </div>
 
+      {/* AM cover note sent with the campaign (DFY) */}
+      {message && !isCollapsed && (
+        <div style={{ background:dark2, border:`1px solid ${dark8}`, borderRadius:10, padding:'11px 14px' }}>
+          <span style={{ fontSize:12, color:dark40, fontFamily:F, display:'block', marginBottom:3 }}>Note from your Blaze team</span>
+          <p style={{ margin:0, fontSize:14, color:dark80, fontFamily:F, lineHeight:1.55, whiteSpace:'pre-wrap' }}>{message}</p>
+        </div>
+      )}
+
       {/* ── Cards ── */}
-      {!collapsed && (
+      {!isCollapsed && (
         <div style={{
           display:'flex', flexDirection:'column', gap:18,
           opacity:   animState === 'animating' ? 0 : 1,
@@ -1005,6 +1064,8 @@ function CampaignSection({
                   onApprove={() => onApprove(post.id)}
                   onRemoveApproval={() => onRemoveApproval(post.id)}
                   onReview={() => onReview(post.id)}
+                  approveLabel={approveLabel}
+                  postedMode={postedMode}
                 />
               ))}
             </div>
@@ -1022,6 +1083,8 @@ function CampaignSection({
                       onApprove={() => onApprove(post.id)}
                       onRemoveApproval={() => onRemoveApproval(post.id)}
                       onReview={() => onReview(post.id)}
+                      approveLabel={approveLabel}
+                      postedMode={postedMode}
                     />
                   ))}
                 </div>
@@ -1038,6 +1101,8 @@ function CampaignSection({
                           onApprove={() => onApprove(post.id)}
                           onRemoveApproval={() => onRemoveApproval(post.id)}
                           onReview={() => onReview(post.id)}
+                          approveLabel={approveLabel}
+                          postedMode={postedMode}
                         />
                       ))}
                     </div>
@@ -1052,11 +1117,11 @@ function CampaignSection({
                         style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
                       >
                         <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
-                          <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
-                          <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <circle cx="12" cy="12" r="9" stroke={postedMode ? purple : green} strokeWidth="1.5"/>
+                          <path d="M8.5 12L11 14.5L15.5 9.5" stroke={postedMode ? purple : green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
-                          Approved ({approved.length})
+                        <span style={{ fontSize:12, fontWeight:500, color:postedMode ? purple : green, fontFamily:F, whiteSpace:'nowrap' }}>
+                          {postedMode ? 'Posted' : 'Approved'} ({approved.length})
                         </span>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                           style={{ transform: approvedSectionCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
@@ -1073,6 +1138,8 @@ function CampaignSection({
                             onApprove={() => onApprove(post.id)}
                             onRemoveApproval={() => onRemoveApproval(post.id)}
                             onReview={() => onReview(post.id)}
+                            approveLabel={approveLabel}
+                            postedMode={postedMode}
                           />
                         ))}
                       </div>
@@ -1392,27 +1459,31 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (re
 // ── Content review page (full-page overlay) ───────────────────────────────────
 type CommentMsg = { id: number; author: 'client' | 'staff'; text: string; time: string; system?: boolean };
 function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
-  mode, internalStatus, onMarkReady, onUndoReady, onResubmit, onRequestChanges, onDecline, dontPostReasons, resubmitNotes, isPast,
+  mode, audience = 'dfy', internalStatus, sentToClient, onMarkReady, onUndoReady, onResubmit, onRequestChanges, onDecline, dontPostReasons, resubmitNotes, thread, isPast,
 }: {
   post: Post; status: Status;
   allPosts: Post[]; allStatuses: Record<number, Status>;
   onClose: () => void; onApprove: () => void; onRemoveApproval: () => void;
   onDontPost: (reasons: string[]) => void; onNavigate: (id: number) => void;
   mode?: 'internal' | 'client';
+  audience?: 'dfy' | 'diy';
   internalStatus?: InternalStatus;
   onMarkReady?: () => void;
   onUndoReady?: () => void;
+  sentToClient?: boolean;
   onResubmit?: (note: string) => void;
   onRequestChanges?: (text: string) => void;
   onDecline?: (text: string) => void;
   dontPostReasons?: Record<number, string[]>;
   resubmitNotes?: Record<number, string>;
+  /** Shared per-post conversation log — single source of truth for both staff and client. */
+  thread: CommentMsg[];
   isPast?: boolean;
 }) {
   const isReturned = status === 'rejected' || status === 'declined';
   const isDeclined = status === 'declined';
   // Posts with an existing conversation open straight into the Feedback panel
-  const hasThread = (dontPostReasons?.[post.id]?.length ?? 0) > 0 || resubmitNotes?.[post.id] !== undefined;
+  const hasThread = thread.length > 0;
   // Staff post sent to the client and awaiting their action — locked (no edit tools/tab)
   const isAwaitingClient = mode === 'internal' && internalStatus === 'readyForClient' && status === 'pending';
   // The right panel stays open at all times in the content preview
@@ -1423,54 +1494,45 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
   const [feedbackMode, setFeedbackMode] = useState<'request' | 'decline'>('request');
   const CAPTION_LIMIT = 100;
   const { openModal } = useModals();
-  const handleDontPost = () => openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
+  // DIY skips the feedback modal entirely — Don't Post just drafts the post.
+  const handleDontPost = () =>
+    audience === 'diy'
+      ? onDontPost([])
+      : openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
 
   const isApproved = status === 'approved';
   const isInternal = mode === 'internal';
+  const isDiy = audience === 'diy';
+  // DIY self-serve: a left assistant panel instead of the client↔staff feedback thread.
+  const [chatInput, setChatInput] = useState('');
+  const diySuggestions = [
+    { emoji: '🖼️', label: 'Change photo content', detail: '"add people into the background to fill the scene"' },
+    { emoji: '🖼️', label: 'Adjust background', detail: '"replace the background with a modern office"' },
+    { emoji: '✏️', label: 'Change text overlay', detail: '"make the headline bigger and move it to the top"' },
+    { emoji: '🎨', label: 'Modify colors', detail: '"make the color scheme more vibrant"' },
+    { emoji: '🏷️', label: 'Modify branding', detail: '"add my logo in the bottom right corner"' },
+  ];
 
-  // Conversation thread — seeded from real client feedback + staff resubmit notes, extended locally
-  const seedThread = (): CommentMsg[] => {
-    const msgs: CommentMsg[] = [];
-    const fb = dontPostReasons?.[post.id];
-    if (fb && fb.length) msgs.push({ id: 1, author: 'client', text: fb.join('\n'), time: '2 days ago' });
-    const note = resubmitNotes?.[post.id];
-    if (note !== undefined) msgs.push({ id: 2, author: 'staff', text: note || 'Resubmitted the post with the requested updates.', time: '1 day ago' });
-    return msgs;
-  };
-  const [thread, setThread] = useState<CommentMsg[]>(seedThread);
+  // Conversation thread is owned by the parent (a per-post log shared by staff +
+  // client) so every message shows in order regardless of who opens the review.
   useEffect(() => {
-    setThread(seedThread());
     // Panel stays open; clients default to Feedback, staff to Feedback when there's a thread
     setRightTab(mode !== 'internal' || (hasThread && status !== 'approved') ? 'comment' : 'edit');
   }, [post.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openCommentMode = () => setRightTab('comment');
   const openEditMode = () => setRightTab('edit');
-  const sendComment = () => {
-    if (!commentInput.trim()) return;
-    const text = commentInput.trim();
-    setThread(t => [...t, { id: t.length + 100, author: isInternal ? 'staff' : 'client', text, time: 'just now' }]);
-    if (!isInternal) onRequestChanges?.(text);
-    setCommentInput('');
-  };
-  // Client: submit feedback — either request changes or decline
+  // Client: submit feedback — either request changes or decline. The parent
+  // appends the message to the shared thread and updates status.
   const submitClientFeedback = () => {
     const text = commentInput.trim();
-    const label = feedbackMode === 'decline' ? 'Declined this post.' : 'Requested changes.';
-    setThread(t => [...t, { id: t.length + 100, author: 'client', text: text || label, time: 'just now' }]);
     if (feedbackMode === 'decline') onDecline?.(text); else onRequestChanges?.(text);
     setCommentInput('');
   };
-  // Staff: resubmit to client, using whatever was typed as the note. Stays on the preview.
+  // Staff: resubmit to client, using whatever was typed as the note. Stays on the
+  // preview. The parent appends the staff note + a system line to the thread.
   const resubmitWithComment = () => {
-    const note = commentInput.trim();
-    setThread(t => {
-      const next = [...t];
-      if (note) next.push({ id: t.length + 100, author: 'staff', text: note, time: 'just now' });
-      next.push({ id: t.length + 200, author: 'staff', text: 'V2 submitted to client', time: 'just now', system: true });
-      return next;
-    });
-    onResubmit?.(note);
+    onResubmit?.(commentInput.trim());
     setCommentInput('');
   };
   const isReadyForClient = internalStatus === 'readyForClient';
@@ -1503,7 +1565,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               if (isPast) return <StatusPill status={status} isPast dontPostReasons={dontPostReasons?.[post.id]} />;
               if (isReturned && isReadyForClient) return <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} />;
               if (status === 'approved' && isReadyForClient) return <StatusPill status="approved" />;
-              return <InternalStatusPill status={internalStatus ?? 'internalReview'} />;
+              return <InternalStatusPill status={sentToClient ? 'inClientReview' : (internalStatus ?? 'internalReview')} />;
             })()
             : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} resubmitNote={resubmitNotes?.[post.id]} isPast={isPast} tooltipPlacement="below" viewerMode="client" />}
           <Button variant="ghost" size="sm" square>
@@ -1526,7 +1588,8 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
             </Button>
           )}
           {isInternal ? (
-            isReturned ? null : isReadyForClient ? (
+            // Once sent (in client review) the handoff can't be pulled back — no Undo.
+            isReturned || sentToClient ? null : isReadyForClient ? (
               <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onUndoReady?.(); }}>
                 Undo
               </Button>
@@ -1534,6 +1597,24 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onMarkReady?.(); }}>
                 Ready for Client
               </Button>
+            )
+          ) : isDiy ? (
+            /* DIY self-serve: Don't Post (→ Draft) + Approve (→ autopublish). */
+            isApproved ? (
+              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
+                Remove approval
+              </Button>
+            ) : (
+              <>
+                {status !== 'draft' && (
+                  <Button variant="secondary" size="sm" onPress={handleDontPost}>
+                    Don't Post
+                  </Button>
+                )}
+                <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
+                  {status === 'draft' ? 'Approve & Schedule' : 'Approve'}
+                </Button>
+              </>
             )
           ) : (
             isApproved ? (
@@ -1570,10 +1651,40 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
       {/* ── Body ── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
-        {/* Center — post preview */}
+        {/* DIY — left assistant panel (replaces the DFY feedback thread) */}
+        {isDiy && (
+          <div style={{ width: 280, flexShrink: 0, background: white, borderRight: `1px solid ${dark8}`, display: 'flex', flexDirection: 'column', padding: '20px 20px 0', overflowY: 'auto' }}>
+            <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+              Blaze can improve this post by:
+            </p>
+            <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {diySuggestions.map((s, i) => (
+                <li key={i} style={{ fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+                  <span style={{ marginRight: 4 }}>{s.emoji}</span>
+                  <strong style={{ fontWeight: 500, color: dark90 }}>{s.label}</strong>{': '}
+                  <span style={{ color: dark60 }}>{s.detail}</span>
+                </li>
+              ))}
+            </ol>
+            <p style={{ margin: '20px 0 12px', fontSize: 13, color: dark80, fontFamily: F }}>What would you like to do?</p>
+            <div style={{ flex: 1 }} />
+            <div style={{ borderTop: `1px solid ${dark8}`, paddingTop: 12, paddingBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${dark8}`, borderRadius: 8, padding: '8px 10px', background: white }}>
+                <input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Ask Blaze to change something..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, color: dark90, fontFamily: F, background: 'transparent' }} />
+                <button style={{ width: 26, height: 26, borderRadius: 99, border: 'none', background: dark90, color: white, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Center — post preview (pad right by the 300px overlay panel width to
+            center the card in the visible band between the side panels) */}
         <div style={{
           flex: 1, position: 'relative', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24,
+          paddingRight: focusMode ? 24 : 300,
           overflowY: 'auto',
         }}>
 
@@ -1679,7 +1790,8 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           transition: 'transform 0.3s ease',
         }}>
           <div style={{ width: 300, height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
-            {/* Segment control: Feedback / Edit */}
+            {/* Segment control: Feedback / Edit — DFY only. DIY has no feedback thread. */}
+            {!isDiy && (
             <div style={{ padding: '12px 16px', flexShrink: 0, borderBottom: `1px solid ${dark8}` }}>
               <div style={{ display: 'flex', background: dark4, borderRadius: 8, padding: 2 }}>
                 {([['comment', 'Feedback', MessageChat01], ['edit', 'Edit', Edit3]] as const).map(([t, label, TabIcon]) => {
@@ -1699,14 +1811,16 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
                 })}
               </div>
             </div>
+            )}
 
-            {rightTab === 'edit' ? (
+            {(isDiy || rightTab === 'edit') ? (
             <div style={{ flex: 1, padding: '20px 16px', overflowY: 'auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Posting on */}
             <div>
               <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Posting on</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{post.date}</p>
+                {/* DIY drafts aren't scheduled yet — prompt to schedule instead of showing a date. */}
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{isDiy && status === 'draft' ? 'Schedule Post' : post.date}</p>
                 <button style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
@@ -1945,7 +2059,8 @@ const CONTENT_TYPES = [
   { key: 'paid-social',label: 'Paid Search',                 desc: 'Google Search ad copy before going live on search networks.',        defaultOn: true },
 ];
 
-function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
+function TurnOffConfirmModal({ close, onConfirm, audience = 'dfy' }: { close: () => void; onConfirm: () => void; audience?: 'dfy' | 'diy' }) {
+  const isDiy = audience === 'diy';
   return (
     <Modal.Root size="sm" onClose={close}>
       <Modal.Header onClose={close}>
@@ -1954,7 +2069,9 @@ function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfir
       <Modal.Content>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
-            All content types will bypass client review and publish automatically after agent review.
+            {isDiy
+              ? 'All content types will publish automatically as soon as they’re generated — nothing will wait for your sign-off.'
+              : 'All content types will bypass client review and publish automatically after agent review.'}
           </p>
           <div style={{
             display: 'flex', alignItems: 'flex-start', gap: 10,
@@ -1963,7 +2080,9 @@ function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfir
           }}>
             <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
             <p style={{ margin: 0, fontSize: 13, color: '#7a4800', fontFamily: F, lineHeight: 1.55 }}>
-              Any content currently awaiting client approval will be auto-approved and scheduled to post.
+              {isDiy
+                ? 'Any content currently awaiting your approval will be auto-approved and scheduled to post.'
+                : 'Any content currently awaiting client approval will be auto-approved and scheduled to post.'}
             </p>
           </div>
         </div>
@@ -1980,16 +2099,15 @@ function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfir
   );
 }
 
-function ApprovalSettingsModal({ close }: { close: () => void }) {
+function ApprovalSettingsModal({ close, audience = 'dfy' }: { close: () => void; audience?: 'dfy' | 'diy' }) {
   const { openModal } = useModals();
-  const [approvalsOn, setApprovalsOn] = useState(true);
-  const [types, setTypes] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(CONTENT_TYPES.map(t => [t.key, t.defaultOn]))
-  );
+  const isDiy = audience === 'diy';
+  // Single source of truth — shared with surfaces like SEO/AEO "Blog post settings".
+  const { approvalsOn, setApprovalsOn, requiresApproval: types, setFeature } = useApprovalSettings();
 
   const handleMasterToggle = (val: boolean) => {
     if (!val) {
-      openModal(TurnOffConfirmModal, { onConfirm: () => setApprovalsOn(false) });
+      openModal(TurnOffConfirmModal, { audience, onConfirm: () => setApprovalsOn(false) });
     } else {
       setApprovalsOn(true);
     }
@@ -2003,7 +2121,9 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Approval Settings</span>
           <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>
-            Control which content types require client sign-off before publishing.
+            {isDiy
+              ? 'Choose which content types need your sign-off before they go live.'
+              : 'Control which content types require client sign-off before publishing.'}
           </span>
         </div>
       </Modal.Header>
@@ -2014,7 +2134,9 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
             <div>
               <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>Approvals</p>
               <p style={{ margin: 0, fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.55 }}>
-                Require client sign-off before content goes live. When off, agent-reviewed content publishes automatically.
+                {isDiy
+                  ? 'Require my sign-off before content goes live. When off, content publishes automatically as soon as it’s generated.'
+                  : 'Require client sign-off before content goes live. When off, agent-reviewed content publishes automatically.'}
               </p>
             </div>
             <Toggle on={approvalsOn} onChange={handleMasterToggle} />
@@ -2047,10 +2169,12 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
                         color: types[ct.key] ? green : dark60,
                         border: `1px solid ${types[ct.key] ? 'rgba(32,161,79,0.25)' : dark15}`,
                       }}>
-                        {types[ct.key] ? 'Client approval required' : 'Agent review only'}
+                        {types[ct.key]
+                          ? (isDiy ? 'Approval required' : 'Client approval required')
+                          : (isDiy ? 'Auto-publishes' : 'Agent review only')}
                       </span>
                     </div>
-                    <Toggle on={types[ct.key]} onChange={v => setTypes(prev => ({ ...prev, [ct.key]: v }))} />
+                    <Toggle on={types[ct.key]} onChange={v => setFeature(ct.key, v)} />
                   </div>
                 ))}
               </div>
@@ -2063,7 +2187,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
         <Modal.FooterContent slot="left">
           <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>
             {approvalsOn
-              ? `${clientRequiredCount} of ${CONTENT_TYPES.length} content types require client approval`
+              ? `${clientRequiredCount} of ${CONTENT_TYPES.length} content types require ${isDiy ? 'your' : 'client'} approval`
               : 'Approvals disabled — all content publishes automatically'}
           </span>
         </Modal.FooterContent>
@@ -2149,9 +2273,14 @@ function CelebrationModal({ close, campaignName = 'Campaign', postCount = 0, dat
 // ── Internal status pill ──────────────────────────────────────────────────────
 type InternalStatus = 'internalReview' | 'readyForClient';
 
-function InternalStatusPill({ status }: { status: InternalStatus }) {
-  const cfg = status === 'readyForClient'
+// `inClientReview` = sent to the client (distinct from readyForClient = checked
+// but not yet sent).
+type InternalPillState = 'internalReview' | 'readyForClient' | 'inClientReview';
+function InternalStatusPill({ status }: { status: InternalPillState }) {
+  const cfg = status === 'inClientReview'
     ? { bg: white, overlay: 'rgba(32,161,79,0.1)', border: 'rgba(32,161,79,0.25)', color: green, label: 'In client review' }
+    : status === 'readyForClient'
+    ? { bg: white, overlay: 'rgba(1,121,207,0.1)', border: 'rgba(1,121,207,0.25)', color: '#0179cf', label: 'Ready for Client' }
     : { bg: white, overlay: 'rgba(106,0,255,0.08)', border: 'rgba(106,0,255,0.2)', color: '#6a00ff', label: 'Internal Review' };
   return (
     <span style={{
@@ -2269,7 +2398,7 @@ function LocalSEOCard({
 // ── Internal content card ─────────────────────────────────────────────────────
 function InternalCard({
   post, internalStatus, onMarkReady, onUndo, onReview, onEdit, isPast,
-  returnedByClient, approvedByClient, dontPostReasons, onResubmit, pastClientStatus, clientStatus,
+  returnedByClient, approvedByClient, dontPostReasons, onResubmit, pastClientStatus, clientStatus, sent,
 }: {
   post: Post; internalStatus: InternalStatus; isPast?: boolean;
   onMarkReady: () => void; onUndo: () => void; onReview: () => void; onEdit?: () => void;
@@ -2279,6 +2408,8 @@ function InternalCard({
   onResubmit?: (note: string) => void;
   pastClientStatus?: Status;
   clientStatus?: Status;
+  /** Sent to client (→ "In client review"): dim + drop the checkbox. */
+  sent?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const isReady = internalStatus === 'readyForClient';
@@ -2291,7 +2422,13 @@ function InternalCard({
         post={post}
         internalStatus={internalStatus}
         onMarkReady={onMarkReady}
+        onUndo={onUndo}
         onReview={onEdit ?? onReview}
+        isPast={isPast}
+        sent={sent}
+        returnedByClient={returnedByClient}
+        approvedByClient={approvedByClient}
+        clientStatus={clientStatus}
       />
     );
   }
@@ -2303,7 +2440,13 @@ function InternalCard({
         post={post}
         internalStatus={internalStatus}
         onMarkReady={onMarkReady}
+        onUndo={onUndo}
         onReview={onEdit ?? onReview}
+        isPast={isPast}
+        sent={sent}
+        returnedByClient={returnedByClient}
+        approvedByClient={approvedByClient}
+        clientStatus={clientStatus}
       />
     );
   }
@@ -2333,17 +2476,26 @@ function InternalCard({
         position:'relative', width:245, height:CARD_H, flexShrink:0,
         background:dark2, border:`1px solid ${dark4}`, borderRadius:10,
         overflow:'hidden', cursor:'pointer',
-        opacity: returnedByClient ? 1 : isReady ? 0.65 : 1, transition:'opacity 0.2s',
+        opacity: sent ? 0.4 : 1, transition:'opacity 0.2s',
         display:'flex', flexDirection:'column',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Header */}
-      <div style={{ height:HEADER_H, display:'flex', alignItems:'center', gap:4, padding:'12px 12px 2px', flexShrink:0 }}>
+      {/* Header — per-creative checkbox controls inclusion in the client send */}
+      <div style={{ height:HEADER_H, display:'flex', alignItems:'center', gap:6, padding:'12px 12px 2px', flexShrink:0 }}>
         <TypeIcon type={post.type} size={14} />
         <span style={{ fontSize:12, color:dark60, fontFamily:F, flex:1, letterSpacing:'0.24px' }}>{TYPE_LABEL[post.type]}</span>
         <span style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', whiteSpace:'nowrap' }}>{post.date}</span>
+        {!isPast && !returnedByClient && !approvedByClient && !sent && (
+          <span
+            onClick={(e) => e.stopPropagation()}
+            title={isReady ? 'Will be sent to the client' : 'Excluded from the client send'}
+            style={{ position:'relative', zIndex:6, display:'inline-flex', alignItems:'center' }}
+          >
+            <Checkbox checked={isReady} onChange={(next) => (next ? onMarkReady() : onUndo())} />
+          </span>
+        )}
       </div>
 
       {isBlog ? (
@@ -2419,7 +2571,7 @@ function InternalCard({
             ? <StatusPill status={clientStatus === 'declined' ? 'declined' : 'rejected'} dontPostReasons={dontPostReasons} />
             : approvedByClient
               ? <StatusPill status="approved" />
-              : <InternalStatusPill status={internalStatus} />}
+              : <InternalStatusPill status={sent ? 'inClientReview' : internalStatus} />}
       </div>
 
       {/* Hover overlay */}
@@ -2439,19 +2591,10 @@ function InternalCard({
               Review
             </Button>
           ) : (
-            <>
-              <Button
-                variant={isReady ? 'secondary' : 'green'}
-                size="sm"
-                frontIcon={isReady ? ApprovalsIcon : Check2}
-                onClick={(e) => { e.stopPropagation(); isReady ? onUndo() : onMarkReady(); }}
-              >
-                {isReady ? 'Undo' : 'Ready for Client'}
-              </Button>
-              <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-                Review
-              </Button>
-            </>
+            /* Readiness is the header checkbox now; hover just offers Review. */
+            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+              Review
+            </Button>
           )}
         </div>
       </div>
@@ -2461,25 +2604,28 @@ function InternalCard({
 
 // ── Internal campaign section (proper component so useState works) ───────────
 function InternalCampaignSection({
-  campaign, internalStatuses, statuses, dontPostReasons, today, isPast: isPastProp,
-  onMarkReady, onUndo, onMarkAllReady, onReview, onEdit, onResubmit,
-  defaultCollapsed,
+  campaign, internalStatuses, statuses, dontPostReasons, sentPosts, today, isPast: isPastProp,
+  onMarkReady, onUndo, onSendToClient, onReview, onEdit, onResubmit,
+  defaultCollapsed, filterActive,
 }: {
   campaign: Campaign;
   internalStatuses: Record<number, InternalStatus>;
   statuses: Record<number, Status>;
   dontPostReasons: Record<number, string[]>;
+  sentPosts: Record<number, boolean>;
   today: string;
   isPast?: boolean;
   onMarkReady: (id: number) => void;
   onUndo: (id: number) => void;
-  onMarkAllReady: () => void;
+  onSendToClient: () => void;
   onReview: (post: Post) => void;
   onEdit: (post: Post) => void;
   onResubmit: (id: number, note: string) => void;
   defaultCollapsed?: boolean;
+  filterActive?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
+  const isCollapsed = filterActive ? false : collapsed;
   const [returnedCollapsed, setReturnedCollapsed] = useState(false);
   const [approvedCollapsed, setApprovedCollapsed] = useState(false);
 
@@ -2489,9 +2635,9 @@ function InternalCampaignSection({
   const returnedPosts      = posts.filter(isReturned);
   const approvedByClient   = posts.filter(isApproved);
   const activePosts        = posts.filter(p => !isReturned(p) && !isApproved(p));
-  const readyCount  = activePosts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
-  const totalCount  = activePosts.length;
-  const allReady    = totalCount > 0 && readyCount === totalCount;
+  // Checked creatives not yet sent — Send to Client shows only when there's
+  // something left to send.
+  const unsentReadyCount = activePosts.filter(p => internalStatuses[p.id] === 'readyForClient' && !sentPosts[p.id]).length;
   const isPastCamp  = isPastProp ?? campaign.endDate < today;
   const cardGrid = (children: React.ReactNode) =>
     <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>{children}</div>;
@@ -2505,9 +2651,9 @@ function InternalCampaignSection({
           <button
             onClick={() => setCollapsed(c => !c)}
             style={{ display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20, border:'none', background:'transparent', cursor:'pointer', padding:0, flexShrink:0 }}
-            aria-label={collapsed ? 'Expand campaign' : 'Collapse campaign'}
+            aria-label={isCollapsed ? 'Expand campaign' : 'Collapse campaign'}
           >
-            {collapsed ? <ChevronRight size={16} color={dark40} /> : <ChevronDown size={16} color={dark40} />}
+            {isCollapsed ? <ChevronRight size={16} color={dark40} /> : <ChevronDown size={16} color={dark40} />}
           </button>
           <span style={{ fontSize:18, fontWeight:400, color:dark80, fontFamily:F, letterSpacing:'-0.36px' }}>{campaign.name}</span>
           <span style={{ fontSize:14, color:dark60, fontFamily:F }}>{campaign.dateRange}</span>
@@ -2558,15 +2704,12 @@ function InternalCampaignSection({
                   </div>
                 )}
 
-                {/* All Ready for Client */}
-                {!allReady && totalCount > 0 && (
+                {/* Send to Client — opens an editable cover note. Hidden once
+                    every checked creative is already sent (in client review). */}
+                {unsentReadyCount > 0 && (
                   <>
                     <div style={{ width:1, height:16, background:dark8 }} />
-                    <button onClick={onMarkAllReady}
-                      style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 8px', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:400, color:dark90, fontFamily:F }}>
-                      <ApprovalsIcon size={15} color={dark90} />
-                      All Ready for Client
-                    </button>
+                    <Button variant="secondary" size="sm" onPress={onSendToClient}>Send to Client</Button>
                   </>
                 )}
               </>
@@ -2576,7 +2719,7 @@ function InternalCampaignSection({
       </div>
 
       {/* Cards grid */}
-      {!collapsed && (
+      {!isCollapsed && (
         <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
           {/* Past campaigns — flat grid with Posted/Don't Post/Failed */}
@@ -2601,6 +2744,7 @@ function InternalCampaignSection({
             <InternalCard
               key={post.id} post={post}
               internalStatus={internalStatuses[post.id]}
+              sent={sentPosts[post.id]}
               onMarkReady={() => onMarkReady(post.id)}
               onUndo={() => onUndo(post.id)}
               onReview={() => onReview(post)}
@@ -2717,83 +2861,128 @@ function FilterMenu({
     return () => document.removeEventListener('mousedown', onDoc);
   }, [open]);
 
-  const typeLabel = typeOptions.find(o => o.value === typeValue)?.label ?? 'All types';
-  const statusLabel = statusOptions.find(o => o.value === statusValue)?.label ?? 'All';
+  const typeLabel = typeOptions.find(o => o.value === typeValue)?.label;
+  const statusLabel = statusOptions.find(o => o.value === statusValue)?.label;
   const typeActive = typeValue !== 'all';
   const statusActive = statusValue !== null;
-  const activeCount = (typeActive ? 1 : 0) + (statusActive ? 1 : 0);
-  const summary = activeCount === 0
-    ? 'Filter'
-    : [typeActive ? typeLabel : null, statusActive ? statusLabel : null].filter(Boolean).join(' · ');
+  const active = typeActive || statusActive;
+  // Attention dot on the icon: returned-by-client content (DFY only; DIY has no
+  // 'returned' status option, so this stays 0 there).
+  const returnedCount = statusOptions.some(o => o.value === 'returned') ? statusCount('returned') : 0;
 
   const rowStyle = (selected: boolean): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-    padding: '7px 8px', borderRadius: 8, border: 'none',
+    padding: '9px 12px', borderRadius: 8, border: 'none',
     background: selected ? dark4 : 'transparent', cursor: 'pointer',
     fontFamily: F, textAlign: 'left',
   });
   const sectionLabelStyle: React.CSSProperties = {
-    margin: '0 0 2px', padding: '6px 8px 2px', fontSize: 11, color: dark40,
-    fontFamily: F, letterSpacing: '0.22px',
+    margin: '4px 8px 6px', fontSize: 13, color: dark40, fontFamily: F,
   };
   const renderRow = (
     key: string, label: string, selected: boolean, count: number,
     onClick: () => void, redBadge = false,
   ) => (
     <button key={key} onClick={onClick} style={rowStyle(selected)}>
-      <span style={{ fontSize: 14, color: selected ? dark90 : dark80, fontWeight: selected ? 500 : 400, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 15, color: dark90, fontWeight: selected ? 500 : 400, whiteSpace: 'nowrap' }}>{label}</span>
       {redBadge && count > 0
-        ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 99, background: red, color: white, fontSize: 10, fontWeight: 600, padding: '0 5px', lineHeight: 1 }}>{count}</span>
-        : <span style={{ fontSize: 11, color: dark40 }}>{count}</span>}
-      <span style={{ flex: 1 }} />
-      <span style={{ width: 16, height: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: dark90 }}>
-        {selected && <Check2 size={15} />}
-      </span>
+        ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 99, background: red, color: white, fontSize: 11, fontWeight: 600, padding: '0 5px', lineHeight: 1 }}>{count}</span>
+        : <span style={{ fontSize: 14, color: dark40 }}>{count}</span>}
+      {selected && <span style={{ marginLeft: 'auto', display: 'inline-flex', color: dark90 }}><Check2 size={16} /></span>}
     </button>
   );
 
-  return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '7px 12px', borderRadius: 8,
-          border: `1px solid ${open || activeCount ? dark15 : dark8}`,
-          background: white, color: activeCount ? dark90 : dark60,
-          fontSize: 14, fontWeight: activeCount ? 500 : 400, fontFamily: F,
-          cursor: 'pointer', whiteSpace: 'nowrap',
-        }}
-      >
-        <span>{summary}</span>
-        {activeCount > 0 && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 99, background: dark90, color: white, fontSize: 10, fontWeight: 600, padding: '0 5px', lineHeight: 1 }}>{activeCount}</span>
-        )}
-        <ChevronDown />
+  const Chip = ({ label, onClear: onClearChip }: { label: string; onClear: () => void }) => (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 6px 4px 10px', borderRadius: 99, background: dark4, border: `1px solid ${dark8}`, fontSize: 12, color: dark80, fontFamily: F, whiteSpace: 'nowrap' }}>
+      {label}
+      <button onClick={onClearChip} aria-label={`Remove ${label} filter`} style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', padding: 0, color: dark60 }}>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
       </button>
-      {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60,
-          minWidth: 224, background: white, border: `1px solid ${dark8}`,
-          borderRadius: 12, boxShadow: '0 10px 32px rgba(0,0,0,0.14)', padding: 6,
-        }}>
-          <p style={sectionLabelStyle}>Content type</p>
-          {typeOptions.map(o => renderRow(o.value, o.label, o.value === typeValue, typeCount(o.value), () => onTypeChange(o.value)))}
-          <div style={{ height: 1, background: dark8, margin: '6px 4px' }} />
-          <p style={sectionLabelStyle}>Status</p>
-          {statusOptions.map(o => renderRow(o.label, o.label, o.value === statusValue, statusCount(o.value), () => onStatusChange(o.value), o.value === 'returned'))}
-          {activeCount > 0 && (
-            <>
-              <div style={{ height: 1, background: dark8, margin: '6px 4px' }} />
-              <button onClick={onClear} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 8px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: F, color: dark60, fontSize: 14 }}>
-                <span style={{ width: 16, display: 'inline-block' }} />
-                Clear all filters
-              </button>
-            </>
-          )}
-        </div>
-      )}
+    </span>
+  );
+
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+      {/* Active-filter chips (with ✕) sit to the LEFT of the Filter button. */}
+      {typeActive && typeLabel && <Chip label={typeLabel} onClear={() => onTypeChange('all')} />}
+      {statusActive && statusLabel && <Chip label={statusLabel} onClear={() => onStatusChange(null)} />}
+      <div ref={ref} style={{ position: 'relative' }}>
+        <button
+          onClick={() => setOpen(o => !o)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '7px 12px', borderRadius: 8,
+            border: '1px solid transparent',
+            background: open ? dark4 : 'transparent', color: dark90, fontSize: 14, fontWeight: 400, fontFamily: F,
+            cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+        >
+          <span style={{ position: 'relative', display: 'inline-flex' }}>
+            <FilterIcon size={16} />
+            {returnedCount > 0 && (
+              <span style={{ position: 'absolute', top: -2, right: -2, width: 7, height: 7, borderRadius: 99, background: red, border: `1.5px solid ${white}`, boxSizing: 'border-box' }} />
+            )}
+          </span>
+          Filter
+          <ChevronDownLg size={16} color="var(--dark-40)" />
+        </button>
+        {open && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 60,
+            width: 256, maxHeight: '72vh', overflowY: 'auto', background: white, border: `1px solid ${dark8}`,
+            borderRadius: 12, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', padding: 8,
+          }}>
+            <p style={sectionLabelStyle}>Content type</p>
+            {/* Click the selected row again to deselect. No "All" row — use Clear filter. */}
+            {typeOptions.filter(o => o.value !== 'all').map(o => renderRow(o.value, o.label, o.value === typeValue, typeCount(o.value), () => onTypeChange(o.value === typeValue ? 'all' : o.value)))}
+            <div style={{ height: 1, background: dark8, margin: '8px 4px' }} />
+            <p style={sectionLabelStyle}>Status</p>
+            {statusOptions.filter(o => o.value !== null).map(o => renderRow(o.label, o.label, o.value === statusValue, statusCount(o.value), () => onStatusChange(o.value === statusValue ? null : o.value), o.value === 'returned'))}
+            <div style={{ height: 1, background: dark8, margin: '8px 4px' }} />
+            <button
+              onClick={onClear}
+              disabled={!active}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '9px 12px', borderRadius: 8, border: 'none', background: 'transparent', cursor: active ? 'pointer' : 'default', fontFamily: F, fontSize: 14, fontWeight: 500, color: active ? dark90 : dark40 }}
+            >
+              Clear filter
+            </button>
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+// ── Send-to-client cover note ─────────────────────────────────────────────────
+function defaultCampaignMessage(campaignName: string, count: number, dateRange: string) {
+  return `Hi there,\n\nThe ${campaignName} content is ready for your review — ${count} ${count === 1 ? 'piece' : 'pieces'} for ${dateRange}. Approve anything that's good to go, or leave a note on whatever you'd like changed.\n\nThanks!`;
+}
+
+function SendToClientModal({ close, campaignName, count, dateRange, onSend }: { close: () => void; campaignName: string; count: number; dateRange: string; onSend: (message: string) => void }) {
+  const [message, setMessage] = useState(defaultCampaignMessage(campaignName, count, dateRange));
+  return (
+    <Modal.Root size="md" onClose={close}>
+      <Modal.Header title={`Send ${campaignName} to client`} onClose={close} />
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>The client sees this note above the campaign. Adjust it before sending.</span>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            autoFocus
+            style={{ width: '100%', boxSizing: 'border-box', minHeight: 168, resize: 'vertical', border: `1px solid ${dark8}`, borderRadius: 8, padding: '10px 12px', fontFamily: F, fontSize: 14, color: dark90, lineHeight: 1.6, outline: 'none', background: white }}
+          />
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="tertiary" onPress={close}>Cancel</Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" isDisabled={!message.trim()} onPress={() => { onSend(message.trim()); close(); }}>Send to Client</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
   );
 }
 
@@ -2802,7 +2991,12 @@ function ApprovalV2Inner() {
   const allPosts = CAMPAIGNS.flatMap(c => c.posts);
   const today = '2026-06-03';
   const { clientView, setClientView } = useClientView();
-  const tab: 'internal' | 'client' = clientView ? 'client' : 'internal';
+  // DFY = agency pipeline (internal review → client handoff).
+  // DIY = self-serve customer reviews their own generated content directly.
+  const { audience } = useApprovalAudience();
+  const isDiy = audience === 'diy';
+  // DIY collapses to a single self-review view; the AM/Client split is DFY-only.
+  const tab: 'internal' | 'client' = isDiy ? 'client' : (clientView ? 'client' : 'internal');
   const [filterBadge, setFilterBadge] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -2812,7 +3006,9 @@ function ApprovalV2Inner() {
     CAMPAIGNS.forEach(c => {
       const isPast = c.endDate < today;
       c.posts.forEach((p, i) => {
-        initial[p.id] = isPast ? (i % 2 === 0 ? 'readyForClient' : 'internalReview') : 'internalReview';
+        // Per-creative checkboxes start CHECKED — every active creative is in the
+        // client send by default; the AM unchecks to exclude.
+        initial[p.id] = isPast ? (i % 2 === 0 ? 'readyForClient' : 'internalReview') : 'readyForClient';
       });
     });
     return initial;
@@ -2836,14 +3032,42 @@ function ApprovalV2Inner() {
     setShowFeedbackToast(true);
     setTimeout(() => setShowFeedbackToast(false), 3500);
   };
+  // DIY "Don't Post" → drafts the post in place and surfaces an undoable toast.
+  const [draftedToast, setDraftedToast] = useState<number | null>(null);
+  const draftedTimer = useRef<ReturnType<typeof setTimeout>>();
+  const showDraftedToast = (id: number) => {
+    setDraftedToast(id);
+    clearTimeout(draftedTimer.current);
+    draftedTimer.current = setTimeout(() => setDraftedToast(null), 5000);
+  };
+  const undoDraft = (id: number) => {
+    setStatuses(prev => ({ ...prev, [id]: 'pending' }));
+    setDraftedToast(null);
+  };
   const [completingCampaignId, setCompletingCampaignId] = useState<number | null>(null);
   const [dontPostReasons, setDontPostReasons] = useState<Record<number, string[]>>({});
   const [resubmitNotes, setResubmitNotes] = useState<Record<number, string>>({});
+  // Per-post conversation log — the single source shared by staff + client, so
+  // every message (incl. repeat change requests) shows in order on both sides.
+  const [threads, setThreads] = useState<Record<number, CommentMsg[]>>({});
+  const appendMessage = (id: number, msg: { author: 'client' | 'staff'; text: string; system?: boolean }) =>
+    setThreads(prev => {
+      const cur = prev[id] ?? [];
+      return { ...prev, [id]: [...cur, { id: cur.length + 1, time: 'just now', ...msg }] };
+    });
 
   // Display status used by the status filter pills
   const TODAY = '2026-06-03';
   const pastPostIds = new Set(CAMPAIGNS.filter(c => c.endDate < TODAY).flatMap(c => c.posts.map(p => p.id)));
   const getDisplayStatus = (id: number): string => {
+    if (isDiy) {
+      // DIY self-serve: no agency pipeline. Don't Post → Draft; pending → Review.
+      if (statuses[id] === 'draft') return 'draft';
+      if (pastPostIds.has(id)) return statuses[id] === 'approved' ? 'posted' : statuses[id] === 'pending' ? 'failed' : 'draft';
+      if (statuses[id] === 'approved') return 'approved';
+      if (statuses[id] === 'pending') return 'review';
+      return 'draft';
+    }
     if (pastPostIds.has(id)) {
       if (statuses[id] === 'approved') return 'posted';
       if (statuses[id] === 'declined') return 'declined';
@@ -2893,6 +3117,10 @@ function ApprovalV2Inner() {
   const declinePost = (id: number) => {
     setStatuses(prev => ({ ...prev, [id]: 'declined' }));
   };
+  // DIY "Don't Post" sends the generated post back to Draft.
+  const draftPost = (id: number) => {
+    setStatuses(prev => ({ ...prev, [id]: 'draft' }));
+  };
 
   const resubmitPost = (id: number, note: string) => {
     setStatuses(prev => ({ ...prev, [id]: 'pending' }));
@@ -2908,11 +3136,24 @@ function ApprovalV2Inner() {
   const undoReady = (id: number) => {
     setInternalStatuses(prev => ({ ...prev, [id]: 'internalReview' }));
   };
-  const markAllReadyForClient = (campaign: Campaign) => {
-    setInternalStatuses(prev => {
-      const next = { ...prev };
-      campaign.posts.forEach(p => { next[p.id] = 'readyForClient'; });
-      return next;
+  // Cover note the AM sends with each campaign; the client sees it under the name.
+  const [campaignMessages, setCampaignMessages] = useState<Record<number, string>>({});
+  // Creatives actually sent to the client → flips the staff pill to "In client review".
+  const [sentPosts, setSentPosts] = useState<Record<number, boolean>>({});
+  const sendToClient = (campaign: Campaign) => {
+    const count = campaign.posts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
+    openModal(SendToClientModal, {
+      campaignName: campaign.name,
+      count,
+      dateRange: campaign.dateRange,
+      onSend: (message: string) => {
+        setCampaignMessages(prev => ({ ...prev, [campaign.id]: message }));
+        setSentPosts(prev => {
+          const next = { ...prev };
+          campaign.posts.forEach(p => { if (internalStatuses[p.id] === 'readyForClient') next[p.id] = true; });
+          return next;
+        });
+      },
     });
   };
 
@@ -2925,16 +3166,23 @@ function ApprovalV2Inner() {
     });
   };
 
-  // Header title: Approvals + Settings
+  // Header title: just "Approvals" — Settings moves into the right-side group.
   const headerTitle = (
-    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-      <span style={{ fontSize:16, fontWeight:500, color:dark90, fontFamily:F }}>Approvals</span>
-      <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
-    </div>
+    <span style={{ fontSize:16, fontWeight:500, color:dark90, fontFamily:F }}>Approvals</span>
   );
 
   // ── Filter options + counts (consumed by the topbar FilterMenu) ──
-  const STATUS_FILTERS = clientView
+  const STATUS_FILTERS = isDiy
+    ? [
+        // DIY hides the DFY pipeline statuses (internal/in-client review, returned).
+        { label: 'All', value: null },
+        { label: 'Review', value: 'review' },
+        { label: 'Draft', value: 'draft' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Posted', value: 'posted' },
+        { label: 'Failed', value: 'failed' },
+      ]
+    : clientView
     ? [
         { label: 'All', value: null },
         { label: 'Review', value: 'inClientReview' },
@@ -2979,6 +3227,10 @@ function ApprovalV2Inner() {
           .flatMap(c => c.posts)
           .filter(p => !clientView || internalStatuses[p.id] === 'readyForClient').length;
 
+  // A filter is active — force-expand campaign sections so matches aren't hidden.
+  const filterActive = filterBadge !== null || statusFilter !== null;
+  const clearFilters = () => { setFilterBadge(null); setStatusFilter(null); };
+
   const filterMenu = (
     <FilterMenu
       typeOptions={CAMPAIGN_TYPE_OPTIONS}
@@ -2989,8 +3241,22 @@ function ApprovalV2Inner() {
       statusValue={statusFilter}
       onStatusChange={setStatusFilter}
       statusCount={statusCount}
-      onClear={() => { setFilterBadge(null); setStatusFilter(null); }}
+      onClear={clearFilters}
     />
+  );
+
+  // Shown when the active filters match no content (instead of bare section headers).
+  const filterEmptyState = (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14, padding:'80px 0' }}>
+      <div style={{ width:52, height:52, borderRadius:99, background:dark4, display:'flex', alignItems:'center', justifyContent:'center', color:dark40 }}>
+        <FilterIcon size={22} />
+      </div>
+      <div style={{ textAlign:'center' }}>
+        <p style={{ margin:'0 0 4px', fontSize:16, fontWeight:500, color:dark90, fontFamily:F }}>No content matches your filters</p>
+        <p style={{ margin:0, fontSize:13, color:dark60, fontFamily:F }}>Try adjusting or clearing your filters to see more content.</p>
+      </div>
+      <Button variant="secondary" size="sm" onPress={clearFilters}>Clear filter</Button>
+    </div>
   );
 
   return (
@@ -2998,19 +3264,26 @@ function ApprovalV2Inner() {
       title={headerTitle}
       topbarRight={
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
-            82 Credits
-          </span>
           {filterMenu}
-          <Button
-            variant={clientView ? 'primary' : 'secondary'}
-            size="sm"
-            frontIcon={EyeOpen}
-            onPress={() => { setClientView(!clientView); setStatusFilter(null); }}
-          >
-            {clientView ? 'Exit client view' : 'View as client'}
-          </Button>
+          <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, { audience })}>Settings</Button>
+          {/* "View as client" is a DFY-only affordance — DIY has no separate client. */}
+          {!isDiy && (
+            <Button
+              variant={clientView ? 'primary' : 'secondary'}
+              size="sm"
+              frontIcon={EyeOpen}
+              onPress={() => { setClientView(!clientView); setStatusFilter(null); }}
+            >
+              {clientView ? 'Exit client view' : 'View as client'}
+            </Button>
+          )}
+          {/* Credits are a DIY (self-serve) concept — agencies (DFY) don't see them. */}
+          {isDiy && (
+            <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F, whiteSpace:'nowrap' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+              82 Credits
+            </span>
+          )}
         </div>
       }
     >
@@ -3054,13 +3327,14 @@ function ApprovalV2Inner() {
               internalStatuses={internalStatuses}
               statuses={statuses}
               dontPostReasons={dontPostReasons}
-              resubmitNotes={resubmitNotes}
+              sentPosts={sentPosts}
               today={today}
               isPast={opts?.isPast}
               defaultCollapsed={opts?.defaultCollapsed}
+              filterActive={filterActive}
               onMarkReady={markReadyForClient}
               onUndo={undoReady}
-              onMarkAllReady={() => markAllReadyForClient(c)}
+              onSendToClient={() => sendToClient(c)}
               onReview={setReviewPost}
               onEdit={(post) => {
                 if (post.type === 'review' || post.type === 'comment') openModal(EditAIDraftModal, { post });
@@ -3074,15 +3348,13 @@ function ApprovalV2Inner() {
           const readyCampaigns = activeCampaigns.filter(isAllReady);
           const activePending  = activeCampaigns.filter(c => !isAllReady(c));
 
+          if (filterActive && filtered.length === 0) return filterEmptyState;
+
           return (
             <div style={{ display:'flex', flexDirection:'column', gap:40 }}>
               {activePending.map(c => renderIC(c))}
-              {readyCampaigns.length > 0 && (
-                <>
-                  <SectionHeader label="Ready for Client" count={readyCampaigns.length} />
-                  {readyCampaigns.map(c => renderIC(c))}
-                </>
-              )}
+              {/* "Ready for Client" campaigns render inline — no section divider. */}
+              {readyCampaigns.map(c => renderIC(c))}
               {pastCampaigns.length > 0 && (
                 <>
                   <SectionHeader label="Past campaigns" count={pastCampaigns.length} />
@@ -3106,10 +3378,17 @@ function ApprovalV2Inner() {
         const past     = filteredClient.filter(isPast);
 
         const renderCampaign = (campaign: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => {
-          // Only expose posts the internal team has marked Ready for Client
-          const visiblePosts = campaign.posts.filter(p => internalStatuses[p.id] === 'readyForClient' && matchesStatus(p.id));
+          // DFY: only expose posts the internal team marked Ready for Client.
+          // DIY: every generated post is the customer's to review directly.
+          const visiblePosts = campaign.posts.filter(p => (isDiy || internalStatuses[p.id] === 'readyForClient') && matchesStatus(p.id));
           if (visiblePosts.length === 0) return null;
           const clientCampaign = { ...campaign, posts: visiblePosts };
+          // AM cover note (DFY only): live send wins; else active campaigns get the default.
+          const message = isDiy
+            ? undefined
+            : (campaignMessages[campaign.id] ?? (isActive(campaign) ? defaultCampaignMessage(campaign.name, visiblePosts.length, campaign.dateRange) : undefined));
+          // DIY reputation: the AI reply is "posted", not "approved" — relabel the CTAs.
+          const isReputationDiy = isDiy && campaign.badge === 'Reputation';
           return (
             <CampaignSection
               key={campaign.id}
@@ -3119,11 +3398,21 @@ function ApprovalV2Inner() {
               resubmitNotes={resubmitNotes}
               onApprove={(id) => approve(id, campaign.id)}
               onRemoveApproval={removeApproval}
-              onReview={(id) => { setReviewPost(campaign.posts.find(p => p.id === id)!); }}
+              onReview={(id) => {
+                const p = campaign.posts.find(p => p.id === id)!;
+                // DIY reputation uses the same Edit-AI-draft modal as DFY (not the full review page).
+                if (isDiy && (p.type === 'review' || p.type === 'comment')) { openModal(EditAIDraftModal, { post: p }); return; }
+                setReviewPost(p);
+              }}
               onApproveAll={() => approveAll(clientCampaign)}
               justCompleted={completingCampaignId === campaign.id}
               defaultCollapsed={opts?.defaultCollapsed}
               isPast={opts?.isPast}
+              filterActive={filterActive}
+              message={message}
+              approveLabel={isReputationDiy ? 'Post Reply' : undefined}
+              approveAllLabel={isReputationDiy ? 'Post All' : undefined}
+              postedMode={isReputationDiy}
             />
           );
         };
@@ -3139,8 +3428,14 @@ function ApprovalV2Inner() {
 
         // Nothing to approve = no active campaign has any readyForClient+pending post
         const hasAnythingToApprove = active.some(c =>
-          c.posts.some(p => internalStatuses[p.id] === 'readyForClient' && statuses[p.id] === 'pending')
+          c.posts.some(p => (isDiy || internalStatuses[p.id] === 'readyForClient') && statuses[p.id] === 'pending')
         );
+
+        // Total posts visible after BOTH filters — section headers count by badge only,
+        // so a status filter that matches nothing would otherwise leave bare headers.
+        const totalVisible = filteredClient.reduce((n, c) =>
+          n + c.posts.filter(p => (isDiy || internalStatuses[p.id] === 'readyForClient') && matchesStatus(p.id)).length, 0);
+        if (filterActive && totalVisible === 0) return filterEmptyState;
 
         return (
           <div style={{ display:'flex', flexDirection:'column', gap:40 }}>
@@ -3199,17 +3494,43 @@ function ApprovalV2Inner() {
             approve(reviewPost.id, c.id);
           }}
           onRemoveApproval={() => removeApproval(reviewPost.id)}
-          onDontPost={(reasons) => { rejectPost(reviewPost.id); setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: reasons })); setReviewPost(null); triggerFeedbackToast(); }}
-          onRequestChanges={(text) => { rejectPost(reviewPost.id); setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: [...(prev[reviewPost.id] ?? []), text] })); }}
-          onDecline={(text) => { declinePost(reviewPost.id); setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: [...(prev[reviewPost.id] ?? []), text || 'Declined'] })); }}
+          onDontPost={(reasons) => {
+            if (isDiy) {
+              // DIY: no feedback modal — draft in place, stay on the page, undoable toast.
+              draftPost(reviewPost.id);
+              showDraftedToast(reviewPost.id);
+            } else {
+              rejectPost(reviewPost.id);
+              setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: reasons }));
+              setReviewPost(null);
+              triggerFeedbackToast();
+            }
+          }}
+          onRequestChanges={(text) => {
+            rejectPost(reviewPost.id);
+            setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: [...(prev[reviewPost.id] ?? []), text] }));
+            appendMessage(reviewPost.id, { author: 'client', text: text || 'Requested changes.' });
+          }}
+          onDecline={(text) => {
+            declinePost(reviewPost.id);
+            setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: [...(prev[reviewPost.id] ?? []), text || 'Declined'] }));
+            appendMessage(reviewPost.id, { author: 'client', text: text || 'Declined this post.' });
+          }}
           onNavigate={(id) => setReviewPost(CAMPAIGNS.flatMap(c => c.posts).find(p => p.id === id) ?? null)}
           mode={tab}
+          audience={audience}
           internalStatus={internalStatuses[reviewPost.id]}
+          sentToClient={sentPosts[reviewPost.id]}
           onMarkReady={() => markReadyForClient(reviewPost.id)}
           onUndoReady={() => undoReady(reviewPost.id)}
-          onResubmit={(note) => { resubmitPost(reviewPost.id, note); }}
+          onResubmit={(note) => {
+            resubmitPost(reviewPost.id, note);
+            if (note) appendMessage(reviewPost.id, { author: 'staff', text: note });
+            appendMessage(reviewPost.id, { author: 'staff', text: 'Revised version submitted to client', system: true });
+          }}
           dontPostReasons={dontPostReasons}
           resubmitNotes={resubmitNotes}
+          thread={threads[reviewPost.id] ?? []}
           isPast={CAMPAIGNS.find(c => c.posts.some(p => p.id === reviewPost.id))?.endDate < today}
         />
       )}
@@ -3219,6 +3540,16 @@ function ApprovalV2Inner() {
         <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
           <Toast variant="success" onDismiss={() => setShowFeedbackToast(false)}>
             Feedback submitted. Agent is notified for revision.
+          </Toast>
+        </div>,
+        document.body
+      )}
+
+      {/* DIY: post moved to drafts toast — undoable */}
+      {draftedToast !== null && createPortal(
+        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+          <Toast variant="success" action={{ label: 'Undo', onClick: () => undoDraft(draftedToast) }}>
+            Post moved to drafts
           </Toast>
         </div>,
         document.body

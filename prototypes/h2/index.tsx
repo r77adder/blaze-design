@@ -24,6 +24,8 @@ import { OrganicProfileRoute } from './pages/OrganicProfile';
 import { Placeholder } from './pages/Placeholder';
 import { DevStateProvider, useDevState } from './dev-state-context';
 import { ClientViewProvider } from './client-view-context';
+import { ApprovalAudienceProvider } from './approval-audience-context';
+import { ApprovalSettingsProvider } from './approval-settings-context';
 import { DevStatePanel } from './DevStatePanel';
 import { PaidAdsColdView } from './pages/ColdViews';
 import { DfyCampaignsRoute } from './pages/DfyCampaigns';
@@ -72,13 +74,17 @@ export default function H2() {
             <SavedCardsProvider>
               <ModalStack>
                 <DevStateProvider>
-                  <MetaCampaignProvider>
-                    <ClientViewProvider>
-                      <H2RoutedShell />
-                    </ClientViewProvider>
-                    <MetaCampaignModal />
-                  </MetaCampaignProvider>
-                  <DevStatePanel />
+                  <ApprovalAudienceProvider>
+                    <ApprovalSettingsProvider>
+                      <MetaCampaignProvider>
+                        <ClientViewProvider>
+                          <H2RoutedShell />
+                        </ClientViewProvider>
+                        <MetaCampaignModal />
+                      </MetaCampaignProvider>
+                      <DevStatePanel />
+                    </ApprovalSettingsProvider>
+                  </ApprovalAudienceProvider>
                 </DevStateProvider>
                 <Toaster />
               </ModalStack>

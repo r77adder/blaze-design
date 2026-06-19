@@ -36,6 +36,7 @@ import { Chip, StatusPill, TabChip, Tabs, Toggle } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { useDevState } from '../dev-state-context';
+import { useApprovalSettings } from '../approval-settings-context';
 
 type SeoAeoTab = 'dashboard' | 'analytics' | 'how-it-works' | 'settings';
 type AnalyticsSubTab = 'seo' | 'aeo';
@@ -1931,10 +1932,14 @@ function TargetCountrySelect({ onChange }: { onChange?: () => void }) {
 }
 
 function SetupTab() {
+  const navigate = useNavigate();
+  // Publishing/approval is controlled in one place — the Approval Settings modal.
+  // This page only reflects the resulting status for SEO/AEO blogs.
+  const { featureRequiresApproval } = useApprovalSettings();
+  const blogRequiresApproval = featureRequiresApproval('seo-blogs');
   const [planActive, setPlanActive] = useState(true);
   const [blogConnected, setBlogConnected] = useState(false);
   const [showConnect, setShowConnect] = useState(false);
-  const [autoApprove, setAutoApprove] = useState(false);
   // Becomes true the moment any setting changes; drives the Save/Cancel footer.
   const [dirty, setDirty] = useState(false);
 
@@ -1973,15 +1978,32 @@ function SetupTab() {
 
       {/* Frequency settings + auto-approve */}
       <SectionCard title="Blog post settings">
-        {/* Auto-approve */}
+        {/* Publishing — read-only status mirroring Approval Settings (the one control). */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingBottom: 20, marginBottom: 20, borderBottom: '1px solid var(--dark-4)' }}>
           <div>
-            <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)' }}>Auto-approve posts</Text>
-            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
-              Blaze publishes posts automatically on their scheduled date. Turn off to review and approve each post before it goes live.
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <Text variant="secondary" style={{ fontWeight: 500, color: 'var(--dark-90)' }}>Publishing</Text>
+              <span
+                style={{
+                  display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 99,
+                  fontSize: 11, fontFamily: 'inherit', whiteSpace: 'nowrap',
+                  background: blogRequiresApproval ? 'rgba(32,161,79,0.1)' : 'var(--dark-4)',
+                  color: blogRequiresApproval ? '#20a14f' : 'var(--dark-60)',
+                  border: `1px solid ${blogRequiresApproval ? 'rgba(32,161,79,0.25)' : 'var(--dark-15)'}`,
+                }}
+              >
+                {blogRequiresApproval ? 'Approval required' : 'Auto-publishes'}
+              </span>
+            </div>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
+              {blogRequiresApproval
+                ? 'Posts require your sign-off before going live.'
+                : 'Posts publish automatically on their scheduled date.'}
             </Text>
           </div>
-          <Toggle checked={autoApprove} onChange={(v) => { setAutoApprove(v); setDirty(true); }} aria-label="Auto-approve posts" />
+          <Button variant="secondary" size="sm" onPress={() => navigate('/h2/approvals')} style={{ flexShrink: 0 }}>
+            Manage in Approval Settings →
+          </Button>
         </div>
 
         {/* Blog account */}
