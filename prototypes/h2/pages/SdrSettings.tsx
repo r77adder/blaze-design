@@ -235,7 +235,11 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
           onChange={(v) => setSubTab(v as SettingsSubTab)}
         >
           {subTab === 'triggers' && (
-            <TriggersSection agent={activeAgent} onChange={updateAgent} />
+            <TriggersSection
+              agent={activeAgent}
+              onChange={updateAgent}
+              onStartCompliance={() => setSubTab('compliance')}
+            />
           )}
           {subTab === 'agent' && (
             <>
@@ -328,7 +332,6 @@ function AgentSelector({
                 transition: 'border-color 120ms ease, background 120ms ease',
               }}
             >
-              <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: '#04af00', flexShrink: 0 }} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left' }}>
                 <span style={{ fontSize: 14, fontWeight: 500, color: active ? 'var(--light-100)' : 'var(--dark-90)', lineHeight: 1.3 }}>
                   {agent.name}
@@ -987,7 +990,7 @@ function StepRow({
 }
 
 const inputStyle: React.CSSProperties = {
-  fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-90)',
+  fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.26px', color: 'var(--dark-90)',
   padding: '6px 8px', border: '1px solid var(--dark-8)', borderRadius: 6,
   background: 'var(--light-100)', outline: 'none', width: '100%', boxSizing: 'border-box',
 };
@@ -1265,7 +1268,7 @@ function EscalationRulesSection({ settings, setSettings }: SectionProps) {
       </div>
       <div style={{ marginTop: 12 }}>
         <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleAdd}>
-          Add Escalation Rule
+          Add escalation rule
         </Button>
       </div>
     </SectionShell>
@@ -1596,9 +1599,12 @@ function PickupRow({
 function TriggersSection({
   agent,
   onChange,
+  onStartCompliance,
 }: {
   agent: AgentConfig;
   onChange: (a: AgentConfig) => void;
+  /** Jumps to the Compliance sub-tab so the user can start A2P / 10DLC registration. */
+  onStartCompliance: () => void;
 }) {
   const [shift, setShift] = useState<ShiftDay[]>(DEFAULT_SHIFT);
   // Rings-before-pickup, separate for business hours vs after hours.
@@ -1617,21 +1623,48 @@ function TriggersSection({
         title="Agent phone number"
         sub="The number callers will reach and that the AI will use for outbound SMS."
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '10px 14px',
-            border: '1px solid var(--dark-8)',
-            borderRadius: 8,
-            background: 'var(--dark-2)',
-          }}
-        >
-          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
-            {agent.agentPhone || '—'}
-          </span>
-          <StatusPill tone="success" size="sm">Active</StatusPill>
+        {/* A2P / 10DLC compliance gate — the number takes calls now, but can't
+            text customers until it's registered with carriers. Everything sits
+            on one row: number + status, the SMS gate label, why, and the CTA. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 14px',
+              border: '1px solid var(--dark-8)',
+              borderRadius: 8,
+              background: 'var(--dark-2)',
+            }}
+          >
+            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+              {agent.agentPhone || '—'}
+            </span>
+            <StatusPill tone="success" size="sm">Active</StatusPill>
+          </div>
+
+          {/* Compliance gate, wrapped in a container styled like the number chip
+              (matched height via 7px vertical padding around the 28px button). */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '6px 8px 6px 14px',
+              border: '1px solid var(--dark-8)',
+              borderRadius: 8,
+              background: 'var(--dark-2)',
+            }}
+          >
+            <StatusPill tone="warning" size="sm">SMS not available</StatusPill>
+            <Text color="var(--dark-60)" style={{ fontSize: 13, lineHeight: 1.5, whiteSpace: 'nowrap' }}>
+              Complete A2P compliance to enable texting.
+            </Text>
+            <Button variant="secondary" size="sm" onPress={onStartCompliance}>
+              Start compliance
+            </Button>
+          </div>
         </div>
       </SectionShell>
 
@@ -2280,7 +2313,7 @@ function NotificationsSection({ onConfigureEscalations }: { onConfigureEscalatio
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
           {/* headline + subheadline — the count is folded into the description */}
           <div style={{ minWidth: 0 }}>
-            <Heading level={3} style={{ marginBottom: 4 }}>Daily Digest</Heading>
+            <Heading level={3} style={{ marginBottom: 4 }}>Daily digest</Heading>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
               {digestEvents.length === 0
                 ? 'No events are set to Digest yet — set an event’s SMS or Email to “Digest” above to start batching it here.'
@@ -2518,12 +2551,12 @@ const inputFocusProps = {
 };
 
 const textInputStyle: React.CSSProperties = {
-  fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)',
+  fontFamily: 'inherit', fontSize: 14, letterSpacing: '0.28px', color: 'var(--dark-90)',
   padding: '8px 10px', border: '1px solid var(--dark-8)', borderRadius: 6,
   background: 'var(--light-100)', outline: 'none', width: '100%', boxSizing: 'border-box',
 };
 
-const largeInputStyle: React.CSSProperties = { ...textInputStyle, fontSize: 16, padding: '12px 14px', borderRadius: 8 };
+const largeInputStyle: React.CSSProperties = { ...textInputStyle, fontSize: 16, letterSpacing: '0.32px', padding: '12px 14px', borderRadius: 8 };
 
 function TextField({ label, value, onChange, hint, maxWidth }: { label: string; required?: boolean; value: string; onChange: (v: string) => void; hint?: string; maxWidth?: number }) {
   return (

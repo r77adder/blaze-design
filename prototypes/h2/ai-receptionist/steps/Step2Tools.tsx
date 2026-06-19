@@ -75,7 +75,7 @@ const CONNECT_TOASTS: Record<IntegrationId, string> = {
   hubspot: 'HubSpot connected · Qualified leads will sync to your CRM',
 };
 
-const SUCCESS_GREEN = '#04af00';
+const SUCCESS_GREEN = 'var(--status-approved)';
 const MIN_CONNECTIONS = 2;
 
 interface Step2ToolsProps {
@@ -263,7 +263,7 @@ function IntegrationCard({ integration, isConnected, onConnect, onDisconnect }: 
               gap: 6,
               padding: '4px 10px 4px 8px',
               borderRadius: 999,
-              background: 'rgba(4, 175, 0, 0.12)',
+              background: 'color-mix(in srgb, var(--status-approved) 12%, transparent)',
               color: SUCCESS_GREEN,
               fontSize: 12,
               fontWeight: 500,

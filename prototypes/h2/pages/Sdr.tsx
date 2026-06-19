@@ -6,6 +6,7 @@ import ArrowLeft from '@/icons/20/ArrowLeft';
 import ArrowUp from '@/icons/20/ArrowUp';
 import ArrowDown from '@/icons/20/ArrowDown';
 import ChevronDown from '@/icons/20/ChevronDown';
+import Check from '@/icons/16/Check';
 import ChevronUp from '@/icons/20/ChevronUp';
 import Search from '@/icons/20/Search';
 import Voice from '@/icons/20/Voice';
@@ -1930,8 +1931,10 @@ function ColdDashboard({ onViewLeads }: { onViewLeads: () => void }) {
             'Ongoing monitoring',
           ].map((item) => (
             <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <span style={{ color: 'var(--status-posting)', fontSize: 14, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>✓</span>
-              <span style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.4 }}>{item}</span>
+              <span style={{ flexShrink: 0, marginTop: 1, display: 'inline-flex' }}>
+                <Check size={14} color="var(--status-posting)" />
+              </span>
+              <span style={{ fontSize: 13, letterSpacing: '0.26px', color: 'var(--dark-80)', lineHeight: 1.4 }}>{item}</span>
             </div>
           ))}
         </div>

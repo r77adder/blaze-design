@@ -250,6 +250,7 @@ function TextInput({
         color: 'var(--dark-90)',
         fontFamily: "'Sohne', sans-serif",
         fontSize: 14,
+        letterSpacing: '0.28px',
         outline: 'none',
       }}
       onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--dark-90)')}
@@ -280,6 +281,7 @@ function Textarea({
         color: 'var(--dark-90)',
         fontFamily: "'Sohne', sans-serif",
         fontSize: 14,
+        letterSpacing: '0.28px',
         lineHeight: 1.5,
         outline: 'none',
         resize: 'vertical',
@@ -312,6 +314,7 @@ function VoiceSelect({
           color: 'var(--dark-90)',
           fontFamily: "'Sohne', sans-serif",
           fontSize: 14,
+          letterSpacing: '0.28px',
           outline: 'none',
           appearance: 'menulist',
         }}
@@ -385,6 +388,7 @@ function QualifyingQuestionsEditor({
             color: 'var(--dark-90)',
             fontFamily: "'Sohne', sans-serif",
             fontSize: 14,
+            letterSpacing: '0.28px',
             outline: 'none',
           }}
         />
@@ -435,6 +439,7 @@ function QuestionRow({
           color: 'var(--dark-90)',
           fontFamily: "'Sohne', sans-serif",
           fontSize: 14,
+          letterSpacing: '0.28px',
           outline: 'none',
         }}
       />
