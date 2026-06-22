@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ToolbarHeader, ToolbarButton, Sheet } from '@ios/components';
+import { ToolbarHeader, GlassIconButton, Sheet } from '@ios/components';
+import settingsIcon from '@ios/icons/settings.svg';
 import { ASSETS } from './assets';
 import { REPUTATION, ReputationMiniCard } from './Reputation';
 import checkCircleIcon from '@ios/icons/approval.svg';
@@ -310,14 +311,14 @@ export function ApprovalsScreen({
       {asTab ? (
         <ToolbarHeader
           variant="screen"
-          titleSlot={<span style={{ fontFamily: font, fontSize: 28, fontWeight: 400, lineHeight: 1.1, color: 'var(--ios-dark-90)' }}>Approvals</span>}
-          rightButtons={<ToolbarButton variant="credits" credits={96} />}
+          title="Approvals"
+          rightButtons={<GlassIconButton icon={settingsIcon} label="Settings" />}
         />
       ) : (
         <ToolbarHeader title="Approvals" onLeftPress={onBack} />
       )}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: asTab ? '4px 20px 130px' : '4px 20px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: asTab ? '20px 20px 130px' : '4px 20px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
 
         {/* Pending campaign groups */}
         {PENDING_GROUPS.map((group) => (
