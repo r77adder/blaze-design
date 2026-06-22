@@ -31,6 +31,8 @@ import { ContentPreviewScreen } from '../unscheduled-posts/ContentPreviewScreen'
 
 // Campaign approval feature module
 import { CampaignApprovalFlow } from '../campaign-approval';
+import { ApprovalsScreen } from './ApprovalsScreen';
+import { ReputationReviewFlow } from './Reputation';
 
 import plusIcon from '@ios/icons/plus-01.svg';
 import checkBrokenIcon from '@ios/icons/lighter_weight/check-broken.svg';
@@ -77,6 +79,7 @@ interface AppScreensProps {
   llState: LLDataState;
   onOpenLearningLoop: () => void;
   onApproveCampaign: () => void;
+  onOpenApprovals: () => void;
   unscheduledCount: number;
   onUnscheduled: () => void;
   onBrandKitOpen: () => void;
@@ -90,7 +93,7 @@ interface AppScreensProps {
 
 function AppScreens({
   onCampaignsSettings, showSkeleton,
-  llState, onOpenLearningLoop, onApproveCampaign,
+  llState, onOpenLearningLoop, onApproveCampaign, onOpenApprovals,
   unscheduledCount, onUnscheduled,
   onBrandKitOpen, onBrandKitClose,
   onLeadOpen, onLeadClose, selectedLeadId,
@@ -116,7 +119,7 @@ function AppScreens({
   return (
     <>
       <div ref={anchorRef} style={{ height: 0 }} />
-      {state === 'home'              && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} onApproveCampaign={onApproveCampaign} />}
+      {state === 'home'              && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} onOpenApprovals={onOpenApprovals} />}
       {state === 'calendar'          && <CalendarScreen unscheduledCount={unscheduledCount} onUnscheduled={onUnscheduled} />}
       {state === 'campaigns'         && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} onCampaignClick={onApproveCampaign} />}
       {state === 'receptionist'      && <LeadsScreen onLeadClick={onLeadOpen} onStatusEdit={onStatusEdit} statusOverrides={statusOverrides} />}
@@ -187,7 +190,16 @@ export default function MobileApp() {
   }
 
   // Campaign approval state --------------------------------------------------
+  // approvalsOpen → the Approvals overview page (pushed from the Home "Review
+  // pending approvals" card). campaignFlowOpen → the single-campaign review
+  // flow, layered on top of either the Approvals page or the Campaigns tab.
+  const [approvalsOpen, setApprovalsOpen]       = useState(false);
   const [campaignFlowOpen, setCampaignFlowOpen] = useState(false);
+  // True when the campaign flow was entered from an Approvals "Review N Posts"
+  // button → skip the campaign detail screen and open the review sheet directly.
+  const [campaignStartInReview, setCampaignStartInReview] = useState(false);
+  // Reputation review flow (entered from the Approvals "Needs Attention" row).
+  const [reputationFlowOpen, setReputationFlowOpen] = useState(false);
 
   // campaign settings confirmed — show "Changes applied" toast
   function handleCampConfirm() {
@@ -282,19 +294,27 @@ export default function MobileApp() {
     llView === 'll' && llState === 'no-account'
       ? <LLConnectFooter onConnect={() => setLLState('collecting')} />
       : null;
-  const hideFooter = llView === 'll' || llView === 'lock' || campaignFlowOpen;
+  const hideFooter = llView === 'll' || llView === 'lock' || campaignFlowOpen || approvalsOpen || reputationFlowOpen;
 
   return (
     <StatePicker states={ALL_STATES} defaultState="home">
       <AppBody
         llView={llView}
         llState={llState}
+        approvalsOpen={approvalsOpen}
         campaignFlowOpen={campaignFlowOpen}
+        campaignStartInReview={campaignStartInReview}
+        reputationFlowOpen={reputationFlowOpen}
         onOpenLearningLoop={() => setLLView('ll')}
         onLLBack={() => setLLView('tabs')}
         onLLLockOpen={() => { setLLState('active'); setLLView('ll'); }}
         onLLConnect={() => setLLState('collecting')}
-        onApproveCampaign={() => setCampaignFlowOpen(true)}
+        onOpenApprovals={() => setApprovalsOpen(true)}
+        onApprovalsBack={() => setApprovalsOpen(false)}
+        onApproveCampaign={() => { setCampaignStartInReview(false); setCampaignFlowOpen(true); }}
+        onReviewFromApprovals={() => { setCampaignStartInReview(true); setCampaignFlowOpen(true); }}
+        onReviewReputation={() => setReputationFlowOpen(true)}
+        onReputationClose={() => setReputationFlowOpen(false)}
         onCampaignClose={() => setCampaignFlowOpen(false)}
         onCampaignsSettings={() => setCampSettingsOpen(true)}
         unscheduledCount={unschedPosts.length}
@@ -332,12 +352,20 @@ export default function MobileApp() {
 interface AppBodyProps {
   llView: 'tabs' | 'll' | 'lock';
   llState: LLDataState;
+  approvalsOpen: boolean;
   campaignFlowOpen: boolean;
+  campaignStartInReview: boolean;
+  reputationFlowOpen: boolean;
   onOpenLearningLoop: () => void;
   onLLBack: () => void;
   onLLLockOpen: () => void;
   onLLConnect: () => void;
+  onOpenApprovals: () => void;
+  onApprovalsBack: () => void;
   onApproveCampaign: () => void;
+  onReviewFromApprovals: () => void;
+  onReviewReputation: () => void;
+  onReputationClose: () => void;
   onCampaignClose: () => void;
   onCampaignsSettings: () => void;
   unscheduledCount: number;
@@ -392,9 +420,15 @@ function AppBody(props: AppBodyProps) {
     ? (props.statusOverrides[statusEditLead.id] ?? statusEditLead.status)
     : null;
 
+  // The campaign DETAIL screen (not the review-first flow) has a full-bleed
+  // hero, so the status bar floats over it and the hero extends to the top.
+  const campaignDetailOpen = props.campaignFlowOpen && !props.campaignStartInReview;
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100vw', height: '100vh', background: 'linear-gradient(145deg, var(--dark-4) 0%, rgba(124,92,252,0.05) 100%)' }}>
       <PhoneFrame
+        overlayStatusBar={campaignDetailOpen}
+        statusBarTheme="dark"
         footer={footer}
         overlay={
           <>
@@ -412,11 +446,12 @@ function AppBody(props: AppBodyProps) {
           </>
         }
       >
-        {props.llView === 'tabs' && !props.campaignFlowOpen && (
+        {props.llView === 'tabs' && !props.campaignFlowOpen && !props.approvalsOpen && (
           <AppScreens
             onCampaignsSettings={props.onCampaignsSettings}
             showSkeleton={props.showSkeleton}
             onApproveCampaign={props.onApproveCampaign}
+            onOpenApprovals={props.onOpenApprovals}
             unscheduledCount={props.unscheduledCount}
             onUnscheduled={props.onUnscheduled}
             llState={props.llState}
@@ -444,8 +479,18 @@ function AppBody(props: AppBodyProps) {
         {props.llView === 'lock' && (
           <LockScreen onOpenNotification={props.onLLLockOpen} />
         )}
+        {props.approvalsOpen && !props.campaignFlowOpen && !props.reputationFlowOpen && (
+          <ApprovalsScreen
+            onBack={props.onApprovalsBack}
+            onReviewCampaign={props.onReviewFromApprovals}
+            onReviewReputation={props.onReviewReputation}
+          />
+        )}
         {props.campaignFlowOpen && (
-          <CampaignApprovalFlow onClose={props.onCampaignClose} />
+          <CampaignApprovalFlow onClose={props.onCampaignClose} startInReview={props.campaignStartInReview} />
+        )}
+        {props.reputationFlowOpen && !props.campaignFlowOpen && (
+          <ReputationReviewFlow onClose={props.onReputationClose} />
         )}
       </PhoneFrame>
     </div>

@@ -13,17 +13,24 @@ import approvalsIcon from '@ios/icons/approvals.svg';
 import creditsIcon from '@ios/icons/credits.svg';
 
 // ── Image assets ──────────────────────────────────────────────────────────────
-const CK        = 'https://www.figma.com/api/mcp/asset/bf418beb-b21e-408f-b5ee-f167032c8b7a';
-const APPROVALS = 'https://www.figma.com/api/mcp/asset/f185b9c3-5011-4985-8503-11516ae24e80';
-const IMG1 = 'https://www.figma.com/api/mcp/asset/f9de6206-307b-4a7d-a279-7fdad209957c';
-const IMG2 = 'https://www.figma.com/api/mcp/asset/861374f8-f235-4861-982b-7ef9c61b993f';
-const IMG3 = 'https://www.figma.com/api/mcp/asset/d2648b60-309f-4127-b5c3-cf36aee60154';
-const IMG4 = 'https://www.figma.com/api/mcp/asset/7fdee3c4-c5be-4da5-9bbc-affa5ebd7190';
-const IMG5 = 'https://www.figma.com/api/mcp/asset/60bdce21-f033-4e5d-9866-a632780b79cc';
-const HERO = 'https://www.figma.com/api/mcp/asset/d2648b60-309f-4127-b5c3-cf36aee60154';
-const AVATAR = 'https://www.figma.com/api/mcp/asset/efaaccc8-0c4d-4b5a-8bb3-cbd3253b808f';
-const IMG_EMAIL = 'https://www.figma.com/api/mcp/asset/18c22376-a705-44c4-b1d2-b76779d4ef38';
-const IMG_BLOG  = 'https://www.figma.com/api/mcp/asset/4b9ee42d-7ad2-45cc-a259-c3adbb12b836';
+// Durable Unsplash photos + a ui-avatars logo tile. (The original Figma MCP
+// asset URLs are short-lived and 404 once the export expires.)
+const IMG1 = 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&auto=format&fit=crop&q=80'; // coffee cup overhead
+const IMG2 = 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&auto=format&fit=crop&q=80'; // beans close-up
+const IMG3 = 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&auto=format&fit=crop&q=80'; // grinder & beans
+const IMG4 = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&auto=format&fit=crop&q=80'; // pour-over brew
+const IMG5 = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80'; // iced cold brew
+const HERO = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&auto=format&fit=crop&q=80'; // latte art hero
+const AVATAR = 'https://ui-avatars.com/api/?name=Radiant+Health&background=45164a&color=fff&bold=true&size=200&font-size=0.4';
+const IMG_EMAIL = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80'; // espresso
+const IMG_BLOG  = 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&auto=format&fit=crop&q=80'; // grinder & beans
+
+// Last-resort fallback for any image that still fails to load.
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80';
+function handleImgError(e: React.SyntheticEvent<HTMLImageElement>) {
+  const el = e.currentTarget;
+  if (el.dataset.fallback !== '1') { el.dataset.fallback = '1'; el.src = FALLBACK_IMG; }
+}
 
 // ── Unsplash coffee photos (for story/short/email/blog cards) ─────────────────
 const COFFEE1 = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&auto=format&fit=crop&q=80'; // latte art overhead
@@ -306,12 +313,12 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
 
         {/* Hero */}
         <div style={{ position:'relative', height:280, overflow:'hidden', flexShrink:0 }}>
-          <img src={HERO} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+          <img src={HERO} alt="" onError={handleImgError} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
           <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)' }} />
-          <div style={{ position:'absolute', top:64, left:16 }}>
+          <div style={{ position:'absolute', top:76, left:16 }}>
             <GlassIconButton icon={chevLeftIcon as unknown as string} label="Back" onClick={onBack} />
           </div>
-          <div style={{ position:'absolute', top:64, right:16 }}>
+          <div style={{ position:'absolute', top:76, right:16 }}>
             <GlassIconButton icon={moreIcon as unknown as string} label="More" />
           </div>
           <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'0 16px 18px' }}>
@@ -696,8 +703,12 @@ export default function CampaignApproval() {
 // The overlay sheets position themselves absolute relative to this wrapper,
 // so it must be rendered inside an element with `position: relative`.
 
-export function CampaignApprovalFlow({ onClose }: { onClose: () => void }) {
-  const [sheetOpen, setSheetOpen] = useState(false);
+export function CampaignApprovalFlow({ onClose, startInReview = false }: { onClose: () => void; startInReview?: boolean }) {
+  // When startInReview is set (entered from the Approvals "Review N Posts"
+  // button), the review sheet is open from the start — the campaign detail
+  // screen is skipped — and closing or finishing the sheet exits the flow
+  // entirely instead of revealing the detail screen behind it.
+  const [sheetOpen, setSheetOpen] = useState(startInReview);
   const [cur, setCur] = useState(0);
   const [postStates, setPostStates] = useState<PostStatus[]>(Array(TOTAL).fill('pending'));
   const [campaignApproved, setCampaignApproved] = useState(false);
@@ -714,7 +725,12 @@ export function CampaignApprovalFlow({ onClose }: { onClose: () => void }) {
     setSheetOpen(true);
   }, []);
 
-  const closeSheet = useCallback(() => setSheetOpen(false), []);
+  // In review-first mode there is no detail screen to fall back to, so closing
+  // the sheet exits the whole flow.
+  const closeSheet = useCallback(() => {
+    if (startInReview) onClose();
+    else setSheetOpen(false);
+  }, [startInReview, onClose]);
 
   const advanceToNext = useCallback((states: PostStatus[], afterCur: number) => {
     const next = states.findIndex((s, i) => i > afterCur && s === 'pending');
@@ -722,11 +738,12 @@ export function CampaignApprovalFlow({ onClose }: { onClose: () => void }) {
       setCur(next);
     } else if (states.every(s => s !== 'pending')) {
       setTimeout(() => {
+        if (startInReview) { onClose(); return; }
         setSheetOpen(false);
         setTimeout(() => setCampaignApproved(true), 420);
       }, 500);
     }
-  }, []);
+  }, [startInReview, onClose]);
 
   const handleApprove = useCallback(() => {
     setApproveAnim('s1');

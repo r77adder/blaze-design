@@ -38,9 +38,9 @@ const UP_NEXT = [
     id: 2,
     gradient: 'linear-gradient(135deg, #20a14f 0%, #1fcf5f 100%)',
     icon: approvalsIcon,
-    title: 'Approve your next campaign',
-    sub: 'Spring Sale 2026',
-    meta: 'Apr 19 – May 1 · 16 posts to review',
+    title: 'Review pending approvals',
+    sub: null,
+    meta: '2 campaigns · 18 posts waiting',
   },
   {
     id: 3,
@@ -89,11 +89,11 @@ export type LLDataState = 'no-account' | 'collecting' | 'active';
 export function HomeScreen({
   llState = 'no-account',
   onOpenLearningLoop = () => {},
-  onApproveCampaign = () => {},
+  onOpenApprovals = () => {},
 }: {
   llState?: LLDataState;
   onOpenLearningLoop?: () => void;
-  onApproveCampaign?: () => void;
+  onOpenApprovals?: () => void;
 } = {}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const llSub =
@@ -156,7 +156,7 @@ export function HomeScreen({
             {UP_NEXT.map((card) => (
               <div
                 key={card.id}
-                onClick={card.title === 'Approve your next campaign' ? onApproveCampaign : undefined}
+                onClick={card.title === 'Review pending approvals' ? onOpenApprovals : undefined}
                 style={{
                   border: '1px solid var(--ios-dark-8)',
                   borderRadius: 12, padding: 16,
