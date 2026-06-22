@@ -69,18 +69,21 @@ export function prototypeMetaPlugin(): Plugin {
     },
     load(id) {
       if (id !== RESOLVED_ID) return;
-      const root = path.resolve('prototypes');
-      const slugs = fs
-        .readdirSync(root, { withFileTypes: true })
-        .filter((e) => e.isDirectory() && !e.name.startsWith('_'))
-        .map((e) => e.name);
       const meta: Record<string, PrototypeMeta> = {};
-      for (const slug of slugs) {
-        const dir = path.join(root, slug);
-        const lastModified =
-          lastGitCommitISO(dir, process.cwd()) ?? maxMtimeISO(dir);
-        const { title, description } = readMetaJson(dir);
-        meta[slug] = { lastModified, title, description };
+      // Scan both the web (prototypes/) and iOS (ios/prototypes/) galleries.
+      for (const root of [path.resolve('prototypes'), path.resolve('ios/prototypes')]) {
+        if (!fs.existsSync(root)) continue;
+        const slugs = fs
+          .readdirSync(root, { withFileTypes: true })
+          .filter((e) => e.isDirectory() && !e.name.startsWith('_'))
+          .map((e) => e.name);
+        for (const slug of slugs) {
+          const dir = path.join(root, slug);
+          const lastModified =
+            lastGitCommitISO(dir, process.cwd()) ?? maxMtimeISO(dir);
+          const { title, description } = readMetaJson(dir);
+          meta[slug] = { lastModified, title, description };
+        }
       }
       return `export const PROTOTYPE_META = ${JSON.stringify(meta, null, 2)};`;
     },

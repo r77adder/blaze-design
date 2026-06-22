@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { ToolbarButton } from '@ios/components';
 import chevronRightSmall from '@ios/icons/chevron-right-small.svg';
-import approvalsIcon from '@ios/icons/approval.svg';
+import campaignsIcon from '@ios/icons/layers-05.svg';
+import brandKitIcon from '@ios/icons/atom.svg';
 import lightningIcon from '@ios/icons/lightning-01.svg';
 import folderIcon from '@ios/icons/folder.svg';
 import barGroupIcon from '@ios/icons/bar-group-03.svg';
@@ -64,11 +65,13 @@ function Row({
 }
 
 export function MoreScreen({
+  onBrandKitClick,
   onOpenLearningLoop = () => {},
-  onApprovalsClick,
+  onCampaignsClick,
 }: {
+  onBrandKitClick?: () => void;
   onOpenLearningLoop?: () => void;
-  onApprovalsClick?: () => void;
+  onCampaignsClick?: () => void;
 } = {}) {
   // Show the bottom divider on the sticky header only once the user has
   // scrolled past it (iOS Large Title behavior). We listen to scroll on the
@@ -136,7 +139,8 @@ export function MoreScreen({
 
         {/* tools — no section label */}
         <div style={CARD_STYLE}>
-          <Row icon={approvalsIcon}    label="Approvals"     separator onClick={onApprovalsClick} />
+          <Row icon={campaignsIcon}    label="Campaigns"     separator onClick={onCampaignsClick} />
+          <Row icon={brandKitIcon}     label="Brand Kit"     separator onClick={onBrandKitClick} />
           <Row icon={lightningIcon}    label="Integrations"  separator />
           <Row icon={barGroupIcon}     label="Insights"      separator />
           <Row icon={learningLoopIcon} label="Learning Loop" separator onClick={onOpenLearningLoop} />

@@ -50,12 +50,13 @@ export const iosPrototypeRoutes: PrototypeRoute[] = Object.entries(iosModules)
     const match = path.match(/\/ios\/prototypes\/([^/]+)\/index\.tsx$/);
     if (!match) return null;
     const slug = match[1]!;
+    const meta = PROTOTYPE_META[slug];
     return {
       slug,
       Component: mod.default,
-      lastModified: null,
-      title: null,
-      description: null,
+      lastModified: meta?.lastModified ?? null,
+      title: meta?.title ?? null,
+      description: meta?.description ?? null,
     };
   })
   .filter((r): r is PrototypeRoute => r !== null)

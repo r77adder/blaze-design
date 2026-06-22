@@ -41,7 +41,7 @@ const COFFEE5 = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=
 const COFFEE6 = 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&auto=format&fit=crop&q=80'; // coffee grinder & beans
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type PostStatus = 'pending' | 'approved' | 'rejected';
+type PostStatus = 'pending' | 'approved' | 'rejected' | 'revision';
 type PostType = 'still' | 'carousel' | 'story' | 'short' | 'feed-video' | 'email' | 'blog';
 
 interface Post {
@@ -443,12 +443,17 @@ function CampaignScreen({ onBack, onReview, campaignApproved }: { onBack: () => 
 // ── Review Sheet ──────────────────────────────────────────────────────────────
 function ReviewSheet({
   open, cur, postStates, onClose, onPrev, onNext, onApprove, onDontPost, onActions,
-  approveAnim, cardAnim,
+  approveAnim, cardAnim, dfy = false, onRequestRevision, revisionNote,
 }: {
   open: boolean; cur: number; postStates: PostStatus[]; onClose: () => void;
   onPrev: () => void; onNext: () => void; onApprove: () => void; onDontPost: () => void;
   onActions: () => void; approveAnim: 'idle' | 's1' | 's2';
   cardAnim: 'idle' | 'exit' | 'enter';
+  /** DFY (done-for-you): "Send back" requests a revision from the Blaze team
+   *  instead of letting the user reject/edit the content themselves. */
+  dfy?: boolean;
+  onRequestRevision?: () => void;
+  revisionNote?: string;
 }) {
   const post = POSTS[cur];
   const status = postStates[cur];
@@ -478,10 +483,24 @@ function ReviewSheet({
           <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', minWidth:0 }}>
             <div style={{ fontSize:18, fontWeight:400, lineHeight:1.4, color:T.dark90, fontFamily:T.font, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:200 }}>{TYPE_LABELS[post.type]}</div>
           </div>
-          <div style={{ width:44, display:'flex', alignItems:'center', justifyContent:'flex-end', flexShrink:0 }}>
-            <ContentPill variant={contentPillVariant} />
+          <div style={{ minWidth:44, display:'flex', alignItems:'center', justifyContent:'flex-end', flexShrink:0 }}>
+            {status === 'revision' ? (
+              <span style={{ background:'rgba(237,124,44,0.14)', border:'1px solid rgba(237,124,44,0.3)', borderRadius:5, padding:'2px 7px', fontSize:12, color:'#ed7c2c', fontFamily:T.font, whiteSpace:'nowrap' }}>In revision</span>
+            ) : (
+              <ContentPill variant={contentPillVariant} />
+            )}
           </div>
         </div>
+
+        {/* DFY: revision-requested banner — the feedback loop with the team. */}
+        {status === 'revision' && (
+          <div style={{ margin:'0 16px 8px', padding:'12px 14px', background:'rgba(237,124,44,0.08)', border:'1px solid rgba(237,124,44,0.2)', borderRadius:12, display:'flex', flexDirection:'column', gap:6, flexShrink:0 }}>
+            <span style={{ fontSize:12, fontWeight:500, color:'#ed7c2c', fontFamily:T.font }}>↩ Sent to your Blaze team</span>
+            <span style={{ fontSize:13, color:T.dark80, fontFamily:T.font, lineHeight:1.4 }}>
+              {revisionNote ? `“${revisionNote}”` : 'They’ll revise this and resend it for your approval.'}
+            </span>
+          </div>
+        )}
         {/* Progress dots + "N of M reviewed" */}
         <div style={{ padding:'0 0 10px', display:'flex', gap:8, alignItems:'center', justifyContent:'center', flexShrink:0 }}>
           <div style={{ display:'flex', gap:6, alignItems:'center' }}>
@@ -500,7 +519,7 @@ function ReviewSheet({
               caption={post.caption}
               username="radiant_health"
               avatar={AVATAR}
-              status={status}
+              status={status === 'revision' ? 'pending' : status}
               approveAnim={approveAnim}
               slides={post.slides}
               sticker1={post.sticker1}
@@ -515,14 +534,19 @@ function ReviewSheet({
         </div>
         {/* ── Footer ── */}
         <ContentPreviewFooter
-          variant={status === 'approved' ? 'approved-connected' : status === 'rejected' ? 'dont-post' : 'review'}
+          variant={
+            status === 'approved' ? 'approved-connected' :
+            status === 'revision' ? 'revision' :
+            status === 'rejected' ? 'dont-post' :
+            dfy ? 'review-dfy' : 'review'
+          }
           contentType={TYPE_LABELS[post.type]}
           date={post.date}
           badgeCount={postStates.filter(s => s === 'approved').length}
           onPrev={onPrev}
           onNext={onNext}
           onPrimaryAction={status === 'pending' ? onApprove : undefined}
-          onSecondaryAction={status === 'pending' ? onDontPost : undefined}
+          onSecondaryAction={status === 'pending' ? (dfy ? onRequestRevision : onDontPost) : undefined}
           onActions={onActions}
         />
       </div>
@@ -558,6 +582,45 @@ function ActionsDrawer({ open, isApproved, postDate, onClose, onRemoveApproval }
         <div style={{ borderBottom:'none' }}>
           <DrawerItem onClick={onClose} danger icon={<svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M4 6.17647H20M10 16.7647V10.4118M14 16.7647V10.4118M16 21H8C6.89543 21 6 20.0519 6 18.8824V7.23529C6 6.65052 6.44772 6.17647 7 6.17647H17C17.5523 6.17647 18 6.65052 18 7.23529V18.8824C18 20.0519 17.1046 21 16 21ZM10 6.17647H14C14.5523 6.17647 15 5.70242 15 5.11765V4.05882C15 3.47405 14.5523 3 14 3H10C9.44772 3 9 3.47405 9 4.05882V5.11765C9 5.70242 9.44772 6.17647 10 6.17647Z" stroke={T.red} strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round"/></svg>} label="Delete" />
         </div>
+      </div>
+    </>
+  );
+}
+
+// ── Revision Sheet (DFY) ────────────────────────────────────────────────────
+// Bottom sheet to send a piece back to the Blaze team with a note.
+function RevisionSheet({ open, onClose, onSend }: { open: boolean; onClose: () => void; onSend: (note: string) => void }) {
+  const [note, setNote] = useState('');
+  const CHIPS = ['Change the tone', 'Use a different photo', 'Tighten the caption', 'Wrong product'];
+  return (
+    <>
+      <div onClick={onClose} style={{ position:'absolute', inset:0, background:T.dark8, zIndex:204, opacity: open ? 1 : 0, pointerEvents: open ? 'all' : 'none', transition:'opacity 0.3s' }} />
+      <div style={{ position:'absolute', bottom:0, left:0, right:0, background:T.bgLight, borderRadius:'24px 24px 0 0', boxShadow:'0 15px 75px rgba(0,0,0,0.18)', zIndex:205, transform: open ? 'translateY(0)' : 'translateY(100%)', transition:'transform 0.38s cubic-bezier(0.32,1.0,0.60,1)', padding:'8px 20px 36px', display:'flex', flexDirection:'column', gap:16 }}>
+        <div style={{ width:58, height:6, background:T.dark8, borderRadius:99, margin:'4px auto 4px' }} />
+        <div>
+          <div style={{ fontSize:20, fontWeight:500, color:T.dark90, fontFamily:T.font }}>Send back for revision</div>
+          <div style={{ fontSize:14, color:T.dark60, fontFamily:T.font, marginTop:4, lineHeight:1.4 }}>Tell your Blaze team what to change — they’ll revise it and resend for approval.</div>
+        </div>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="What should we change?"
+          rows={3}
+          style={{ width:'100%', boxSizing:'border-box', resize:'none', border:`1px solid ${T.dark8}`, borderRadius:12, padding:'12px 14px', fontSize:16, fontFamily:T.font, color:T.dark90, outline:'none', background:T.bgGray }}
+        />
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+          {CHIPS.map((c) => (
+            <button key={c} type="button" onClick={() => setNote(n => n ? `${n}\n${c}` : c)}
+              style={{ background:T.dark4, border:'none', borderRadius:99, padding:'8px 12px', fontSize:13, color:T.dark80, fontFamily:T.font, cursor:'pointer' }}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <button type="button" onClick={() => { onSend(note.trim()); setNote(''); }}
+          style={{ width:'100%', height:52, borderRadius:99, background:T.dark90, color:'#fff', border:'none', cursor:'pointer', fontSize:16, fontFamily:T.font, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Send to team
+        </button>
       </div>
     </>
   );
@@ -703,7 +766,7 @@ export default function CampaignApproval() {
 // The overlay sheets position themselves absolute relative to this wrapper,
 // so it must be rendered inside an element with `position: relative`.
 
-export function CampaignApprovalFlow({ onClose, startInReview = false }: { onClose: () => void; startInReview?: boolean }) {
+export function CampaignApprovalFlow({ onClose, startInReview = false, dfy = false }: { onClose: () => void; startInReview?: boolean; dfy?: boolean }) {
   // When startInReview is set (entered from the Approvals "Review N Posts"
   // button), the review sheet is open from the start — the campaign detail
   // screen is skipped — and closing or finishing the sheet exits the flow
@@ -715,6 +778,10 @@ export function CampaignApprovalFlow({ onClose, startInReview = false }: { onClo
   const [actionsOpen, setActionsOpen] = useState(false);
   const [approveAnim, setApproveAnim] = useState<'idle' | 's1' | 's2'>('idle');
   const [cardAnim, setCardAnim] = useState<'idle' | 'exit' | 'enter'>('idle');
+  // DFY revision feedback loop: which post the revision sheet is open for, and
+  // the note the user sends back to the Blaze team per post.
+  const [revisionFor, setRevisionFor] = useState<number | null>(null);
+  const [revisionNotes, setRevisionNotes] = useState<Record<number, string>>({});
 
   const openSheet = useCallback((startIndex?: number) => {
     setPostStates(prev => {
@@ -771,6 +838,19 @@ export function CampaignApprovalFlow({ onClose, startInReview = false }: { onClo
     setTimeout(() => { setPostStates(prev => { const n = [...prev]; n[cur] = 'pending'; return n; }); }, 280);
   }, [cur]);
 
+  // DFY: send the current post back to the team with a note, mark it 'revision'.
+  const handleSendRevision = useCallback((note: string) => {
+    const idx = revisionFor;
+    setRevisionFor(null);
+    if (idx === null) return;
+    setRevisionNotes(prev => ({ ...prev, [idx]: note }));
+    let updatedStates: PostStatus[] = [];
+    setPostStates(prev => { updatedStates = [...prev]; updatedStates[idx] = 'revision'; return updatedStates; });
+    setTimeout(() => setCardAnim('exit'), 60);
+    setTimeout(() => { setCardAnim('enter'); advanceToNext(updatedStates, idx); }, 60 + 380);
+    setTimeout(() => setCardAnim('idle'), 60 + 380 + 40);
+  }, [revisionFor, advanceToNext]);
+
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#fff' }}>
       <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', overflowX: 'hidden' }}>
@@ -784,6 +864,12 @@ export function CampaignApprovalFlow({ onClose, startInReview = false }: { onClo
         onApprove={handleApprove} onDontPost={handleDontPost}
         onActions={() => setActionsOpen(true)}
         approveAnim={approveAnim} cardAnim={cardAnim}
+        dfy={dfy} onRequestRevision={() => setRevisionFor(cur)} revisionNote={revisionNotes[cur]}
+      />
+      <RevisionSheet
+        open={revisionFor !== null}
+        onClose={() => setRevisionFor(null)}
+        onSend={handleSendRevision}
       />
       <ActionsDrawer
         open={actionsOpen} isApproved={postStates[cur] === 'approved'}

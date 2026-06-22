@@ -42,30 +42,35 @@ import addStrategyIcon from '@ios/icons/lighter_weight/add-strategy.svg';
 import homeIcon from '@ios/icons/home-04.svg';
 import homeFilledIcon from '@ios/icons/home-filled.svg';
 import calendarIcon from '@ios/icons/calendar-01.svg';
-import campaignsIcon from '@ios/icons/layers-05.svg';
-import brandKitTabIcon from '@ios/icons/atom.svg';
+import approvalsTabIcon from '@ios/icons/approvals.svg';
+// Thin stroked variant — matches the weight of the other tab-bar icons
+// (the default `user-profile-group.svg` is a heavier filled glyph).
+import receptionistIcon from '@ios/icons/users.svg';
 import moreIcon from '@ios/icons/more-dots.svg';
 
-// Primary tabs shown in the bottom tab bar. DIY surfaces Brand Kit as a tab
-// and keeps Approvals out of the bar (opened from the Home card / More menu).
-const TABS = ['home', 'calendar', 'campaigns', 'brand-kit', 'more'] as const;
+// Primary tabs shown in the bottom tab bar. DFY surfaces Approvals as a
+// first-class tab and moves Campaigns into the More menu.
+const TABS = ['home', 'calendar', 'approvals', 'receptionist', 'more'] as const;
 
 // All states the state context will accept (includes secondary sub-views like
-// lead-conversation, and receptionist which is no longer a tab).
-const ALL_STATES = [...TABS, 'receptionist', 'lead-conversation'] as const;
+// brand-kit, campaigns and lead-conversation that are pushed from a parent tab
+// and don't have their own tab in the tab bar).
+const ALL_STATES = [...TABS, 'brand-kit', 'campaigns', 'lead-conversation'] as const;
 type AppState = (typeof ALL_STATES)[number];
 
 const TAB_ITEMS: TabItem[] = [
-  { id: 'home',      label: 'Home',      icon: homeIcon, iconActive: homeFilledIcon },
-  { id: 'calendar',  label: 'Calendar',  icon: calendarIcon },
-  { id: 'campaigns', label: 'Campaigns', icon: campaignsIcon },
-  { id: 'brand-kit', label: 'Brand Kit', icon: brandKitTabIcon },
-  { id: 'more',      label: 'More',      icon: moreIcon },
+  { id: 'home',         label: 'Home',         icon: homeIcon, iconActive: homeFilledIcon },
+  { id: 'calendar',     label: 'Calendar',     icon: calendarIcon },
+  { id: 'approvals',    label: 'Approvals',    icon: approvalsTabIcon },
+  { id: 'receptionist', label: 'Receptionist', icon: receptionistIcon },
+  { id: 'more',         label: 'More',         icon: moreIcon },
 ];
 
 // Map a sub-view back to its parent tab so the tab bar stays highlighted on
 // the right tab while the user is deep in a secondary screen.
 function parentTab(state: string): string {
+  if (state === 'brand-kit')         return 'more';
+  if (state === 'campaigns')         return 'more';
   if (state === 'lead-conversation') return 'receptionist';
   return state;
 }
@@ -77,10 +82,14 @@ interface AppScreensProps {
   onOpenLearningLoop: () => void;
   onApproveCampaign: () => void;
   onOpenApprovals: () => void;
+  onReviewFromApprovals: () => void;
+  onReviewReputation: () => void;
   unscheduledCount: number;
   onUnscheduled: () => void;
   onBrandKitOpen: () => void;
   onBrandKitClose: () => void;
+  onCampaignsOpen: () => void;
+  onCampaignsClose: () => void;
   onLeadOpen: (id: string) => void;
   onLeadClose: () => void;
   selectedLeadId: string | null;
@@ -91,8 +100,10 @@ interface AppScreensProps {
 function AppScreens({
   onCampaignsSettings, showSkeleton,
   llState, onOpenLearningLoop, onApproveCampaign, onOpenApprovals,
+  onReviewFromApprovals, onReviewReputation,
   unscheduledCount, onUnscheduled,
   onBrandKitOpen, onBrandKitClose,
+  onCampaignsOpen, onCampaignsClose,
   onLeadOpen, onLeadClose, selectedLeadId,
   onStatusEdit, statusOverrides,
 }: AppScreensProps) {
@@ -117,13 +128,15 @@ function AppScreens({
     <>
       <div ref={anchorRef} style={{ height: 0 }} />
       {state === 'home'              && <HomeScreen llState={llState} onOpenLearningLoop={onOpenLearningLoop} onOpenApprovals={onOpenApprovals} />}
+      {state === 'approvals'         && <ApprovalsScreen asTab onReviewCampaign={onReviewFromApprovals} onReviewReputation={onReviewReputation} />}
       {state === 'calendar'          && <CalendarScreen unscheduledCount={unscheduledCount} onUnscheduled={onUnscheduled} />}
-      {state === 'campaigns'         && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} onCampaignClick={onApproveCampaign} />}
+      {state === 'campaigns'         && <CampaignsScreen onSettingsClick={onCampaignsSettings} showSkeleton={showSkeleton} onCampaignClick={onApproveCampaign} onBack={onCampaignsClose} />}
       {state === 'receptionist'      && <LeadsScreen onLeadClick={onLeadOpen} onStatusEdit={onStatusEdit} statusOverrides={statusOverrides} />}
       {state === 'lead-conversation' && selectedLeadId && <LeadConversationScreen leadId={selectedLeadId} onBack={onLeadClose} onStatusEdit={onStatusEdit} statusOverrides={statusOverrides} />}
-      {state === 'more'              && <MoreScreen onOpenLearningLoop={onOpenLearningLoop} onApprovalsClick={onOpenApprovals} />}
-      {state === 'brand-kit'         && <BrandKitScreen />}
-      <div style={{ height: 148 }} />
+      {state === 'more'              && <MoreScreen onBrandKitClick={onBrandKitOpen} onOpenLearningLoop={onOpenLearningLoop} onCampaignsClick={onCampaignsOpen} />}
+      {state === 'brand-kit'         && <BrandKitScreen onBack={onBrandKitClose} />}
+      {/* Approvals manages its own height + bottom clearance (self-scroller). */}
+      {state !== 'approvals' && <div style={{ height: 148 }} />}
     </>
   );
 }
@@ -187,10 +200,9 @@ export default function MobileApp() {
   }
 
   // Campaign approval state --------------------------------------------------
-  // approvalsOpen → the Approvals overview page (pushed from the Home "Review
-  // pending approvals" card). campaignFlowOpen → the single-campaign review
-  // flow, layered on top of either the Approvals page or the Campaigns tab.
-  const [approvalsOpen, setApprovalsOpen]       = useState(false);
+  // DFY: Approvals is a tab (state 'approvals'), not a pushed overlay.
+  // campaignFlowOpen → the single-campaign review flow, layered on top of the
+  // Approvals tab or the Campaigns tab.
   const [campaignFlowOpen, setCampaignFlowOpen] = useState(false);
   // True when the campaign flow was entered from an Approvals "Review N Posts"
   // button → skip the campaign detail screen and open the review sheet directly.
@@ -291,14 +303,13 @@ export default function MobileApp() {
     llView === 'll' && llState === 'no-account'
       ? <LLConnectFooter onConnect={() => setLLState('collecting')} />
       : null;
-  const hideFooter = llView === 'll' || llView === 'lock' || campaignFlowOpen || approvalsOpen || reputationFlowOpen;
+  const hideFooter = llView === 'll' || llView === 'lock' || campaignFlowOpen || reputationFlowOpen;
 
   return (
     <StatePicker states={ALL_STATES} defaultState="home">
       <AppBody
         llView={llView}
         llState={llState}
-        approvalsOpen={approvalsOpen}
         campaignFlowOpen={campaignFlowOpen}
         campaignStartInReview={campaignStartInReview}
         reputationFlowOpen={reputationFlowOpen}
@@ -306,8 +317,6 @@ export default function MobileApp() {
         onLLBack={() => setLLView('tabs')}
         onLLLockOpen={() => { setLLState('active'); setLLView('ll'); }}
         onLLConnect={() => setLLState('collecting')}
-        onOpenApprovals={() => setApprovalsOpen(true)}
-        onApprovalsBack={() => setApprovalsOpen(false)}
         onApproveCampaign={() => { setCampaignStartInReview(false); setCampaignFlowOpen(true); }}
         onReviewFromApprovals={() => { setCampaignStartInReview(true); setCampaignFlowOpen(true); }}
         onReviewReputation={() => setReputationFlowOpen(true)}
@@ -349,7 +358,6 @@ export default function MobileApp() {
 interface AppBodyProps {
   llView: 'tabs' | 'll' | 'lock';
   llState: LLDataState;
-  approvalsOpen: boolean;
   campaignFlowOpen: boolean;
   campaignStartInReview: boolean;
   reputationFlowOpen: boolean;
@@ -357,8 +365,6 @@ interface AppBodyProps {
   onLLBack: () => void;
   onLLLockOpen: () => void;
   onLLConnect: () => void;
-  onOpenApprovals: () => void;
-  onApprovalsBack: () => void;
   onApproveCampaign: () => void;
   onReviewFromApprovals: () => void;
   onReviewReputation: () => void;
@@ -443,18 +449,22 @@ function AppBody(props: AppBodyProps) {
           </>
         }
       >
-        {props.llView === 'tabs' && !props.campaignFlowOpen && !props.approvalsOpen && (
+        {props.llView === 'tabs' && !props.campaignFlowOpen && !props.reputationFlowOpen && (
           <AppScreens
             onCampaignsSettings={props.onCampaignsSettings}
             showSkeleton={props.showSkeleton}
             onApproveCampaign={props.onApproveCampaign}
-            onOpenApprovals={props.onOpenApprovals}
+            onOpenApprovals={() => setState('approvals')}
+            onReviewFromApprovals={props.onReviewFromApprovals}
+            onReviewReputation={props.onReviewReputation}
             unscheduledCount={props.unscheduledCount}
             onUnscheduled={props.onUnscheduled}
             llState={props.llState}
             onOpenLearningLoop={props.onOpenLearningLoop}
             onBrandKitOpen={() => setState('brand-kit')}
             onBrandKitClose={() => setState('more')}
+            onCampaignsOpen={() => setState('campaigns')}
+            onCampaignsClose={() => setState('more')}
             onLeadOpen={(id) => { props.onLeadOpen(id); setState('lead-conversation'); }}
             onLeadClose={() => { props.onLeadClose(); setState('receptionist'); }}
             selectedLeadId={props.selectedLeadId}
@@ -476,15 +486,8 @@ function AppBody(props: AppBodyProps) {
         {props.llView === 'lock' && (
           <LockScreen onOpenNotification={props.onLLLockOpen} />
         )}
-        {props.approvalsOpen && !props.campaignFlowOpen && !props.reputationFlowOpen && (
-          <ApprovalsScreen
-            onBack={props.onApprovalsBack}
-            onReviewCampaign={props.onReviewFromApprovals}
-            onReviewReputation={props.onReviewReputation}
-          />
-        )}
         {props.campaignFlowOpen && (
-          <CampaignApprovalFlow onClose={props.onCampaignClose} startInReview={props.campaignStartInReview} />
+          <CampaignApprovalFlow onClose={props.onCampaignClose} startInReview={props.campaignStartInReview} dfy />
         )}
         {props.reputationFlowOpen && !props.campaignFlowOpen && (
           <ReputationReviewFlow onClose={props.onReputationClose} />

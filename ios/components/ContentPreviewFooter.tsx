@@ -24,6 +24,8 @@ import React from 'react';
 
 export type ContentPreviewFooterVariant =
   | 'review'
+  | 'review-dfy'
+  | 'revision'
   | 'dont-post'
   | 'approved-connected'
   | 'approved-0-connected'
@@ -267,10 +269,11 @@ export function ContentPreviewFooter({
 }: ContentPreviewFooterProps) {
 
   const isPosted   = variant === 'posted' || variant === 'posted-failed';
+  const isRevision = variant === 'revision';
   const isDontPost = variant === 'dont-post';
-  const showChevron = !isPosted;
+  const showChevron = !isPosted && !isRevision;
   const dateLabel   = isPosted ? 'Posted on' : 'Posting on';
-  const dateValue   = isDontPost ? 'Not scheduled' : date;
+  const dateValue   = isDontPost ? 'Not scheduled' : isRevision ? 'With your Blaze team' : date;
 
   // ── Badge resolution ──────────────────────────────────────────────────────
   const primaryBadge: React.ReactNode = (() => {
@@ -304,6 +307,42 @@ export function ContentPreviewFooter({
           highlightBg={primaryHighlight}
           badge={primaryBadge}
         />
+      );
+    }
+
+    // DFY: a revision was requested — this piece is back with the Blaze team.
+    if (isRevision) {
+      return (
+        <PillButton
+          icon={<IconRefresh color={DARK_60} />}
+          label="Revision requested"
+          labelColor={DARK_60}
+          onClick={onActions}
+        />
+      );
+    }
+
+    // DFY review: send back to the team for changes instead of self-editing.
+    if (variant === 'review-dfy') {
+      return (
+        <>
+          <PillButton
+            icon={<IconRefresh color={DARK_90} />}
+            label="Send back"
+            onClick={onSecondaryAction}
+          />
+          <PillButton
+            icon={<IconApprovals color={GREEN} />}
+            label="Approve"
+            onClick={onPrimaryAction}
+          />
+          <PillButton
+            icon={<IconDots color={DARK_80} />}
+            label="Actions"
+            labelColor={DARK_80}
+            onClick={onActions}
+          />
+        </>
       );
     }
 
