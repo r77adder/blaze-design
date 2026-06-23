@@ -10,8 +10,9 @@ import {
 import { useLocation } from 'react-router-dom';
 import { Button, Heading, Text } from '@/components';
 import { Select, StatusPill, TextField, useToast } from '@/staging';
-import type { SelectOption } from '@/staging';
+import type { SelectOption, StatusPillTone } from '@/staging';
 import type { IconProps } from '@/icons/Types';
+import AlertTriangle from '@/icons/20/AlertTriangle';
 import Check2 from '@/icons/20/Check2';
 import ChevronDown from '@/icons/20/ChevronDown';
 import ChevronUp from '@/icons/20/ChevronUp';
@@ -21,6 +22,7 @@ import Edit1 from '@/icons/20/Edit1';
 import LinkAngled from '@/icons/20/LinkAngled';
 import Loader1 from '@/icons/20/Loader1';
 import Marker2 from '@/icons/20/Marker2';
+import ShieldChecked from '@/icons/20/ShieldChecked';
 import Trash2 from '@/icons/20/Trash2';
 import Upload from '@/icons/20/Upload';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
@@ -65,6 +67,26 @@ const STEADY_DATA: ComplianceData = {
 };
 
 type ReviewState = 'under-review' | 'approved' | 'failed';
+
+/**
+ * A2P 10DLC verification status for the agent number — the single status the
+ * Triggers tab's phone-number token and this tab's submission tracker both
+ * reflect. Derived from the compliance form's phase + per-section review state
+ * (see `deriveA2pStatus`), so the two surfaces never disagree.
+ *
+ * - not-registered — nothing submitted yet (replaces the old "SMS not available")
+ * - awaiting       — submitted, carrier review in progress
+ * - verified       — every section approved; texting enabled
+ * - rejected       — one or more sections were rejected and need changes
+ */
+export type A2pStatus = 'not-registered' | 'awaiting' | 'verified' | 'rejected';
+
+/** Seed the shared A2P status from the H2 dev-state controller, matching the
+ *  compliance form's own cold/steady seeding (cold = empty form, steady =
+ *  submitted with the policy section rejected). */
+export function a2pFromDevState(devState: 'cold' | 'steady'): A2pStatus {
+  return devState === 'cold' ? 'not-registered' : 'rejected';
+}
 
 const NULL_REVIEW: Record<SectionId, ReviewState | null> = {
   business: null, address: null, rep: null, policy: null, optin: null,
@@ -252,6 +274,63 @@ const SECTIONS: SectionMeta[] = [
 
 const SECTION_ORDER: SectionId[] = SECTIONS.map((s) => s.id);
 
+// Collapse the form's phase + per-section verdicts into one A2P status.
+// Precedence: any rejected section (or one re-opened for editing) → rejected;
+// else anything still in review → awaiting; else all approved → verified.
+function deriveA2pStatus(
+  phase: 'editing' | 'review',
+  reviewStatus: Record<SectionId, ReviewState | null>,
+  editing: Record<SectionId, boolean>,
+): A2pStatus {
+  if (phase === 'editing') return 'not-registered';
+  const vals = SECTION_ORDER.map((s) => reviewStatus[s]);
+  if (vals.some((v) => v === 'failed') || SECTION_ORDER.some((s) => editing[s])) return 'rejected';
+  if (vals.some((v) => v === 'under-review')) return 'awaiting';
+  if (vals.every((v) => v === 'approved')) return 'verified';
+  return 'awaiting';
+}
+
+// Submission-tracker presentation, keyed by A2P status. `tint`/`border` mirror
+// the StatusPill tone palette so the banner reads as the same status family.
+const TRACKER: Record<
+  A2pStatus,
+  { title: string; tone: StatusPillTone; icon: ComponentType<IconProps>; spin?: boolean; tint: string; border: string; desc: string }
+> = {
+  'not-registered': {
+    title: 'Not registered',
+    tone: 'warning',
+    icon: Document,
+    tint: 'rgba(237, 124, 44, 0.08)',
+    border: 'rgba(237, 124, 44, 0.22)',
+    desc: "This number isn't registered for A2P 10DLC yet. Complete every section below and submit to register it for business texting.",
+  },
+  awaiting: {
+    title: 'Awaiting approval',
+    tone: 'info',
+    icon: Loader1,
+    spin: true,
+    tint: 'rgba(1, 121, 207, 0.08)',
+    border: 'rgba(1, 121, 207, 0.22)',
+    desc: 'Your registration is under carrier review — no action needed. Approval typically takes 5–30 business days.',
+  },
+  verified: {
+    title: 'Verified',
+    tone: 'success',
+    icon: ShieldChecked,
+    tint: 'rgba(4, 175, 0, 0.08)',
+    border: 'rgba(4, 175, 0, 0.20)',
+    desc: 'This number is registered and approved for A2P 10DLC messaging. Outbound texting is enabled.',
+  },
+  rejected: {
+    title: 'Rejected',
+    tone: 'danger',
+    icon: AlertTriangle,
+    tint: 'rgba(188, 1, 11, 0.06)',
+    border: 'rgba(188, 1, 11, 0.20)',
+    desc: 'The carrier rejected your A2P 10DLC submission.',
+  },
+};
+
 // Simulated carrier verdicts — sections sit in the "under review" waiting
 // state for a few seconds before resolving; policy fails to demo the
 // edit-and-resubmit flow.
@@ -269,6 +348,53 @@ const FAILURE_REASON: Partial<Record<SectionId, string>> = {
   policy:
     'Your Privacy Policy page is missing the required opt-out (STOP) and message-frequency language. Update the page, then resubmit this section.',
 };
+
+// ── Submission status tracker ─────────────────────────────────────────────────
+
+function SubmissionTracker({
+  status,
+  rejectionReasons,
+}: {
+  status: A2pStatus;
+  rejectionReasons: { title: string; reason: string }[];
+}) {
+  const meta = TRACKER[status];
+  const Icon = meta.icon;
+  return (
+    <div
+      role="status"
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 12,
+        padding: 16,
+        borderRadius: 10,
+        border: `1px solid ${meta.border}`,
+        background: meta.tint,
+      }}
+    >
+      <span
+        style={{
+          flexShrink: 0,
+          marginTop: 1,
+          display: 'inline-flex',
+          color: 'var(--dark-90)',
+          ...(meta.spin ? { animation: 'blzspin 0.9s linear infinite' } : null),
+        }}
+      >
+        <Icon size={20} />
+      </span>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <Heading level={4}>A2P registration</Heading>
+        <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 14 }}>
+          {status === 'rejected' && rejectionReasons.length > 0
+            ? `${meta.desc} ${rejectionReasons.map((r) => r.reason).join(' ')}`
+            : meta.desc}
+        </Text>
+      </div>
+    </div>
+  );
+}
 
 // ── Layout constants ────────────────────────────────────────────────────────
 
@@ -294,7 +420,12 @@ const SCOPED_CSS =
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-export function ComplianceSection() {
+export function ComplianceSection({
+  onStatusChange,
+}: {
+  /** Reports the derived A2P status up so the Triggers tab token stays in sync. */
+  onStatusChange?: (status: A2pStatus) => void;
+} = {}) {
   const { showToast } = useToast();
   const { pathname } = useLocation();
   const { getState } = useDevState();
@@ -348,6 +479,22 @@ export function ComplianceSection() {
   }, [data]);
 
   const allReady = SECTION_ORDER.every((s) => ready[s]);
+
+  // Single A2P status that drives both the top tracker and (reported up) the
+  // Triggers-tab phone-number token.
+  const a2pStatus = deriveA2pStatus(phase, reviewStatus, editing);
+  useEffect(() => {
+    onStatusChange?.(a2pStatus);
+  }, [a2pStatus, onStatusChange]);
+
+  // Per-section rejection reasons, surfaced in the tracker when status is
+  // rejected (a section the user has re-opened for editing has no verdict yet).
+  const rejectionReasons = SECTION_ORDER
+    .filter((s) => reviewStatus[s] === 'failed')
+    .map((s) => ({
+      title: SECTIONS.find((m) => m.id === s)!.title,
+      reason: FAILURE_REASON[s] ?? 'This section was rejected during carrier review. Update it and resubmit.',
+    }));
 
   const toggle = (id: SectionId) => setOpen((o) => ({ ...o, [id]: !o[id] }));
 
@@ -602,6 +749,10 @@ export function ComplianceSection() {
           verification. Submitted details should match your latest official legal and financial documents.
         </Text>
       </div>
+
+      {/* submission status tracker — the single A2P verdict for this number,
+          with a brief reason (and per-section detail when rejected). */}
+      <SubmissionTracker status={a2pStatus} rejectionReasons={rejectionReasons} />
 
       {/* divider-separated sections, with generous spacing */}
       <div>

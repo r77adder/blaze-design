@@ -1,6 +1,8 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button, Heading, IconButton, Modal, Text, useModals, type StackModalProps } from '@/components';
 import { Avatar, Chip, Pill, Select, StatusPill, TextField as DSTextField, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import Close from '@/icons/20/Close';
 import Lock3 from '@/icons/20/Lock3';
 import ChevronDown from '@/icons/20/ChevronDown';
@@ -11,9 +13,11 @@ import CheckboxChecked from '@/icons/20/CheckboxChecked';
 import ArrowRight from '@/icons/20/ArrowRight';
 import Play3 from '@/icons/20/Play3';
 import Trash2 from '@/icons/20/Trash2';
+import AlertTriangle from '@/icons/20/AlertTriangle';
 import { ChannelGlyph } from '../SdrDetail';
 import { H2Layout } from '../H2Layout';
-import { ComplianceSection } from './SdrCompliance';
+import { ComplianceSection, a2pFromDevState, type A2pStatus } from './SdrCompliance';
+import { useDevState } from '../dev-state-context';
 import { ALL_CHANNELS, SOURCE_LABELS, type Channel } from '../sdr-data';
 import {
   AFTER_HOURS_OPTIONS,
@@ -176,6 +180,18 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
   const [subTab, setSubTab] = useState<SettingsSubTab>('triggers');
   const [chatOpen, setChatOpen] = useState(false);
 
+  // Shared A2P verification status: the Compliance tab owns the detail and
+  // reports the derived status up here; the Triggers tab's phone-number token
+  // reads it. Seeded from the dev-state controller (cold = not registered,
+  // steady = rejected) and re-seeded when the designer flips it.
+  const { pathname } = useLocation();
+  const { getState } = useDevState();
+  const devState = getState(pathname);
+  const [a2pStatus, setA2pStatus] = useState<A2pStatus>(() => a2pFromDevState(devState));
+  useEffect(() => {
+    setA2pStatus(a2pFromDevState(devState));
+  }, [devState]);
+
   const activeAgent = agents.find((a) => a.id === activeAgentId) ?? agents[0]!;
 
   const updateAgent = (next: AgentConfig) => {
@@ -191,12 +207,21 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
     setActiveAgentId(newId);
   };
 
-  const tabs: { id: SettingsSubTab; label: string; sub: string }[] = [
+  const tabs: { id: SettingsSubTab; label: string; sub: string; icon?: React.ComponentType<{ size?: number; color?: string }>; iconColor?: string }[] = [
     { id: 'triggers',      label: 'Triggers',      sub: 'When it runs' },
     { id: 'agent',         label: 'Agent',         sub: 'What the AI does' },
     { id: 'outcomes',      label: 'Outcomes',      sub: 'What gets delivered' },
     { id: 'notifications', label: 'Notifications', sub: 'How you stay in the loop' },
-    { id: 'compliance',    label: 'Compliance',    sub: 'A2P / 10DLC registration' },
+    {
+      id: 'compliance',
+      label: 'Compliance',
+      sub: 'A2P / 10DLC registration',
+      // A small warning icon on the tab itself flags that A2P needs action
+      // (rejected / not registered) — so the status reads from the nav without
+      // repeating a pill inside the banner.
+      icon: a2pNeedsAttention(a2pStatus) ? AlertTriangle : undefined,
+      iconColor: a2pTabIconColor(a2pStatus),
+    },
   ];
 
   return (
@@ -238,6 +263,7 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
             <TriggersSection
               agent={activeAgent}
               onChange={updateAgent}
+              a2pStatus={a2pStatus}
               onStartCompliance={() => setSubTab('compliance')}
             />
           )}
@@ -258,7 +284,7 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
           {subTab === 'notifications' && (
             <NotificationsSection onConfigureEscalations={() => setSubTab('outcomes')} />
           )}
-          {subTab === 'compliance' && <ComplianceSection />}
+          {subTab === 'compliance' && <ComplianceSection onStatusChange={setA2pStatus} />}
         </FolderTabPanel>
       </div>
 
@@ -350,13 +376,25 @@ function AgentSelector({
 
 // ── Folder tab panel ──────────────────────────────────────────────────────
 
+// Whether the A2P status needs the user's attention (drives the Compliance
+// tab's warning icon). Awaiting + verified are calm states, so no icon.
+function a2pNeedsAttention(status: A2pStatus): boolean {
+  return status === 'rejected' || status === 'not-registered';
+}
+
+// Tint for the Compliance tab warning icon — matches the status color family
+// (danger red when rejected, warning orange when not yet registered).
+function a2pTabIconColor(status: A2pStatus): string {
+  return status === 'rejected' ? 'var(--red-70)' : 'var(--status-connect)';
+}
+
 function FolderTabPanel({
   tabs,
   value,
   onChange,
   children,
 }: {
-  tabs: { id: string; label: string; sub: string }[];
+  tabs: { id: string; label: string; sub: string; icon?: React.ComponentType<{ size?: number; color?: string }>; iconColor?: string }[];
   value: string;
   onChange: (v: string) => void;
   children: React.ReactNode;
@@ -365,11 +403,20 @@ function FolderTabPanel({
     <div>
       {/* Tab strip — selectable chips (grey fill; white + border when selected) */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {tabs.map((t) => (
-          <Chip key={t.id} size="md" selected={t.id === value} onSelectionChange={() => onChange(t.id)}>
-            {t.label}
-          </Chip>
-        ))}
+        {tabs.map((t) => {
+          const TabIcon = t.icon;
+          return (
+            <Chip
+              key={t.id}
+              size="md"
+              selected={t.id === value}
+              onSelectionChange={() => onChange(t.id)}
+              icon={TabIcon ? (props) => <TabIcon {...props} color={t.iconColor} /> : undefined}
+            >
+              {t.label}
+            </Chip>
+          );
+        })}
       </div>
 
       {/* Content */}
@@ -1596,13 +1643,57 @@ function PickupRow({
   );
 }
 
+// A2P verification status token shown beside the agent number, plus the gate
+// copy for each permutation. The whole chip is the "status token" — clicking it
+// jumps to the Compliance tab.
+const A2P_TOKEN: Record<A2pStatus, { label: string; tone: StatusPillTone; help: string }> = {
+  'not-registered': { label: 'Not registered',    tone: 'warning', help: 'SMS not available — register for A2P to enable texting.' },
+  awaiting:         { label: 'Awaiting approval', tone: 'info',    help: 'A2P registration is under carrier review.' },
+  verified:         { label: 'Verified',          tone: 'success', help: 'Approved for A2P messaging — texting is enabled.' },
+  rejected:         { label: 'Rejected',          tone: 'danger',  help: 'A2P registration was rejected — review the details.' },
+};
+
+function A2pStatusToken({ status, onOpen }: { status: A2pStatus; onOpen: () => void }) {
+  const meta = A2P_TOKEN[status];
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`A2P status: ${meta.label}. Open the Compliance tab.`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 10px 10px 14px',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 8,
+        background: 'var(--dark-2)',
+        cursor: 'pointer',
+        font: 'inherit',
+        textAlign: 'left',
+      }}
+    >
+      <StatusPill tone={meta.tone} size="sm">{meta.label}</StatusPill>
+      <Text color="var(--dark-60)" style={{ fontSize: 13, lineHeight: 1.5, whiteSpace: 'nowrap' }}>
+        {meta.help}
+      </Text>
+      <span style={{ flexShrink: 0, color: 'var(--dark-40)', display: 'inline-flex' }}>
+        <ArrowRight size={16} />
+      </span>
+    </button>
+  );
+}
+
 function TriggersSection({
   agent,
   onChange,
+  a2pStatus,
   onStartCompliance,
 }: {
   agent: AgentConfig;
   onChange: (a: AgentConfig) => void;
+  /** Current A2P verification status for the agent number (shared with Compliance). */
+  a2pStatus: A2pStatus;
   /** Jumps to the Compliance sub-tab so the user can start A2P / 10DLC registration. */
   onStartCompliance: () => void;
 }) {
@@ -1623,9 +1714,9 @@ function TriggersSection({
         title="Agent phone number"
         sub="The number callers will reach and that the AI will use for outbound SMS."
       >
-        {/* A2P / 10DLC compliance gate — the number takes calls now, but can't
-            text customers until it's registered with carriers. Everything sits
-            on one row: number + status, the SMS gate label, why, and the CTA. */}
+        {/* A2P / 10DLC verification — the number takes calls now ("Active"), but
+            its ability to text customers depends on its A2P registration status.
+            The status token reflects that and links to the Compliance tab. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div
             style={{
@@ -1644,27 +1735,7 @@ function TriggersSection({
             <StatusPill tone="success" size="sm">Active</StatusPill>
           </div>
 
-          {/* Compliance gate, wrapped in a container styled like the number chip
-              (matched height via 7px vertical padding around the 28px button). */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '6px 8px 6px 14px',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 8,
-              background: 'var(--dark-2)',
-            }}
-          >
-            <StatusPill tone="warning" size="sm">SMS not available</StatusPill>
-            <Text color="var(--dark-60)" style={{ fontSize: 13, lineHeight: 1.5, whiteSpace: 'nowrap' }}>
-              Complete A2P compliance to enable texting.
-            </Text>
-            <Button variant="secondary" size="sm" onPress={onStartCompliance}>
-              Start compliance
-            </Button>
-          </div>
+          <A2pStatusToken status={a2pStatus} onOpen={onStartCompliance} />
         </div>
       </SectionShell>
 
