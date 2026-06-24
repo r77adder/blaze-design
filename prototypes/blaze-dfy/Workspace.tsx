@@ -13,6 +13,33 @@ import { Settings, StrategyTab } from './Steady';
 import { ApprovalV2View, ApprovalsFilterControl } from './Approvals';
 import type { ApprovalTypeFilter, ApprovalStatusFilter } from './Approvals';
 import { useReview, type Phase } from './lib/review';
+import type { ComponentType } from 'react';
+// Faithfully-ported H2 feature pages (Awareness / Conversion). They live in
+// ../h2-port and read cold/steady via the shimmed dev-state (our global toggle).
+import { OrganicSocialRoute } from '../h2-port/pages/OrganicSocial';
+import { OrganicProfileRoute } from '../h2-port/pages/OrganicProfile';
+import { SeoAeoRoute } from '../h2-port/pages/SeoAeo';
+import { PaidSocialRoute } from '../h2-port/pages/PaidSocial';
+import { PaidSearchRoute } from '../h2-port/pages/PaidSearch';
+import { LandingPagesRoute } from '../h2-port/pages/LandingPages';
+import { SdrRoute } from '../h2-port/pages/Sdr';
+import { ReputationRoute } from '../h2-port/pages/Reputation';
+import { CompetitorIntelPage } from '../h2-port/competitor-tracking/pages/CompetitorIntel';
+import { ContentSettingsRoute } from '../h2-port/pages/ContentSettings';
+
+/** section slug -> ported feature page. Shared across AM/Client for now. */
+const H2_FEATURE_ROUTES: Record<string, ComponentType> = {
+  'organic-social': OrganicSocialRoute,
+  'organic-profile': OrganicProfileRoute,
+  'seo-aeo': SeoAeoRoute,
+  'paid-social': PaidSocialRoute,
+  'paid-search': PaidSearchRoute,
+  'competitor-tracking': CompetitorIntelPage,
+  'landing-pages': LandingPagesRoute,
+  sdr: SdrRoute,
+  reputation: ReputationRoute,
+  'content-settings': ContentSettingsRoute,
+};
 
 export function Workspace() {
   const { accountId = '', side = 'am', section, sub } = useParams();
@@ -56,8 +83,10 @@ export function Workspace() {
   const creativeUnlocked = account.phase >= 3 || strategyComplete;
 
   let content;
-  if (sec === 'home') content = <Home clientView={s === 'client'} tab={effSub ?? 'work'} onTabChange={(t) => go(`/${account.id}/${s}/home/${t}`)} onOpenSection={(section) => go(`/${account.id}/${s}/${section}`)} />;
+  if (sec === 'home') content = <Home account={account} clientView={s === 'client'} tab={effSub ?? 'work'} onTabChange={(t) => go(`/${account.id}/${s}/home/${t}`)} onOpenSection={(section) => go(`/${account.id}/${s}/${section}`)} />;
   else if (sec === 'approvals') content = <ApprovalV2View clientView={s === 'client'} embedded initialReviewPostId={sub} typeFilter={apprFilter.type} statusFilter={apprFilter.status} campaignMessages={campaignMessages} onSendCampaignMessage={(id, message) => setCampaignMessages((m) => ({ ...m, [id]: message }))} />;
+  // Ported H2 Awareness / Conversion features — shared across AM & Client.
+  else if (H2_FEATURE_ROUTES[sec]) { const Feature = H2_FEATURE_ROUTES[sec]; content = <Feature />; }
   else if (s === 'client') content = <ClientPortal account={account} section={sec} clientView={s === 'client'} />;
   // AM steady-state Brand Kit / Content Calendar reuse the shared portal views.
   else if (sec === 'brand' || sec === 'calendar') content = <ClientPortal account={account} section={sec} clientView={s === 'client'} />;

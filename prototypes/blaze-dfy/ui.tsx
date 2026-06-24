@@ -88,12 +88,12 @@ export function SectionHeading({ title, note, desc, right }: { title: string; no
 
 /** "Add row" action — secondary button that hugs its content (the flex wrapper
  *  stops the lib Button stretching in a flex-column list). Matches the Create flow. */
-export function AddLink({ label, onClick }: { label: string; onClick: () => void }) {
-  return <div style={{ display: 'flex' }}><Button variant="secondary" frontIcon={Plus} onPress={onClick}>{label}</Button></div>;
+export function AddLink({ label, onClick, variant = 'secondary' }: { label: string; onClick: () => void; variant?: 'secondary' | 'tertiary' | 'ghost' }) {
+  return <div style={{ display: 'flex' }}><Button variant={variant} frontIcon={Plus} onPress={onClick}>{label}</Button></div>;
 }
 /** Remove-row action — secondary trash IconButton. Matches the Create flow. */
-export function RemoveX({ onClick }: { onClick: () => void }) {
-  return <IconButton icon={Trash2} variant="secondary" size="md" title="Remove" onPress={onClick} />;
+export function RemoveX({ onClick, size = 'md', variant = 'secondary' }: { onClick: () => void; size?: 'sm' | 'md' | 'lg'; variant?: 'secondary' | 'tertiary' | 'ghost' }) {
+  return <IconButton icon={Trash2} variant={variant} size={size} title="Remove" onPress={onClick} />;
 }
 
 /** Footer action row for phase screens. */
@@ -267,7 +267,7 @@ export function IntroPage({ title, intro, steps, action }: { title: string; intr
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 28 }}>{action}</div>
+      <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>{action}</div>
     </div>
   );
 }

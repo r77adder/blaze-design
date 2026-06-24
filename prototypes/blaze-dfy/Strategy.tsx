@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Heading, Text, Button } from '@/components';
 import { Card, Chip, Select } from '@/staging';
 import Plus from '@/icons/20/Plus';
+import ThumbUp from '@/icons/20/ThumbUp';
+import ThumbDown from '@/icons/20/ThumbDown';
 import type { Account, Goals, BrandColor, BrandFont, ScoreStatus, SwipeItem } from './lib/types';
 import * as S from './lib/strategy';
 import { updateAccountBrand } from './lib/api';
@@ -9,6 +11,7 @@ import { PhaseScreen, type Go } from './nav';
 import { useReview } from './lib/review';
 import { AmReviewPanel } from './Review';
 import { Field, TextInput, TextArea, SectionHeading, AddLink, RemoveX, EditableMarkdown, FontFamilySelect, FieldCard, IntroPage, SuccessState, ScorecardHeader, GaugeRing, gradientFor, ColorSwatch } from './ui';
+import { SwipeFilePort, MarketingGoalsPort } from './onboarding-port';
 
 function statusColor(s: ScoreStatus) { return s === 'bad' ? 'var(--red-70)' : s === 'warn' ? 'var(--status-review)' : 'var(--status-approved)'; }
 
@@ -52,9 +55,9 @@ export function Strategy({ account, sub, go }: { account: Account; sub: string; 
     <PhaseScreen account={account} side="am" section="strategy" sub={sub} go={go} nextSection="creative" nextLabel="Continue to Creative Review" maxWidth={920}>
       {sub === 'context' && <BrandContext account={account} />}
       {sub === 'creative' && <Creative account={account} />}
-      {sub === 'swipe' && <SwipeFileStep account={account} />}
+      {sub === 'swipe' && <SwipeFilePort />}
       {sub === 'audit' && <Audit account={account} />}
-      {sub === 'goals' && <GoalsStep account={account} />}
+      {sub === 'goals' && <MarketingGoalsPort />}
     </PhaseScreen>
   );
 }
@@ -66,10 +69,10 @@ function BrandContext({ account }: { account: Account }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {fields.map(([label, key]) => (
-        <FieldCard key={key}>
-          <Heading level={4} style={{ margin: '0 0 8px' }}>{label}</Heading>
-          <EditableMarkdown value={v[key]} onChange={(val) => setV({ ...v, [key]: val })} />
-        </FieldCard>
+        <div key={key}>
+          <Heading level={3} style={{ margin: '0 0 8px' }}>{label}</Heading>
+          <TextArea value={v[key]} onChange={(e) => setV({ ...v, [key]: e.target.value })} style={{ minHeight: 110 }} />
+        </div>
       ))}
     </div>
   );
@@ -89,16 +92,16 @@ function Creative({ account }: { account: Account }) {
       <div>
         <SectionHeading title="Taglines" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {taglines.map((t, i) => <div key={i} style={{ display: 'flex', gap: 8 }}><TextInput value={t} onChange={(e) => setTaglines(taglines.map((x, j) => j === i ? e.target.value : x))} /><RemoveX onClick={() => setTaglines(taglines.filter((_, j) => j !== i))} /></div>)}
-          <AddLink label="Add tagline" onClick={() => setTaglines([...taglines, ''])} />
+          {taglines.map((t, i) => <div key={i} style={{ display: 'flex', gap: 8 }}><TextInput value={t} onChange={(e) => setTaglines(taglines.map((x, j) => j === i ? e.target.value : x))} /><RemoveX size="lg" onClick={() => setTaglines(taglines.filter((_, j) => j !== i))} /></div>)}
+          <AddLink variant="tertiary" label="Add tagline" onClick={() => setTaglines([...taglines, ''])} />
         </div>
       </div>
       <div>
         <SectionHeading title="Tone & voice" />
         <TextArea value={tone} onChange={(e) => setTone(e.target.value)} style={{ minHeight: 76, marginBottom: 16 }} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-          <RuleColumn title="Do's" tone="var(--positive-60)" mark="✓" items={dos} setItems={setDos} addLabel="Add a do" />
-          <RuleColumn title="Don'ts" tone="var(--negative-60)" mark="✕" items={donts} setItems={setDonts} addLabel="Add a don't" />
+          <RuleColumn title="Do's" tone="var(--positive-60)" items={dos} setItems={setDos} addLabel="Add a do" />
+          <RuleColumn title="Don'ts" tone="var(--negative-60)" items={donts} setItems={setDonts} addLabel="Add a don't" />
         </div>
       </div>
       <div>
@@ -110,20 +113,20 @@ function Creative({ account }: { account: Account }) {
                 <ColorSwatch value={c.hex} onChange={(hex) => setColors(colors.map((x, j) => j === i ? { ...x, hex } : x))} />
                 <TextInput value={c.hex} onChange={(e) => setColors(colors.map((x, j) => j === i ? { ...x, hex: e.target.value } : x))} style={{ maxWidth: 130, textTransform: 'uppercase' }} />
                 <TextInput value={c.name} onChange={(e) => setColors(colors.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} style={{ maxWidth: 200 }} />
-                <RemoveX onClick={() => setColors(colors.filter((_, j) => j !== i))} />
+                <RemoveX size="lg" onClick={() => setColors(colors.filter((_, j) => j !== i))} />
               </div>
             ))}
-            <AddLink label="Add color" onClick={() => setColors([...colors, { hex: '#888888', name: 'New color' }])} />
+            <AddLink variant="tertiary" label="Add color" onClick={() => setColors([...colors, { hex: '#888888', name: 'New color' }])} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {fonts.map((f, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 150px auto', alignItems: 'center', gap: 8 }}>
-                <FontFamilySelect value={f.family} onChange={(val) => setFonts(fonts.map((x, j) => j === i ? { ...x, family: val } : x))} size="lg" />
-                <Select value={f.role} onChange={(v) => setFonts(fonts.map((x, j) => j === i ? { ...x, role: v as BrandFont['role'] } : x))} options={[{ value: 'Display', label: 'Display' }, { value: 'Heading', label: 'Heading' }, { value: 'Body', label: 'Body' }]} size="lg" fullWidth />
-                <RemoveX onClick={() => setFonts(fonts.filter((_, j) => j !== i))} />
+                <FontFamilySelect value={f.family} onChange={(val) => setFonts(fonts.map((x, j) => j === i ? { ...x, family: val } : x))} size="md" />
+                <Select value={f.role} onChange={(v) => setFonts(fonts.map((x, j) => j === i ? { ...x, role: v as BrandFont['role'] } : x))} options={[{ value: 'Display', label: 'Display' }, { value: 'Heading', label: 'Heading' }, { value: 'Body', label: 'Body' }]} size="md" fullWidth />
+                <RemoveX size="lg" onClick={() => setFonts(fonts.filter((_, j) => j !== i))} />
               </div>
             ))}
-            <AddLink label="Add font" onClick={() => setFonts([...fonts, { family: '', role: 'Body' }])} />
+            <AddLink variant="tertiary" label="Add font" onClick={() => setFonts([...fonts, { family: '', role: 'Body' }])} />
           </div>
         </div>
       </div>
@@ -138,18 +141,18 @@ function Creative({ account }: { account: Account }) {
   );
 }
 
-function RuleColumn({ title, tone, mark, items, setItems, addLabel }: { title: string; tone: string; mark: string; items: string[]; setItems: (v: string[]) => void; addLabel: string }) {
+function RuleColumn({ title, tone, items, setItems, addLabel }: { title: string; tone: string; items: string[]; setItems: (v: string[]) => void; addLabel: string }) {
   return (
     <div>
-      <Text variant="smallList" color={tone} style={{ display: 'block', marginBottom: 8 }}>{mark} {title}</Text>
+      <Heading level={3} style={{ margin: '0 0 8px', color: tone }}>{title}</Heading>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {items.map((r, i) => (
           <div key={i} style={{ display: 'flex', gap: 6 }}>
             <TextInput value={r} onChange={(e) => setItems(items.map((x, j) => j === i ? e.target.value : x))} placeholder={`${title.slice(0, -1)}…`} />
-            <RemoveX onClick={() => setItems(items.filter((_, j) => j !== i))} />
+            <RemoveX size="lg" onClick={() => setItems(items.filter((_, j) => j !== i))} />
           </div>
         ))}
-        <AddLink label={addLabel} onClick={() => setItems([...items, ''])} />
+        <AddLink variant="tertiary" label={addLabel} onClick={() => setItems([...items, ''])} />
       </div>
     </div>
   );
@@ -172,8 +175,8 @@ function SwipeFileStep({ account }: { account: Account }) {
     return (
       <>
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          <button onClick={() => setSwipe({ ...swipe, [id]: r === 'like' ? undefined : 'like' })} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, background: r === 'like' ? 'var(--positive-10)' : 'var(--light-100)', color: r === 'like' ? 'var(--positive-60)' : 'var(--dark-60)', border: r === 'like' ? 'none' : '1px solid var(--dark-8)' }}>👍 Like</button>
-          <button onClick={() => setSwipe({ ...swipe, [id]: r === 'dislike' ? undefined : 'dislike' })} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, background: r === 'dislike' ? 'var(--negative-10)' : 'var(--light-100)', color: r === 'dislike' ? 'var(--negative-60)' : 'var(--dark-60)', border: r === 'dislike' ? 'none' : '1px solid var(--dark-8)' }}>👎 Not for us</button>
+          <button onClick={() => setSwipe({ ...swipe, [id]: r === 'like' ? undefined : 'like' })} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, background: r === 'like' ? 'var(--positive-10)' : 'var(--light-100)', color: r === 'like' ? 'var(--positive-60)' : 'var(--dark-60)', border: r === 'like' ? 'none' : '1px solid var(--dark-8)' }}><ThumbUp size={16} /> Like</button>
+          <button onClick={() => setSwipe({ ...swipe, [id]: r === 'dislike' ? undefined : 'dislike' })} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, background: r === 'dislike' ? 'var(--negative-10)' : 'var(--light-100)', color: r === 'dislike' ? 'var(--negative-60)' : 'var(--dark-60)', border: r === 'dislike' ? 'none' : '1px solid var(--dark-8)' }}><ThumbDown size={16} /> Not for us</button>
         </div>
         <TextArea value={notes[id] ?? ''} placeholder="What do they like / not like about this?" onChange={(e) => setNotes({ ...notes, [id]: e.target.value })} style={{ minHeight: 56, fontSize: 14 }} />
       </>

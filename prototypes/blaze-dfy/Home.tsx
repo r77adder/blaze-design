@@ -4,6 +4,7 @@ import { Button, Heading, Modal, Paragraph, Text, useModals } from '@/components
 import type { StackModalProps } from '@/components';
 import { Avatar, Callout, Card, Checkbox, Pill, Select, StatusPill, TabChip, Tabs, useToast } from '@/staging';
 import { TextInput, TextArea } from './ui';
+import { CampaignModal } from './CampaignModal';
 import Approvals from '@/icons/20/Approvals';
 import CalendarPost from '@/icons/20/CalendarPost';
 import Clock1 from '@/icons/20/Clock1';
@@ -26,6 +27,9 @@ import Stars from '@/icons/20/Stars';
 import Video from '@/icons/20/Video';
 import Voice from '@/icons/20/Voice';
 import styles from './Home.module.scss';
+import type { Account } from './lib/types';
+import { useDfyState } from './lib/dev-state';
+import { HomeCold } from './HomeCold';
 
 /** Pending posts surfaced on the approvals tile (demo count). */
 const APPROVAL_PENDING_COUNT = 6;
@@ -189,13 +193,15 @@ interface AgentTask {
   /** Where the finished work / change landed — surfaces a "go to it" button on
    *  the done task that deep-links to that workspace section. */
   output?: { label: string; section: string };
+  /** Campaign-creation tasks open the full Review-campaign-details modal on Edit. */
+  kind?: 'campaign';
 }
 
 // Every agent task here comes from one analyzed call — rendered as a single
 // Fathom meeting card with each task individually approvable.
 const SEED_AGENT_TASKS: AgentTask[] = [
   {
-    id: 'p1', text: 'Create the Summer Sale campaign (June–July)', status: 'review', assignee: 'alex',
+    id: 'p1', text: 'Create the Summer Sale campaign (June–July)', status: 'review', assignee: 'alex', kind: 'campaign',
     source: 'Organic Campaigns', why: 'Sale runs Jun 20–Jul 31 — content should start landing the week before.',
     conversation: 'Sarah: “Summer’s our big season — I want a real sale in June and July, push the exterior packages hard, maybe 20% off. Last year we left it too late and missed the window.” Alex: “We can build a 6-week wave that ramps into the final week.”',
     output: { label: 'Review the Campaign', section: 'approvals' },
@@ -1000,6 +1006,7 @@ function MeetingModal({ close, meeting, initialTasks, onTasksChange, onOpenTrans
   onGoToOutput: (section: string) => void;
 }) {
   const { showToast } = useToast();
+  const { openModal } = useModals();
   const [tasks, setTasks] = useState(initialTasks);
   const [active, setActive] = useState<{ id: string; prompt: string } | null>(null);
   const [rewriting, setRewriting] = useState<string | null>(null);
@@ -1084,9 +1091,11 @@ function MeetingModal({ close, meeting, initialTasks, onTasksChange, onOpenTrans
 
                   {isReview && active?.id !== t.id && rewriting !== t.id && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <Button variant="ghost" size="sm" onPress={() => ignore(t.id)}>Ignore</Button>
+                      <Button variant="secondary" size="sm" onPress={() => ignore(t.id)}>Ignore</Button>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Button variant="secondary" size="sm" onPress={() => setActive({ id: t.id, prompt: '' })}>Request Changes</Button>
+                        {t.kind === 'campaign' && (
+                          <Button variant="secondary" size="sm" frontIcon={Edit1} onPress={() => openModal(CampaignModal, { taskTitle: t.text })}>Edit</Button>
+                        )}
                         <Button variant="primary" size="sm" frontIcon={Check2} className={styles.approveBtn} onPress={() => approve(t.id)}>Approve &amp; Start</Button>
                       </div>
                     </div>
@@ -1312,7 +1321,15 @@ export function MeetingsView({ clientView }: { clientView: boolean }) {
   );
 }
 
-export function Home({ clientView, tab, onTabChange, onOpenSection }: { clientView: boolean; tab: string; onTabChange: (t: string) => void; onOpenSection?: (section: string) => void }) {
+export function Home({ account, clientView, tab, onTabChange, onOpenSection }: { account: Account; clientView: boolean; tab: string; onTabChange: (t: string) => void; onOpenSection?: (section: string) => void }) {
+  const { state } = useDfyState();
+  // Cold state = the AM activation/onboarding checklist. Client cold falls
+  // through to the normal feed for now.
+  if (state === 'cold' && !clientView) return <HomeCold account={account} onOpenSection={onOpenSection} />;
+  return <HomeSteady clientView={clientView} tab={tab} onTabChange={onTabChange} onOpenSection={onOpenSection} />;
+}
+
+function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientView: boolean; tab: string; onTabChange: (t: string) => void; onOpenSection?: (section: string) => void }) {
   // Deep-link to a workspace section (e.g. the Approvals tab) or a home sub-tab.
   const openSection = (section: string) => {
     if (section.startsWith('home/')) onTabChange(section.slice('home/'.length));

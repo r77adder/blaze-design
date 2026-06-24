@@ -1,0 +1,30 @@
+// One-off CSS module for the Living Doc prototype. CLAUDE.md prefers inline
+// style={} in prototypes, but inline styles can't express :hover — same
+// minimum-viable exception as FeedItem.module.scss. ONLY pseudo-state rules
+// live here; all layout/spacing stays inline in LivingDoc.tsx.
+.taskItem {
+  transition: background 0.12s ease;
+}
+
+.taskItem:hover {
+  background: var(--dark-4);
+}
+
+// Soft approve buttons — light green fill, dark green text, so a feed full
+// of approvals doesn't read as a wall of solid-black primaries. Doubled
+// selector beats Button.module.scss's single-class variant rules; the
+// pseudo-class rules out-rank its .hovered/.pressed state classes.
+// NOTE: no `svg { fill }` override here — the check icons are stroke-based
+// with fill="none"; forcing fill paints the open path solid. Strokes use
+// currentColor, so they pick up the dark green text color on their own.
+.approveBtn.approveBtn {
+  background: rgba(4, 175, 0, 0.12);
+  color: var(--positive-80);
+}
+
+.approveBtn.approveBtn:hover,
+.approveBtn.approveBtn:active,
+.approveBtn.approveBtn:focus {
+  background: rgba(4, 175, 0, 0.2);
+  color: var(--positive-80);
+}

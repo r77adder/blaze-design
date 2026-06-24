@@ -40,6 +40,9 @@ interface ReviewState {
   /** Set once the AM finishes Strategy onboarding — unlocks Creative Review. */
   strategyComplete: boolean;
   setStrategyComplete: (v: boolean) => void;
+  /** Set once the AM finishes Creative Review. */
+  creativeComplete: boolean;
+  setCreativeComplete: (v: boolean) => void;
   packet: (p: Phase) => PacketStatus;
   share: (p: Phase) => void;
   reset: (p: Phase) => void;
@@ -55,6 +58,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
   const [packets, setPackets] = useState<ByPhase<PacketStatus>>(() => byPhase<PacketStatus>(() => 'draft'));
   const [feedback, setFeedback] = useState<ByPhase<Record<string, ItemFeedback>>>(() => byPhase(() => ({})));
   const [strategyComplete, setStrategyComplete] = useState(false);
+  const [creativeComplete, setCreativeComplete] = useState(false);
 
   const setPacket = (p: Phase, s: PacketStatus) => setPackets((m) => ({ ...m, [p]: s }));
   const setItem = (p: Phase, id: string, patch: Partial<ItemFeedback>) =>
@@ -63,6 +67,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{
       strategyComplete, setStrategyComplete,
+      creativeComplete, setCreativeComplete,
       packet: (p) => packets[p],
       share: (p) => setPacket(p, 'shared'),
       submit: (p) => setPacket(p, 'submitted'),

@@ -1,30 +1,42 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, Button, Heading } from '@/components';
 import { Card, StatusPill, Chip } from '@/staging';
 import Plus from '@/icons/20/Plus';
-import type { Account, GeneratedAsset, AssetType, WeekTheme } from './lib/types';
+import ThumbUp from '@/icons/20/ThumbUp';
+import ThumbDown from '@/icons/20/ThumbDown';
+import type { Account, AssetType, WeekTheme } from './lib/types';
 import * as S from './lib/strategy';
 import { PhaseScreen, type Go } from './nav';
 import { AmReviewPanel } from './Review';
-import { SectionHeading, TextInput, TextArea, AddLink, RemoveX, HoverInput, IntroPage, SuccessState, SidePanel, PanelSection } from './ui';
+import { SectionHeading, TextArea, AddLink, RemoveX, HoverInput, IntroPage, SuccessState } from './ui';
+import { AssetCard } from './AssetCard';
+import { CreativePlan } from './CreativePlan';
+import { BrandGuidelinesEditor } from './CreativeFeedbackExtras';
+import { reviewItems, type Wave, type SampleItem } from './lib/creative';
+import { useReview } from './lib/review';
 
 const ORDER: AssetType[] = ['Still Image', 'Video', 'Carousel', 'Story', 'Search Ad', 'Meta Ad', 'Blog Post', 'Email'];
 
 export function CreativeReview({ account, sub, go }: { account: Account; sub: string; go: Go }) {
   const theme = (S.campaignThemes(account).find((t) => t.recommended) ?? S.campaignThemes(account)[0]).title;
-  const assets = useMemo(() => S.generatedAssets(account, theme), [account, theme]);
+  // Generation waves live here so they persist across sub-steps — the items the
+  // AM marks in the Plan step flow into the Visual review step.
+  const [waves, setWaves] = useState<Wave[]>([]);
+  const { setCreativeComplete } = useReview();
+  useEffect(() => { if (sub === 'done') setCreativeComplete(true); }, [sub, setCreativeComplete]);
 
   if (sub === 'intro') {
     return (
       <IntroPage
         title="Review the first wave of creative"
-        intro={`We generated a storyboard for the "${theme}" theme — three of each format. Review it, capture feedback, then set the posting cadence and campaign themes.`}
+        intro={`Seeded from the "${theme}" strategy. Plan and generate samples, pick what's worth the customer's time, then capture feedback and set the cadence.`}
         steps={[
-          { label: 'Visual review', desc: 'Stills, video, carousels, ads, blogs, emails, and an SEO plan.' },
-          { label: 'Feedback summary', desc: 'What the client wants changed — auto-saved to the Brand Kit.' },
+          { label: 'Plan & generate', desc: 'Choose what to generate (or upload your own) and run waves until it’s right.' },
+          { label: 'Visual review', desc: 'The samples you marked, ready for the customer to approve.' },
+          { label: 'Feedback summary', desc: 'Inferred taste + brand guidelines, auto-saved to the Brand Kit.' },
           { label: 'Campaign calendar', desc: 'Weekly cadence plus two months of campaign themes.' },
         ]}
-        action={<Button size="lg" onPress={() => go(`/${account.id}/am/creative/storyboard`)}>Start review</Button>}
+        action={<Button size="lg" onPress={() => go(`/${account.id}/am/creative/plan`)}>Start review</Button>}
       />
     );
   }
@@ -47,78 +59,39 @@ export function CreativeReview({ account, sub, go }: { account: Account; sub: st
 
   return (
     <PhaseScreen account={account} side="am" section="creative" sub={sub} go={go} prevSection="strategy" nextLabel="Finish & open client portal" maxWidth={960}>
-      {sub === 'storyboard' && <Storyboard account={account} theme={theme} assets={assets} />}
+      {sub === 'plan' && <CreativePlan account={account} waves={waves} setWaves={setWaves} />}
+      {sub === 'storyboard' && <Storyboard account={account} items={reviewItems(waves)} onGoToPlan={() => go(`/${account.id}/am/creative/plan`)} />}
       {sub === 'feedback' && <FeedbackSummary account={account} />}
       {sub === 'calendar' && <Calendar account={account} />}
     </PhaseScreen>
   );
 }
 
-function Storyboard({ account, theme, assets }: { account: Account; theme: string; assets: GeneratedAsset[] }) {
-  const groups = ORDER.map((t) => [t, assets.filter((a) => a.type === t)] as const).filter(([, l]) => l.length);
-  const items = [...groups.map(([t]) => ({ key: t as string, label: t as string })), { key: 'seo', label: 'SEO Plan' }];
+function Storyboard({ account, items, onGoToPlan }: { account: Account; items: SampleItem[]; onGoToPlan: () => void }) {
+  const groups = ORDER.map((t) => [t, items.filter((a) => a.type === t)] as const).filter(([, l]) => l.length);
   return (
-    <div>
-      <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Generated for <strong style={{ color: 'var(--purple)' }}>{theme}</strong>, three of each format. Add feedback on any asset.</Text>
-      <SidePanel items={items}>
-        {groups.map(([t, list]) => (
-          <PanelSection key={t} id={t}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+      {items.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '48px 0', border: '1px dashed var(--dark-12)', borderRadius: 12 }}>
+          <Heading level={4} style={{ margin: '0 0 6px' }}>Nothing marked for review yet</Heading>
+          <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Generate samples and tick “Include in customer review” in the Plan step — they’ll show up here.</Text>
+          <Button variant="secondary" onPress={onGoToPlan}>Go to Plan</Button>
+        </div>
+      ) : (
+        groups.map(([t, list]) => (
+          <section key={t}>
             <SectionHeading title={t} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, alignItems: 'start' }}>
               {list.map((a) => <AssetCard key={a.id} asset={a} />)}
             </div>
-          </PanelSection>
-        ))}
-        <PanelSection id="seo">
-          <SectionHeading title="SEO keyword plan" desc="Chosen for local intent + winnable difficulty." />
-          <SeoPlan account={account} />
-        </PanelSection>
-      </SidePanel>
+          </section>
+        ))
+      )}
+      <section>
+        <SectionHeading title="SEO keyword plan" desc="Chosen for local intent + winnable difficulty." />
+        <SeoPlan account={account} />
+      </section>
     </div>
-  );
-}
-
-function AssetCard({ asset }: { asset: GeneratedAsset }) {
-  const [fb, setFb] = useState({ topic: '', caption: '', overlay: '' });
-  const [regen, setRegen] = useState(false);
-  const [hover, setHover] = useState(false);
-  const textOnly = asset.type === 'Blog Post' || asset.type === 'Email';
-  return (
-    <Card padding="none" style={{ overflow: 'hidden' }}>
-      <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-        {/* media on top */}
-        <div style={{ position: 'relative', height: 150, overflow: 'hidden', background: textOnly ? 'var(--dark-3)' : 'var(--dark-8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {!textOnly && <img src={`https://picsum.photos/seed/dfy-${asset.id}/480/300`} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-          {!textOnly && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55))' }} />}
-          <div style={{ position: 'absolute', top: 8, left: 8, right: 8, zIndex: 2, display: 'flex', gap: 6, opacity: hover ? 1 : 0, transition: 'opacity 0.12s', pointerEvents: hover ? 'auto' : 'none' }}>
-            <MiniBtn title="Regenerate" onClick={() => setRegen(!regen)}>↻</MiniBtn>
-            <MiniBtn title="Upload a file" onClick={() => {}}>↑</MiniBtn>
-            <MiniBtn title="Paste a link" onClick={() => {}}>🔗</MiniBtn>
-          </div>
-          <Text variant="smallList" color={textOnly ? 'var(--dark-40)' : 'var(--light-100)'} style={{ position: 'relative', zIndex: 1, padding: '32px 16px 16px', textAlign: 'center', textShadow: textOnly ? 'none' : '0 1px 7px rgba(0,0,0,0.45)' }}>{textOnly ? asset.type : asset.overlay}</Text>
-        </div>
-        <div style={{ padding: 12 }}>
-          {regen && (
-            <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-              <TextInput inputSize="sm" placeholder="Regenerate with a prompt…" style={{ flex: 1 }} />
-              <Button size="sm" onPress={() => setRegen(false)}>Go</Button>
-            </div>
-          )}
-          {/* caption underneath */}
-          <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block' }}>{asset.topic}</Text>
-          <Text variant="secondary" color="var(--dark-90)" style={{ display: 'block', margin: '4px 0 12px', lineHeight: 1.5 }}>{asset.caption}</Text>
-          {/* feedback boxes under that */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {(['topic', 'caption', 'overlay'] as const).map((k) => (
-              <label key={k} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text variant="metadata" color="var(--dark-60)">{k === 'overlay' ? 'Image / text overlay' : k.charAt(0).toUpperCase() + k.slice(1)}</Text>
-                <TextArea value={fb[k]} onChange={(e) => setFb({ ...fb, [k]: e.target.value })} placeholder={`Notes on ${k}…`} style={{ minHeight: 52, fontSize: 13 }} />
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Card>
   );
 }
 
@@ -137,8 +110,8 @@ function SeoPlan({ account }: { account: Account }) {
                 <Text variant="metadata" color="var(--dark-60)">{k.volume}</Text>
                 <StatusPill tone="neutral">{k.intent}</StatusPill>
                 <StatusPill tone={k.difficulty === 'Low' ? 'success' : k.difficulty === 'Medium' ? 'warning' : 'danger'}>{k.difficulty}</StatusPill>
-                <button title="Keep" onClick={() => setReact({ ...react, [i]: r === 'like' ? undefined : 'like' })} style={{ width: 28, height: 28, borderRadius: 7, cursor: 'pointer', border: r === 'like' ? 'none' : '1px solid var(--dark-8)', background: r === 'like' ? 'var(--positive-10)' : 'var(--light-100)', color: r === 'like' ? 'var(--positive-60)' : 'var(--dark-60)' }}>👍</button>
-                <button title="Drop" onClick={() => setReact({ ...react, [i]: r === 'dislike' ? undefined : 'dislike' })} style={{ width: 28, height: 28, borderRadius: 7, cursor: 'pointer', border: r === 'dislike' ? 'none' : '1px solid var(--dark-8)', background: r === 'dislike' ? 'var(--negative-10)' : 'var(--light-100)', color: r === 'dislike' ? 'var(--negative-60)' : 'var(--dark-60)' }}>👎</button>
+                <button title="Keep" onClick={() => setReact({ ...react, [i]: r === 'like' ? undefined : 'like' })} style={{ width: 28, height: 28, borderRadius: 7, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: r === 'like' ? 'none' : '1px solid var(--dark-8)', background: r === 'like' ? 'var(--positive-10)' : 'var(--light-100)', color: r === 'like' ? 'var(--positive-60)' : 'var(--dark-60)' }}><ThumbUp size={16} /></button>
+                <button title="Drop" onClick={() => setReact({ ...react, [i]: r === 'dislike' ? undefined : 'dislike' })} style={{ width: 28, height: 28, borderRadius: 7, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: r === 'dislike' ? 'none' : '1px solid var(--dark-8)', background: r === 'dislike' ? 'var(--negative-10)' : 'var(--light-100)', color: r === 'dislike' ? 'var(--negative-60)' : 'var(--dark-60)' }}><ThumbDown size={16} /></button>
               </div>
             </div>
             <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginTop: 4 }}>★ {k.why}</Text>
@@ -153,28 +126,10 @@ function SeoPlan({ account }: { account: Account }) {
   );
 }
 
-function MiniBtn({ title, onClick, children }: { title: string; onClick: () => void; children: React.ReactNode }) {
-  return <button title={title} onClick={onClick} style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 13, background: 'var(--light-90)', color: 'var(--dark-80)', backdropFilter: 'blur(4px)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>{children}</button>;
-}
-
 function FeedbackSummary({ account }: { account: Account }) {
-  const prefs = S.creativePreferences(account);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <SectionHeading title="What we learned" note="Synthesized from this round's feedback and swipe-file reactions." />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <Card><Text variant="metadata" color="var(--positive-60)" style={{ display: 'block', marginBottom: 8 }}>Lean into</Text>{prefs.learned.map((p, i) => <Text key={i} style={{ display: 'block', marginBottom: 6, color: 'var(--dark-90)' }}>✓ {p}</Text>)}</Card>
-        <Card><Text variant="metadata" color="var(--negative-60)" style={{ display: 'block', marginBottom: 8 }}>Avoid</Text>{prefs.avoid.map((p, i) => <Text key={i} style={{ display: 'block', marginBottom: 6, color: 'var(--dark-90)' }}>✕ {p}</Text>)}</Card>
-      </div>
-      <Card>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: 'var(--positive-60)', fontSize: 20 }}>✓</span>
-          <div style={{ flex: 1 }}>
-            <Text variant="largeList" color="var(--dark-90)" style={{ display: 'block' }}>Saved automatically to Brand Kit → Creative preferences</Text>
-            <Text variant="metadata" color="var(--dark-60)">These learnings steer every future generation, and the client sees them in their portal.</Text>
-          </div>
-        </div>
-      </Card>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+      <BrandGuidelinesEditor account={account} />
     </div>
   );
 }
@@ -220,13 +175,12 @@ function Calendar({ account }: { account: Account }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
       <div>
         <SectionHeading title="Weekly schedule" desc="Add posts to any day. Each strategy is its own track (e.g. Offers, Thought leadership)." right={<StatusPill tone="info">{total} posts / week</StatusPill>} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {tracks.map((track) => (
-            <div key={track.id}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ width: 8, height: 8, borderRadius: 99, background: 'var(--action-50)' }} />
-                <HoverInput value={track.name} onChange={(v) => renameTrack(track.id, v)} style={{ fontSize: 15, fontWeight: 600, maxWidth: 280 }} />
-                {tracks.length > 1 && <RemoveX onClick={() => removeTrack(track.id)} />}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {tracks.map((track, ti) => (
+            <div key={track.id} style={{ paddingTop: ti ? 20 : 0, paddingBottom: ti < tracks.length - 1 ? 20 : 0, borderTop: ti ? '1px solid var(--dark-8)' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                <HoverInput value={track.name} onChange={(v) => renameTrack(track.id, v)} style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.16px', maxWidth: 280, marginLeft: -8 }} />
+                {tracks.length > 1 && <RemoveX variant="tertiary" onClick={() => removeTrack(track.id)} />}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8 }}>
                 {S.DAYS.map((d) => (
@@ -241,14 +195,14 @@ function Calendar({ account }: { account: Account }) {
                         </div>
                       ))}
                     </div>
-                    <button onClick={() => openAdd(track.id, d)} style={{ marginTop: 6, display: 'flex', justifyContent: 'center', gap: 4, borderRadius: 6, border: '1px dashed var(--dark-12)', background: 'none', padding: '5px 0', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 500, color: 'var(--dark-60)' }}>+ Add</button>
+                    <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center' }}><Button variant="tertiary" size="sm" frontIcon={Plus} onPress={() => openAdd(track.id, d)}>Add</Button></div>
                   </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
-        <Button variant="ghost" size="sm" frontIcon={Plus} onPress={addTrack} style={{ marginTop: 12 }}>Add strategy track</Button>
+        <div style={{ marginTop: 16 }}><Button variant="secondary" size="sm" frontIcon={Plus} onPress={addTrack}>Add strategy track</Button></div>
       </div>
 
       {adding && (
@@ -274,24 +228,22 @@ function Calendar({ account }: { account: Account }) {
 
       <div>
         <SectionHeading title="Weekly evergreen campaign themes, next 2 months" right={<Button size="sm" variant="secondary" onPress={() => setThemes(S.seasonalThemes(account))}>Regenerate</Button>} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {themes.map((w, i) => (
-            <Card key={i}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{ width: 64, flexShrink: 0, borderRadius: 8, background: 'var(--dark-2)', padding: '6px 4px', textAlign: 'center' }}>
-                  <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block' }}>Week</Text>
-                  <HoverInput value={w.week} onChange={(v) => setThemes(themes.map((x, j) => j === i ? { ...x, week: v } : x))} style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, padding: '2px 4px' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <div style={{ flex: 1 }}><HoverInput value={w.title} placeholder="Campaign title" onChange={(v) => setThemes(themes.map((x, j) => j === i ? { ...x, title: v } : x))} style={{ fontSize: 16, fontWeight: 600 }} /></div>
-                    <StatusPill tone="neutral">{w.season}</StatusPill>
-                    <RemoveX onClick={() => setThemes(themes.filter((_, j) => j !== i))} />
-                  </div>
-                  <HoverInput value={w.description} placeholder="What this campaign is about…" multiline onChange={(v) => setThemes(themes.map((x, j) => j === i ? { ...x, description: v } : x))} style={{ fontSize: 14, color: 'var(--dark-60)', minHeight: 38 }} />
-                </div>
+            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'stretch', paddingTop: i ? 16 : 0, paddingBottom: 16, borderTop: i ? '1px solid var(--dark-8)' : 'none' }}>
+              <div style={{ width: 100, height: 100, flexShrink: 0, alignSelf: 'center', borderRadius: 8, background: 'var(--dark-2)', padding: '6px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block' }}>Week</Text>
+                <HoverInput value={w.week} onChange={(v) => setThemes(themes.map((x, j) => j === i ? { ...x, week: v } : x))} style={{ textAlign: 'center', fontSize: 15, fontWeight: 400, padding: '2px 4px' }} />
               </div>
-            </Card>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}><HoverInput value={w.title} placeholder="Campaign title" onChange={(v) => setThemes(themes.map((x, j) => j === i ? { ...x, title: v } : x))} style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.16px' }} /></div>
+                  <StatusPill tone="neutral">{w.season}</StatusPill>
+                  <RemoveX variant="tertiary" onClick={() => setThemes(themes.filter((_, j) => j !== i))} />
+                </div>
+                <TextArea value={w.description} placeholder="What this campaign is about…" onChange={(e) => setThemes(themes.map((x, j) => j === i ? { ...x, description: e.target.value } : x))} style={{ minHeight: 56 }} />
+              </div>
+            </div>
           ))}
           <AddLink label="Add campaign" onClick={() => setThemes([...themes, { week: 'New', title: '', description: '', season: 'Custom' }])} />
         </div>

@@ -31,8 +31,8 @@ export function brandContextMarkdown(a: Account): { overview: string; segments: 
   const c = brandContext(a);
   return {
     overview: c.businessOverview,
-    segments: c.customerSegments.map((s) => `- **${s.name}** - ${s.detail}`).join('\n'),
-    services: c.services.map((s) => `- **${s.name}** - ${s.detail}`).join('\n'),
+    segments: c.customerSegments.map((s) => `- ${s.name} - ${s.detail}`).join('\n'),
+    services: c.services.map((s) => `- ${s.name} - ${s.detail}`).join('\n'),
     bio: c.founderBio,
   };
 }

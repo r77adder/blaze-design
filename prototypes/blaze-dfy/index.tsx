@@ -5,6 +5,16 @@ import { Directory, StaffTeam } from './Directory';
 import { Create } from './Create';
 import { Workspace } from './Workspace';
 import { ReviewProvider } from './lib/review';
+import { DfyStateProvider } from './lib/dev-state';
+// Provider stack required by the faithfully-ported H2 feature pages (Awareness
+// / Conversion). The pages were copied into ../h2-port; these supply the
+// contexts they read. dev-state is shimmed in h2-port onto our global toggle.
+import { ToolsProvider } from '../h2-port/tools-context';
+import { OnboardingProvider } from '../h2-port/onboarding/onboarding-context';
+import { BrandKitProvider } from '../h2-port/brand-kit/brand-kit-context';
+import { SavedCardsProvider } from '../h2-port/competitor-tracking/SavedCardsContext';
+import { MetaCampaignProvider } from '../h2-port/meta-campaign/meta-campaign-context';
+import { ClientViewProvider } from '../h2-port/client-view-context';
 
 /**
  * Blaze DFY — Done-For-You onboarding (AM workspace + client portal).
@@ -19,7 +29,14 @@ import { ReviewProvider } from './lib/review';
 export default function BlazeDfy() {
   return (
     <ReviewProvider>
+      <DfyStateProvider>
+      <ToolsProvider>
+      <OnboardingProvider>
+      <BrandKitProvider>
       <ToasterProvider>
+      <SavedCardsProvider>
+      <MetaCampaignProvider>
+      <ClientViewProvider>
         <ModalStack>
           <Routes>
             <Route index element={<Directory />} />
@@ -31,7 +48,14 @@ export default function BlazeDfy() {
           </Routes>
           <Toaster />
         </ModalStack>
+      </ClientViewProvider>
+      </MetaCampaignProvider>
+      </SavedCardsProvider>
       </ToasterProvider>
+      </BrandKitProvider>
+      </OnboardingProvider>
+      </ToolsProvider>
+      </DfyStateProvider>
     </ReviewProvider>
   );
 }

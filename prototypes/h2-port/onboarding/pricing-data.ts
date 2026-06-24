@@ -1,0 +1,330 @@
+import type { ToolId } from '../tools-context';
+import type { Term } from './onboarding-context';
+
+/**
+ * Pricing model — each feature has a 12-month base, with multipliers for
+ * shorter terms (12 mo = best price, 3 mo = highest). UGC and Ad Creative
+ * are sold as packs (1 pack per 4 months), not monthly subscriptions.
+ *
+ * Prices match the spec in the H2 onboarding kickoff message:
+ *   Organic / Paid Ads / Landing Pages / SEO+AEO+Reputation  → $899/m
+ *   AI Receptionist (SDR)                                    → $100/m
+ *   UGC Content                                              → $950/pack (mid of $700-1200)
+ *   Ad Creative                                              → $400/pack
+ */
+
+export interface ToolPricing {
+  toolId: ToolId;
+  label: string;
+  /** What it does — short copy used on the strategy and pricing rows. */
+  blurb: string;
+  /** "How Blaze improves it" — anchored to the user's gap. */
+  benefit: string;
+  /** Monthly base price for the 12-month term, in USD. */
+  monthlyBase: number;
+  /** True if the feature is billed as packs every 4 months instead of monthly. */
+  isPack?: boolean;
+  /** When isPack: per-pack price at 12-month term. Pack frequency is 1 / 4 mo. */
+  packPrice?: number;
+  /** Pack price range string for display ("700-1200"). Mid is used for math. */
+  packRangeLabel?: string;
+}
+
+export const TOOL_PRICING: Record<ToolId, ToolPricing> = {
+  'Organic Campaigns': {
+    toolId: 'Organic Campaigns',
+    label: 'Organic Campaigns',
+    blurb: 'Schedule, publish, and optimize across Instagram, TikTok, LinkedIn, Facebook, X, and YouTube.',
+    benefit:
+      'We auto-generate a 30-day content calendar from your brand profile, schedule it across every channel, and tune cadence weekly based on what lands.',
+    monthlyBase: 899,
+  },
+  'SEO/AEO': {
+    toolId: 'SEO/AEO',
+    label: 'SEO & AEO',
+    blurb: 'Rank on Google and get cited by ChatGPT, Perplexity, and other answer engines.',
+    benefit:
+      'Topic-cluster blogs targeting the queries we found you ranking #4+ on, plus structured data so AI assistants quote you when customers ask.',
+    monthlyBase: 899,
+  },
+  'UGC Content': {
+    toolId: 'UGC Content',
+    label: 'UGC & Avatar Content',
+    blurb: 'Creator-style AI avatar videos and user-generated content for socials and ads.',
+    benefit:
+      'A pack of 8 UGC-style videos every 4 months — scripts, AI avatars, captions, ready to schedule in your campaigns.',
+    monthlyBase: 0,
+    isPack: true,
+    packPrice: 950,
+    packRangeLabel: '$700–$1,200',
+  },
+  'Paid Social': {
+    toolId: 'Paid Social',
+    label: 'Paid Ads',
+    blurb: 'Run and optimize Meta, TikTok, and LinkedIn ads with auto-bid management.',
+    benefit:
+      'We launch your first 3 campaigns within a week, manage daily budget allocation across creatives, and reallocate spend toward the winners weekly.',
+    monthlyBase: 899,
+  },
+  'Paid Search': {
+    toolId: 'Paid Search',
+    label: 'Paid Search (Google Ads)',
+    blurb: 'Keyword research, bid management, and conversion tracking for Google Ads.',
+    benefit:
+      'Daily bid tuning on your high-intent keywords + landing-page experiments to lift conversion rate from your ad clicks.',
+    monthlyBase: 0, // bundled into Paid Ads in the proposal; here for shape
+  },
+  'Landing Pages': {
+    toolId: 'Landing Pages',
+    label: 'Landing Pages',
+    blurb: 'High-converting pages tied to your campaigns.',
+    benefit:
+      'A new page per campaign + A/B-tested hero, CTA, and form variants. Auto-deploy to your domain.',
+    monthlyBase: 899,
+  },
+  SDR: {
+    toolId: 'SDR',
+    label: 'AI Receptionist',
+    blurb: 'AI SDR agent — handles inbound across email, SMS, and chat.',
+    benefit:
+      'Replies in under 2 minutes, qualifies leads against your criteria, books meetings into your calendar, and hands off warm leads to you.',
+    monthlyBase: 100,
+  },
+  Reputation: {
+    toolId: 'Reputation',
+    label: 'Reputation Management',
+    blurb: 'Monitor and respond to reviews across Google, Yelp, and more.',
+    benefit:
+      'Auto-drafted responses to every new review within an hour, drip campaigns to ask happy customers for reviews, and weekly sentiment digest.',
+    monthlyBase: 0, // bundled into SEO/AEO/Reputation in the proposal
+  },
+};
+
+/**
+ * Term multipliers — 12mo is base (1.0); shorter terms cost more per month.
+ * Mirrors common agency retainer pricing.
+ *
+ * NOTE: terms 1 (Monthly) and 18 are DIY-only and DFY's pricing UI never
+ * exposes them. They live here so `Record<Term, number>` stays total.
+ */
+export const TERM_MULTIPLIER: Record<Term, number> = {
+  1: 1.4, // monthly (DIY only — DFY UI never renders this)
+  3: 1.3,
+  6: 1.15,
+  12: 1.0,
+  18: 0.93, // longest term (DIY only)
+};
+
+export const TERM_LABEL: Record<Term, string> = {
+  1: 'Monthly plan',
+  3: '3-month plan',
+  6: '6-month plan',
+  12: '12-month plan',
+  18: '18-month plan',
+};
+
+export const TERM_SUBTEXT: Record<Term, string> = {
+  1: 'Pay-as-you-go — cancel any time',
+  3: 'Most flexible',
+  6: 'Save 15% per month',
+  12: 'Best value — save 30% per month',
+  18: 'Deepest discount — save 35% per month',
+};
+
+/**
+ * Proposal-level grouping — we sell some features as a single bundled line
+ * even though they're separate ToolIds internally. This keeps the pricing
+ * table aligned to the user's mental model ("Paid Ads", "SEO & AEO &
+ * Reputation Management") instead of leaking the internal taxonomy.
+ */
+export interface PricingLine {
+  key: string;
+  label: string;
+  blurb: string;
+  /** Tools that must be selected for this line to appear. ANY selected → show. */
+  tools: ToolId[];
+  /** Monthly base price (sum of constituent tools' monthlyBase). */
+  monthlyBase: number;
+  /** True if billed as packs / 4mo. */
+  isPack?: boolean;
+  packPrice?: number;
+  packRangeLabel?: string;
+}
+
+export const PRICING_LINES: PricingLine[] = [
+  {
+    key: 'organic',
+    label: 'Organic Campaigns',
+    blurb: 'Schedule, publish, and tune content across every social channel.',
+    tools: ['Organic Campaigns'],
+    monthlyBase: 899,
+  },
+  {
+    key: 'paid',
+    label: 'Paid Ads (Social + Search)',
+    blurb: 'Meta, TikTok, LinkedIn, and Google Ads with daily bid management.',
+    tools: ['Paid Social', 'Paid Search'],
+    monthlyBase: 899,
+  },
+  {
+    key: 'landing',
+    label: 'Landing Pages',
+    blurb: 'A new high-converting page per campaign, with A/B testing.',
+    tools: ['Landing Pages'],
+    monthlyBase: 899,
+  },
+  {
+    key: 'seo',
+    label: 'SEO, AEO & Reputation Management',
+    blurb: 'Rank on Google, get cited by AI assistants, manage your reviews.',
+    tools: ['SEO/AEO', 'Reputation'],
+    monthlyBase: 899,
+  },
+  {
+    key: 'ugc',
+    label: 'UGC Content',
+    blurb: '1 pack of 8 creator-style AI avatar videos every 4 months.',
+    tools: ['UGC Content'],
+    monthlyBase: 0,
+    isPack: true,
+    packPrice: 950,
+    packRangeLabel: '$700–$1,200 per pack',
+  },
+  {
+    key: 'creative',
+    label: 'Ad Creative',
+    blurb: '1 pack of ad creative assets every 4 months — static + motion variants.',
+    tools: ['Paid Social', 'Paid Search'],
+    monthlyBase: 0,
+    isPack: true,
+    packPrice: 400,
+    packRangeLabel: '$400 per pack',
+  },
+  {
+    key: 'sdr',
+    label: 'AI Receptionist',
+    blurb: 'AI agent that handles inbound email, SMS, and chat in under 2 minutes.',
+    tools: ['SDR'],
+    monthlyBase: 100,
+  },
+];
+
+export interface PricingTotals {
+  monthly: number;
+  /** Total over the full term (monthly × months + pack costs over term). */
+  termTotal: number;
+  /** Number of pack purchases in the term (ceil(months / 4)). */
+  packsInTerm: number;
+}
+
+export function computePricing(selected: PricingLine[], term: Term): PricingTotals {
+  const multiplier = TERM_MULTIPLIER[term];
+  const monthly = selected
+    .filter((l) => !l.isPack)
+    .reduce((sum, l) => sum + Math.round(l.monthlyBase * multiplier), 0);
+  const packsInTerm = Math.ceil(term / 4);
+  const packCosts = selected
+    .filter((l) => l.isPack)
+    .reduce((sum, l) => sum + Math.round((l.packPrice ?? 0) * multiplier) * packsInTerm, 0);
+  return {
+    monthly,
+    termTotal: monthly * term + packCosts,
+    packsInTerm,
+  };
+}
+
+/**
+ * Pick the visible pricing lines from the user's selected tools. Any line
+ * whose `tools` intersects with `selectedTools` is included.
+ */
+export function visibleLines(selectedTools: ToolId[]): PricingLine[] {
+  const set = new Set(selectedTools);
+  return PRICING_LINES.filter((l) => l.tools.some((t) => set.has(t)));
+}
+
+export function fmtUsd(n: number): string {
+  return `$${n.toLocaleString('en-US')}`;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// DIY plans
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Self-serve plan tiers — DIY users land on one based on how many features
+ * they kept in step 5 (≤3 → Starter, 4+ → Growth). Pricing is flat per-plan
+ * (no per-feature multipliers like DFY) — the user pays one monthly figure
+ * regardless of how many included features they actually turn on.
+ */
+export type DiyPlanTier = 'starter' | 'growth';
+
+export interface DiyPlan {
+  tier: DiyPlanTier;
+  label: string;
+  description: string;
+  /** Per-month price for each term, in USD. */
+  monthlyByTerm: Record<Term, number>;
+  /**
+   * Marketing discount % for each term — what we want printed on the chips.
+   * Kept separate from the actual price ratio because the prices are rounded
+   * to even dollars, which makes the implied math off by ~1pp.
+   */
+  discountByTerm: Record<Term, number>;
+  /** What you can compare yourself to — savings copy under the term cards. */
+  competitiveSavings: { competitor: string; theyChargeMonthly: number }[];
+}
+
+export const DIY_PLANS: Record<DiyPlanTier, DiyPlan> = {
+  starter: {
+    tier: 'starter',
+    label: 'Starter',
+    description: 'For owner-operators getting their first 3 channels humming.',
+    // Matches the pricing card screenshot in spec: $79 / $67 / $64 / $60 / $56
+    monthlyByTerm: { 1: 79, 3: 67, 6: 64, 12: 60, 18: 56 },
+    discountByTerm: { 1: 0, 3: 15, 6: 20, 12: 25, 18: 30 },
+    competitiveSavings: [
+      { competitor: 'Hootsuite + Canva Pro', theyChargeMonthly: 119 },
+      { competitor: 'A part-time social freelancer', theyChargeMonthly: 1200 },
+      { competitor: 'Surfer SEO + Buffer', theyChargeMonthly: 168 },
+    ],
+  },
+  growth: {
+    tier: 'growth',
+    label: 'Growth',
+    description: 'For teams running 4+ channels and ready to scale paid + outbound.',
+    // User spec: Monthly $149 → 12mo $105. The intermediates and 18mo are
+    // interpolated to mirror Starter's discount curve (15 / 20 / 30 / 35).
+    monthlyByTerm: { 1: 149, 3: 127, 6: 119, 12: 105, 18: 97 },
+    discountByTerm: { 1: 0, 3: 15, 6: 20, 12: 30, 18: 35 },
+    competitiveSavings: [
+      { competitor: 'A marketing agency retainer', theyChargeMonthly: 3500 },
+      { competitor: 'In-house marketing hire', theyChargeMonthly: 6500 },
+      { competitor: 'Hootsuite Enterprise + HubSpot Starter', theyChargeMonthly: 549 },
+    ],
+  },
+};
+
+/** Pick a plan tier from the number of features the user kept. */
+export function pickDiyPlan(featureCount: number): DiyPlanTier {
+  return featureCount <= 3 ? 'starter' : 'growth';
+}
+
+/** Terms exposed in the DIY pricing UI, in card-display order (left → right). */
+export const DIY_TERMS: Term[] = [1, 3, 6, 12, 18];
+
+/** Terms exposed in the DFY pricing UI — keeps DFY scoped to what it always rendered. */
+export const DFY_TERMS: Term[] = [12, 6, 3];
+
+/** Shorter labels for the term cards on DIY's pricing step. */
+export const DIY_TERM_CARD_LABEL: Record<Term, string> = {
+  1: 'Monthly',
+  3: '3 months',
+  6: '6 months',
+  12: '12 months',
+  18: '18 months',
+};
+
+/** Marketing-rounded discount % vs the Monthly price for each plan/term combo. */
+export function diyDiscountPct(plan: DiyPlan, term: Term): number {
+  return plan.discountByTerm[term];
+}

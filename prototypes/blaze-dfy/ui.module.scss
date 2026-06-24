@@ -41,10 +41,10 @@
   background: var(--light-100);
   border: 1px solid var(--dark-8);
   border-radius: 8px;
-  padding: 9px 12px;
+  padding: 10px 14px;
   outline: none;
   resize: vertical;
-  transition: border-color 120ms ease;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .textArea::placeholder {
@@ -57,4 +57,5 @@
 
 .textArea:focus {
   border-color: var(--dark-40);
+  box-shadow: 0 0 0 3px var(--dark-4);
 }

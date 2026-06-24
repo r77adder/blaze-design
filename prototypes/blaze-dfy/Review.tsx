@@ -203,7 +203,7 @@ export function AmReviewPanel({ account, phase, go }: { account: Account; phase:
             <Text variant="largeList" color="var(--dark-90)" style={{ display: 'block' }}>Share this {PHASE_TITLE[phase]} with the client</Text>
             <Text variant="metadata" color="var(--dark-60)">Send {account.poc.name} a link to approve or request changes.</Text>
           </div>
-          <Button size="lg" onPress={() => share(phase)}>Share for review</Button>
+          <Button size="lg" variant="secondary" onPress={() => share(phase)}>Share for review</Button>
         </div>
       )}
       {status === 'shared' && (

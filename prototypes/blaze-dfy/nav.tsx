@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Text, useModals } from '@/components';
 import { TabChip, useToast } from '@/staging';
 import { PrototypeShell } from '../_shell';
@@ -7,17 +7,25 @@ import type { SidebarSection } from '../_shell/Sidebar';
 import { getAccounts, handoffAccount } from './lib/api';
 import { HandoffModal } from './Handoff';
 import { ApprovalSettingsModal } from './Approvals';
+import { DevStatePanel } from './DevStatePanel';
+import { useDfyState } from './lib/dev-state';
 import HomeIcon from '@/icons/20/Home';
-import Insights from '@/icons/20/BarChartSquare';
 import ClipboardCheck from '@/icons/20/Approvals';
 import Compass from '@/icons/20/Globe';
 import Clapperboard from '@/icons/20/Star';
 import Palette from '@/icons/20/Brand';
-import Calendar from '@/icons/20/Calendar1';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import ArrowSwitchHorizontal from '@/icons/20/ArrowSwitchHorizontal';
 import Lightning from '@/icons/20/Lightning';
 import Settings from '@/icons/20/Settings';
+import Marker03 from '@/icons/20/Marker03';
+import Cursor04 from '@/icons/20/Cursor04';
+import Google from '@/icons/20/Google';
+import Target2 from '@/icons/20/Target2';
+import Templates from '@/icons/20/Templates';
+import UserProfileGroup from '@/icons/20/UserProfileGroup';
+import CalendarPost from '@/icons/20/CalendarPost';
+import AudioSettings from '@/icons/20/AudioSettings';
 import type { Account } from './lib/types';
 import type { Side } from './lib/router';
 import { HOME_TAB_COUNTS } from './Home';
@@ -33,6 +41,19 @@ export function useGo(): Go {
  *  Back / Continue footer is a real flex sibling pinned to the bottom of the
  *  workspace content area (never floating over scrolling content). Walks
  *  sub-steps, then jumps to the previous/next section. */
+/** Lets a phase step inject chrome into the PhaseScreen frame: a centered
+ *  cluster in the sticky footer, and a bar that floats just above it. */
+interface PhaseChrome { setFooterCenter: (n: ReactNode) => void; setAboveFooter: (n: ReactNode) => void; setNextDisabled: (b: boolean) => void }
+const PhaseChromeContext = createContext<PhaseChrome | null>(null);
+export const usePhaseChrome = () => useContext(PhaseChromeContext);
+
+/** Lets a page inject chrome into the WorkspaceShell topbar — sub-tabs into the
+ *  center, page actions (e.g. "Generate report") next to the AM/Client switch.
+ *  Used by the ported H2 pages' H2Layout shim. */
+interface WorkspaceChrome { setTopbarCenter: (n: ReactNode) => void; setTopbarRight: (n: ReactNode) => void }
+const WorkspaceChromeContext = createContext<WorkspaceChrome | null>(null);
+export const useWorkspaceChrome = () => useContext(WorkspaceChromeContext);
+
 export function PhaseScreen({ account, side, section, sub, go, prevSection, nextSection, nextHref, nextLabel, maxWidth = 920, children }: {
   account: Account; side: Side; section: string; sub: string; go: Go; prevSection?: string; nextSection?: string; nextHref?: string; nextLabel: string; maxWidth?: number; children: ReactNode;
 }) {
@@ -43,19 +64,31 @@ export function PhaseScreen({ account, side, section, sub, go, prevSection, next
   // Content scrolls in its own area, so reset that scroll on each sub-step.
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [sub]);
+  const [footerCenter, setFooterCenter] = useState<ReactNode>(null);
+  const [aboveFooter, setAboveFooter] = useState<ReactNode>(null);
+  const [nextDisabled, setNextDisabled] = useState(false);
+  const chrome = useMemo(() => ({ setFooterCenter, setAboveFooter, setNextDisabled }), []);
   // Bleed past the shell's 24px content padding so the footer bar spans
   // edge-to-edge and sits flush at the very bottom; the scroll area re-adds
   // padding so the content itself keeps its margins.
   return (
-    <div style={{ height: 'calc(100% + 48px)', margin: -24, display: 'flex', flexDirection: 'column' }}>
-      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 24px 32px' }}>
-        <div style={{ maxWidth, margin: '0 auto' }}>{children}</div>
+    <PhaseChromeContext.Provider value={chrome}>
+      <div style={{ height: 'calc(100% + 48px)', margin: -24, display: 'flex', flexDirection: 'column' }}>
+        <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '24px 24px 32px' }}>
+          <div style={{ maxWidth, margin: '0 auto' }}>{children}</div>
+        </div>
+        {aboveFooter && (
+          <div style={{ flexShrink: 0, padding: '16px 24px' }}>
+            <div style={{ maxWidth, margin: '0 auto' }}>{aboveFooter}</div>
+          </div>
+        )}
+        <div style={{ flexShrink: 0, borderTop: '1px solid var(--dark-8)', background: 'var(--light-100)', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Button variant="secondary" size="lg" onPress={back}>Back</Button>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>{footerCenter}</div>
+          <Button size="lg" isDisabled={nextDisabled} onPress={next}>{i >= steps.length - 1 ? nextLabel : 'Continue'}</Button>
+        </div>
       </div>
-      <div style={{ flexShrink: 0, borderTop: '1px solid var(--dark-8)', background: 'var(--light-100)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-        <Button variant="secondary" size="lg" onPress={back}>Back</Button>
-        <Button size="lg" onPress={next}>{i >= steps.length - 1 ? nextLabel : 'Continue'}</Button>
-      </div>
-    </div>
+    </PhaseChromeContext.Provider>
   );
 }
 
@@ -81,6 +114,7 @@ export const STEPS: Record<string, Step[]> = {
   ],
   creative: [
     { key: 'intro', label: 'Intro', hidden: true },
+    { key: 'plan', label: 'Plan' },
     { key: 'storyboard', label: 'Visual review' },
     { key: 'feedback', label: 'Feedback summary' },
     { key: 'calendar', label: 'Campaign calendar' },
@@ -103,39 +137,40 @@ interface NavGroup { label?: string; items: NavDef[] }
 
 /** AM sidebar splits the onboarding flow from the steady-state run-the-account
  *  tools, mirroring how the workspace shifts after onboarding completes. */
+/** Ported H2 feature groups — shared by AM and Client sidebars. */
+const AWARENESS_GROUP: NavGroup = { label: 'Awareness', items: [
+  { label: 'Organic Campaigns', icon: CalendarPost, section: 'organic-social' },
+  { label: 'Local SEO', icon: Marker03, section: 'organic-profile' },
+  { label: 'SEO/AEO', icon: Compass, section: 'seo-aeo' },
+  { label: 'Paid Social', icon: Cursor04, section: 'paid-social' },
+  { label: 'Paid Search', icon: Google, section: 'paid-search' },
+  { label: 'Competitor Tracking', icon: Target2, section: 'competitor-tracking' },
+] };
+const CONVERSION_GROUP: NavGroup = { label: 'Conversion', items: [
+  { label: 'Landing Pages', icon: Templates, section: 'landing-pages' },
+  { label: 'AI Receptionist', icon: UserProfileGroup, section: 'sdr' },
+  { label: 'Reputation', icon: Clapperboard, section: 'reputation' },
+] };
+/** Ported feature sections render the same for AM & Client, so the AM/Client
+ *  switch should stay on the current section instead of dropping to home. */
+const FEATURE_SECTIONS = [...AWARENESS_GROUP.items, ...CONVERSION_GROUP.items].map((i) => i.section);
+
 const AM_SECTIONS: NavGroup[] = [
   { items: [
     { label: 'Home', icon: HomeIcon, section: 'home' },
     { label: 'Approvals', icon: ClipboardCheck, section: 'approvals' },
-    { label: 'Content Calendar', icon: Calendar, section: 'calendar' },
   ] },
-  { label: 'Onboarding', items: [
-    { label: 'Strategy onboarding', icon: Compass, section: 'strategy' },
-    { label: 'Creative Review', icon: Clapperboard, section: 'creative' },
-  ] },
-  { label: 'Steady state', items: [
+  AWARENESS_GROUP,
+  CONVERSION_GROUP,
+  { label: 'Settings', items: [
     { label: 'Brand Kit', icon: Palette, section: 'brand' },
     { label: 'Strategy', icon: Lightning, section: 'plan' },
-    { label: 'Settings', icon: Settings, section: 'settings' },
+    { label: 'Account', icon: Settings, section: 'settings' },
+    { label: 'Content Settings', icon: AudioSettings, section: 'content-settings' },
   ] },
 ];
-/** Client side splits into a Review section (the onboarding deliverables to
- *  sign off on) and the steady-state workspace tools. */
-const CLIENT_SECTIONS: NavGroup[] = [
-  { items: [
-    { label: 'Home', icon: HomeIcon, section: 'home' },
-    { label: 'Approvals', icon: ClipboardCheck, section: 'approvals' },
-    { label: 'Calendar', icon: Calendar, section: 'calendar' },
-  ] },
-  { label: 'Review', items: [
-    { label: 'Strategy', icon: Compass, section: 'review-strategy' },
-    { label: 'Creative', icon: Clapperboard, section: 'review-creative' },
-  ] },
-  { items: [
-    { label: 'Performance', icon: Insights, section: 'insights' },
-    { label: 'Brand Kit', icon: Palette, section: 'brand' },
-  ] },
-];
+/** Client side mirrors the AM sidebar exactly. */
+const CLIENT_SECTIONS: NavGroup[] = AM_SECTIONS;
 
 /** Step tabs rendered into the top nav bar (PrototypeShell topbarCenter). */
 function StepTabs({ steps, active, onSelect, showIndex = true }: { steps: Step[]; active: string; onSelect: (k: string) => void; showIndex?: boolean }) {
@@ -166,6 +201,11 @@ export function WorkspaceShell({
   const { openModal, closeModal } = useModals();
   const { showToast } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Topbar chrome injected by the page (ported H2 pages push their sub-tabs +
+  // actions up here via the H2Layout shim).
+  const [injectedCenter, setInjectedCenter] = useState<ReactNode>(null);
+  const [injectedRight, setInjectedRight] = useState<ReactNode>(null);
+  const wsChrome = useMemo(() => ({ setTopbarCenter: setInjectedCenter, setTopbarRight: setInjectedRight }), []);
 
   const openHandoff = () => openModal(HandoffModal, {
     account,
@@ -176,6 +216,7 @@ export function WorkspaceShell({
       showToast({ message: `Handed off to ${amName} — they now own this workspace` });
     },
   });
+  const { state: dfyState } = useDfyState();
   const groups = side === 'am' ? AM_SECTIONS : CLIENT_SECTIONS;
   const allItems = groups.flatMap((g) => g.items);
   const active = allItems.find((n) => n.section === section)?.label ?? allItems[0].label;
@@ -199,7 +240,8 @@ export function WorkspaceShell({
   );
 
   const topbarCenter = !sub ? undefined
-    : section === 'home' ? chipStrip(true)
+    // Cold Home is a single setup checklist — no Workstream/Insights tabs.
+    : section === 'home' ? (dfyState === 'cold' && side === 'am' ? undefined : chipStrip(true))
     : section === 'settings' || section === 'plan' ? chipStrip(false)
     : steps
       ? <StepTabs steps={steps} active={sub} onSelect={(k) => go(`/${account.id}/${side}/${section}/${k}`)} />
@@ -219,7 +261,7 @@ export function WorkspaceShell({
   }));
 
   return (
-   <>
+   <WorkspaceChromeContext.Provider value={wsChrome}>
     <PrototypeShell
       title={active}
       workspaceName={account.name}
@@ -230,10 +272,11 @@ export function WorkspaceShell({
         { label: 'Handoff client', icon: ArrowSwitchHorizontal, onClick: openHandoff },
         { label: 'All accounts', icon: ArrowLeft, href: BASE },
       ]}
-      topbarCenter={topbarCenter}
+      topbarCenter={injectedCenter ?? topbarCenter}
       topbarRight={
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           {topbarExtra}
+          {injectedRight}
           {section === 'approvals' && side === 'am' && (
             <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
           )}
@@ -242,7 +285,7 @@ export function WorkspaceShell({
             const on = s === side;
             // Stay on the current section when it exists for both sides (Approvals,
             // Calendar, Brand Kit, Home) — otherwise fall back to the side's root.
-            const shared = ['home', 'approvals', 'calendar', 'brand'].includes(section);
+            const shared = ['home', 'approvals', 'calendar', 'brand', ...FEATURE_SECTIONS].includes(section);
             const to = shared ? `/${account.id}/${s}/${section}${sub ? `/${sub}` : ''}` : `/${account.id}/${s}`;
             return <button key={s} onClick={() => go(to)} style={{ border: on ? '1px solid var(--dark-8)' : '1px solid transparent', background: on ? 'var(--light-100)' : 'transparent', color: on ? 'var(--dark-90)' : 'var(--dark-60)', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>{s === 'am' ? 'AM' : 'Client'}</button>;
           })}
@@ -253,7 +296,8 @@ export function WorkspaceShell({
       {children}
     </PrototypeShell>
     {menuOpen && <AccountSwitcher side={side} currentId={account.id} go={go} onClose={() => setMenuOpen(false)} />}
-   </>
+    <DevStatePanel />
+   </WorkspaceChromeContext.Provider>
   );
 }
 
