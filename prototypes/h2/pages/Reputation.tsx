@@ -5,9 +5,8 @@ import { Facebook, Google, Instagram, TikTok, Twitter } from '@/icons/20';
 import { StatusPill, TabChip, useToast } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
-import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
-import { ReputationColdView } from './ColdViews';
+import { ConnectSourcesPage, ReputationColdView } from './ReputationColdView';
 
 /**
  * /h2/reputation — deep port of Blaze H2 Features/reputation.html.
@@ -545,23 +544,9 @@ function AiDraftBlock({ draft, readOnly, hideActions, approveLabel = 'Approve & 
       </div>
       {!hideActions && (
         readOnly ? (
-          <button
-            type="button"
-            onClick={onEdit}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              padding: 0,
-              fontFamily: 'inherit',
-              fontSize: 12,
-              color: 'var(--purple)',
-              fontWeight: 500,
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
-          >
+          <Button variant="secondary" size="sm" onClick={onEdit}>
             Edit reply
-          </button>
+          </Button>
         ) : (
           <div style={{ display: 'flex', gap: 6 }}>
             <Button variant="secondary" size="sm" onClick={onEdit}>Edit</Button>
@@ -593,29 +578,15 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: Atte
   // "Review & reply".
   const actions = item.autoReplied && item.aiDraft ? (
     <div onClick={stop} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <button
-        type="button"
-        onClick={() => onEditDraft(item)}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          padding: 0,
-          fontFamily: 'inherit',
-          fontSize: 12,
-          color: 'var(--purple)',
-          fontWeight: 500,
-          cursor: 'pointer',
-          textDecoration: 'underline',
-        }}
-      >
+      <Button variant="secondary" size="sm" onClick={() => onEditDraft(item)}>
         Edit reply
-      </button>
+      </Button>
     </div>
   ) : item.aiDraft ? (
     <div onClick={stop} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       <StatusPill tone="neutral" size="sm">Confidence {item.aiDraft.confidence}%</StatusPill>
       <Button variant="secondary" size="sm" onClick={() => onEditDraft(item)}>Edit</Button>
-      <Button variant="secondary" size="sm" onClick={() => onApproveDraft(item)}>Approve</Button>
+      <Button variant="secondary" size="sm" onClick={() => onApproveDraft(item)}>Post Reply</Button>
     </div>
   ) : (
     <div onClick={stop}>
@@ -980,7 +951,7 @@ function ListeningPane() {
 
 // ─── TABS ─────────────────────────────────────────────────────────
 
-type TabKey = 'reviews' | 'insights' | 'listening';
+type TabKey = 'reviews' | 'insights' | 'listening' | 'manage';
 
 // ─── ITEM-DETAIL MODAL ────────────────────────────────────────────
 
@@ -1209,7 +1180,7 @@ function EditDraftModal({
         </Modal.FooterContent>
         <Modal.FooterContent slot="right">
           <Modal.FooterButton variant="primary" isDisabled={!canSave} onPress={() => onSave(text.trim())}>
-            Save changes
+            Save and Post
           </Modal.FooterButton>
         </Modal.FooterContent>
       </Modal.Footer>
@@ -1260,6 +1231,13 @@ function ReputationRouteInner() {
 
   const reviewCount = attention.length;
 
+  // Connected review/social sources, seeded with the OAuth sources (Google,
+  // Facebook). The "Manage Accounts" tab opens the full connect page; new
+  // connections there bump this set.
+  const [connectedSources, setConnectedSources] = useState<Set<string>>(
+    () => new Set(['google', 'facebook']),
+  );
+
   if (isCold) {
     return (
       <H2Layout>
@@ -1271,12 +1249,13 @@ function ReputationRouteInner() {
   // Sub-tabs lifted into the topbar's center slot — state (active key + counts)
   // stays here, only the rendered chips are passed up.
   const topbarCenter = (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
       {(
         [
           { key: 'reviews', label: 'Reviews & Comments', count: reviewCount },
           { key: 'insights', label: 'Business Insights', count: 5 },
           { key: 'listening', label: 'Social Listening' },
+          { key: 'manage', label: 'Manage Sources' },
         ] as const
       ).map((t) => (
         <TabChip
@@ -1291,8 +1270,23 @@ function ReputationRouteInner() {
     </div>
   );
 
+  // "Manage Accounts" tab — the full connect page (grouped sources), seeded
+  // with what's already connected. Rendered for both connected + steady.
+  if (tab === 'manage') {
+    return (
+      <H2Layout topbarCenter={topbarCenter}>
+        <ConnectSourcesPage
+          title="Manage your sources"
+          subhead="Connect or update the platforms Blaze monitors for reviews, comments, and mentions."
+          initialConnected={[...connectedSources]}
+          onConnect={(key) => setConnectedSources((prev) => new Set(prev).add(key))}
+        />
+      </H2Layout>
+    );
+  }
+
   return (
-    <H2Layout topbarCenter={topbarCenter} topbarRight={<GenerateReportButton />}>
+    <H2Layout topbarCenter={topbarCenter}>
       <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
         {/* KPI strip */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>

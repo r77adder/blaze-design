@@ -87,6 +87,9 @@ export function DevStatePanel() {
   // the global Onboarding toggle is always reachable.
   if (!pathname.startsWith('/h2')) return null;
   const hasPathState = DEV_STATE_PATHS.has(pathname);
+  // Approvals audience (DFY/DIY) is only meaningful on pages that branch on it.
+  // Reputation doesn't, so hide those toggles there to keep the panel focused.
+  const showAudience = pathname !== '/h2/reputation';
 
   const current = getState(pathname);
 
@@ -206,20 +209,24 @@ export function DevStatePanel() {
           openOnboarding({ reset: true });
         }}
       />
-      <Divider />
-      {/* Approvals audience: DFY (agency) vs DIY (self-serve customer). */}
-      <DevStateButton
-        label="steady"
-        text="DFY"
-        selected={audience === 'dfy'}
-        onClick={() => setAudience('dfy')}
-      />
-      <DevStateButton
-        label="steady"
-        text="DIY"
-        selected={audience === 'diy'}
-        onClick={() => setAudience('diy')}
-      />
+      {showAudience && (
+        <>
+          <Divider />
+          {/* Approvals audience: DFY (agency) vs DIY (self-serve customer). */}
+          <DevStateButton
+            label="steady"
+            text="DFY"
+            selected={audience === 'dfy'}
+            onClick={() => setAudience('dfy')}
+          />
+          <DevStateButton
+            label="steady"
+            text="DIY"
+            selected={audience === 'diy'}
+            onClick={() => setAudience('diy')}
+          />
+        </>
+      )}
       <Divider />
       {/* Jump straight to the creative-ready announcement / approve-creative
           flow without walking the whole onboarding → generating path. */}

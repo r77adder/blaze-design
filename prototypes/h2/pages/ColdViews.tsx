@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { Button, Heading, Text } from '@/components';
 import { useToast } from '@/staging';
 import Globe from '@/icons/20/Globe';
-import Star from '@/icons/20/Star';
 import Stars from '@/icons/20/Stars';
 import Camera1 from '@/icons/20/Camera1';
 import Calendar1 from '@/icons/20/Calendar1';
@@ -166,17 +165,8 @@ export function LandingPagesColdView() {
   );
 }
 
-export function ReputationColdView() {
-  return (
-    <EmptyState
-      icon={<Star size={28} />}
-      title="Connect a review source"
-      subhead="Pull in Google, Yelp, and DM feedback so Blaze can triage, draft replies, and surface what needs your attention."
-      ctaLabel="Connect a source"
-      ctaMessage="Opening review-source picker"
-    />
-  );
-}
+// ReputationColdView now lives in its own file (./ReputationColdView) — it's a
+// richer connect-sources view rather than the generic single-CTA empty state.
 
 export function UgcColdView() {
   return (
