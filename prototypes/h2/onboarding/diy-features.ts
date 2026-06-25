@@ -11,6 +11,7 @@ import Star from '@/icons/20/Star';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
 import Templates from '@/icons/20/Templates';
 import UserProfileCircle from '@/icons/20/UserProfileCircle';
+import { GAP_AND_FIX } from './gap-and-fix-data';
 
 /**
  * DIY onboarding feature catalog.
@@ -52,22 +53,21 @@ export interface FeatureDef<Id extends string> {
   /** Underlying billing ToolId, when one exists. Undefined for DIY-native
    *  areas (Local SEO, Competitor Ranking) that aren't part of `ToolId`. */
   toolId?: ToolId;
+  /** "The gap we found" + "how Blaze fixes it" — shown on V1's feature page. */
+  gap: string;
+  fix: string;
 }
 
-/** Features a DIY user can add to a self-serve plan on their own. */
+/** Features a DIY user can add to a self-serve plan on their own. Paid-first
+ *  order; Organic Campaigns sits last. */
 export const DIY_ADDABLE_FEATURES: FeatureDef<DiyFeatureId>[] = [
-  {
-    id: 'organic-campaigns',
-    label: 'Organic Campaigns',
-    description: 'Schedule and publish across every social channel.',
-    icon: Calendar1,
-    toolId: 'Organic Campaigns',
-  },
   {
     id: 'local-seo',
     label: 'Local SEO',
     description: 'Rank in the local map pack and keep your Google Business Profile sharp.',
     icon: Map02,
+    gap: 'Your Google Business Profile is thin and you\'re missing from the local map pack for high-intent searches.',
+    fix: 'Optimize your GBP, build local citations, and climb the map pack for "painters near me Austin" and nearby terms.',
   },
   {
     id: 'seo-aeo',
@@ -75,6 +75,8 @@ export const DIY_ADDABLE_FEATURES: FeatureDef<DiyFeatureId>[] = [
     description: 'Rank on Google and get cited by ChatGPT, Perplexity, and other answer engines.',
     icon: Globe,
     toolId: 'SEO/AEO',
+    gap: GAP_AND_FIX['SEO/AEO'].gap,
+    fix: GAP_AND_FIX['SEO/AEO'].fix,
   },
   {
     id: 'paid-search',
@@ -82,6 +84,8 @@ export const DIY_ADDABLE_FEATURES: FeatureDef<DiyFeatureId>[] = [
     description: 'Google Ads keywords, bids, and conversion tracking.',
     icon: Google,
     toolId: 'Paid Search',
+    gap: GAP_AND_FIX['Paid Search'].gap,
+    fix: GAP_AND_FIX['Paid Search'].fix,
   },
   {
     id: 'paid-social',
@@ -89,12 +93,25 @@ export const DIY_ADDABLE_FEATURES: FeatureDef<DiyFeatureId>[] = [
     description: 'Run and optimize Meta, TikTok, and LinkedIn ads.',
     icon: Cursor04,
     toolId: 'Paid Social',
+    gap: GAP_AND_FIX['Paid Social'].gap,
+    fix: GAP_AND_FIX['Paid Social'].fix,
   },
   {
     id: 'competitor-ranking',
     label: 'Competitor Ranking',
     description: 'Track how you stack up against local competitors over time.',
     icon: LineChartUp02,
+    gap: 'You can\'t see what local competitors are spending, ranking, or posting — so you\'re guessing.',
+    fix: 'Track competitors\' paid ads, search rankings, and content over time, with alerts when they make a move.',
+  },
+  {
+    id: 'organic-campaigns',
+    label: 'Organic Campaigns',
+    description: 'Schedule and publish across every social channel.',
+    icon: Calendar1,
+    toolId: 'Organic Campaigns',
+    gap: GAP_AND_FIX['Organic Campaigns'].gap,
+    fix: GAP_AND_FIX['Organic Campaigns'].fix,
   },
 ];
 
@@ -106,6 +123,8 @@ export const DFY_ONLY_FEATURES: FeatureDef<DfyFeatureId>[] = [
     description: 'We monitor and respond to every review across Google, Yelp, and more.',
     icon: Star,
     toolId: 'Reputation',
+    gap: GAP_AND_FIX['Reputation'].gap,
+    fix: GAP_AND_FIX['Reputation'].fix,
   },
   {
     id: 'ai-receptionist',
@@ -113,6 +132,8 @@ export const DFY_ONLY_FEATURES: FeatureDef<DfyFeatureId>[] = [
     description: 'An AI agent answers inbound email, SMS, and chat in under 2 minutes.',
     icon: UserProfileGroup,
     toolId: 'SDR',
+    gap: GAP_AND_FIX['SDR'].gap,
+    fix: GAP_AND_FIX['SDR'].fix,
   },
   {
     id: 'website-landing-pages',
@@ -120,6 +141,8 @@ export const DFY_ONLY_FEATURES: FeatureDef<DfyFeatureId>[] = [
     description: 'We design and ship landing pages and site updates for you.',
     icon: Templates,
     toolId: 'Landing Pages',
+    gap: GAP_AND_FIX['Landing Pages'].gap,
+    fix: GAP_AND_FIX['Landing Pages'].fix,
   },
   {
     id: 'ugc-content',
@@ -127,6 +150,8 @@ export const DFY_ONLY_FEATURES: FeatureDef<DfyFeatureId>[] = [
     description: 'We produce creator-style AI avatar videos and UGC for your channels.',
     icon: UserProfileCircle,
     toolId: 'UGC Content',
+    gap: GAP_AND_FIX['UGC Content'].gap,
+    fix: GAP_AND_FIX['UGC Content'].fix,
   },
 ];
 

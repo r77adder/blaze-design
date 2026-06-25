@@ -154,12 +154,12 @@ export const H2_SECTIONS: SidebarSection[] = [
     label: 'Awareness',
     collapsible: true,
     items: [
-      { label: 'Organic Campaigns', icon: Calendar1Sm, href: '/h2/organic-social' },
       { label: 'Local SEO', icon: Marker03, href: '/h2/organic-profile' },
       { label: 'SEO/AEO', icon: Globe, href: '/h2/seo-aeo' },
       { label: 'UGC Content', icon: UserProfileCircle, href: '/h2/influencer-content' },
       { label: 'Paid Social', icon: Cursor04, href: '/h2/paid-social' },
       { label: 'Paid Search', icon: BarChartSquare, href: '/h2/paid-search' },
+      { label: 'Organic Campaigns', icon: Calendar1Sm, href: '/h2/organic-social' },
       { label: 'Competitor Tracking', icon: Target2, href: '/h2/competitor-tracking', trail: 'NEW' },
     ],
   },

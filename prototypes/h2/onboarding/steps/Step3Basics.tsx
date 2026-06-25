@@ -1,323 +1,106 @@
-import { useState, type ChangeEvent, type ComponentType } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { Button, Heading, Text } from '@/components';
-import { Chip } from '@/staging';
-import CustomerService from '@/icons/20/CustomerService';
-import Marker from '@/icons/20/Marker';
-import Bag04 from '@/icons/20/Bag04';
-import Check2 from '@/icons/20/Check2';
+import Upload from '@/icons/20/Upload';
 import Edit1 from '@/icons/20/Edit1';
-import { BUSINESS_TYPES, type BusinessType } from '../../tools-context';
+import Instagram from '@/icons/20/Instagram';
+import Facebook from '@/icons/20/Facebook';
+import TikTok from '@/icons/20/TikTok';
+import LinkedIn from '@/icons/20/LinkedIn';
+import Google from '@/icons/20/Google';
+import Star from '@/icons/20/Star';
 import { useOnboarding } from '../onboarding-context';
 
-const TYPE_ICONS: Record<BusinessType, ComponentType<{ size?: number; color?: string }>> = {
-  services: CustomerService,
-  local: Marker,
-  products: Bag04,
-};
-
-const TYPE_DESCRIPTIONS: Record<BusinessType, string> = {
-  services: 'Consultant, agencies, freelancer',
-  local: 'Restaurants, stores, salons',
-  products: 'E-commerce, manufactures',
-};
-
-const LANGUAGES = ['English (US)', 'English (UK)', 'Spanish', 'French', 'German'];
-const ETHNICITIES = ['Multicultural/Diverse Group', 'Black', 'White', 'Asian', 'Hispanic / Latino'];
-const GENDERS = ['All Genders', 'Female', 'Male', 'Non-Binary'];
-const AGES = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
+/**
+ * V1 "basics" step — condensed. Brand (logo + name) leads, then connected
+ * profiles, then the brand-context text. Each section is read-only with a
+ * tertiary Edit toggle that reveals inline inputs.
+ */
 
 export function Step3Basics() {
-  const { profile, updateProfile, setBusinessType, next, back } = useOnboarding();
+  const { profile, updateProfile, next, back } = useOnboarding();
+  const [segments, setSegments] = useState(
+    'Homeowners 35–65 planning an interior or exterior project, property managers & HOAs with recurring repaints, and past customers ripe for referrals.',
+  );
+  const [services, setServices] = useState(
+    'Interior & exterior painting, cabinet refinishing, and commercial coatings — concierge service from color consult to cleanup.',
+  );
+  const [goal, setGoal] = useState(
+    'Drive 25+ qualified estimate requests a month from paid channels within 90 days — a predictable pipeline at a lower cost per lead.',
+  );
 
   return (
-    <div style={{ padding: '64px 24px 120px', maxWidth: 880, margin: '0 auto' }}>
-      <Heading
-        level={1}
-        style={{ fontSize: 32, letterSpacing: '-0.4px', lineHeight: 1.2, marginBottom: 8 }}
-      >
+    <div style={{ padding: '64px 24px 120px', maxWidth: 760, margin: '0 auto' }}>
+      <Heading level={1} style={{ fontSize: 32, letterSpacing: '-0.4px', lineHeight: 1.2, marginBottom: 8 }}>
         First, let's confirm some basics about your business
       </Heading>
-      <Text
-        variant="primary"
-        style={{ display: 'block', color: 'var(--dark-60)', fontSize: 16, marginBottom: 32 }}
-      >
-        We pulled this from your website — correct anything that's off.
+      <Text variant="primary" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 16, marginBottom: 8 }}>
+        Pulled from your website — edit anything that's off.
       </Text>
 
-      {/* Business name */}
-      <FieldLabel>Business name</FieldLabel>
-      <TextInput
-        value={profile.name}
-        onChange={(e) => updateProfile({ name: e.target.value })}
-        style={{ marginBottom: 24 }}
-      />
-
-      {/* Business type cards */}
-      <div
-        style={{
-          background: 'rgba(124, 92, 252, 0.04)',
-          border: '1px solid rgba(124, 92, 252, 0.12)',
-          borderRadius: 12,
-          padding: 20,
-          marginBottom: 28,
-        }}
-      >
-        <div style={{ marginBottom: 4 }}>
-          <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-            Select your type of business
-            <span style={{ color: 'var(--red-70)' }}>*</span>
-          </Text>
-        </div>
-        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 16 }}>
-          This will affect your content plan
-        </Text>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 12,
-          }}
-        >
-          {BUSINESS_TYPES.map((b) => {
-            const Icon = TYPE_ICONS[b.id];
-            const selected = profile.type === b.id;
-            return (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setBusinessType(b.id)}
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                  padding: 16,
-                  background: 'var(--light-100)',
-                  border: `1.5px solid ${selected ? 'var(--dark-90)' : 'var(--dark-8)'}`,
-                  borderRadius: 10,
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'border-color 120ms ease',
-                }}
-              >
-                <Icon size={20} color="var(--dark-90)" />
-                <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-                  {b.label.replace('Local Business', 'Place Based').replace('Services', 'Service Based').replace('Products', 'Product Based')}
-                </Text>
-                <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
-                  {TYPE_DESCRIPTIONS[b.id]}
-                </Text>
-                {selected && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      width: 22,
-                      height: 22,
-                      borderRadius: '50%',
-                      background: 'var(--dark-90)',
-                      color: 'var(--light-100)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Check2 size={14} color="var(--light-100)" />
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Elevator pitch */}
-      <FieldLabel>Elevator Pitch</FieldLabel>
-      <div
-        style={{
-          border: '1px solid var(--dark-8)',
-          borderRadius: 10,
-          padding: 16,
-          background: 'var(--light-100)',
-          marginBottom: 24,
-        }}
-      >
-        <Text variant="primary" style={{ color: 'var(--dark-90)', lineHeight: 1.55, fontSize: 14 }}>
-          <span dangerouslySetInnerHTML={{
-            __html: profile.elevatorPitch.replace(
-              'locally-owned residential and commercial painting contractor',
-              '<strong style="color: var(--dark-90); font-weight: 500;">locally-owned residential and commercial painting contractor</strong>',
-            ),
-          }} />
-        </Text>
-      </div>
-
-      {/* Profiles — pulled from scorecard input. Lets the scan analyze
-          presence + reputation beyond just the website. */}
-      <ProfilesFieldset />
-
-      {/* Logo */}
-      <div style={{ marginBottom: 24 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 8,
-          }}
-        >
-          <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-            Logo
-          </Text>
-          <button
-            type="button"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 10px',
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 8,
-              fontFamily: 'inherit',
-              fontSize: 13,
-              color: 'var(--dark-90)',
-              cursor: 'pointer',
-            }}
-          >
-            <Edit1 size={14} color="var(--dark-90)" />
-            Edit
-          </button>
-        </div>
-        <div
-          style={{
-            width: 360,
-            maxWidth: '100%',
-            height: 140,
-            border: '1px solid var(--dark-8)',
-            borderRadius: 10,
-            background: 'var(--light-100)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: '"Times New Roman", Georgia, serif',
-            fontSize: 26,
-            letterSpacing: '0.06em',
-            color: 'var(--dark-90)',
-            fontWeight: 600,
-          }}
-        >
-          CertaPro
-        </div>
-      </div>
-
-      {/* Audience row */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 32,
-          marginBottom: 24,
-        }}
-      >
-        <div>
-          <Heading level={5} style={{ marginBottom: 12 }}>Who you're speaking to</Heading>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-            <SmallField label="Age">
-              <input
-                type="number"
-                value={profile.audienceAgeMin}
-                onChange={(e) => updateProfile({ audienceAgeMin: Number(e.target.value) })}
-                style={smallInputStyle}
-              />
-            </SmallField>
-            <span style={{ fontSize: 14, color: 'var(--dark-60)', padding: '8px 4px' }}>to</span>
-            <SmallField>
-              <input
-                type="number"
-                value={profile.audienceAgeMax}
-                onChange={(e) => updateProfile({ audienceAgeMax: Number(e.target.value) })}
-                style={smallInputStyle}
-              />
-            </SmallField>
-            <SmallField label="Gender">
-              <Select
-                value={profile.audienceGender}
-                options={GENDERS}
-                onChange={(v) => updateProfile({ audienceGender: v })}
-              />
-            </SmallField>
+      {/* 1 · Brand (logo + name) — leads the page */}
+      <Section title="Brand" first>
+        {(editing) => (
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+            <LogoBox />
+            <div style={{ flex: 1, minWidth: 220 }}>
+              {editing ? (
+                <>
+                  <FieldLabel>Business name</FieldLabel>
+                  <TextInput value={profile.name} onChange={(e) => updateProfile({ name: e.target.value })} />
+                  <div style={{ marginTop: 12 }}>
+                    <UploadButton />
+                  </div>
+                </>
+              ) : (
+                <Heading level={4} style={{ margin: 0 }}>
+                  {profile.name}
+                </Heading>
+              )}
+            </div>
           </div>
-        </div>
-        <div>
-          <Heading level={5} style={{ marginBottom: 12 }}>Audience</Heading>
-          <SmallField label="Primary Market Locations">
-            <LocationChips
-              values={profile.audienceLocations}
-              onChange={(arr) => updateProfile({ audienceLocations: arr })}
-            />
-          </SmallField>
-        </div>
-      </div>
+        )}
+      </Section>
 
-      {/* Who appears in content */}
-      <div style={{ marginBottom: 24 }}>
-        <Heading level={5} style={{ marginBottom: 12 }}>Who appears in content</Heading>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-          <SmallField label="Age">
-            <Select
-              value={profile.contentAge}
-              options={AGES}
-              onChange={(v) => updateProfile({ contentAge: v })}
-            />
-          </SmallField>
-          <SmallField label="Gender">
-            <Select
-              value={profile.contentGender}
-              options={GENDERS}
-              onChange={(v) => updateProfile({ contentGender: v })}
-            />
-          </SmallField>
-          <SmallField label="Ethnicity">
-            <Select
-              value={profile.contentEthnicity}
-              options={ETHNICITIES}
-              onChange={(v) => updateProfile({ contentEthnicity: v })}
-            />
-          </SmallField>
-        </div>
-      </div>
+      {/* 2 · Connected profiles */}
+      <ProfilesSection />
 
-      {/* Primary language */}
-      <div style={{ marginBottom: 24 }}>
-        <Heading level={5} style={{ marginBottom: 12 }}>Primary language</Heading>
-        <SmallField>
-          <Select
-            value={profile.primaryLanguage}
-            options={LANGUAGES}
-            onChange={(v) => updateProfile({ primaryLanguage: v })}
-          />
-        </SmallField>
-      </div>
+      {/* 3 · About (elevator pitch + positioning) */}
+      <Section title="About your business">
+        {(editing) =>
+          editing ? (
+            <>
+              <FieldLabel>Elevator pitch</FieldLabel>
+              <Textarea value={profile.elevatorPitch} onChange={(v) => updateProfile({ elevatorPitch: v })} minHeight={120} />
+              <div style={{ marginTop: 16 }}>
+                <FieldLabel>Positioning</FieldLabel>
+                <PositionEdit label="Primary" value={profile.positioningPrimary} onChange={(v) => updateProfile({ positioningPrimary: v })} />
+              </div>
+            </>
+          ) : (
+            <>
+              <Text variant="primary" style={{ display: 'block', color: 'var(--dark-80)', lineHeight: 1.55, fontSize: 14, marginBottom: 14 }}>
+                {profile.elevatorPitch}
+              </Text>
+              <PositionLine label="Positioning" text={profile.positioningPrimary} last />
+            </>
+          )
+        }
+      </Section>
 
-      {/* Market positioning */}
-      <div style={{ marginBottom: 32 }}>
-        <Heading level={5} style={{ marginBottom: 12 }}>Market Positioning</Heading>
-        <div
-          style={{
-            border: '1px solid var(--dark-8)',
-            borderRadius: 10,
-            padding: '18px 22px',
-            background: 'var(--light-100)',
-          }}
-        >
-          <PositionLine label="Primary Positioning" text={profile.positioningPrimary} />
-          <PositionLine label="Secondary Positioning" text={profile.positioningSecondary} />
-          <PositionLine label="Tertiary Positioning" text={profile.positioningTertiary} last />
-        </div>
-      </div>
+      {/* 4 · Marketing goal */}
+      <Section title="Marketing goal">
+        {(editing) => (editing ? <Textarea value={goal} onChange={setGoal} minHeight={100} /> : <Markdownish text={goal} />)}
+      </Section>
+
+      {/* 5 · Customer segments */}
+      <Section title="Customer segments">
+        {(editing) => (editing ? <Textarea value={segments} onChange={setSegments} minHeight={140} /> : <Markdownish text={segments} />)}
+      </Section>
+
+      {/* 6 · Services & products */}
+      <Section title="Services & products">
+        {(editing) => (editing ? <Textarea value={services} onChange={setServices} minHeight={120} /> : <Markdownish text={services} />)}
+      </Section>
 
       <div
         style={{
@@ -334,299 +117,223 @@ export function Step3Basics() {
           zIndex: 4,
         }}
       >
-        <button
-          type="button"
-          onClick={back}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            fontFamily: 'inherit',
-            fontSize: 14,
-            color: 'var(--dark-90)',
-            cursor: 'pointer',
-            padding: '8px 12px',
-          }}
-        >
+        <button type="button" onClick={back} style={{ background: 'transparent', border: 'none', fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)', cursor: 'pointer', padding: '8px 12px' }}>
           Back
         </button>
         <Button variant="primary" size="lg" onPress={next}>
-          Generate My Business Score Card
+          Continue
         </Button>
       </div>
     </div>
   );
 }
 
-function ProfilesFieldset() {
-  // Field set lifted from the scorecard /scorecard InputView so the scan
-  // has the same profile surface area to analyze (GBP, social, reviews).
-  // Uncontrolled inputs — prototype-grade; values aren't persisted.
+// ─── Section wrapper (H3 header + tertiary Edit toggle) ───────────────────────
+
+function Section({ title, first, children }: { title: string; first?: boolean; children: (editing: boolean) => ReactNode }) {
+  const [editing, setEditing] = useState(false);
   return (
-    <div style={{ marginBottom: 28 }}>
-      <ProfileField label="Google Business Profile" hint="(business name + city works)">
-        <ProfileInput defaultValue="CertaPro Painters of Austin — Austin, TX" />
-      </ProfileField>
-
-      <ProfileField label="Social handles" hint="(any platforms you use)">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-          <ProfileInput placeholder="Instagram" defaultValue="@certapro_austin" />
-          <ProfileInput placeholder="Facebook" defaultValue="CertaProAustin" />
-          <ProfileInput placeholder="TikTok" />
-          <ProfileInput placeholder="LinkedIn" defaultValue="certapro-painters-austin" />
+    <section style={{ padding: '20px 0', borderTop: first ? 'none' : '1px solid var(--dark-8)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12, minHeight: 32 }}>
+        <Heading level={3} style={{ margin: 0, fontSize: 18 }}>
+          {title}
+        </Heading>
+        <div style={{ flexShrink: 0 }}>
+          <Button variant="secondary" size="sm" frontIcon={Edit1} onPress={() => setEditing((e) => !e)}>
+            {editing ? 'Done' : 'Edit'}
+          </Button>
         </div>
-      </ProfileField>
-
-      <ProfileField label="Review profiles" hint="(URLs or platform names)">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <ProfileInput placeholder="Google reviews URL" defaultValue="auto-detect from GBP" />
-          <ProfileInput placeholder="Yelp / Angi / vertical-specific" defaultValue="Yelp, Angi, HomeAdvisor" />
-        </div>
-      </ProfileField>
-    </div>
-  );
-}
-
-function ProfileField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ marginBottom: 8, display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <Text
-          variant="smallList"
-          style={{ color: 'var(--dark-90)', fontWeight: 500 }}
-        >
-          {label}
-        </Text>
-        {hint && (
-          <Text variant="metadata" style={{ color: 'var(--dark-40)', fontSize: 12 }}>
-            {hint}
-          </Text>
-        )}
       </div>
-      {children}
+      {children(editing)}
+    </section>
+  );
+}
+
+/** Renders a brand-context value with **bold** + `- ` bullets as read-only. */
+function Markdownish({ text }: { text: string }) {
+  const lines = text.split('\n').filter((l) => l.trim());
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {lines.map((line, i) => {
+        const bullet = line.trim().startsWith('- ');
+        const body = (bullet ? line.trim().slice(2) : line.trim()).replace(/\*\*(.+?)\*\*/g, '<strong style="font-weight:500;color:var(--dark-90)">$1</strong>');
+        return (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            {bullet && <span aria-hidden style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--dark-40)', marginTop: 9, flexShrink: 0 }} />}
+            <span style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--dark-80)' }} dangerouslySetInnerHTML={{ __html: body }} />
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function ProfileInput({ placeholder, defaultValue, type = 'text' }: { placeholder?: string; defaultValue?: string; type?: string }) {
+// ─── Connected profiles (GBP, socials, reviews — all icon-prefixed) ──────────
+
+const SOCIALS = [
+  { key: 'ig', icon: Instagram, placeholder: 'Instagram', initial: '@certapro_austin' },
+  { key: 'fb', icon: Facebook, placeholder: 'Facebook', initial: 'CertaProAustin' },
+  { key: 'tt', icon: TikTok, placeholder: 'TikTok', initial: '' },
+  { key: 'li', icon: LinkedIn, placeholder: 'LinkedIn', initial: 'certapro-painters-austin' },
+] as const;
+
+function ProfilesSection() {
+  const [gbp, setGbp] = useState('CertaPro Painters of Austin — Austin, TX');
+  const [handles, setHandles] = useState<Record<string, string>>(() => Object.fromEntries(SOCIALS.map((s) => [s.key, s.initial])));
+  const [gReviews, setGReviews] = useState('auto-detect from GBP');
+  const [oReviews, setOReviews] = useState('Yelp, Angi, HomeAdvisor');
+  const set = (key: string, v: string) => setHandles((h) => ({ ...h, [key]: v }));
+
   return (
-    <input
-      type={type}
-      defaultValue={defaultValue}
-      placeholder={placeholder}
+    <Section title="Connected profiles">
+      {(editing) =>
+        editing ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <FieldLabel>Google Business Profile</FieldLabel>
+              <IconInput icon={Google} value={gbp} onChange={setGbp} />
+            </div>
+            <div>
+              <FieldLabel>Social handles</FieldLabel>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                {SOCIALS.map((s) => (
+                  <IconInput key={s.key} icon={s.icon} placeholder={s.placeholder} value={handles[s.key]} onChange={(v) => set(s.key, v)} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Review profiles</FieldLabel>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <IconInput icon={Google} placeholder="Google reviews" value={gReviews} onChange={setGReviews} />
+                <IconInput icon={Star} placeholder="Yelp / Angi / vertical" value={oReviews} onChange={setOReviews} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Inline icon={Google}>{gbp}</Inline>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {SOCIALS.map((s) => (
+                <Inline key={s.key} icon={s.icon} muted={!handles[s.key]}>
+                  {handles[s.key] || `Add ${s.placeholder}`}
+                </Inline>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <Inline icon={Google}>{gReviews}</Inline>
+              <Inline icon={Star}>{oReviews}</Inline>
+            </div>
+          </div>
+        )
+      }
+    </Section>
+  );
+}
+
+function Inline({ icon: Icon, children, muted }: { icon: typeof Instagram; children: ReactNode; muted?: boolean }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: muted ? 'var(--dark-40)' : 'var(--dark-80)', fontSize: 14 }}>
+      <Icon size={18} color="var(--dark-60)" />
+      {children}
+    </span>
+  );
+}
+
+function IconInput({ icon: Icon, placeholder, value, onChange }: { icon: typeof Instagram; placeholder?: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div style={{ position: 'relative' }}>
+      <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', pointerEvents: 'none' }}>
+        <Icon size={18} color="var(--dark-60)" />
+      </span>
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={{ ...profileInputStyle, paddingLeft: 38 }} />
+    </div>
+  );
+}
+
+// ─── Small building blocks ────────────────────────────────────────────────────
+
+function LogoBox() {
+  return (
+    <div
       style={{
-        width: '100%',
-        padding: '12px 14px',
-        fontSize: 14,
-        fontFamily: 'inherit',
-        background: 'var(--light-100)',
+        width: 200,
+        height: 88,
         border: '1px solid var(--dark-8)',
         borderRadius: 10,
+        background: 'var(--light-100)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: '"Times New Roman", Georgia, serif',
+        fontSize: 24,
+        letterSpacing: '0.06em',
         color: 'var(--dark-90)',
-        outline: 'none',
-        boxSizing: 'border-box',
+        fontWeight: 600,
+        flexShrink: 0,
       }}
-    />
+    >
+      CertaPro
+    </div>
   );
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function UploadButton() {
   return (
-    <Text
-      variant="smallList"
-      style={{
-        display: 'block',
-        color: 'var(--dark-90)',
-        fontWeight: 500,
-        marginBottom: 8,
-      }}
-    >
+    <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-90)', cursor: 'pointer' }}>
+      <Upload size={14} color="var(--dark-90)" />
+      Upload Logo kit
+    </button>
+  );
+}
+
+function FieldLabel({ children }: { children: ReactNode }) {
+  return (
+    <Text variant="smallList" style={{ display: 'block', color: 'var(--dark-90)', fontWeight: 500, marginBottom: 8 }}>
       {children}
     </Text>
   );
 }
 
-const smallInputStyle: React.CSSProperties = {
-  width: 64,
-  padding: '8px 10px',
+const profileInputStyle: CSSProperties = {
+  width: '100%',
+  padding: '12px 14px',
   fontSize: 14,
+  letterSpacing: '0.28px',
   fontFamily: 'inherit',
   background: 'var(--light-100)',
   border: '1px solid var(--dark-8)',
-  borderRadius: 8,
+  borderRadius: 10,
   color: 'var(--dark-90)',
   outline: 'none',
+  boxSizing: 'border-box',
 };
 
-function TextInput({
-  value,
-  onChange,
-  style,
-}: {
-  value: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <input
-      type="text"
-      value={value}
-      onChange={onChange}
-      style={{
-        width: '100%',
-        padding: '12px 14px',
-        fontSize: 15,
-        fontFamily: 'inherit',
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 10,
-        color: 'var(--dark-90)',
-        outline: 'none',
-        ...style,
-      }}
-    />
-  );
+function TextInput({ value, onChange, style }: { value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; style?: CSSProperties }) {
+  return <input type="text" value={value} onChange={onChange} style={{ ...profileInputStyle, fontSize: 16, letterSpacing: '0.32px', ...style }} />;
 }
 
-function SmallField({ label, children }: { label?: string; children: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && (
-        <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 12 }}>
-          {label}
-        </Text>
-      )}
-      {children}
-    </div>
-  );
+function Textarea({ value, onChange, minHeight = 120 }: { value: string; onChange: (v: string) => void; minHeight?: number }) {
+  return <textarea value={value} onChange={(e) => onChange(e.target.value)} style={{ ...profileInputStyle, minHeight, lineHeight: 1.55, resize: 'vertical' }} />;
 }
 
-function Select({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: readonly string[] | string[];
-  onChange: (v: string) => void;
-}) {
+function PositionLine({ label, text, last }: { label: string; text: string; last?: boolean }) {
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        appearance: 'none',
-        padding: '8px 28px 8px 10px',
-        fontSize: 14,
-        fontFamily: 'inherit',
-        background: `var(--light-100) url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23000' stroke-opacity='0.6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M4 6l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 10px center`,
-        border: '1px solid var(--dark-8)',
-        borderRadius: 8,
-        color: 'var(--dark-90)',
-        outline: 'none',
-        minWidth: 140,
-      }}
-    >
-      {options.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function LocationChips({
-  values,
-  onChange,
-}: {
-  values: string[];
-  onChange: (arr: string[]) => void;
-}) {
-  const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState('');
-
-  const remove = (v: string) => onChange(values.filter((x) => x !== v));
-  const add = () => {
-    const t = draft.trim();
-    if (t && !values.includes(t)) onChange([...values, t]);
-    setDraft('');
-    setAdding(false);
-  };
-
-  return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-      {values.map((v) => (
-        <Chip
-          key={v}
-          size="md"
-          deletable
-          onDelete={() => remove(v)}
-        >
-          {v}
-        </Chip>
-      ))}
-      {adding ? (
-        <input
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={add}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') add();
-            if (e.key === 'Escape') {
-              setDraft('');
-              setAdding(false);
-            }
-          }}
-          placeholder="Country / region"
-          style={{
-            ...smallInputStyle,
-            width: 160,
-            fontSize: 14,
-          }}
-        />
-      ) : (
-        <Chip size="md" variant="add" onClick={() => setAdding(true)}>
-          Add
-        </Chip>
-      )}
-    </div>
-  );
-}
-
-function PositionLine({
-  label,
-  text,
-  last,
-}: {
-  label: string;
-  text: string;
-  last?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 10,
-        alignItems: 'flex-start',
-        padding: '4px 0',
-        marginBottom: last ? 0 : 8,
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          width: 4,
-          height: 4,
-          borderRadius: '50%',
-          background: 'var(--dark-90)',
-          marginTop: 9,
-          flexShrink: 0,
-        }}
-      />
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '3px 0', marginBottom: last ? 0 : 6 }}>
+      <span aria-hidden style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--dark-90)', marginTop: 9, flexShrink: 0 }} />
       <Text variant="primary" style={{ color: 'var(--dark-90)', lineHeight: 1.55, fontSize: 14 }}>
         <strong style={{ fontWeight: 500 }}>{label}:</strong> {text}
       </Text>
+    </div>
+  );
+}
+
+function PositionEdit({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 12, marginBottom: 4 }}>
+        {label}
+      </Text>
+      <input value={value} onChange={(e) => onChange(e.target.value)} style={profileInputStyle} />
     </div>
   );
 }

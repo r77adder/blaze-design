@@ -13,7 +13,7 @@ const LANGUAGES = [
   'Italian',
 ];
 
-export function Step1Website() {
+export function Step1Website({ onContinue }: { onContinue?: () => void } = {}) {
   const { websiteUrl, setWebsiteUrl, contentLanguage, setContentLanguage, next } = useOnboarding();
   const [localUrl, setLocalUrl] = useState(websiteUrl);
   const [langOpen, setLangOpen] = useState(false);
@@ -26,7 +26,8 @@ export function Step1Website() {
     } else {
       setWebsiteUrl(localUrl.trim());
     }
-    next();
+    if (onContinue) onContinue();
+    else next();
   };
 
   return (
@@ -70,7 +71,8 @@ export function Step1Website() {
               minWidth: 0,
               height: 48,
               padding: '0 20px',
-              fontSize: 17,
+              fontSize: 16,
+              letterSpacing: '0.32px',
               fontFamily: 'inherit',
               color: 'var(--dark-90)',
               background: 'var(--light-100)',

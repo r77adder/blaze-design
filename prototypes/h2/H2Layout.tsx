@@ -58,6 +58,20 @@ function filterSectionsForEnabledTools(
     .filter((section) => section.items.length > 0);
 }
 
+/** ToolIds currently surfaced in the rail (Demand Gen + Conversion), in rail
+ *  order, after the enabled-tools filter. The cold-state Home mirrors this so
+ *  its "Finalize" list never offers a feature the nav doesn't show. */
+export function enabledRailToolIds(enabled: Set<ToolId>): ToolId[] {
+  const ids: ToolId[] = [];
+  for (const section of filterSectionsForEnabledTools(H2_SECTIONS, enabled)) {
+    for (const item of section.items) {
+      const toolId = LABEL_TO_TOOL_ID[item.label];
+      if (toolId && !ids.includes(toolId)) ids.push(toolId);
+    }
+  }
+  return ids;
+}
+
 export interface H2LayoutProps {
   children: ReactNode;
   /** Override the auto-derived page title (defaults to PAGE_TITLES[pathname]).

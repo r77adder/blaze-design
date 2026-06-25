@@ -44,13 +44,11 @@ export function Step7Checkout() {
   const { reset: resetBrandKit } = useBrandKit();
   const navigate = useNavigate();
 
-  // Flat plan-tier pricing for the selected term (Starter or Growth).
-  const diyPlan = DIY_PLANS[pickDiyPlan(diyFeatures.length)];
-  const diyTermMonths = term === 1 ? 1 : term;
-
-  // Numbers the rest of the screen uses.
-  const summaryMonthly = diyPlan.monthlyByTerm[term];
-  const summaryTermTotal = summaryMonthly * diyTermMonths;
+  // Flat plan-tier pricing for the selected term (Starter or Growth) — the
+  // only model now that the Done-For-You option is gone.
+  const plan = DIY_PLANS[pickDiyPlan(diyFeatures.length)];
+  const summaryMonthly = plan.monthlyByTerm[term];
+  const summaryTermTotal = summaryMonthly * (term === 1 ? 1 : term);
   const summaryTermBadge = DIY_TERM_CARD_LABEL[term];
 
   const [phase, setPhase] = useState<CheckoutPhase>('form');
@@ -139,7 +137,7 @@ export function Step7Checkout() {
             Blaze
           </div>
           <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 13, marginBottom: 6 }}>
-            Subscribe to {`${diyPlan.label} plan — ${summaryTermBadge}`}
+            Subscribe to {plan.label} plan — {summaryTermBadge}
           </Text>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
             <span style={{ fontSize: 36, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.5px' }}>
@@ -157,7 +155,7 @@ export function Step7Checkout() {
               marginBottom: 16,
             }}
           >
-            {/* Flat plan — list the selected DIY features, no per-line prices. */}
+            {/* Flat plan — list the selected features, no per-line prices. */}
             {diyFeatures.map((id, i) => {
               const feature = diyFeatureById(id);
               if (!feature) return null;
@@ -375,6 +373,7 @@ const stripeInputStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px 14px',
   fontSize: 14,
+  letterSpacing: '0.28px',
   fontFamily: 'inherit',
   background: 'var(--light-100)',
   border: '1px solid var(--dark-8)',

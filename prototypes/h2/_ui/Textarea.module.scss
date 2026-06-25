@@ -1,12 +1,15 @@
 .root {
   font-family: 'Sohne', sans-serif;
-  font-size: 13px;
+  // Brand type scale: 14px body carries 0.28px tracking; form controls reset
+  // letter-spacing, so it must be set explicitly.
+  font-size: 14px;
+  letter-spacing: 0.28px;
   line-height: 1.5;
   color: var(--dark-90);
   background: var(--light-100);
   border: 1px solid var(--dark-8);
   border-radius: 8px;
-  padding: 9px 12px;
+  padding: 10px 12px;
   outline: none;
   resize: vertical;
   transition: border-color 120ms ease;
@@ -20,7 +23,7 @@
   }
 
   &:focus {
-    border-color: var(--dark-40);
+    border-color: var(--dark-90);
   }
 }
 

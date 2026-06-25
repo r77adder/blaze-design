@@ -16,7 +16,7 @@
   }
 
   &:focus {
-    border-color: var(--dark-40);
+    border-color: var(--dark-90);
   }
 
   &:disabled {
@@ -30,14 +30,18 @@
   box-sizing: border-box;
 }
 
+// Brand type scale: 14px carries 0.28px tracking. Form controls reset
+// letter-spacing, so it's set explicitly on each size.
 .size-sm {
-  font-size: 13px;
-  padding: 7px 11px;
+  font-size: 14px;
+  letter-spacing: 0.28px;
+  padding: 8px 12px;
 }
 
 .size-md {
   font-size: 14px;
-  padding: 9px 12px;
+  letter-spacing: 0.28px;
+  padding: 10px 12px;
 }
 
 .size-lg {

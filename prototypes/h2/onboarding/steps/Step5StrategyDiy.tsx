@@ -30,8 +30,8 @@ import { COLD_ON_FINISH } from './Step7Checkout';
  *   - "Start your trial with {Starter|Growth} Plan" → Home cold (7-day trial)
  *   - "Continue to checkout" → plan selection (pricing) → checkout
  */
-export function Step5StrategyDiy() {
-  const { diyFeatures, toggleDiyFeature, next, back, finish } = useOnboarding();
+export function Step5StrategyDiy({ showGapFix = false }: { showGapFix?: boolean } = {}) {
+  const { v2Features, toggleV2Feature, next, back, finish } = useOnboarding();
   const { setState: setDevState } = useDevState();
   const { reset: resetBrandKit } = useBrandKit();
   const { showToast } = useToast();
@@ -48,7 +48,7 @@ export function Step5StrategyDiy() {
       return nextSet;
     });
 
-  const addableCount = diyFeatures.length;
+  const addableCount = v2Features.length;
   const wantsDfy = dfyInterest.size > 0;
   const tier = pickDiyPlan(addableCount);
   const plan = DIY_PLANS[tier];
@@ -104,8 +104,11 @@ export function Step5StrategyDiy() {
             label={f.label}
             description={f.description}
             icon={f.icon}
-            selected={diyFeatures.includes(f.id)}
-            onToggle={() => toggleDiyFeature(f.id)}
+            gap={f.gap}
+            fix={f.fix}
+            showGapFix={showGapFix}
+            selected={v2Features.includes(f.id)}
+            onToggle={() => toggleV2Feature(f.id)}
           />
         ))}
       </div>
@@ -129,6 +132,9 @@ export function Step5StrategyDiy() {
             label={f.label}
             description={f.description}
             icon={f.icon}
+            gap={f.gap}
+            fix={f.fix}
+            showGapFix={showGapFix}
             selected={dfyInterest.has(f.id)}
             onSelect={() => toggleDfyInterest(f.id)}
           />
@@ -255,12 +261,18 @@ function AddableCard({
   icon,
   selected,
   onToggle,
+  gap,
+  fix,
+  showGapFix,
 }: {
   label: string;
   description: string;
   icon: ComponentType<IconProps>;
   selected: boolean;
   onToggle: () => void;
+  gap: string;
+  fix: string;
+  showGapFix?: boolean;
 }) {
   return (
     <button
@@ -299,6 +311,7 @@ function AddableCard({
         <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4, lineHeight: 1.45 }}>
           {description}
         </Text>
+        {showGapFix && <GapFixBlock gap={gap} fix={fix} dimFix={!selected} />}
       </div>
       <span
         aria-hidden
@@ -316,12 +329,18 @@ function DfyCard({
   icon,
   selected,
   onSelect,
+  gap,
+  fix,
+  showGapFix,
 }: {
   label: string;
   description: string;
   icon: ComponentType<IconProps>;
   selected: boolean;
   onSelect: () => void;
+  gap: string;
+  fix: string;
+  showGapFix?: boolean;
 }) {
   return (
     <button
@@ -359,8 +378,36 @@ function DfyCard({
         <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4, lineHeight: 1.45 }}>
           {description}
         </Text>
+        {showGapFix && <GapFixBlock gap={gap} fix={fix} />}
       </div>
     </button>
+  );
+}
+
+/** "Gap we found" + "how Blaze fixes it" lines under a feature card — shown on
+ *  V1's feature page (V2 omits them). */
+function GapFixBlock({ gap, fix, dimFix }: { gap: string; fix: string; dimFix?: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+      <GapFixLine label="Gap" tone="warn" body={gap} />
+      <div style={{ opacity: dimFix ? 0.45 : 1, transition: 'opacity 160ms ease' }}>
+        <GapFixLine label="Fix" tone="ok" body={fix} />
+      </div>
+    </div>
+  );
+}
+
+function GapFixLine({ label, body, tone }: { label: string; body: string; tone: 'warn' | 'ok' }) {
+  const accent = tone === 'warn' ? 'var(--red-70)' : 'var(--positive-50)';
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr', columnGap: 10 }}>
+      <Text variant="metadata" style={{ color: accent, fontWeight: 500, fontSize: 13 }}>
+        {label}
+      </Text>
+      <Text variant="secondary" style={{ color: 'var(--dark-80)', fontSize: 13, lineHeight: 1.45 }}>
+        {body}
+      </Text>
+    </div>
   );
 }
 

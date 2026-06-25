@@ -4,7 +4,6 @@ import ArrowRight from '@/icons/20/ArrowRight';
 import Check2 from '@/icons/20/Check2';
 import { useDevState } from '../../dev-state-context';
 import { useBrandKit } from '../../brand-kit/brand-kit-context';
-import { ExpertUpsellBanner } from '../../pages/ExpertUpsellBanner';
 import { StatusPill, useToast } from '@/staging';
 import { useOnboarding, type Term } from '../onboarding-context';
 import { diyFeatureById, type DiyFeatureId } from '../diy-features';
@@ -19,23 +18,22 @@ import {
 import { COLD_ON_FINISH } from './Step7Checkout';
 
 /**
- * DIY pricing step. Five term cards (Monthly / 3 / 6 / 12 / 18) priced flat
- * per plan tier, a "what's included" rundown with no per-feature pricing
- * (DIY plans don't bill per feature), a competitive-savings strip, and the
- * ExpertUpsellBanner styled as the DFY upsell ("we can run it for you").
+ * Self-serve pricing step. Five term cards (Monthly / 3 / 6 / 12 / 18) priced
+ * flat per plan tier, a "what's included" rundown with no per-feature pricing,
+ * and a competitive-savings strip.
  *
  * Footer carries the two CTAs from the spec:
  *   - Primary  → "Start your 7-day trial" → lands on /h2 cold home, finishes onboarding.
  *   - Secondary → "Continue to checkout" → step 7 (DIY checkout variant).
  */
 export function Step6PricingDiy() {
-  const { diyFeatures, term, setTerm, next, back, finish } = useOnboarding();
+  const { v2Features, term, setTerm, next, back, finish } = useOnboarding();
   const { setState: setDevState } = useDevState();
   const { reset: resetBrandKit } = useBrandKit();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const tier = pickDiyPlan(diyFeatures.length);
+  const tier = pickDiyPlan(v2Features.length);
   const plan = DIY_PLANS[tier];
   const monthly = plan.monthlyByTerm[term];
   const termMonths = term === 1 ? 1 : term;
@@ -111,7 +109,7 @@ export function Step6PricingDiy() {
           <div>
             <Heading level={4}>What's included</Heading>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 4 }}>
-              {diyFeatures.length} feature{diyFeatures.length === 1 ? '' : 's'} on the {plan.label} plan
+              {v2Features.length} feature{v2Features.length === 1 ? '' : 's'} on the {plan.label} plan
             </Text>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -129,7 +127,7 @@ export function Step6PricingDiy() {
           </div>
         </div>
         <div>
-          {diyFeatures.map((id) => (
+          {v2Features.map((id) => (
             <IncludedRow key={id} featureId={id} />
           ))}
         </div>
@@ -189,16 +187,6 @@ export function Step6PricingDiy() {
             );
           })}
         </div>
-      </div>
-
-      {/* DFY upsell — uses the recurring ExpertUpsellBanner pattern. */}
-      <div style={{ marginBottom: 24 }}>
-        <ExpertUpsellBanner
-          heading="Want us to run it for you?"
-          body="Switch to Done For You — our growth specialist owns every channel end-to-end."
-          ctaLabel="Talk to a growth specialist"
-          onTalk={() => showToast({ message: 'Connecting you with a growth specialist…' })}
-        />
       </div>
 
       {/* Footer */}

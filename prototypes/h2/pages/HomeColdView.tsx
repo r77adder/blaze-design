@@ -1,6 +1,6 @@
-import { useState, type ComponentType } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Heading, Text } from '@/components';
+import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button, Heading, Text, useModals } from '@/components';
 import { useToast } from '@/staging';
 import Calendar1 from '@/icons/20/Calendar1';
 import Globe from '@/icons/20/Globe';
@@ -13,11 +13,15 @@ import Star from '@/icons/20/Star';
 import Check2 from '@/icons/20/Check2';
 import ArrowRight from '@/icons/20/ArrowRight';
 import Palette from '@/icons/20/Palette';
-import { H2Layout } from '../H2Layout';
+import Target5 from '@/icons/20/Target5';
+import Images3 from '@/icons/20/Images3';
+import { enabledRailToolIds, H2Layout } from '../H2Layout';
+import { CreativeReviewFlow } from '../cold-flows/CreativeReviewFlow';
+import { CreativeReadyModal } from '../CreativeReadyModal';
 import { useOnboarding } from '../onboarding/onboarding-context';
 import { useBrandKit } from '../brand-kit/brand-kit-context';
 import { useDevState } from '../dev-state-context';
-import { TOOL_DESCRIPTIONS, TOOL_LABEL, type ToolId } from '../tools-context';
+import { TOOL_DESCRIPTIONS, TOOL_LABEL, useTools, type ToolId } from '../tools-context';
 
 /**
  * HomeColdView — post-onboarding "unboxing" experience. The user picked
@@ -70,11 +74,41 @@ const TURNED_ON_TOAST: Record<ToolId, string> = {
 
 export function HomeColdView({ businessName }: { businessName?: string }) {
   const { showToast } = useToast();
-  const { selectedTools } = useOnboarding();
+  const { track } = useOnboarding();
+  const isV2 = track === 'v2';
+  // Mirror the left rail: only offer features the nav actually surfaces, in
+  // rail order. Keeps the cold Home and sidebar from ever drifting apart.
+  const { enabled } = useTools();
+  const railTools = useMemo(() => enabledRailToolIds(enabled), [enabled]);
   const { done: brandKitDone } = useBrandKit();
   const { setState: setDevState } = useDevState();
   const navigate = useNavigate();
+  const { openModal } = useModals();
+  const [searchParams] = useSearchParams();
   const [active, setActive] = useState<Set<ToolId>>(() => new Set());
+  // The two guided setup flows (Strategy onboarding, Creative review) launched
+  // as full-screen takeovers from the top of the checklist.
+  const [openFlow, setOpenFlow] = useState<null | 'strategy' | 'creative'>(null);
+  const [doneFlows, setDoneFlows] = useState<Set<'strategy' | 'creative'>>(() => new Set());
+
+  const finishFlow = (id: 'strategy' | 'creative', toast: string) => {
+    setDoneFlows((prev) => new Set(prev).add(id));
+    setOpenFlow(null);
+    showToast({ message: toast });
+  };
+
+  // When the user lands here from the "generating" handoff (?creative=ready),
+  // pop the "creative is ready" announcement a beat later — as if the first
+  // wave just finished rendering. "Review creative" opens the review takeover.
+  const announcedRef = useRef(false);
+  useEffect(() => {
+    if (announcedRef.current || searchParams.get('creative') !== 'ready') return;
+    announcedRef.current = true;
+    const t = setTimeout(() => {
+      openModal(CreativeReadyModal, { onReview: () => setOpenFlow('creative') });
+    }, 2600);
+    return () => clearTimeout(t);
+  }, [searchParams, openModal]);
 
   // Owner-first welcome ("Welcome to Blaze, John.") feels warmer than the
   // raw business name. Falls back to the first token of `businessName` if
@@ -84,9 +118,11 @@ export function HomeColdView({ businessName }: { businessName?: string }) {
     : businessName
       ? businessName.split(' ')[0]
       : '';
-  // Total includes Brand Kit + every feature the user opted into.
-  const total = selectedTools.length + 1;
-  const liveCount = active.size + (brandKitDone ? 1 : 0);
+  // V2 surfaces the two guided setup flows (Strategy onboarding, Creative
+  // review) + Brand Kit as the first cold-state steps; V1 runs the flows in
+  // onboarding and skips the Brand Kit row, so its cold state is just features.
+  const total = railTools.length;
+  const liveCount = active.size;
   const allDone = liveCount === total;
   const progressPct = total === 0 ? 0 : Math.round((liveCount / total) * 100);
 
@@ -123,7 +159,8 @@ export function HomeColdView({ businessName }: { businessName?: string }) {
   };
 
   return (
-    <H2Layout>
+    <>
+      <H2Layout>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '8px 4px 60px' }}>
         {/* HERO — warm gradient hint behind the welcome line */}
         <div
@@ -272,12 +309,11 @@ export function HomeColdView({ businessName }: { businessName?: string }) {
               overflow: 'hidden',
             }}
           >
-            <BrandKitRow active={brandKitDone} onFinalize={finalizeBrandKit} />
-            {selectedTools.map((id) => (
+            {railTools.map((id, i) => (
               <FeatureRow
                 key={id}
                 id={id}
-                isFirst={false}
+                isFirst={i === 0}
                 active={active.has(id)}
                 onTurnOn={() => turnOn(id)}
               />
@@ -300,7 +336,14 @@ export function HomeColdView({ businessName }: { businessName?: string }) {
           </Text>
         )}
       </div>
-    </H2Layout>
+      </H2Layout>
+      {openFlow === 'creative' && (
+        <CreativeReviewFlow
+          onClose={() => setOpenFlow(null)}
+          onFinish={() => finishFlow('creative', 'Creative reviewed — your approved assets are saved to your library.')}
+        />
+      )}
+    </>
   );
 }
 
@@ -312,9 +355,11 @@ export function HomeColdView({ businessName }: { businessName?: string }) {
 function BrandKitRow({
   active,
   onFinalize,
+  isFirst,
 }: {
   active: boolean;
   onFinalize: () => void;
+  isFirst?: boolean;
 }) {
   return (
     <div
@@ -324,6 +369,7 @@ function BrandKitRow({
         gap: 16,
         padding: '20px 20px',
         background: active ? 'rgba(4, 175, 0, 0.04)' : 'rgba(124, 92, 252, 0.04)',
+        borderTop: isFirst ? 'none' : '1px solid var(--dark-4)',
         transition: 'background 260ms ease',
       }}
     >
@@ -391,6 +437,111 @@ function BrandKitRow({
       ) : (
         <Button variant="primary" size="sm" onPress={onFinalize}>
           Finalize
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The two guided "do this first" setup steps — Strategy onboarding and
+ * Creative review. Purple-accented + numbered to set them apart from the
+ * brand-yellow feature rows. Clicking "Start" launches the flow takeover.
+ */
+function FlowRow({
+  stepNumber,
+  icon: Icon,
+  title,
+  blurb,
+  done,
+  onStart,
+  isFirst,
+}: {
+  stepNumber: number;
+  icon: ComponentType<{ size?: number; color?: string }>;
+  title: string;
+  blurb: string;
+  done: boolean;
+  onStart: () => void;
+  isFirst?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        padding: '20px 20px',
+        borderTop: isFirst ? 'none' : '1px solid var(--dark-4)',
+        background: done ? 'rgba(4, 175, 0, 0.04)' : 'rgba(124, 92, 252, 0.04)',
+        transition: 'background 260ms ease',
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          position: 'relative',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 44,
+          height: 44,
+          borderRadius: 10,
+          background: done ? 'rgba(4, 175, 0, 0.12)' : 'rgba(124, 92, 252, 0.14)',
+          color: done ? 'var(--dark-90)' : 'var(--purple)',
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={20} color={done ? 'var(--dark-90)' : 'var(--purple)'} />
+        <span
+          style={{
+            position: 'absolute',
+            top: -6,
+            left: -6,
+            width: 18,
+            height: 18,
+            borderRadius: 99,
+            background: 'var(--dark-90)',
+            color: 'var(--light-100)',
+            fontSize: 11,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {stepNumber}
+        </span>
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500, fontSize: 15 }}>
+          {title}
+        </Text>
+        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 3, lineHeight: 1.45 }}>
+          {blurb}
+        </Text>
+      </div>
+      {done ? (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 12px',
+            background: 'rgba(4, 175, 0, 0.12)',
+            color: '#04af00',
+            borderRadius: 999,
+            fontSize: 13,
+            fontWeight: 500,
+            flexShrink: 0,
+          }}
+        >
+          <Check2 size={14} color="#04af00" />
+          Done
+        </span>
+      ) : (
+        <Button variant="primary" size="sm" onPress={onStart}>
+          Start
         </Button>
       )}
     </div>
@@ -485,7 +636,7 @@ function FeatureRow({
         </span>
       ) : (
         <Button variant="primary" size="sm" onPress={onTurnOn}>
-          Turn on
+          Finalize
         </Button>
       )}
     </div>

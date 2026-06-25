@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useModals } from '@/components';
 import { DEV_STATE_PATHS, useDevState, type DevState } from './dev-state-context';
 import { useOnboarding } from './onboarding/onboarding-context';
+import { useApprovalAudience } from './approval-audience-context';
+import { CreativeReadyModal } from './CreativeReadyModal';
+import { CreativeReviewFlow } from './cold-flows/CreativeReviewFlow';
 
 /**
  * Floating dev-only panel pinned to a corner of every H2 page. Designer can
@@ -51,6 +55,11 @@ export function DevStatePanel() {
   const navigate = useNavigate();
   const { getState, setState } = useDevState();
   const { active: onboardingActive, open: openOnboarding } = useOnboarding();
+  const { audience, setAudience } = useApprovalAudience();
+  const { openModal } = useModals();
+  // Owns the approve-creative takeover so it's reachable from any page via the
+  // panel's "Review" action (HomeColdView has its own copy for the real flow).
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -123,6 +132,7 @@ export function DevStatePanel() {
     : { left: 8, bottom: 88 };
 
   return (
+    <>
     <div
       ref={panelRef}
       data-dev-panel
@@ -132,6 +142,7 @@ export function DevStatePanel() {
         zIndex: 50,
         display: 'inline-flex',
         alignItems: 'center',
+        flexWrap: 'wrap',
         gap: 2,
         background: 'var(--dark-90)',
         border: '1px dashed var(--brand)',
@@ -141,8 +152,8 @@ export function DevStatePanel() {
         boxShadow: '0 2px 10px rgba(0,0,0,0.20)',
         userSelect: 'none',
         touchAction: 'none',
-        flexWrap: 'wrap',
         rowGap: 4,
+        maxWidth: 340,
       }}
     >
       <div
@@ -195,7 +206,76 @@ export function DevStatePanel() {
           openOnboarding({ reset: true });
         }}
       />
+      <Divider />
+      {/* Approvals audience: DFY (agency) vs DIY (self-serve customer). */}
+      <DevStateButton
+        label="steady"
+        text="DFY"
+        selected={audience === 'dfy'}
+        onClick={() => setAudience('dfy')}
+      />
+      <DevStateButton
+        label="steady"
+        text="DIY"
+        selected={audience === 'diy'}
+        onClick={() => setAudience('diy')}
+      />
+      <Divider />
+      {/* Jump straight to the creative-ready announcement / approve-creative
+          flow without walking the whole onboarding → generating path. */}
+      <DevActionButton
+        text="▸ Modal"
+        title="Pop the 'creative is ready' announcement modal"
+        onClick={() => openModal(CreativeReadyModal, { onReview: () => setReviewOpen(true) })}
+      />
+      <DevActionButton
+        text="▸ Review"
+        title="Open the approve-creative review flow"
+        onClick={() => setReviewOpen(true)}
+      />
     </div>
+      {reviewOpen && (
+        <CreativeReviewFlow onClose={() => setReviewOpen(false)} onFinish={() => setReviewOpen(false)} />
+      )}
+    </>
+  );
+}
+
+/** Momentary action (not a toggle) — fires onClick, never shows selected. */
+function DevActionButton({
+  text,
+  title,
+  onClick,
+}: {
+  text: string;
+  title?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-dev-action={text}
+      title={title}
+      onClick={onClick}
+      style={{
+        appearance: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        fontSize: 10.5,
+        lineHeight: 1,
+        padding: '3px 6px',
+        borderRadius: 3,
+        background: 'transparent',
+        color: 'var(--brand)',
+        fontWeight: 500,
+        letterSpacing: '0.02em',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+      }}
+    >
+      {text}
+    </button>
   );
 }
 
