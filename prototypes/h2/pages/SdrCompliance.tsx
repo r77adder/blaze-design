@@ -1,5 +1,7 @@
 import {
+  forwardRef,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -420,12 +422,20 @@ const SCOPED_CSS =
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-export function ComplianceSection({
-  onStatusChange,
-}: {
-  /** Reports the derived A2P status up so the Triggers tab token stays in sync. */
-  onStatusChange?: (status: A2pStatus) => void;
-} = {}) {
+export const ComplianceSection = forwardRef<
+  { submit: () => void },
+  {
+    embedded?: boolean;
+    hideSubmit?: boolean;
+    onSubmitted?: () => void;
+    onReadyChange?: (ready: boolean) => void;
+    /** Reports the derived A2P status up so the Triggers tab token stays in sync. */
+    onStatusChange?: (status: A2pStatus) => void;
+  }
+>(function ComplianceSection(
+  { embedded = false, hideSubmit = false, onSubmitted, onReadyChange, onStatusChange },
+  ref,
+) {
   const { showToast } = useToast();
   const { pathname } = useLocation();
   const { getState } = useDevState();
@@ -480,6 +490,10 @@ export function ComplianceSection({
 
   const allReady = SECTION_ORDER.every((s) => ready[s]);
 
+  useEffect(() => {
+    onReadyChange?.(allReady);
+  }, [allReady, onReadyChange]);
+
   // Single A2P status that drives both the top tracker and (reported up) the
   // Triggers-tab phone-number token.
   const a2pStatus = deriveA2pStatus(phase, reviewStatus, editing);
@@ -515,7 +529,10 @@ export function ComplianceSection({
     });
     scheduleResolution();
     showToast({ message: 'Submitted for carrier review', variant: 'success' });
+    onSubmitted?.();
   };
+
+  useImperativeHandle(ref, () => ({ submit: submitAll }));
 
   const editFailed = (id: SectionId) => {
     setEditing((e) => ({ ...e, [id]: true }));
@@ -558,7 +575,7 @@ export function ComplianceSection({
         );
       case 'address':
         return (
-          <div style={GRID_4}>
+          <div style={embedded ? GRID_2 : GRID_4}>
             <Field label="Street address" required>
               <TextField fullWidth placeholder="123 Main Street" value={data.address.street} onChange={(v) => update('address', { street: v })} />
             </Field>
@@ -575,7 +592,7 @@ export function ComplianceSection({
         );
       case 'rep':
         return (
-          <div style={GRID_3}>
+          <div style={embedded ? GRID_2 : GRID_3}>
             <Field label="First name" required>
               <TextField fullWidth placeholder="John" value={data.rep.firstName} onChange={(v) => update('rep', { firstName: v })} />
             </Field>
@@ -741,18 +758,21 @@ export function ComplianceSection({
     <section className="blz-cmp" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <style>{SCOPED_CSS}</style>
 
-      {/* intro */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Heading level={3}>A2P / 10DLC compliance</Heading>
-        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
-          Complete every section below, then submit your brand for outbound voice and SMS
-          verification. Submitted details should match your latest official legal and financial documents.
-        </Text>
-      </div>
+      {/* intro — hidden in the embedded DIY flow, where the step header covers it */}
+      {!embedded && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Heading level={3}>A2P / 10DLC compliance</Heading>
+          <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
+            Complete every section below, then submit your brand for outbound voice and SMS
+            verification. Submitted details should match your latest official legal and financial documents.
+          </Text>
+        </div>
+      )}
 
       {/* submission status tracker — the single A2P verdict for this number,
-          with a brief reason (and per-section detail when rejected). */}
-      <SubmissionTracker status={a2pStatus} rejectionReasons={rejectionReasons} />
+          with a brief reason (and per-section detail when rejected). Hidden in
+          the embedded DIY setup flow, where the step header already frames it. */}
+      {!embedded && <SubmissionTracker status={a2pStatus} rejectionReasons={rejectionReasons} />}
 
       {/* divider-separated sections, with generous spacing */}
       <div>
@@ -778,21 +798,25 @@ export function ComplianceSection({
           Negative margins bleed past the page's 24px gutter + the scroll
           container's 24px padding so the bar spans edge-to-edge and sits
           flush at the bottom; padding re-insets the contents to the gutter. */}
-      {phase === 'editing' && (
+      {phase === 'editing' && !hideSubmit && (
         <div
-          style={{
-            position: 'sticky',
-            bottom: -24,
-            zIndex: 5,
-            margin: '0 -48px -24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 16,
-            background: 'var(--light-100)',
-            borderTop: '1px solid var(--dark-8)',
-            padding: '16px 48px',
-          }}
+          style={
+            embedded
+              ? { display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }
+              : {
+                  position: 'sticky',
+                  bottom: -24,
+                  zIndex: 5,
+                  margin: '0 -48px -24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: 16,
+                  background: 'var(--light-100)',
+                  borderTop: '1px solid var(--dark-8)',
+                  padding: '16px 48px',
+                }
+          }
         >
           {!allReady && (
             <Text variant="secondary" style={{ color: 'var(--dark-40)', fontSize: 14 }}>
@@ -806,7 +830,7 @@ export function ComplianceSection({
       )}
     </section>
   );
-}
+});
 
 // ── Opt-in screenshot uploader (simulated) ────────────────────────────────────
 

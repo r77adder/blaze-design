@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { BUSINESS_TYPES, ALL_TOOLS, type BusinessType, type ToolId } from '../tools-context';
+import { BUSINESS_TYPES, type BusinessType, type ToolId } from '../tools-context';
 import {
   DEFAULT_DIY_FEATURES,
   diyFeatureToolIds,
@@ -21,68 +21,50 @@ import {
  * so reload-mid-flow resumes; the DevStatePanel has a global toggle that
  * resets it to step 1 for re-demoing.
  *
- * Steps:
+ * Single self-serve (DIY) flow. Steps:
  *   1 website prompt
  *   2 loading/learning
  *   3 business profile basics
  *   4 promotional business scorecard
- *   5 confirm meta strategy (per-feature opt-out)
- *   6 pricing (3/6/12 mo term picker)
+ *   5 pick your DIY features (build your plan)
+ *   6 pricing (1/3/6/12/18 mo term picker, flat plan tier)
  *   7 mock Stripe checkout
  * After step 7 → `complete = true` and the user lands on Home (cold state).
  */
 
-/** 1-indexed step within the active track's sequence. Both tracks today
- *  have 7 steps; clamp via `next`/`back`. */
+/** 1-indexed step within the onboarding sequence; clamp via `next`/`back`. */
 export type OnboardingStep = number;
 
-/**
- * Onboarding tracks:
- *   - `dfy`  "Done For You" (concierge, original flow).
- *   - `diy`  "Do It Yourself" (self-serve, flat plan).
- */
-export type OnboardingTrack = 'dfy' | 'diy';
-
 /** Stable identifier for every screen — the source of truth for routing in
- *  `<Onboarding>`. Numeric `step` is just an index into the active track's
- *  sequence; the ID is what tells you WHAT to render. */
+ *  `<Onboarding>`. Numeric `step` is just an index into `STEP_SEQUENCE`; the
+ *  ID is what tells you WHAT to render. */
 export type StepId =
   | 'website'
   | 'loading'
   | 'basics'
   | 'scorecard'
-  | 'strategy-dfy'
   | 'strategy-diy'
-  | 'pricing-dfy'
   | 'pricing-diy'
   | 'checkout';
 
-/** Per-track screen order. Used by `next`/`back`, the progress bar, and the
- *  router in `<Onboarding>`. Keep these in sync with the StepId union. */
-export const TRACK_SEQUENCES: Record<OnboardingTrack, StepId[]> = {
-  dfy: ['website', 'loading', 'basics', 'scorecard', 'strategy-dfy', 'pricing-dfy', 'checkout'],
-  diy: ['website', 'loading', 'basics', 'scorecard', 'strategy-diy', 'pricing-diy', 'checkout'],
-};
-
-/** Map a step ID to its equivalent in the other track when the user flips
- *  the prototype switch mid-flow. Strategy/pricing have direct counterparts. */
-function equivalentStepId(stepId: StepId, newTrack: OnboardingTrack): StepId {
-  const seq = TRACK_SEQUENCES[newTrack];
-  if (seq.includes(stepId)) return stepId;
-  if (stepId === 'strategy-dfy') return 'strategy-diy';
-  if (stepId === 'strategy-diy') return 'strategy-dfy';
-  if (stepId === 'pricing-dfy') return 'pricing-diy';
-  if (stepId === 'pricing-diy') return 'pricing-dfy';
-  return seq[0];
-}
+/** Screen order. Used by `next`/`back`, the progress bar, and the router in
+ *  `<Onboarding>`. Keep this in sync with the StepId union. */
+export const STEP_SEQUENCE: StepId[] = [
+  'website',
+  'loading',
+  'basics',
+  'scorecard',
+  'strategy-diy',
+  'pricing-diy',
+  'checkout',
+];
 
 /**
  * Terms used across the onboarding pricing screens.
- *   1  → "Monthly" (DIY only)
- *   3, 6, 12 → shared
- *   18 → DIY only (longest, deepest discount)
+ *   1  → "Monthly"
+ *   3, 6, 12, 18 → longer terms (deeper discounts)
  *
- * DFY pricing UI exposes only [3, 6, 12]; DIY exposes [1, 3, 6, 12, 18].
+ * The DIY pricing UI exposes [1, 3, 6, 12, 18].
  */
 export type Term = 1 | 3 | 6 | 12 | 18;
 
@@ -129,40 +111,29 @@ interface OnboardingState {
   active: boolean;
   step: OnboardingStep;
   complete: boolean;
-  /** Which onboarding flow is currently being run. Designers can flip this
-   *  at any point via the top-right prototype switch — selections are kept
-   *  per-track so the two flows feel independent. */
-  track: OnboardingTrack;
   websiteUrl: string;
   contentLanguage: string;
   profile: BusinessProfile;
-  /** DFY step 5 starts with everything on; user opts OUT of unwanted tools. */
-  dfySelectedTools: ToolId[];
-  /** DIY step 5 selection — uses the DIY feature catalog (diy-features.ts),
-   *  NOT the global ToolId set, because DIY introduces Local SEO + Competitor
+  /** Step 5 selection — uses the DIY feature catalog (diy-features.ts), NOT
+   *  the global ToolId set, because DIY introduces Local SEO + Competitor
    *  Ranking which aren't billed ToolIds. Starts with 3 (Starter sweet-spot);
    *  adding a 4th jumps the user to Growth. */
   diyFeatures: DiyFeatureId[];
   term: Term;
 }
 
-// v5: DIY selection moved from ToolId[] to the DIY feature catalog
-// (diyFeatures: DiyFeatureId[]). Bumping the key invalidates v4 entries that
-// still carry `diySelectedTools` cleanly — fine for prototype storage.
-const STORAGE_KEY = 'h2-onboarding-v5';
-
-// DFY default: every tool on. User opts OUT of unwanted features.
-const DFY_DEFAULT_SELECTED: ToolId[] = [...ALL_TOOLS];
+// v6: onboarding collapsed to a single DIY-only flow — dropped the `track`
+// and `dfySelectedTools` keys. Bumping the key invalidates v5 entries cleanly
+// — fine for prototype storage.
+const STORAGE_KEY = 'h2-onboarding-v6';
 
 const INITIAL_STATE: OnboardingState = {
   active: true,
   step: 1,
   complete: false,
-  track: 'dfy',
   websiteUrl: '',
   contentLanguage: 'English (US)',
   profile: DEFAULT_PROFILE,
-  dfySelectedTools: DFY_DEFAULT_SELECTED,
   diyFeatures: DEFAULT_DIY_FEATURES,
   term: 12,
 };
@@ -185,26 +156,22 @@ function loadStored(): OnboardingState | null {
 }
 
 interface OnboardingContextValue extends OnboardingState {
-  /** ToolId[] view of the current track's selection — for DFY it's the raw
-   *  list; for DIY it's the addable features mapped to their ToolIds (drops
-   *  Local SEO / Competitor Ranking, which have no billed ToolId). Used by the
-   *  post-onboarding Home cold state. */
+  /** ToolId[] view of the selection — the addable DIY features mapped to their
+   *  ToolIds (drops Local SEO / Competitor Ranking, which have no billed
+   *  ToolId). Used by the post-onboarding Home cold state. */
   selectedTools: ToolId[];
-  /** The step ID for the current `(track, step)` pair — drives routing. */
+  /** The step ID for the current `step` — drives routing. */
   stepId: StepId;
-  /** Total number of steps in the active track's sequence. */
+  /** Total number of steps in the sequence. */
   totalSteps: number;
   setStep: (step: OnboardingStep) => void;
   next: () => void;
   back: () => void;
-  setTrack: (track: OnboardingTrack) => void;
   setWebsiteUrl: (url: string) => void;
   setContentLanguage: (lang: string) => void;
   updateProfile: (patch: Partial<BusinessProfile>) => void;
   setBusinessType: (type: BusinessType) => void;
-  /** DFY feature toggle (operates on the ToolId list). */
-  toggleTool: (id: ToolId) => void;
-  /** DIY addable-feature toggle (operates on the DIY feature catalog). */
+  /** Addable-feature toggle (operates on the DIY feature catalog). */
   toggleDiyFeature: (id: DiyFeatureId) => void;
   setTerm: (term: Term) => void;
   /** Mark complete + close the takeover. */
@@ -235,41 +202,20 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const setStep = useCallback((step: OnboardingStep) => {
     setState((s) => {
-      const max = TRACK_SEQUENCES[s.track].length;
+      const max = STEP_SEQUENCE.length;
       return { ...s, step: Math.max(1, Math.min(max, step)) };
     });
   }, []);
 
   const next = useCallback(() => {
     setState((s) => {
-      const max = TRACK_SEQUENCES[s.track].length;
+      const max = STEP_SEQUENCE.length;
       return { ...s, step: Math.min(max, s.step + 1) };
     });
   }, []);
 
   const back = useCallback(() => {
     setState((s) => ({ ...s, step: Math.max(1, s.step - 1) }));
-  }, []);
-
-  const setTrack = useCallback((track: OnboardingTrack) => {
-    setState((s) => {
-      // 1) Snap term to one the new track can render.
-      const dfyTerms: Term[] = [3, 6, 12];
-      const diyTerms: Term[] = [1, 3, 6, 12, 18];
-      const validTerms = track === 'dfy' ? dfyTerms : diyTerms;
-      const term = validTerms.includes(s.term) ? s.term : 12;
-
-      // 2) Translate the user's current screen into the new track's sequence
-      //    so flipping the switch lands them on the equivalent step (e.g.
-      //    DFY-pricing ↔ DIY-pricing) instead of jumping around at random.
-      const oldSeq = TRACK_SEQUENCES[s.track];
-      const newSeq = TRACK_SEQUENCES[track];
-      const currentId = oldSeq[s.step - 1];
-      const targetId = currentId ? equivalentStepId(currentId, track) : newSeq[0];
-      const newStep = Math.max(1, newSeq.indexOf(targetId) + 1);
-
-      return { ...s, track, term, step: newStep };
-    });
   }, []);
 
   const setWebsiteUrl = useCallback((websiteUrl: string) => {
@@ -286,18 +232,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const setBusinessType = useCallback((type: BusinessType) => {
     setState((s) => ({ ...s, profile: { ...s.profile, type } }));
-  }, []);
-
-  const toggleTool = useCallback((id: ToolId) => {
-    setState((s) => {
-      const has = s.dfySelectedTools.includes(id);
-      return {
-        ...s,
-        dfySelectedTools: has
-          ? s.dfySelectedTools.filter((t) => t !== id)
-          : [...s.dfySelectedTools, id],
-      };
-    });
   }, []);
 
   const toggleDiyFeature = useCallback((id: DiyFeatureId) => {
@@ -346,15 +280,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     [state.profile.type],
   );
 
-  // ToolId[] view of the selection: DFY uses its raw list; DIY maps its
-  // addable feature catalog down to ToolIds (Local SEO / Competitor Ranking
-  // drop out — they have no billed ToolId). This feeds Home cold post-trial.
-  const selectedTools =
-    state.track === 'dfy' ? state.dfySelectedTools : diyFeatureToolIds(state.diyFeatures);
+  // ToolId[] view of the selection: maps the addable feature catalog down to
+  // ToolIds (Local SEO / Competitor Ranking drop out — they have no billed
+  // ToolId). This feeds Home cold post-trial.
+  const selectedTools = diyFeatureToolIds(state.diyFeatures);
 
-  const sequence = TRACK_SEQUENCES[state.track];
-  const totalSteps = sequence.length;
-  const stepId = sequence[Math.min(state.step, totalSteps) - 1];
+  const totalSteps = STEP_SEQUENCE.length;
+  const stepId = STEP_SEQUENCE[Math.min(state.step, totalSteps) - 1];
 
   const value = useMemo<OnboardingContextValue>(
     () => ({
@@ -365,12 +297,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       setStep,
       next,
       back,
-      setTrack,
       setWebsiteUrl,
       setContentLanguage,
       updateProfile,
       setBusinessType,
-      toggleTool,
       toggleDiyFeature,
       setTerm,
       finish,
@@ -387,12 +317,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       setStep,
       next,
       back,
-      setTrack,
       setWebsiteUrl,
       setContentLanguage,
       updateProfile,
       setBusinessType,
-      toggleTool,
       toggleDiyFeature,
       setTerm,
       finish,

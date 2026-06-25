@@ -12,11 +12,8 @@ import { diyFeatureById } from '../diy-features';
 import {
   DIY_PLANS,
   DIY_TERM_CARD_LABEL,
-  TERM_LABEL,
-  computePricing,
   fmtUsd,
   pickDiyPlan,
-  visibleLines,
 } from '../pricing-data';
 
 type CheckoutPhase = 'form' | 'processing' | 'success';
@@ -42,30 +39,19 @@ export const COLD_ON_FINISH = [
 ];
 
 export function Step7Checkout() {
-  const { selectedTools, diyFeatures, term, profile, track, back, finish } = useOnboarding();
+  const { diyFeatures, term, profile, back, finish } = useOnboarding();
   const { setState: setDevState } = useDevState();
   const { reset: resetBrandKit } = useBrandKit();
   const navigate = useNavigate();
-  const isDiy = track === 'diy';
 
-  // DFY = per-feature pricing with term multiplier (existing model).
-  // DIY = flat plan-tier pricing for the selected term (Starter or Growth).
-  const lines = visibleLines(selectedTools);
-  const dfyTotals = computePricing(lines, term);
+  // Flat plan-tier pricing for the selected term (Starter or Growth).
   const diyPlan = DIY_PLANS[pickDiyPlan(diyFeatures.length)];
-  const diyMonthly = diyPlan.monthlyByTerm[term];
   const diyTermMonths = term === 1 ? 1 : term;
-  const diyTermTotal = diyMonthly * diyTermMonths;
 
-  // Numbers the rest of the screen uses — pulled from whichever model applies.
-  const summaryMonthly = isDiy ? diyMonthly : dfyTotals.monthly;
-  const summaryTermTotal = isDiy ? diyTermTotal : dfyTotals.termTotal;
-  const summaryTermLabel = isDiy
-    ? term === 1
-      ? 'Monthly plan'
-      : TERM_LABEL[term]
-    : TERM_LABEL[term];
-  const summaryTermBadge = isDiy ? DIY_TERM_CARD_LABEL[term] : `${term}-month term`;
+  // Numbers the rest of the screen uses.
+  const summaryMonthly = diyPlan.monthlyByTerm[term];
+  const summaryTermTotal = summaryMonthly * diyTermMonths;
+  const summaryTermBadge = DIY_TERM_CARD_LABEL[term];
 
   const [phase, setPhase] = useState<CheckoutPhase>('form');
 
@@ -153,7 +139,7 @@ export function Step7Checkout() {
             Blaze
           </div>
           <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 13, marginBottom: 6 }}>
-            Subscribe to {isDiy ? `${diyPlan.label} plan — ${summaryTermBadge}` : summaryTermLabel}
+            Subscribe to {`${diyPlan.label} plan — ${summaryTermBadge}`}
           </Text>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
             <span style={{ fontSize: 36, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.5px' }}>
@@ -171,49 +157,28 @@ export function Step7Checkout() {
               marginBottom: 16,
             }}
           >
-            {isDiy
-              ? // DIY: flat plan — list the selected DIY features, no per-line prices.
-                diyFeatures.map((id, i) => {
-                  const feature = diyFeatureById(id);
-                  if (!feature) return null;
-                  return (
-                    <div
-                      key={id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '8px 0',
-                        borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
-                      }}
-                    >
-                      <Check2 size={14} color="#04af00" />
-                      <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
-                        {feature.label}
-                      </Text>
-                    </div>
-                  );
-                })
-              : lines.map((l, i) => (
-                  <div
-                    key={l.key}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      padding: '8px 0',
-                      borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
-                    }}
-                  >
-                    <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
-                      {l.label}
-                    </Text>
-                    <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
-                      {l.isPack ? `${fmtUsd(l.packPrice ?? 0)} / pack` : `${fmtUsd(l.monthlyBase)} / mo`}
-                    </Text>
-                  </div>
-                ))}
+            {/* Flat plan — list the selected DIY features, no per-line prices. */}
+            {diyFeatures.map((id, i) => {
+              const feature = diyFeatureById(id);
+              if (!feature) return null;
+              return (
+                <div
+                  key={id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '8px 0',
+                    borderTop: i === 0 ? 'none' : '1px solid var(--dark-4)',
+                  }}
+                >
+                  <Check2 size={14} color="#04af00" />
+                  <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
+                    {feature.label}
+                  </Text>
+                </div>
+              );
+            })}
           </div>
           <div
             style={{
@@ -231,7 +196,7 @@ export function Step7Checkout() {
             <div style={{ height: 1, background: 'var(--dark-8)', margin: '6px 0' }} />
             <Row label="Total due today" value={fmtUsd(summaryMonthly)} bold />
             <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 12, marginTop: 2 }}>
-              {isDiy && term === 1
+              {term === 1
                 ? 'Charged monthly. Cancel any time.'
                 : `Charged monthly. ${term}-month minimum term. Total over term: ${fmtUsd(summaryTermTotal)}.`}
             </Text>
@@ -375,7 +340,7 @@ export function Step7Checkout() {
           >
             By confirming, you agree to Blaze's Terms of Service and authorize a recurring monthly
             charge of {fmtUsd(summaryMonthly)}
-            {isDiy && term === 1 ? ' until you cancel.' : ` for ${term} months.`}
+            {term === 1 ? ' until you cancel.' : ` for ${term} months.`}
           </Text>
         </div>
       </div>

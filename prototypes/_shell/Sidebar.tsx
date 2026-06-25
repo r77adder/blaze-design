@@ -7,7 +7,6 @@ import {
   BarChart,
   BarChartSquare,
   Brand,
-  Brainstorm,
   Calendar1 as Calendar1Sm,
   ClockBackward,
   Cursor04,
@@ -179,7 +178,6 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Ranking', icon: LineChartUp02, href: '/h2/ranking' },
-      { label: 'DFY Campaign', icon: Brainstorm, href: '/h2/dfy-campaigns' },
     ],
   },
   {

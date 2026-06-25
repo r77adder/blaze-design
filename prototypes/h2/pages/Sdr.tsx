@@ -15,10 +15,11 @@ import MessageChat01 from '@/icons/20/MessageChat01';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
+import { useApprovalAudience } from '../approval-audience-context';
 import { ChannelGlyph, SdrDetail } from '../SdrDetail';
 import { ContactHistory } from '../ContactHistory';
 import { OutcomeSelect } from '../BookingOutcomeSelect';
-import { SdrColdView } from './ColdViews';
+import { SdrColdDiy } from '../ai-receptionist/SdrColdDiy';
 import { SdrSettingsBody } from './SdrSettings';
 import {
   ALL_CHANNELS,
@@ -685,6 +686,7 @@ type SdrTab = 'dashboard' | 'leads' | 'bookings' | 'settings';
 function SdrInner() {
   const { getState } = useDevState();
   const isCold = getState('/h2/sdr') === 'cold';
+  const { audience } = useApprovalAudience();
   const [leads, setLeads] = useState<Lead[]>(LEADS);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
@@ -770,10 +772,22 @@ function SdrInner() {
     </div>
   );
 
+  // ─── Cold state ────────────────────────────────────────────────────
+  // The tab strip is hidden in cold, so whichever tab was last active in steady
+  // must not leak through — always route to the setup flow (the DIY wizard for
+  // self-serve, or the DFY "we'll set it up for you" dashboard).
+  if (isCold) {
+    return (
+      <H2Layout title={audience === 'diy' ? 'Set up your AI receptionist' : undefined}>
+        <SdrDashboard leads={leads} isCold onViewLeads={() => setTab('leads')} onOpenLead={setActiveLeadId} />
+      </H2Layout>
+    );
+  }
+
   // ─── Dashboard tab ─────────────────────────────────────────────────
   if (tab === 'dashboard' && !activeLead) {
     return (
-      <H2Layout topbarCenter={isCold ? undefined : tabStrip} topbarRight={isCold ? undefined : <GenerateReportButton />}>
+      <H2Layout topbarCenter={tabStrip} topbarRight={<GenerateReportButton />}>
         <SdrDashboard leads={leads} isCold={isCold} onViewLeads={() => setTab('leads')} onOpenLead={setActiveLeadId} />
       </H2Layout>
     );
@@ -798,18 +812,6 @@ function SdrInner() {
   // live in the topbar next to the profile avatar.
   if (tab === 'settings' && !activeLead) {
     return <SdrSettingsBody tabStrip={tabStrip} />;
-  }
-
-  // ─── Cold view ─────────────────────────────────────────────────────
-  // Renders the AI Receptionist setup CTA + 2-step modal. After "Finish setup"
-  // the modal flips this route's dev state to `steady`, which re-renders the
-  // populated inbox below.
-  if (isCold) {
-    return (
-      <H2Layout>
-        <SdrColdView />
-      </H2Layout>
-    );
   }
 
   // ─── Contact history view ──────────────────────────────────────────
@@ -1627,7 +1629,9 @@ function SdrDashboard({ leads, isCold, onViewLeads, onOpenLead }: { leads: Lead[
     .sort((a, b) => relativeMinutesAgo(a.last_activity_at) - relativeMinutesAgo(b.last_activity_at))
     .slice(0, 5);
 
-  if (isCold) return <ColdDashboard onViewLeads={onViewLeads} />;
+  const { audience } = useApprovalAudience();
+  if (isCold)
+    return audience === 'diy' ? <SdrColdDiy /> : <ColdDashboard />;
 
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
@@ -1819,7 +1823,8 @@ function SdrDashboard({ leads, isCold, onViewLeads, onOpenLead }: { leads: Lead[
 
 // ── Cold / empty state dashboard ──────────────────────────────────────────
 
-function ColdDashboard({ onViewLeads }: { onViewLeads: () => void }) {
+function ColdDashboard() {
+  const { setAudience } = useApprovalAudience();
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
       {/* section: upsell CTA — uses the expert-upsell-banner palette (soft blue
@@ -1891,7 +1896,7 @@ function ColdDashboard({ onViewLeads }: { onViewLeads: () => void }) {
             </Button>
             <button
               type="button"
-              onClick={onViewLeads}
+              onClick={() => setAudience('diy')}
               style={{
                 fontSize: 14,
                 color: 'var(--dark-60)',

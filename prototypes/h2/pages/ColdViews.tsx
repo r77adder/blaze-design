@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { useEffect, type ReactElement, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button, Heading, Text } from '@/components';
 import { useToast } from '@/staging';
@@ -9,9 +9,6 @@ import Camera1 from '@/icons/20/Camera1';
 import Calendar1 from '@/icons/20/Calendar1';
 import FileSearch1 from '@/icons/20/FileSearch1';
 import PaidAds from '@/icons/20/PaidAds';
-import UserProfileGroup from '@/icons/20/UserProfileGroup';
-import { AiReceptionistSetupModal } from '../ai-receptionist/AiReceptionistSetupModal';
-import { useDevState } from '../dev-state-context';
 import {
   FirstCampaignProvider,
   useFirstCampaign,
@@ -154,71 +151,6 @@ function OrganicSocialColdViewBody() {
         Plan first post
       </Button>
     </div>
-  );
-}
-
-export function SdrColdView() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const { setState } = useDevState();
-
-  return (
-    <>
-      {/* Inlined empty-state shell (instead of <EmptyState>) so the CTA can
-          open the setup modal and the cold view can manage modal state
-          locally. Same overall shape — centered icon + title + subhead + CTA. */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: '80px 24px',
-          minHeight: 360,
-          maxWidth: 480,
-          margin: '0 auto',
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 12,
-            background: 'var(--dark-4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 20,
-            color: 'var(--dark-60)',
-          }}
-        >
-          <UserProfileGroup size={28} />
-        </div>
-        <Heading level={3} style={{ marginBottom: 8 }}>
-          No deals or programs yet
-        </Heading>
-        <Text
-          variant="secondary"
-          style={{ display: 'block', marginBottom: 24, lineHeight: 1.55, maxWidth: 400 }}
-        >
-          Connect a data source to import contacts. The AI Receptionist will qualify leads, draft
-          email and SMS outreach, and run the full pipeline end-to-end.
-        </Text>
-        <Button variant="primary" size="lg" onPress={() => setModalOpen(true)}>
-          Set up AI Receptionist
-        </Button>
-      </div>
-
-      {modalOpen && (
-        <AiReceptionistSetupModal
-          onClose={() => setModalOpen(false)}
-          onFinish={() => {
-            setState('/h2/sdr', 'steady');
-            setModalOpen(false);
-          }}
-        />
-      )}
-    </>
   );
 }
 

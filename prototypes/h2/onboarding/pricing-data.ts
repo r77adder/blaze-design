@@ -102,17 +102,15 @@ export const TOOL_PRICING: Record<ToolId, ToolPricing> = {
 
 /**
  * Term multipliers — 12mo is base (1.0); shorter terms cost more per month.
- * Mirrors common agency retainer pricing.
- *
- * NOTE: terms 1 (Monthly) and 18 are DIY-only and DFY's pricing UI never
- * exposes them. They live here so `Record<Term, number>` stays total.
+ * Mirrors common agency retainer pricing. Used by the printable proposal
+ * (ProposalPdf) to derive per-line pricing across terms.
  */
 export const TERM_MULTIPLIER: Record<Term, number> = {
-  1: 1.4, // monthly (DIY only — DFY UI never renders this)
+  1: 1.4, // monthly
   3: 1.3,
   6: 1.15,
   12: 1.0,
-  18: 0.93, // longest term (DIY only)
+  18: 0.93, // longest term
 };
 
 export const TERM_LABEL: Record<Term, string> = {
@@ -121,14 +119,6 @@ export const TERM_LABEL: Record<Term, string> = {
   6: '6-month plan',
   12: '12-month plan',
   18: '18-month plan',
-};
-
-export const TERM_SUBTEXT: Record<Term, string> = {
-  1: 'Pay-as-you-go — cancel any time',
-  3: 'Most flexible',
-  6: 'Save 15% per month',
-  12: 'Best value — save 30% per month',
-  18: 'Deepest discount — save 35% per month',
 };
 
 /**
@@ -311,9 +301,6 @@ export function pickDiyPlan(featureCount: number): DiyPlanTier {
 
 /** Terms exposed in the DIY pricing UI, in card-display order (left → right). */
 export const DIY_TERMS: Term[] = [1, 3, 6, 12, 18];
-
-/** Terms exposed in the DFY pricing UI — keeps DFY scoped to what it always rendered. */
-export const DFY_TERMS: Term[] = [12, 6, 3];
 
 /** Shorter labels for the term cards on DIY's pricing step. */
 export const DIY_TERM_CARD_LABEL: Record<Term, string> = {

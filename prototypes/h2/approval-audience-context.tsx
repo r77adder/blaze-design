@@ -8,20 +8,17 @@ interface ApprovalAudienceContextValue {
 }
 
 const ApprovalAudienceContext = createContext<ApprovalAudienceContextValue>({
-  audience: 'dfy',
+  audience: 'diy',
   setAudience: () => {},
 });
 
 /**
- * Whether the Approvals surface behaves as DFY (agency manages content via an
- * internal-review → client-handoff pipeline) or DIY (self-serve customer
- * reviews their own generated content: generated → Approve → autopublish).
- *
- * Lives at the H2 root — like the onboarding track and View-as-client state —
- * so the DevStatePanel toggle and the Approvals page share one value.
+ * The AI Receptionist cold state is the only surface that still toggles between
+ * the DFY view ("let our team set it up for you") and the DIY self-serve setup
+ * wizard. The two cold views switch via their own inline links; default is DIY.
  */
 export function ApprovalAudienceProvider({ children }: { children: ReactNode }) {
-  const [audience, setAudience] = useState<ApprovalAudience>('dfy');
+  const [audience, setAudience] = useState<ApprovalAudience>('diy');
   return (
     <ApprovalAudienceContext.Provider value={{ audience, setAudience }}>
       {children}

@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { H2Layout } from '../H2Layout';
-import { useClientView } from '../client-view-context';
-import { useApprovalAudience } from '../approval-audience-context';
 import { useApprovalSettings } from '../approval-settings-context';
 import { Button, Modal, ModalStack, useModals } from '@/components';
 import { Toast, Checkbox } from '@/staging';
-import { Approvals as ApprovalsIcon, Check2, EyeOpen, Edit3, ArrowLeft, ArrowRight, ArrowCurveLeftDown, XCircleContained, Globe, CalendarEdit, Settings, Star, Calendar1, Marker03, Cursor04, BarChartSquare, MessageChat01, VideoOn, Filter as FilterIcon } from '@/icons/20';
+import { Approvals as ApprovalsIcon, Check2, EyeOpen, Edit3, ArrowLeft, ArrowRight, Globe, CalendarEdit, Settings, Star, Calendar1, Marker03, Cursor04, BarChartSquare, VideoOn, Filter as FilterIcon } from '@/icons/20';
 import ChevronDownLg from '@/icons/20/ChevronDown';
 import { ChevronDown, ChevronRight, Iphone02 } from '@/icons/16';
 
@@ -1208,18 +1206,6 @@ const SocialIcon = ({ platform, active }: { platform: string; active?: boolean }
   return <span style={{ opacity, cursor: 'pointer', display: 'flex' }}>{icons[platform]}</span>;
 };
 
-// Agency contact managing this client's content — shown in the client "Request Changes" flow
-const AGENCY_NAME = 'Sarah';
-const AGENCY_AVATAR = 'https://randomuser.me/api/portraits/women/44.jpg';
-
-// ── Don't Post feedback modal ─────────────────────────────────────────────────
-const DONT_POST_OPTIONS = [
-  'Image', 'Wrong language', 'Amount of text', 'Caption text',
-  'Layout', 'Writing quality', 'Inaccurate', 'Missing text',
-  'Colors and fonts', 'Other',
-];
-
-// ── Resubmit confirmation modal ───────────────────────────────────────────────
 // ── Edit AI Draft modal (Reputation) ─────────────────────────────────────────
 function EditAIDraftModal({ close, post }: { close: () => void; post: Post }) {
   const [draft, setDraft] = useState(post.aiDraft ?? '');
@@ -1333,177 +1319,27 @@ function PaidSearchLaunchModal({ close, post }: { close: () => void; post: Post 
   );
 }
 
-function ResubmitModal({ close, onConfirm, onReviewFirst }: {
-  close: () => void;
-  onConfirm: (note: string) => void;
-  onReviewFirst?: () => void;
-}) {
-  const [note, setNote] = useState('');
-  return (
-    <Modal.Root size="sm" onClose={close}>
-      <Modal.Header onClose={close}>
-        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
-          Resubmit to Client?
-        </span>
-      </Modal.Header>
-      <Modal.Content>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
-            Have you revised this post? The client will be notified to review it again.
-          </p>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            placeholder="Add a note for the client (optional)"
-            style={{
-              width: '100%', minHeight: 80, resize: 'vertical',
-              border: `1px solid ${dark15}`, borderRadius: 8,
-              padding: '10px 12px', fontSize: 13, color: dark90,
-              fontFamily: F, lineHeight: 1.5, outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
-        </div>
-      </Modal.Content>
-      <Modal.Footer>
-        {onReviewFirst && (
-          <Modal.FooterContent slot="left">
-            <Modal.FooterButton variant="secondary" onPress={() => { close(); onReviewFirst(); }}>
-              Review Post First
-            </Modal.FooterButton>
-          </Modal.FooterContent>
-        )}
-        <Modal.FooterContent slot="right">
-          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(note.trim()); close(); }}>
-            Yes, Resubmit
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-      </Modal.Footer>
-    </Modal.Root>
-  );
-}
-
-function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (reasons: string[]) => void }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [otherText, setOtherText] = useState('');
-  const otherSelected = selected.has('Other');
-
-  const toggle = (opt: string) => setSelected(prev => {
-    const next = new Set(prev);
-    next.has(opt) ? next.delete(opt) : next.add(opt);
-    return next;
-  });
-
-  const buildReasons = () => {
-    const reasons = Array.from(selected).filter(r => r !== 'Other');
-    if (otherSelected) reasons.push('Other');
-    if (otherText.trim()) reasons.push(otherText.trim());
-    return reasons;
-  };
-
-  return (
-    <Modal.Root size="sm" onClose={close}>
-      <Modal.Header onClose={close}>
-        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>
-          What could be improved?
-        </span>
-      </Modal.Header>
-      <Modal.Content>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {DONT_POST_OPTIONS.map(opt => {
-              const active = selected.has(opt);
-              return (
-                <button
-                  key={opt}
-                  onClick={() => toggle(opt)}
-                  style={{
-                    padding: '6px 12px', borderRadius: 99,
-                    border: `1.5px solid ${active ? dark90 : dark15}`,
-                    background: active ? dark4 : white,
-                    fontSize: 13, fontWeight: active ? 500 : 400,
-                    color: dark90, fontFamily: F, cursor: 'pointer',
-                    transition: 'border-color 0.15s, background 0.15s',
-                  }}
-                >
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
-          <textarea
-            value={otherText}
-            onChange={e => setOtherText(e.target.value)}
-            placeholder="Tell us more"
-            style={{
-              width: '100%', minHeight: 88, resize: 'vertical',
-              border: `1px solid ${dark15}`, borderRadius: 8,
-              padding: '10px 12px', fontSize: 13, color: dark90,
-              fontFamily: F, lineHeight: 1.5, outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
-        </div>
-      </Modal.Content>
-      <Modal.Footer>
-        <Modal.FooterContent slot="right">
-          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(buildReasons()); close(); }}>
-            Send Feedback
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-      </Modal.Footer>
-    </Modal.Root>
-  );
-}
-
 // ── Content review page (full-page overlay) ───────────────────────────────────
-type CommentMsg = { id: number; author: 'client' | 'staff'; text: string; time: string; system?: boolean };
-function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
-  mode, audience = 'dfy', internalStatus, sentToClient, onMarkReady, onUndoReady, onResubmit, onRequestChanges, onDecline, dontPostReasons, resubmitNotes, thread, isPast,
+function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApproval, onDontPost, onNavigate,
+  dontPostReasons, resubmitNotes, isPast,
 }: {
   post: Post; status: Status;
-  allPosts: Post[]; allStatuses: Record<number, Status>;
+  allPosts: Post[];
   onClose: () => void; onApprove: () => void; onRemoveApproval: () => void;
   onDontPost: (reasons: string[]) => void; onNavigate: (id: number) => void;
-  mode?: 'internal' | 'client';
-  audience?: 'dfy' | 'diy';
-  internalStatus?: InternalStatus;
-  onMarkReady?: () => void;
-  onUndoReady?: () => void;
-  sentToClient?: boolean;
-  onResubmit?: (note: string) => void;
-  onRequestChanges?: (text: string) => void;
-  onDecline?: (text: string) => void;
   dontPostReasons?: Record<number, string[]>;
   resubmitNotes?: Record<number, string>;
-  /** Shared per-post conversation log — single source of truth for both staff and client. */
-  thread: CommentMsg[];
   isPast?: boolean;
 }) {
-  const isReturned = status === 'rejected' || status === 'declined';
-  const isDeclined = status === 'declined';
-  // Posts with an existing conversation open straight into the Feedback panel
-  const hasThread = thread.length > 0;
-  // Staff post sent to the client and awaiting their action — locked (no edit tools/tab)
-  const isAwaitingClient = mode === 'internal' && internalStatus === 'readyForClient' && status === 'pending';
   // The right panel stays open at all times in the content preview
   const [focusMode, setFocusMode] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
-  const [rightTab, setRightTab] = useState<'edit' | 'comment'>(mode !== 'internal' || hasThread ? 'comment' : 'edit');
-  const [commentInput, setCommentInput] = useState('');
-  const [feedbackMode, setFeedbackMode] = useState<'request' | 'decline'>('request');
   const CAPTION_LIMIT = 100;
-  const { openModal } = useModals();
-  // DIY skips the feedback modal entirely — Don't Post just drafts the post.
-  const handleDontPost = () =>
-    audience === 'diy'
-      ? onDontPost([])
-      : openModal(DontPostModal, { onConfirm: (reasons: string[]) => onDontPost(reasons) });
+  // Self-serve: Don't Post just drafts the post — no feedback modal.
+  const handleDontPost = () => onDontPost([]);
 
   const isApproved = status === 'approved';
-  const isInternal = mode === 'internal';
-  const isDiy = audience === 'diy';
-  // DIY self-serve: a left assistant panel instead of the client↔staff feedback thread.
+  // Self-serve: a left assistant panel for editing the generated post.
   const [chatInput, setChatInput] = useState('');
   const diySuggestions = [
     { emoji: '🖼️', label: 'Change photo content', detail: '"add people into the background to fill the scene"' },
@@ -1513,32 +1349,6 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
     { emoji: '🏷️', label: 'Modify branding', detail: '"add my logo in the bottom right corner"' },
   ];
 
-  // Conversation thread is owned by the parent (a per-post log shared by staff +
-  // client) so every message shows in order regardless of who opens the review.
-  useEffect(() => {
-    // Panel stays open; clients default to Feedback, staff to Feedback when there's a thread
-    setRightTab(mode !== 'internal' || (hasThread && status !== 'approved') ? 'comment' : 'edit');
-  }, [post.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const openCommentMode = () => setRightTab('comment');
-  const openEditMode = () => setRightTab('edit');
-  // Client: submit feedback — either request changes or decline. The parent
-  // appends the message to the shared thread and updates status.
-  const submitClientFeedback = () => {
-    const text = commentInput.trim();
-    if (feedbackMode === 'decline') onDecline?.(text); else onRequestChanges?.(text);
-    setCommentInput('');
-  };
-  // Staff: resubmit to client, using whatever was typed as the note. Stays on the
-  // preview. The parent appends the staff note + a system line to the thread.
-  const resubmitWithComment = () => {
-    onResubmit?.(commentInput.trim());
-    setCommentInput('');
-  };
-  const isReadyForClient = internalStatus === 'readyForClient';
-  // Staff: resubmit composer when the post is returned. Client: feedback selector while
-  // the post is still in review (pending).
-  const showComposer = isInternal ? (status === 'rejected' && !isAwaitingClient) : status === 'pending';
   const currentIdx = allPosts.findIndex(p => p.id === post.id);
   const prevPost = allPosts[currentIdx - 1];
   const nextPost = allPosts[currentIdx + 1];
@@ -1561,13 +1371,7 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           <span style={{ fontSize: 14, fontWeight: 400, color: dark80, fontFamily: F, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
             {post.caption.slice(0, 48)}{post.caption.length > 48 ? '…' : ''}
           </span>
-          {isInternal ? (() => {
-              if (isPast) return <StatusPill status={status} isPast dontPostReasons={dontPostReasons?.[post.id]} />;
-              if (isReturned && isReadyForClient) return <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} />;
-              if (status === 'approved' && isReadyForClient) return <StatusPill status="approved" />;
-              return <InternalStatusPill status={sentToClient ? 'inClientReview' : (internalStatus ?? 'internalReview')} />;
-            })()
-            : <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} resubmitNote={resubmitNotes?.[post.id]} isPast={isPast} tooltipPlacement="below" viewerMode="client" />}
+          <StatusPill status={status} dontPostReasons={dontPostReasons?.[post.id]} resubmitNote={resubmitNotes?.[post.id]} isPast={isPast} tooltipPlacement="below" viewerMode="client" />
           <Button variant="ghost" size="sm" square>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.5" fill={dark60}/><circle cx="12" cy="12" r="1.5" fill={dark60}/><circle cx="19" cy="12" r="1.5" fill={dark60}/></svg>
           </Button>
@@ -1582,50 +1386,22 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           >
             Previous
           </Button>
-          {isInternal && !isApproved && !isAwaitingClient && !isReturned && (
-            <Button variant="secondary" size="sm" frontIcon={Edit3} forceActive={!focusMode && rightTab === 'edit'} onPress={openEditMode}>
-              Edit
+          {/* Self-serve: Don't Post (→ Draft) + Approve (→ autopublish). */}
+          {isApproved ? (
+            <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
+              Remove approval
             </Button>
-          )}
-          {isInternal ? (
-            // Once sent (in client review) the handoff can't be pulled back — no Undo.
-            isReturned || sentToClient ? null : isReadyForClient ? (
-              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onUndoReady?.(); }}>
-                Undo
-              </Button>
-            ) : (
-              <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onMarkReady?.(); }}>
-                Ready for Client
-              </Button>
-            )
-          ) : isDiy ? (
-            /* DIY self-serve: Don't Post (→ Draft) + Approve (→ autopublish). */
-            isApproved ? (
-              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
-                Remove approval
-              </Button>
-            ) : (
-              <>
-                {status !== 'draft' && (
-                  <Button variant="secondary" size="sm" onPress={handleDontPost}>
-                    Don't Post
-                  </Button>
-                )}
-                <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
-                  {status === 'draft' ? 'Approve & Schedule' : 'Approve'}
-                </Button>
-              </>
-            )
           ) : (
-            isApproved ? (
-              <Button variant="secondary" size="sm" frontIcon={ApprovalsIcon} onPress={() => { onRemoveApproval(); }}>
-                Remove approval
-              </Button>
-            ) : isReturned ? null : (
+            <>
+              {status !== 'draft' && (
+                <Button variant="secondary" size="sm" onPress={handleDontPost}>
+                  Don't Post
+                </Button>
+              )}
               <Button variant="green" size="sm" frontIcon={Check2} onPress={() => { onApprove(); }}>
-                Approve
+                {status === 'draft' ? 'Approve & Schedule' : 'Approve'}
               </Button>
-            )
+            </>
           )}
           <Button
             variant="ghost" size="sm" endIcon={ArrowRight}
@@ -1651,9 +1427,8 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
       {/* ── Body ── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
-        {/* DIY — left assistant panel (replaces the DFY feedback thread) */}
-        {isDiy && (
-          <div style={{ width: 280, flexShrink: 0, background: white, borderRight: `1px solid ${dark8}`, display: 'flex', flexDirection: 'column', padding: '20px 20px 0', overflowY: 'auto' }}>
+        {/* DIY — left assistant panel for editing the generated post */}
+        <div style={{ width: 280, flexShrink: 0, background: white, borderRight: `1px solid ${dark8}`, display: 'flex', flexDirection: 'column', padding: '20px 20px 0', overflowY: 'auto' }}>
             <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
               Blaze can improve this post by:
             </p>
@@ -1677,7 +1452,6 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               </div>
             </div>
           </div>
-        )}
 
         {/* Center — post preview (pad right by the 300px overlay panel width to
             center the card in the visible band between the side panels) */}
@@ -1790,37 +1564,13 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
           transition: 'transform 0.3s ease',
         }}>
           <div style={{ width: 300, height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
-            {/* Segment control: Feedback / Edit — DFY only. DIY has no feedback thread. */}
-            {!isDiy && (
-            <div style={{ padding: '12px 16px', flexShrink: 0, borderBottom: `1px solid ${dark8}` }}>
-              <div style={{ display: 'flex', background: dark4, borderRadius: 8, padding: 2 }}>
-                {([['comment', 'Feedback', MessageChat01], ['edit', 'Edit', Edit3]] as const).map(([t, label, TabIcon]) => {
-                  const disabled = t === 'edit' && isAwaitingClient;
-                  const tabColor = disabled ? dark15 : rightTab === t ? dark90 : dark60;
-                  return (
-                  <button key={t} disabled={disabled} onClick={() => !disabled && setRightTab(t)} style={{
-                    flex: 1, padding: '6px 0', border: 'none', borderRadius: 6, cursor: disabled ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    fontSize: 13, fontWeight: 500, fontFamily: F,
-                    background: rightTab === t ? white : 'transparent',
-                    color: tabColor,
-                    boxShadow: rightTab === t ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-                    transition: 'all 0.15s',
-                  }}><TabIcon size={15} color={tabColor} />{label}</button>
-                  );
-                })}
-              </div>
-            </div>
-            )}
-
-            {(isDiy || rightTab === 'edit') ? (
             <div style={{ flex: 1, padding: '20px 16px', overflowY: 'auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Posting on */}
             <div>
               <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Posting on</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {/* DIY drafts aren't scheduled yet — prompt to schedule instead of showing a date. */}
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{isDiy && status === 'draft' ? 'Schedule Post' : post.date}</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{status === 'draft' ? 'Schedule Post' : post.date}</p>
                 <button style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
@@ -1896,129 +1646,6 @@ function ReviewPage({ post, status, allPosts, allStatuses, onClose, onApprove, o
               ))}
             </div>
             </div>
-            ) : (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              {/* Comment panel — conversation thread */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {thread.length === 0 && (
-                  <p style={{ margin: 0, fontSize: 13, color: dark40, fontFamily: F, textAlign: 'center', padding: '24px 0', lineHeight: 1.5 }}>
-                    No feedback yet.
-                  </p>
-                )}
-                {thread.map(m => {
-                  if (m.system) {
-                    return (
-                      <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0' }}>
-                        <div style={{ flex: 1, height: 1, background: dark8 }} />
-                        <span style={{ fontSize: 11, color: dark40, fontFamily: F, whiteSpace: 'nowrap' }}>✓ {m.text}</span>
-                        <div style={{ flex: 1, height: 1, background: dark8 }} />
-                      </div>
-                    );
-                  }
-                  const isClient = m.author === 'client';
-                  const name = isClient ? 'Client' : AGENCY_NAME;
-                  const avatar = isClient ? IMG_AVATAR : AGENCY_AVATAR;
-                  return (
-                    <div key={m.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 99, overflow: 'hidden', flexShrink: 0 }}>
-                        <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                          <span style={{ fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>{name}</span>
-                          <span style={{ fontSize: 11, color: dark40, fontFamily: F }}>{m.time}</span>
-                        </div>
-                        <div style={{
-                          fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.5,
-                          background: isClient ? dark4 : 'rgba(124,92,252,0.08)',
-                          borderRadius: 8, padding: '8px 10px', whiteSpace: 'pre-wrap',
-                        }}>{m.text}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {!isInternal && thread[thread.length - 1]?.author === 'client' && (
-                  <p style={{ margin: '0 0 0 38px', fontSize: 11, color: dark40, fontFamily: F, lineHeight: 1.5 }}>
-                    {status === 'declined'
-                      ? 'Your feedback is sent to the team.'
-                      : "Your feedback is sent to the team. They'll get back to you shortly."}
-                  </p>
-                )}
-              </div>
-              {/* Composer */}
-              {showComposer && (isInternal ? (
-              /* Staff — resubmit composer */
-              <div style={{ flexShrink: 0, borderTop: `1px solid ${dark8}`, padding: '12px 16px 16px' }}>
-                <div style={{ border: `1px solid ${dark15}`, borderRadius: 8, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <textarea
-                    value={commentInput}
-                    onChange={e => setCommentInput(e.target.value)}
-                    placeholder="Add a note for the client — optional"
-                    rows={3}
-                    style={{ width: '100%', border: 'none', outline: 'none', resize: 'none', fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5, boxSizing: 'border-box', background: 'transparent' }}
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button variant="green" size="sm" frontIcon={Check2} onPress={resubmitWithComment}>
-                      Resubmit to client
-                    </Button>
-                  </div>
-                </div>
-                <p style={{ margin: '8px 2px 0', fontSize: 11, color: dark40, fontFamily: F, lineHeight: 1.5 }}>
-                  Make sure you've updated the content before resubmitting.
-                </p>
-              </div>
-              ) : (
-              /* Client — feedback intent selector */
-              <div style={{ flexShrink: 0, borderTop: `1px solid ${dark8}`, padding: '14px 16px 16px' }}>
-                <p style={{ margin: '0 0 8px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>I want to</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-                  {([
-                    { value: 'request', title: 'Request changes', sub: 'Ask for revisions before approving', Icon: ArrowCurveLeftDown },
-                    { value: 'decline', title: 'Decline this post', sub: "This isn't the right direction", Icon: XCircleContained },
-                  ] as const).map(opt => {
-                    const sel = feedbackMode === opt.value;
-                    return (
-                      <button key={opt.value} onClick={() => setFeedbackMode(opt.value)} style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 10, textAlign: 'left',
-                        padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                        border: `1.5px solid ${sel ? dark90 : dark8}`,
-                        background: sel ? dark4 : white, transition: 'all 0.15s',
-                      }}>
-                        <span style={{ marginTop: 1, flexShrink: 0, display: 'flex' }}>
-                          <opt.Icon size={18} color={sel ? dark90 : dark40} />
-                        </span>
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <span style={{ fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>{opt.title}</span>
-                          <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>{opt.sub}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p style={{ margin: '0 0 6px', fontSize: 12, color: dark60, fontFamily: F }}>
-                  {feedbackMode === 'decline' ? 'Reason (optional)' : 'Comment (optional)'}
-                </p>
-                <textarea
-                  value={commentInput}
-                  onChange={e => setCommentInput(e.target.value)}
-                  placeholder={feedbackMode === 'decline' ? 'Help the team understand why…' : 'What needs to change?'}
-                  rows={3}
-                  style={{ width: '100%', resize: 'none', boxSizing: 'border-box', border: `1px solid ${dark15}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5, outline: 'none', marginBottom: 12 }}
-                />
-                <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, lineHeight: 1.5 }}>
-                  {feedbackMode === 'decline'
-                    ? 'The team will be notified. No further revisions will be requested.'
-                    : 'The team will be notified and can submit a revised version for your review.'}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button variant="primary" size="sm" onPress={submitClientFeedback}>
-                    {feedbackMode === 'decline' ? 'Decline post' : 'Send change request'}
-                  </Button>
-                </div>
-              </div>
-              ))}
-            </div>
-            )}
           </div>
         </div>
       </div>
@@ -2059,8 +1686,7 @@ const CONTENT_TYPES = [
   { key: 'paid-social',label: 'Paid Search',                 desc: 'Google Search ad copy before going live on search networks.',        defaultOn: true },
 ];
 
-function TurnOffConfirmModal({ close, onConfirm, audience = 'dfy' }: { close: () => void; onConfirm: () => void; audience?: 'dfy' | 'diy' }) {
-  const isDiy = audience === 'diy';
+function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfirm: () => void }) {
   return (
     <Modal.Root size="sm" onClose={close}>
       <Modal.Header onClose={close}>
@@ -2069,9 +1695,7 @@ function TurnOffConfirmModal({ close, onConfirm, audience = 'dfy' }: { close: ()
       <Modal.Content>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.65 }}>
-            {isDiy
-              ? 'All content types will publish automatically as soon as they’re generated — nothing will wait for your sign-off.'
-              : 'All content types will bypass client review and publish automatically after agent review.'}
+            All content types will publish automatically as soon as they’re generated — nothing will wait for your sign-off.
           </p>
           <div style={{
             display: 'flex', alignItems: 'flex-start', gap: 10,
@@ -2080,9 +1704,7 @@ function TurnOffConfirmModal({ close, onConfirm, audience = 'dfy' }: { close: ()
           }}>
             <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
             <p style={{ margin: 0, fontSize: 13, color: '#7a4800', fontFamily: F, lineHeight: 1.55 }}>
-              {isDiy
-                ? 'Any content currently awaiting your approval will be auto-approved and scheduled to post.'
-                : 'Any content currently awaiting client approval will be auto-approved and scheduled to post.'}
+              Any content currently awaiting your approval will be auto-approved and scheduled to post.
             </p>
           </div>
         </div>
@@ -2099,15 +1721,14 @@ function TurnOffConfirmModal({ close, onConfirm, audience = 'dfy' }: { close: ()
   );
 }
 
-function ApprovalSettingsModal({ close, audience = 'dfy' }: { close: () => void; audience?: 'dfy' | 'diy' }) {
+function ApprovalSettingsModal({ close }: { close: () => void }) {
   const { openModal } = useModals();
-  const isDiy = audience === 'diy';
   // Single source of truth — shared with surfaces like SEO/AEO "Blog post settings".
   const { approvalsOn, setApprovalsOn, requiresApproval: types, setFeature } = useApprovalSettings();
 
   const handleMasterToggle = (val: boolean) => {
     if (!val) {
-      openModal(TurnOffConfirmModal, { audience, onConfirm: () => setApprovalsOn(false) });
+      openModal(TurnOffConfirmModal, { onConfirm: () => setApprovalsOn(false) });
     } else {
       setApprovalsOn(true);
     }
@@ -2121,9 +1742,7 @@ function ApprovalSettingsModal({ close, audience = 'dfy' }: { close: () => void;
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Approval Settings</span>
           <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>
-            {isDiy
-              ? 'Choose which content types need your sign-off before they go live.'
-              : 'Control which content types require client sign-off before publishing.'}
+            Choose which content types need your sign-off before they go live.
           </span>
         </div>
       </Modal.Header>
@@ -2134,9 +1753,7 @@ function ApprovalSettingsModal({ close, audience = 'dfy' }: { close: () => void;
             <div>
               <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>Approvals</p>
               <p style={{ margin: 0, fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.55 }}>
-                {isDiy
-                  ? 'Require my sign-off before content goes live. When off, content publishes automatically as soon as it’s generated.'
-                  : 'Require client sign-off before content goes live. When off, agent-reviewed content publishes automatically.'}
+                Require my sign-off before content goes live. When off, content publishes automatically as soon as it’s generated.
               </p>
             </div>
             <Toggle on={approvalsOn} onChange={handleMasterToggle} />
@@ -2170,8 +1787,8 @@ function ApprovalSettingsModal({ close, audience = 'dfy' }: { close: () => void;
                         border: `1px solid ${types[ct.key] ? 'rgba(32,161,79,0.25)' : dark15}`,
                       }}>
                         {types[ct.key]
-                          ? (isDiy ? 'Approval required' : 'Client approval required')
-                          : (isDiy ? 'Auto-publishes' : 'Agent review only')}
+                          ? 'Approval required'
+                          : 'Auto-publishes'}
                       </span>
                     </div>
                     <Toggle on={types[ct.key]} onChange={v => setFeature(ct.key, v)} />
@@ -2187,7 +1804,7 @@ function ApprovalSettingsModal({ close, audience = 'dfy' }: { close: () => void;
         <Modal.FooterContent slot="left">
           <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>
             {approvalsOn
-              ? `${clientRequiredCount} of ${CONTENT_TYPES.length} content types require ${isDiy ? 'your' : 'client'} approval`
+              ? `${clientRequiredCount} of ${CONTENT_TYPES.length} content types require your approval`
               : 'Approvals disabled — all content publishes automatically'}
           </span>
         </Modal.FooterContent>
@@ -2395,445 +2012,6 @@ function LocalSEOCard({
   );
 }
 
-// ── Internal content card ─────────────────────────────────────────────────────
-function InternalCard({
-  post, internalStatus, onMarkReady, onUndo, onReview, onEdit, isPast,
-  returnedByClient, approvedByClient, dontPostReasons, onResubmit, pastClientStatus, clientStatus, sent,
-}: {
-  post: Post; internalStatus: InternalStatus; isPast?: boolean;
-  onMarkReady: () => void; onUndo: () => void; onReview: () => void; onEdit?: () => void;
-  returnedByClient?: boolean;
-  approvedByClient?: boolean;
-  dontPostReasons?: string[];
-  onResubmit?: (note: string) => void;
-  pastClientStatus?: Status;
-  clientStatus?: Status;
-  /** Sent to client (→ "In client review"): dim + drop the checkbox. */
-  sent?: boolean;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const isReady = internalStatus === 'readyForClient';
-
-  // Reputation posts render as vertical grid cards (3-4 per row)
-  const isReputation = post.type === 'review' || post.type === 'comment';
-  if (isReputation) {
-    return (
-      <ReputationCard
-        post={post}
-        internalStatus={internalStatus}
-        onMarkReady={onMarkReady}
-        onUndo={onUndo}
-        onReview={onEdit ?? onReview}
-        isPast={isPast}
-        sent={sent}
-        returnedByClient={returnedByClient}
-        approvedByClient={approvedByClient}
-        clientStatus={clientStatus}
-      />
-    );
-  }
-
-  // Paid search ads render as vertical grid cards
-  if (post.type === 'paid-search-ad') {
-    return (
-      <PaidSearchCard
-        post={post}
-        internalStatus={internalStatus}
-        onMarkReady={onMarkReady}
-        onUndo={onUndo}
-        onReview={onEdit ?? onReview}
-        isPast={isPast}
-        sent={sent}
-        returnedByClient={returnedByClient}
-        approvedByClient={approvedByClient}
-        clientStatus={clientStatus}
-      />
-    );
-  }
-
-  // Local SEO posts
-  if (post.type === 'local-seo') {
-    return (
-      <LocalSEOCard
-        post={post}
-        internalStatus={internalStatus}
-        onMarkReady={onMarkReady}
-        onReview={onReview}
-      />
-    );
-  }
-
-  const isBlog  = post.type === 'blog';
-  const isPortrait = post.type === 'story' || post.type === 'short' || post.type === 'feed-video';
-  const isLandscape = post.type === 'still' || post.type === 'carousel';
-
-  const CARD_H   = 378;
-  const HEADER_H = 36;
-
-  return (
-    <div
-      style={{
-        position:'relative', width:245, height:CARD_H, flexShrink:0,
-        background:dark2, border:`1px solid ${dark4}`, borderRadius:10,
-        overflow:'hidden', cursor:'pointer',
-        opacity: sent ? 0.4 : 1, transition:'opacity 0.2s',
-        display:'flex', flexDirection:'column',
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Header — per-creative checkbox controls inclusion in the client send */}
-      <div style={{ height:HEADER_H, display:'flex', alignItems:'center', gap:6, padding:'12px 12px 2px', flexShrink:0 }}>
-        <TypeIcon type={post.type} size={14} />
-        <span style={{ fontSize:12, color:dark60, fontFamily:F, flex:1, letterSpacing:'0.24px' }}>{TYPE_LABEL[post.type]}</span>
-        <span style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', whiteSpace:'nowrap' }}>{post.date}</span>
-        {!isPast && !returnedByClient && !approvedByClient && !sent && (
-          <span
-            onClick={(e) => e.stopPropagation()}
-            title={isReady ? 'Will be sent to the client' : 'Excluded from the client send'}
-            style={{ position:'relative', zIndex:6, display:'inline-flex', alignItems:'center' }}
-          >
-            <Checkbox checked={isReady} onChange={(next) => (next ? onMarkReady() : onUndo())} />
-          </span>
-        )}
-      </div>
-
-      {isBlog ? (
-        <div style={{ flex:1, padding:'0 10px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:white, borderRadius:8, boxShadow:'0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ height:126, flexShrink:0, background:'#c8c0b4', overflow:'hidden', borderRadius:'8px 8px 0 0' }}>
-              {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            </div>
-            <div style={{ flex:1, padding:'10px 12px 10px', overflow:'hidden', display:'flex', flexDirection:'column', gap:5 }}>
-              <p style={{ margin:0, fontSize:16, fontWeight:400, color:dark90, fontFamily:F, lineHeight:1.3, display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>{post.caption}</p>
-              <p style={{ margin:0, fontSize:11, color:dark40, fontFamily:F }}>July 8, 2025</p>
-              <p style={{ margin:0, fontSize:12, color:dark60, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:6, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>A fresh coat of paint is one of the highest-return improvements you can make to your home — protecting siding and trim from the Texas sun while instantly lifting curb appeal.</p>
-            </div>
-          </div>
-        </div>
-      ) : isPortrait ? (
-        /* ── Portrait 9:16 — fit to frame height, centered, 9:16 leaves side space ── */
-        <div style={{ flex:1, minHeight:0, padding:'6px 10px 10px', display:'flex', justifyContent:'center', overflow:'hidden' }}>
-          <div style={{ position:'relative', height:'100%', aspectRatio:'9/16', borderRadius:8, overflow:'hidden', background:'#1a1a1a' }}>
-            {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            {post.type === 'feed-video' && (
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : isLandscape ? (
-        <div style={{ flex:1, padding:'0 10px 10px', display:'flex', flexDirection:'column' }}>
-          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:white, borderRadius:8, boxShadow:'0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ padding:'10px 12px 8px', flexShrink:0 }}>
-              <p style={{ margin:0, fontSize:12, color:dark80, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
-                {post.caption}{post.caption.length > 55 && <span style={{ color:dark40 }}> ...mo...</span>}
-              </p>
-            </div>
-            <div style={{ flex:1, position:'relative', background:'#c8c0b4', overflow:'hidden' }}>
-              {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-              {post.type === 'carousel' && post.slides && (
-                <div style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'2px 6px', display:'flex', alignItems:'center', gap:3 }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="white" strokeWidth="1.6"/><path d="M2 7v10M22 7v10" stroke="white" strokeWidth="1.6" strokeLinecap="round"/></svg>
-                  <span style={{ fontSize:10, color:'white', fontFamily:F }}>{post.slides}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* ── Email / other — white inner card: headline + image + body ── */
-        <div style={{ flex:1, padding:'0 10px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:white, borderRadius:8, boxShadow:'0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ padding:'10px 12px 8px', flexShrink:0 }}>
-              <p style={{ margin:0, fontSize:13, fontWeight:500, color:dark90, fontFamily:F, lineHeight:1.4, textAlign:'center', display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>{post.caption}</p>
-            </div>
-            <div style={{ height:110, flexShrink:0, background:'#c8c0b4', overflow:'hidden' }}>
-              {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            </div>
-            <div style={{ flex:1, padding:'8px 12px 10px', overflow:'hidden' }}>
-              <p style={{ margin:0, fontSize:11, color:dark60, fontFamily:F, lineHeight:1.55, letterSpacing:'0.22px', display:'-webkit-box', WebkitLineClamp:7, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
-                A fresh coat of paint is one of the highest-return improvements you can make to your home — protecting siding and trim from the Texas sun while instantly lifting curb appeal. The secret is in the prep: power-washing, scraping, sanding, and caulking every surface before the first coat is what makes a CertaPro finish last for years, not months.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Status pill */}
-      <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        {isPast && pastClientStatus !== undefined
-          ? <StatusPill status={pastClientStatus} dontPostReasons={dontPostReasons} isPast />
-          : returnedByClient
-            ? <StatusPill status={clientStatus === 'declined' ? 'declined' : 'rejected'} dontPostReasons={dontPostReasons} />
-            : approvedByClient
-              ? <StatusPill status="approved" />
-              : <InternalStatusPill status={sent ? 'inClientReview' : internalStatus} />}
-      </div>
-
-      {/* Hover overlay */}
-      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)', opacity:hovered?1:0, transition:'opacity 0.18s', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, pointerEvents:hovered?'all':'none' }}>
-        <div style={{ transform:hovered?'scale(1) translateY(0)':'scale(0.9) translateY(4px)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-          {isPast ? (
-            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              View
-            </Button>
-          ) : returnedByClient ? (
-            <Button variant="secondary" size="sm" frontIcon={EyeOpen}
-              onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              Review
-            </Button>
-          ) : approvedByClient ? (
-            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              Review
-            </Button>
-          ) : (
-            /* Readiness is the header checkbox now; hover just offers Review. */
-            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              Review
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Internal campaign section (proper component so useState works) ───────────
-function InternalCampaignSection({
-  campaign, internalStatuses, statuses, dontPostReasons, sentPosts, today, isPast: isPastProp,
-  onMarkReady, onUndo, onSendToClient, onReview, onEdit, onResubmit,
-  defaultCollapsed, filterActive,
-}: {
-  campaign: Campaign;
-  internalStatuses: Record<number, InternalStatus>;
-  statuses: Record<number, Status>;
-  dontPostReasons: Record<number, string[]>;
-  sentPosts: Record<number, boolean>;
-  today: string;
-  isPast?: boolean;
-  onMarkReady: (id: number) => void;
-  onUndo: (id: number) => void;
-  onSendToClient: () => void;
-  onReview: (post: Post) => void;
-  onEdit: (post: Post) => void;
-  onResubmit: (id: number, note: string) => void;
-  defaultCollapsed?: boolean;
-  filterActive?: boolean;
-}) {
-  const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
-  const isCollapsed = filterActive ? false : collapsed;
-  const [returnedCollapsed, setReturnedCollapsed] = useState(false);
-  const [approvedCollapsed, setApprovedCollapsed] = useState(false);
-
-  const posts = campaign.posts;
-  const isReturned    = (p: Post) => (statuses[p.id] === 'rejected' || statuses[p.id] === 'declined') && internalStatuses[p.id] === 'readyForClient';
-  const isApproved    = (p: Post) => statuses[p.id] === 'approved'  && internalStatuses[p.id] === 'readyForClient';
-  const returnedPosts      = posts.filter(isReturned);
-  const approvedByClient   = posts.filter(isApproved);
-  const activePosts        = posts.filter(p => !isReturned(p) && !isApproved(p));
-  // Checked creatives not yet sent — Send to Client shows only when there's
-  // something left to send.
-  const unsentReadyCount = activePosts.filter(p => internalStatuses[p.id] === 'readyForClient' && !sentPosts[p.id]).length;
-  const isPastCamp  = isPastProp ?? campaign.endDate < today;
-  const cardGrid = (children: React.ReactNode) =>
-    <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>{children}</div>;
-
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
-      {/* Campaign header */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            style={{ display:'flex', alignItems:'center', justifyContent:'center', width:20, height:20, border:'none', background:'transparent', cursor:'pointer', padding:0, flexShrink:0 }}
-            aria-label={isCollapsed ? 'Expand campaign' : 'Collapse campaign'}
-          >
-            {isCollapsed ? <ChevronRight size={16} color={dark40} /> : <ChevronDown size={16} color={dark40} />}
-          </button>
-          <span style={{ fontSize:18, fontWeight:400, color:dark80, fontFamily:F, letterSpacing:'-0.36px' }}>{campaign.name}</span>
-          <span style={{ fontSize:14, color:dark60, fontFamily:F }}>{campaign.dateRange}</span>
-          <span style={{ display:'inline-flex', alignItems:'center', gap:4, background:dark2, borderRadius:4, padding:'2px 6px', fontSize:12, color:dark90, fontFamily:F }}>
-            <BadgeIcon badge={campaign.badge} />
-            {campaign.badge}
-          </span>
-          <button style={{ width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, border:'none', background:'transparent', cursor:'pointer', padding:0 }}>
-            <ArrowRight size={16} color={dark60} />
-          </button>
-        </div>
-
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          {isPastCamp ? (
-            <span style={{ fontSize:12, color:dark60, fontFamily:F }}>{posts.length} posts</span>
-          ) : (() => {
-            const clientRejectedCount = posts.filter(p => statuses[p.id] === 'rejected' || statuses[p.id] === 'declined').length;
-            const clientApprovedCount = posts.filter(p => statuses[p.id] === 'approved').length;
-            const hasClientFeedback = clientRejectedCount > 0 || clientApprovedCount > 0;
-            return (
-              <>
-                {/* Total count */}
-                <span style={{ fontSize:12, color:dark60, fontFamily:F, whiteSpace:'nowrap' }}>
-                  {posts.length} posts
-                </span>
-
-                {/* Client feedback counters */}
-                {hasClientFeedback && (
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    {clientRejectedCount > 0 && (
-                      <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, color:red, fontFamily:F, fontWeight:500 }}>
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                          <circle cx="8" cy="8" r="7" stroke={red} strokeWidth="1.4"/>
-                          <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke={red} strokeWidth="1.4" strokeLinecap="round"/>
-                        </svg>
-                        {clientRejectedCount}
-                      </span>
-                    )}
-                    {clientApprovedCount > 0 && (
-                      <span style={{ display:'inline-flex', alignItems:'center', gap:3, fontSize:12, color:green, fontFamily:F, fontWeight:500 }}>
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                          <circle cx="8" cy="8" r="7" stroke={green} strokeWidth="1.4"/>
-                          <path d="M5 8.5l2 2 4-4" stroke={green} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        {clientApprovedCount}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Send to Client — opens an editable cover note. Hidden once
-                    every checked creative is already sent (in client review). */}
-                {unsentReadyCount > 0 && (
-                  <>
-                    <div style={{ width:1, height:16, background:dark8 }} />
-                    <Button variant="secondary" size="sm" onPress={onSendToClient}>Send to Client</Button>
-                  </>
-                )}
-              </>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Cards grid */}
-      {!isCollapsed && (
-        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
-
-          {/* Past campaigns — flat grid with Posted/Don't Post/Failed */}
-          {isPastCamp ? (
-            cardGrid(posts.map(post => (
-              <InternalCard
-                key={post.id} post={post}
-                internalStatus={internalStatuses[post.id]}
-                isPast
-                pastClientStatus={statuses[post.id]}
-                dontPostReasons={dontPostReasons[post.id]}
-                onMarkReady={() => onMarkReady(post.id)}
-                onUndo={() => onUndo(post.id)}
-                onReview={() => onReview(post)}
-                onEdit={() => onEdit(post)}
-              />
-            )))
-          ) : (
-          <>
-          {/* 1 — Active posts */}
-          {activePosts.length > 0 && cardGrid(activePosts.map(post => (
-            <InternalCard
-              key={post.id} post={post}
-              internalStatus={internalStatuses[post.id]}
-              sent={sentPosts[post.id]}
-              onMarkReady={() => onMarkReady(post.id)}
-              onUndo={() => onUndo(post.id)}
-              onReview={() => onReview(post)}
-              onEdit={() => onEdit(post)}
-            />
-          )))}
-
-          {/* 2 — Returned by Client (below active, full opacity) */}
-          {returnedPosts.length > 0 && (
-            <div data-returned-section style={{ display:'flex', flexDirection:'column', gap:14, scrollMarginTop:80 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ flex:1, height:1, background:dark8 }} />
-                <button
-                  onClick={() => setReturnedCollapsed(c => !c)}
-                  style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
-                    <circle cx="12" cy="12" r="9" stroke={red} strokeWidth="1.5"/>
-                    <path d="M9 9l6 6M15 9l-6 6" stroke={red} strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  <span style={{ fontSize:12, fontWeight:500, color:red, fontFamily:F, whiteSpace:'nowrap' }}>
-                    Returned by client ({returnedPosts.length})
-                  </span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    style={{ transform: returnedCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
-                    <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                <div style={{ flex:1, height:1, background:dark8 }} />
-              </div>
-              {!returnedCollapsed && cardGrid(returnedPosts.map(post => (
-                <InternalCard
-                  key={post.id} post={post}
-                  internalStatus={internalStatuses[post.id]}
-                  returnedByClient clientStatus={statuses[post.id]} isPast={isPastCamp} dontPostReasons={dontPostReasons[post.id]}
-                  onMarkReady={() => onMarkReady(post.id)}
-                  onUndo={() => onUndo(post.id)}
-                  onReview={() => onReview(post)}
-                  onEdit={() => onEdit(post)}
-                  onResubmit={(note) => onResubmit(post.id, note)}
-                />
-              )))}
-            </div>
-          )}
-
-          {/* 3 — Approved by Client (bottom, dimmed, collapsible) */}
-          {approvedByClient.length > 0 && (
-            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ flex:1, height:1, background:dark8 }} />
-                <button
-                  onClick={() => setApprovedCollapsed(c => !c)}
-                  style={{ display:'flex', alignItems:'center', gap:5, background:'transparent', border:'none', cursor:'pointer', padding:'2px 0', flexShrink:0 }}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
-                    <circle cx="12" cy="12" r="9" stroke={green} strokeWidth="1.5"/>
-                    <path d="M8.5 12L11 14.5L15.5 9.5" stroke={green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span style={{ fontSize:12, fontWeight:500, color:green, fontFamily:F, whiteSpace:'nowrap' }}>
-                    Approved by Client ({approvedByClient.length})
-                  </span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    style={{ transform: approvedCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
-                    <path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                <div style={{ flex:1, height:1, background:dark8 }} />
-              </div>
-              {!approvedCollapsed && cardGrid(approvedByClient.map(post => (
-                <InternalCard
-                  key={post.id} post={post}
-                  internalStatus={internalStatuses[post.id]}
-                  approvedByClient
-                  onMarkReady={() => onMarkReady(post.id)}
-                  onUndo={() => onUndo(post.id)}
-                  onReview={() => onReview(post)}
-                  onEdit={() => onEdit(post)}
-                />
-              )))}
-            </div>
-          )}
-          </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Merged filter dropdown — content type + status, in one sectioned menu ────
 function FilterMenu({
   typeOptions, typeValue, onTypeChange, typeCount,
@@ -2953,66 +2131,13 @@ function FilterMenu({
   );
 }
 
-// ── Send-to-client cover note ─────────────────────────────────────────────────
-function defaultCampaignMessage(campaignName: string, count: number, dateRange: string) {
-  return `Hi there,\n\nThe ${campaignName} content is ready for your review — ${count} ${count === 1 ? 'piece' : 'pieces'} for ${dateRange}. Approve anything that's good to go, or leave a note on whatever you'd like changed.\n\nThanks!`;
-}
-
-function SendToClientModal({ close, campaignName, count, dateRange, onSend }: { close: () => void; campaignName: string; count: number; dateRange: string; onSend: (message: string) => void }) {
-  const [message, setMessage] = useState(defaultCampaignMessage(campaignName, count, dateRange));
-  return (
-    <Modal.Root size="md" onClose={close}>
-      <Modal.Header title={`Send ${campaignName} to client`} onClose={close} />
-      <Modal.Content>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>The client sees this note above the campaign. Adjust it before sending.</span>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            autoFocus
-            style={{ width: '100%', boxSizing: 'border-box', minHeight: 168, resize: 'vertical', border: `1px solid ${dark8}`, borderRadius: 8, padding: '10px 12px', fontFamily: F, fontSize: 14, color: dark90, lineHeight: 1.6, outline: 'none', background: white }}
-          />
-        </div>
-      </Modal.Content>
-      <Modal.Footer>
-        <Modal.FooterContent slot="left">
-          <Modal.FooterButton variant="tertiary" onPress={close}>Cancel</Modal.FooterButton>
-        </Modal.FooterContent>
-        <Modal.FooterContent slot="right">
-          <Modal.FooterButton variant="primary" isDisabled={!message.trim()} onPress={() => { onSend(message.trim()); close(); }}>Send to Client</Modal.FooterButton>
-        </Modal.FooterContent>
-      </Modal.Footer>
-    </Modal.Root>
-  );
-}
-
 // ── Inner app (needs ModalStack context) ─────────────────────────────────────
 function ApprovalV2Inner() {
   const allPosts = CAMPAIGNS.flatMap(c => c.posts);
   const today = '2026-06-03';
-  const { clientView, setClientView } = useClientView();
-  // DFY = agency pipeline (internal review → client handoff).
-  // DIY = self-serve customer reviews their own generated content directly.
-  const { audience } = useApprovalAudience();
-  const isDiy = audience === 'diy';
-  // DIY collapses to a single self-review view; the AM/Client split is DFY-only.
-  const tab: 'internal' | 'client' = isDiy ? 'client' : (clientView ? 'client' : 'internal');
+  // Self-serve: the customer reviews their own generated content directly.
   const [filterBadge, setFilterBadge] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
-
-  // Internal statuses — all start as internalReview (past campaigns pre-mixed)
-  const [internalStatuses, setInternalStatuses] = useState<Record<number, InternalStatus>>(() => {
-    const initial: Record<number, InternalStatus> = {};
-    CAMPAIGNS.forEach(c => {
-      const isPast = c.endDate < today;
-      c.posts.forEach((p, i) => {
-        // Per-creative checkboxes start CHECKED — every active creative is in the
-        // client send by default; the AM unchecks to exclude.
-        initial[p.id] = isPast ? (i % 2 === 0 ? 'readyForClient' : 'internalReview') : 'readyForClient';
-      });
-    });
-    return initial;
-  });
 
   const [statuses, setStatuses] = useState<Record<number, Status>>(() => {
     const initial: Record<number, Status> = {};
@@ -3027,12 +2152,7 @@ function ApprovalV2Inner() {
   });
 
   const [reviewPost, setReviewPost] = useState<Post | null>(null);
-  const [showFeedbackToast, setShowFeedbackToast] = useState(false);
-  const triggerFeedbackToast = () => {
-    setShowFeedbackToast(true);
-    setTimeout(() => setShowFeedbackToast(false), 3500);
-  };
-  // DIY "Don't Post" → drafts the post in place and surfaces an undoable toast.
+  // "Don't Post" → drafts the post in place and surfaces an undoable toast.
   const [draftedToast, setDraftedToast] = useState<number | null>(null);
   const draftedTimer = useRef<ReturnType<typeof setTimeout>>();
   const showDraftedToast = (id: number) => {
@@ -3045,44 +2165,22 @@ function ApprovalV2Inner() {
     setDraftedToast(null);
   };
   const [completingCampaignId, setCompletingCampaignId] = useState<number | null>(null);
-  const [dontPostReasons, setDontPostReasons] = useState<Record<number, string[]>>({});
-  const [resubmitNotes, setResubmitNotes] = useState<Record<number, string>>({});
-  // Per-post conversation log — the single source shared by staff + client, so
-  // every message (incl. repeat change requests) shows in order on both sides.
-  const [threads, setThreads] = useState<Record<number, CommentMsg[]>>({});
-  const appendMessage = (id: number, msg: { author: 'client' | 'staff'; text: string; system?: boolean }) =>
-    setThreads(prev => {
-      const cur = prev[id] ?? [];
-      return { ...prev, [id]: [...cur, { id: cur.length + 1, time: 'just now', ...msg }] };
-    });
+  const [dontPostReasons] = useState<Record<number, string[]>>({});
+  const [resubmitNotes] = useState<Record<number, string>>({});
 
   // Display status used by the status filter pills
   const TODAY = '2026-06-03';
   const pastPostIds = new Set(CAMPAIGNS.filter(c => c.endDate < TODAY).flatMap(c => c.posts.map(p => p.id)));
   const getDisplayStatus = (id: number): string => {
-    if (isDiy) {
-      // DIY self-serve: no agency pipeline. Don't Post → Draft; pending → Review.
-      if (statuses[id] === 'draft') return 'draft';
-      if (pastPostIds.has(id)) return statuses[id] === 'approved' ? 'posted' : statuses[id] === 'pending' ? 'failed' : 'draft';
-      if (statuses[id] === 'approved') return 'approved';
-      if (statuses[id] === 'pending') return 'review';
-      return 'draft';
-    }
-    if (pastPostIds.has(id)) {
-      if (statuses[id] === 'approved') return 'posted';
-      if (statuses[id] === 'declined') return 'declined';
-      if (statuses[id] === 'rejected') return 'changesRequested';
-      return 'failed';
-    }
+    // Self-serve: no agency pipeline. Don't Post → Draft; pending → Review.
+    if (statuses[id] === 'draft') return 'draft';
+    if (pastPostIds.has(id)) return statuses[id] === 'approved' ? 'posted' : statuses[id] === 'pending' ? 'failed' : 'draft';
     if (statuses[id] === 'approved') return 'approved';
-    if (statuses[id] === 'declined') return 'declined';
-    if (statuses[id] === 'rejected') return 'changesRequested';
-    if (internalStatuses[id] === 'readyForClient') return 'inClientReview';
-    return 'internalReview';
+    if (statuses[id] === 'pending') return 'review';
+    return 'draft';
   };
-  // 'returned' is a meta-filter matching both changes-requested and declined
   const displayMatches = (ds: string, v: string | null) =>
-    v === null ? true : v === 'returned' ? (ds === 'changesRequested' || ds === 'declined') : ds === v;
+    v === null ? true : ds === v;
   const matchesStatus = (id: number) => displayMatches(getDisplayStatus(id), statusFilter);
 
   const { openModal } = useModals();
@@ -3111,50 +2209,9 @@ function ApprovalV2Inner() {
     setStatuses(prev => ({ ...prev, [id]: 'pending' }));
   };
 
-  const rejectPost = (id: number) => {
-    setStatuses(prev => ({ ...prev, [id]: 'rejected' }));
-  };
-  const declinePost = (id: number) => {
-    setStatuses(prev => ({ ...prev, [id]: 'declined' }));
-  };
-  // DIY "Don't Post" sends the generated post back to Draft.
+  // "Don't Post" sends the generated post back to Draft.
   const draftPost = (id: number) => {
     setStatuses(prev => ({ ...prev, [id]: 'draft' }));
-  };
-
-  const resubmitPost = (id: number, note: string) => {
-    setStatuses(prev => ({ ...prev, [id]: 'pending' }));
-    // Keep the client's original feedback so the V2 thread shows the full conversation.
-    // Always record the resubmission (empty string = no note) so the pill can show "Review V2"
-    setResubmitNotes(prev => ({ ...prev, [id]: note ?? '' }));
-  };
-
-  // Internal handlers
-  const markReadyForClient = (id: number) => {
-    setInternalStatuses(prev => ({ ...prev, [id]: 'readyForClient' }));
-  };
-  const undoReady = (id: number) => {
-    setInternalStatuses(prev => ({ ...prev, [id]: 'internalReview' }));
-  };
-  // Cover note the AM sends with each campaign; the client sees it under the name.
-  const [campaignMessages, setCampaignMessages] = useState<Record<number, string>>({});
-  // Creatives actually sent to the client → flips the staff pill to "In client review".
-  const [sentPosts, setSentPosts] = useState<Record<number, boolean>>({});
-  const sendToClient = (campaign: Campaign) => {
-    const count = campaign.posts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
-    openModal(SendToClientModal, {
-      campaignName: campaign.name,
-      count,
-      dateRange: campaign.dateRange,
-      onSend: (message: string) => {
-        setCampaignMessages(prev => ({ ...prev, [campaign.id]: message }));
-        setSentPosts(prev => {
-          const next = { ...prev };
-          campaign.posts.forEach(p => { if (internalStatuses[p.id] === 'readyForClient') next[p.id] = true; });
-          return next;
-        });
-      },
-    });
   };
 
   const approveAll = (campaign: Campaign) => {
@@ -3172,35 +2229,14 @@ function ApprovalV2Inner() {
   );
 
   // ── Filter options + counts (consumed by the topbar FilterMenu) ──
-  const STATUS_FILTERS = isDiy
-    ? [
-        // DIY hides the DFY pipeline statuses (internal/in-client review, returned).
-        { label: 'All', value: null },
-        { label: 'Review', value: 'review' },
-        { label: 'Draft', value: 'draft' },
-        { label: 'Approved', value: 'approved' },
-        { label: 'Posted', value: 'posted' },
-        { label: 'Failed', value: 'failed' },
-      ]
-    : clientView
-    ? [
-        { label: 'All', value: null },
-        { label: 'Review', value: 'inClientReview' },
-        { label: 'Changes requested', value: 'changesRequested' },
-        { label: 'Declined', value: 'declined' },
-        { label: 'Approved', value: 'approved' },
-        { label: 'Posted', value: 'posted' },
-        { label: 'Failed', value: 'failed' },
-      ]
-    : [
-        { label: 'All', value: null },
-        { label: 'Internal review', value: 'internalReview' },
-        { label: 'In client review', value: 'inClientReview' },
-        { label: 'Returned by Client', value: 'returned' },
-        { label: 'Approved', value: 'approved' },
-        { label: 'Posted', value: 'posted' },
-        { label: 'Failed', value: 'failed' },
-      ];
+  const STATUS_FILTERS = [
+    { label: 'All', value: null },
+    { label: 'Review', value: 'review' },
+    { label: 'Draft', value: 'draft' },
+    { label: 'Approved', value: 'approved' },
+    { label: 'Posted', value: 'posted' },
+    { label: 'Failed', value: 'failed' },
+  ];
   const CAMPAIGN_TYPE_OPTIONS = [
     { label: 'All types', value: 'all' },
     { label: 'Organic Campaigns', value: 'Organic Campaigns' },
@@ -3209,23 +2245,18 @@ function ApprovalV2Inner() {
     { label: 'Paid Social', value: 'Paid Social' },
     { label: 'Paid Search', value: 'Paid Search' },
   ];
-  // Status counts honor the current type filter + view scope
+  // Status counts honor the current type filter
   const scopedPosts = CAMPAIGNS
     .filter(c => !filterBadge || c.badge === filterBadge)
-    .flatMap(c => c.posts)
-    .filter(p => !clientView || internalStatuses[p.id] === 'readyForClient');
+    .flatMap(c => c.posts);
   const statusCount = (v: string | null) =>
     scopedPosts.filter(p => displayMatches(getDisplayStatus(p.id), v)).length;
-  // Type counts honor view scope only (independent of the status filter)
-  const typeScopedPosts = CAMPAIGNS
-    .flatMap(c => c.posts)
-    .filter(p => !clientView || internalStatuses[p.id] === 'readyForClient');
+  // Type counts are independent of the status filter
+  const typeScopedPosts = CAMPAIGNS.flatMap(c => c.posts);
   const typeCount = (v: string) =>
     v === 'all'
       ? typeScopedPosts.length
-      : CAMPAIGNS.filter(c => c.badge === v)
-          .flatMap(c => c.posts)
-          .filter(p => !clientView || internalStatuses[p.id] === 'readyForClient').length;
+      : CAMPAIGNS.filter(c => c.badge === v).flatMap(c => c.posts).length;
 
   // A filter is active — force-expand campaign sections so matches aren't hidden.
   const filterActive = filterBadge !== null || statusFilter !== null;
@@ -3265,108 +2296,16 @@ function ApprovalV2Inner() {
       topbarRight={
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           {filterMenu}
-          <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, { audience })}>Settings</Button>
-          {/* "View as client" is a DFY-only affordance — DIY has no separate client. */}
-          {!isDiy && (
-            <Button
-              variant={clientView ? 'primary' : 'secondary'}
-              size="sm"
-              frontIcon={EyeOpen}
-              onPress={() => { setClientView(!clientView); setStatusFilter(null); }}
-            >
-              {clientView ? 'Exit client view' : 'View as client'}
-            </Button>
-          )}
-          {/* Credits are a DIY (self-serve) concept — agencies (DFY) don't see them. */}
-          {isDiy && (
-            <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F, whiteSpace:'nowrap' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
-              82 Credits
-            </span>
-          )}
+          <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
+          {/* Credits — self-serve concept */}
+          <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F, whiteSpace:'nowrap' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
+            82 Credits
+          </span>
         </div>
       }
     >
-      {/* Client view banner */}
-      {clientView && (
-        <div style={{ display:'flex', alignItems:'center', gap:10, background:dark90, color:white, borderRadius:10, padding:'10px 14px', marginBottom:16, fontFamily:F }}>
-          <EyeOpen size={16} color={white} />
-          <span style={{ fontSize:13, flex:1 }}>
-            Viewing as <strong style={{ fontWeight:600 }}>Client</strong> — only content marked ready for client is visible.
-          </span>
-          <button onClick={() => setClientView(false)} style={{ background:'rgba(255,255,255,0.14)', border:'none', color:white, fontSize:12.5, fontWeight:600, padding:'5px 12px', borderRadius:7, cursor:'pointer', fontFamily:F }}>
-            Exit
-          </button>
-        </div>
-      )}
-
-      {tab === 'internal' ? (
-        /* ── Internal Review tab ── */
-        (() => {
-          const SectionHeader = ({ label, count }: { label: string; count: number }) => (
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <span style={{ fontSize:13, fontWeight:500, color:dark40, fontFamily:F, letterSpacing:'0.26px', whiteSpace:'nowrap' }}>
-                {label} <span style={{ fontWeight:400 }}>({count})</span>
-              </span>
-              <div style={{ flex:1, height:1, background:dark8 }} />
-            </div>
-          );
-
-          const isAllReady = (c: Campaign) => c.posts.every(p => internalStatuses[p.id] === 'readyForClient');
-          const byBadge = filterBadge ? CAMPAIGNS.filter(c => c.badge === filterBadge) : CAMPAIGNS;
-          const filtered = byBadge
-            .map(c => ({ ...c, posts: c.posts.filter(p => matchesStatus(p.id)) }))
-            .filter(c => c.posts.length > 0);
-          const activeCampaigns = filtered.filter(c => c.endDate >= today);
-          const pastCampaigns   = filtered.filter(c => c.endDate < today);
-
-          const renderIC = (c: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => (
-            <InternalCampaignSection
-              key={c.id}
-              campaign={c}
-              internalStatuses={internalStatuses}
-              statuses={statuses}
-              dontPostReasons={dontPostReasons}
-              sentPosts={sentPosts}
-              today={today}
-              isPast={opts?.isPast}
-              defaultCollapsed={opts?.defaultCollapsed}
-              filterActive={filterActive}
-              onMarkReady={markReadyForClient}
-              onUndo={undoReady}
-              onSendToClient={() => sendToClient(c)}
-              onReview={setReviewPost}
-              onEdit={(post) => {
-                if (post.type === 'review' || post.type === 'comment') openModal(EditAIDraftModal, { post });
-                else if (post.type === 'paid-search-ad') openModal(PaidSearchLaunchModal, { post });
-                else setReviewPost(post);
-              }}
-              onResubmit={resubmitPost}
-            />
-          );
-
-          const readyCampaigns = activeCampaigns.filter(isAllReady);
-          const activePending  = activeCampaigns.filter(c => !isAllReady(c));
-
-          if (filterActive && filtered.length === 0) return filterEmptyState;
-
-          return (
-            <div style={{ display:'flex', flexDirection:'column', gap:40 }}>
-              {activePending.map(c => renderIC(c))}
-              {/* "Ready for Client" campaigns render inline — no section divider. */}
-              {readyCampaigns.map(c => renderIC(c))}
-              {pastCampaigns.length > 0 && (
-                <>
-                  <SectionHeader label="Past campaigns" count={pastCampaigns.length} />
-                  {pastCampaigns.map(c => renderIC(c, { defaultCollapsed: true, isPast: true }))}
-                </>
-              )}
-            </div>
-          );
-        })()
-      ) : (
-        /* ── Client Approval tab ── */
-        (() => {
+      {(() => {
         const today = '2026-06-03';
         const isAllApproved = (c: Campaign) => c.posts.every(p => statuses[p.id] === 'approved');
         const isPast        = (c: Campaign) => c.endDate < today && !isAllApproved(c);
@@ -3378,17 +2317,12 @@ function ApprovalV2Inner() {
         const past     = filteredClient.filter(isPast);
 
         const renderCampaign = (campaign: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => {
-          // DFY: only expose posts the internal team marked Ready for Client.
-          // DIY: every generated post is the customer's to review directly.
-          const visiblePosts = campaign.posts.filter(p => (isDiy || internalStatuses[p.id] === 'readyForClient') && matchesStatus(p.id));
+          // Self-serve: every generated post is the customer's to review directly.
+          const visiblePosts = campaign.posts.filter(p => matchesStatus(p.id));
           if (visiblePosts.length === 0) return null;
           const clientCampaign = { ...campaign, posts: visiblePosts };
-          // AM cover note (DFY only): live send wins; else active campaigns get the default.
-          const message = isDiy
-            ? undefined
-            : (campaignMessages[campaign.id] ?? (isActive(campaign) ? defaultCampaignMessage(campaign.name, visiblePosts.length, campaign.dateRange) : undefined));
-          // DIY reputation: the AI reply is "posted", not "approved" — relabel the CTAs.
-          const isReputationDiy = isDiy && campaign.badge === 'Reputation';
+          // Reputation: the AI reply is "posted", not "approved" — relabel the CTAs.
+          const isReputation = campaign.badge === 'Reputation';
           return (
             <CampaignSection
               key={campaign.id}
@@ -3400,8 +2334,8 @@ function ApprovalV2Inner() {
               onRemoveApproval={removeApproval}
               onReview={(id) => {
                 const p = campaign.posts.find(p => p.id === id)!;
-                // DIY reputation uses the same Edit-AI-draft modal as DFY (not the full review page).
-                if (isDiy && (p.type === 'review' || p.type === 'comment')) { openModal(EditAIDraftModal, { post: p }); return; }
+                // Reputation uses the Edit-AI-draft modal (not the full review page).
+                if (p.type === 'review' || p.type === 'comment') { openModal(EditAIDraftModal, { post: p }); return; }
                 setReviewPost(p);
               }}
               onApproveAll={() => approveAll(clientCampaign)}
@@ -3409,10 +2343,9 @@ function ApprovalV2Inner() {
               defaultCollapsed={opts?.defaultCollapsed}
               isPast={opts?.isPast}
               filterActive={filterActive}
-              message={message}
-              approveLabel={isReputationDiy ? 'Post Reply' : undefined}
-              approveAllLabel={isReputationDiy ? 'Post All' : undefined}
-              postedMode={isReputationDiy}
+              approveLabel={isReputation ? 'Post Reply' : undefined}
+              approveAllLabel={isReputation ? 'Post All' : undefined}
+              postedMode={isReputation}
             />
           );
         };
@@ -3426,15 +2359,15 @@ function ApprovalV2Inner() {
           </div>
         );
 
-        // Nothing to approve = no active campaign has any readyForClient+pending post
+        // Nothing to approve = no active campaign has any pending post
         const hasAnythingToApprove = active.some(c =>
-          c.posts.some(p => (isDiy || internalStatuses[p.id] === 'readyForClient') && statuses[p.id] === 'pending')
+          c.posts.some(p => statuses[p.id] === 'pending')
         );
 
         // Total posts visible after BOTH filters — section headers count by badge only,
         // so a status filter that matches nothing would otherwise leave bare headers.
         const totalVisible = filteredClient.reduce((n, c) =>
-          n + c.posts.filter(p => (isDiy || internalStatuses[p.id] === 'readyForClient') && matchesStatus(p.id)).length, 0);
+          n + c.posts.filter(p => matchesStatus(p.id)).length, 0);
         if (filterActive && totalVisible === 0) return filterEmptyState;
 
         return (
@@ -3478,8 +2411,7 @@ function ApprovalV2Inner() {
             )}
           </div>
         );
-      })()
-      )}
+      })()}
 
       {/* Full-page review */}
       {reviewPost && (
@@ -3487,65 +2419,25 @@ function ApprovalV2Inner() {
           post={reviewPost}
           status={statuses[reviewPost.id]}
           allPosts={CAMPAIGNS.flatMap(c => c.posts)}
-          allStatuses={statuses}
           onClose={() => setReviewPost(null)}
           onApprove={() => {
             const c = CAMPAIGNS.find(c => c.posts.some(p => p.id === reviewPost.id))!;
             approve(reviewPost.id, c.id);
           }}
           onRemoveApproval={() => removeApproval(reviewPost.id)}
-          onDontPost={(reasons) => {
-            if (isDiy) {
-              // DIY: no feedback modal — draft in place, stay on the page, undoable toast.
-              draftPost(reviewPost.id);
-              showDraftedToast(reviewPost.id);
-            } else {
-              rejectPost(reviewPost.id);
-              setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: reasons }));
-              setReviewPost(null);
-              triggerFeedbackToast();
-            }
-          }}
-          onRequestChanges={(text) => {
-            rejectPost(reviewPost.id);
-            setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: [...(prev[reviewPost.id] ?? []), text] }));
-            appendMessage(reviewPost.id, { author: 'client', text: text || 'Requested changes.' });
-          }}
-          onDecline={(text) => {
-            declinePost(reviewPost.id);
-            setDontPostReasons(prev => ({ ...prev, [reviewPost.id]: [...(prev[reviewPost.id] ?? []), text || 'Declined'] }));
-            appendMessage(reviewPost.id, { author: 'client', text: text || 'Declined this post.' });
+          onDontPost={() => {
+            // Self-serve: no feedback modal — draft in place, stay on the page, undoable toast.
+            draftPost(reviewPost.id);
+            showDraftedToast(reviewPost.id);
           }}
           onNavigate={(id) => setReviewPost(CAMPAIGNS.flatMap(c => c.posts).find(p => p.id === id) ?? null)}
-          mode={tab}
-          audience={audience}
-          internalStatus={internalStatuses[reviewPost.id]}
-          sentToClient={sentPosts[reviewPost.id]}
-          onMarkReady={() => markReadyForClient(reviewPost.id)}
-          onUndoReady={() => undoReady(reviewPost.id)}
-          onResubmit={(note) => {
-            resubmitPost(reviewPost.id, note);
-            if (note) appendMessage(reviewPost.id, { author: 'staff', text: note });
-            appendMessage(reviewPost.id, { author: 'staff', text: 'Revised version submitted to client', system: true });
-          }}
           dontPostReasons={dontPostReasons}
           resubmitNotes={resubmitNotes}
-          thread={threads[reviewPost.id] ?? []}
           isPast={CAMPAIGNS.find(c => c.posts.some(p => p.id === reviewPost.id))?.endDate < today}
         />
       )}
 
-      {/* Feedback submitted toast */}
-      {showFeedbackToast && createPortal(
-        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
-          <Toast variant="success" onDismiss={() => setShowFeedbackToast(false)}>
-            Feedback submitted. Agent is notified for revision.
-          </Toast>
-        </div>,
-        document.body
-      )}
-
-      {/* DIY: post moved to drafts toast — undoable */}
+      {/* Self-serve: post moved to drafts toast — undoable */}
       {draftedToast !== null && createPortal(
         <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
           <Toast variant="success" action={{ label: 'Undo', onClick: () => undoDraft(draftedToast) }}>
@@ -3560,9 +2452,8 @@ function ApprovalV2Inner() {
 
 // ── Route ───────────────────────────────────────────────────────────────────
 // Cloned from prototypes/approval-v2 (the PR #51 redesign) and adapted for the
-// h2 tree: PrototypeShell → H2Layout, local client-view state → shared
-// useClientView() context, data re-themed to CertaPro Austin. Wired into the
-// H2 sidebar as its own "Approvals" entry (below Home).
+// h2 tree: PrototypeShell → H2Layout, data re-themed to CertaPro Austin. Wired
+// into the H2 sidebar as its own "Approvals" entry (below Home).
 
 /** Surfaced on the Living Doc approvals tile — pending posts in active campaigns. */
 export const APPROVAL_PENDING_COUNT = CAMPAIGNS

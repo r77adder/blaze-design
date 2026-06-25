@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DEV_STATE_PATHS, useDevState, type DevState } from './dev-state-context';
 import { useOnboarding } from './onboarding/onboarding-context';
-import { useApprovalAudience } from './approval-audience-context';
 
 /**
  * Floating dev-only panel pinned to a corner of every H2 page. Designer can
@@ -26,7 +25,7 @@ function loadStoredPosition(): Position | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Position;
-    if (typeof parsed.x === 'number' && typeof parsed.y === 'number') return parsed;
+    if (typeof parsed.x === 'number' && typeof parsed.y === 'number') return clampToViewport(parsed);
   } catch {
     /* ignore */
   }
@@ -37,12 +36,21 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+/** Keep a stored position on-screen. Viewports shrink, and a panel dragged to
+ *  the edge of a tall window must not end up parked past the new bottom/right. */
+function clampToViewport(pos: Position): Position {
+  if (typeof window === 'undefined') return pos;
+  return {
+    x: clamp(pos.x, 8, Math.max(8, window.innerWidth - 290)),
+    y: clamp(pos.y, 8, Math.max(8, window.innerHeight - 40)),
+  };
+}
+
 export function DevStatePanel() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { getState, setState } = useDevState();
   const { active: onboardingActive, open: openOnboarding } = useOnboarding();
-  const { audience, setAudience } = useApprovalAudience();
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -58,6 +66,13 @@ export function DevStatePanel() {
       /* ignore */
     }
   }, [position]);
+
+  // If the window shrinks, pull a stored position back into view.
+  useEffect(() => {
+    const onResize = () => setPosition((p) => (p ? clampToViewport(p) : p));
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Render on every H2 route — even routes without per-path cold/steady — so
   // the global Onboarding toggle is always reachable.
@@ -126,7 +141,8 @@ export function DevStatePanel() {
         boxShadow: '0 2px 10px rgba(0,0,0,0.20)',
         userSelect: 'none',
         touchAction: 'none',
-        maxWidth: 222,
+        flexWrap: 'wrap',
+        rowGap: 4,
       }}
     >
       <div
@@ -178,20 +194,6 @@ export function DevStatePanel() {
           navigate('/h2');
           openOnboarding({ reset: true });
         }}
-      />
-      <Divider />
-      {/* Approvals audience: DFY (agency) vs DIY (self-serve customer). */}
-      <DevStateButton
-        label="steady"
-        text="DFY"
-        selected={audience === 'dfy'}
-        onClick={() => setAudience('dfy')}
-      />
-      <DevStateButton
-        label="steady"
-        text="DIY"
-        selected={audience === 'diy'}
-        onClick={() => setAudience('diy')}
       />
     </div>
   );

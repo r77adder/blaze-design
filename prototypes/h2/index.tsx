@@ -28,8 +28,6 @@ import { ApprovalAudienceProvider } from './approval-audience-context';
 import { ApprovalSettingsProvider } from './approval-settings-context';
 import { DevStatePanel } from './DevStatePanel';
 import { PaidAdsColdView } from './pages/ColdViews';
-import { DfyCampaignsRoute } from './pages/DfyCampaigns';
-import { LivingDocRoute } from './pages/LivingDoc';
 import { ClientApprovalsRoute } from './pages/ApprovalsV2';
 import { OnboardingProvider, useOnboarding } from './onboarding/onboarding-context';
 import { Onboarding } from './onboarding/Onboarding';
@@ -141,8 +139,6 @@ function H2RoutedShell() {
       <Route path="/sdr" element={<SdrRoute />} />
       <Route path="/tools" element={<ToolsRoute />} />
       <Route path="/brand-kit" element={<BrandKitFlow />} />
-      <Route path="/dfy-campaigns" element={<DfyCampaignsRoute />} />
-      <Route path="/living-doc" element={<LivingDocRoute />} />
       <Route path="/approvals" element={<ClientApprovalsRoute />} />
       <Route path="/analytics/*" element={<AnalyticsRoute />} />
       <Route path="/scorecard/*" element={<ScorecardPrototype />} />

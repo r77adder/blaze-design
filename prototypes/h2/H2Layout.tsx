@@ -30,8 +30,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/h2/multi-change': 'Multi-Change',
   '/h2/content-settings': 'Content Preferences',
   '/h2/tools': 'Meta Strategy',
-  '/h2/dfy-campaigns': 'DFY Campaign',
-  '/h2/living-doc': 'Living Doc',
   '/h2/approvals': 'Approvals',
   '/h2/analytics': 'Website Analytics',
   '/h2/competitor-tracking': 'Competitor Tracking',
