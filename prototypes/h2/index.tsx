@@ -45,6 +45,7 @@ import { GoogleAdsPage } from './competitor-tracking/pages/GoogleAds';
 import { MetaCampaignProvider } from './meta-campaign/meta-campaign-context';
 import { MetaCampaignModal } from './meta-campaign/MetaCampaignModal';
 import { PaidSocialDetailRoute } from './pages/PaidSocialDetail';
+import { AnalyticsRoute } from './analytics';
 
 /**
  * H2 mega-prototype. Wraps every sub-page in <H2Layout> (sidebar + topbar)
@@ -143,6 +144,7 @@ function H2RoutedShell() {
       <Route path="/dfy-campaigns" element={<DfyCampaignsRoute />} />
       <Route path="/living-doc" element={<LivingDocRoute />} />
       <Route path="/approvals" element={<ClientApprovalsRoute />} />
+      <Route path="/analytics/*" element={<AnalyticsRoute />} />
       <Route path="/scorecard/*" element={<ScorecardPrototype />} />
       <Route path="/competitor-tracking" element={<CompetitorIntelPage />} />
       <Route path="/competitor-tracking/alerts" element={<CompetitorAlertsPage />} />

@@ -4,6 +4,7 @@ import {
   Approvals,
   ArrowUpRightSquareContained,
   AudioSettings,
+  BarChart,
   BarChartSquare,
   Brand,
   Brainstorm,
@@ -168,6 +169,7 @@ export const H2_SECTIONS: SidebarSection[] = [
     collapsible: true,
     items: [
       { label: 'Landing Pages', icon: Templates, href: '/h2/landing-pages' },
+      { label: 'Website Analytics', icon: BarChart, href: '/h2/analytics' },
       { label: 'AI Receptionist', icon: UserProfileGroup, href: '/h2/sdr' },
       { label: 'Reputation', icon: Star, href: '/h2/reputation' },
     ],

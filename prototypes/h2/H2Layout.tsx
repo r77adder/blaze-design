@@ -33,6 +33,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/h2/dfy-campaigns': 'DFY Campaign',
   '/h2/living-doc': 'Living Doc',
   '/h2/approvals': 'Approvals',
+  '/h2/analytics': 'Website Analytics',
   '/h2/competitor-tracking': 'Competitor Tracking',
   '/h2/competitor-tracking/landscape': 'Competitive Landscape',
   '/h2/competitor-tracking/alerts': 'Alerts',
@@ -98,7 +99,9 @@ export function H2Layout({ children, title, topbarRight, topbarCenter, fullBleed
   // would lose the active highlight.
   const activeLabel = pathname.startsWith('/h2/competitor-tracking')
     ? 'Competitor Tracking'
-    : undefined;
+    : pathname.startsWith('/h2/analytics')
+      ? 'Website Analytics'
+      : undefined;
   return (
     <PrototypeShell
       title={title ?? derived}
