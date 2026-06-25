@@ -20,6 +20,8 @@ export interface PrototypeRoute {
   title: string | null;
   /** One-sentence description from meta.json. */
   description: string | null;
+  /** When true, the gallery groups this prototype into an "Archived" section. */
+  archived: boolean;
 }
 
 export const prototypeRoutes: PrototypeRoute[] = Object.entries(modules)
@@ -34,6 +36,7 @@ export const prototypeRoutes: PrototypeRoute[] = Object.entries(modules)
       lastModified: meta?.lastModified ?? null,
       title: meta?.title ?? null,
       description: meta?.description ?? null,
+      archived: meta?.archived ?? false,
     };
   })
   .filter((r): r is PrototypeRoute => r !== null)
@@ -57,6 +60,7 @@ export const iosPrototypeRoutes: PrototypeRoute[] = Object.entries(iosModules)
       lastModified: meta?.lastModified ?? null,
       title: meta?.title ?? null,
       description: meta?.description ?? null,
+      archived: meta?.archived ?? false,
     };
   })
   .filter((r): r is PrototypeRoute => r !== null)

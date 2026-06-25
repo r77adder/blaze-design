@@ -13,9 +13,11 @@ interface PrototypeMeta {
   title?: string;
   /** One-sentence description from meta.json. */
   description?: string;
+  /** When true, the gallery groups this prototype into an "Archived" section. */
+  archived?: boolean;
 }
 
-function readMetaJson(dir: string): { title?: string; description?: string } {
+function readMetaJson(dir: string): { title?: string; description?: string; archived?: boolean } {
   const metaPath = path.join(dir, 'meta.json');
   if (!fs.existsSync(metaPath)) return {};
   try {
@@ -25,6 +27,7 @@ function readMetaJson(dir: string): { title?: string; description?: string } {
       title: typeof parsed.title === 'string' ? parsed.title : undefined,
       description:
         typeof parsed.description === 'string' ? parsed.description : undefined,
+      archived: typeof parsed.archived === 'boolean' ? parsed.archived : undefined,
     };
   } catch {
     return {};
@@ -81,8 +84,8 @@ export function prototypeMetaPlugin(): Plugin {
           const dir = path.join(root, slug);
           const lastModified =
             lastGitCommitISO(dir, process.cwd()) ?? maxMtimeISO(dir);
-          const { title, description } = readMetaJson(dir);
-          meta[slug] = { lastModified, title, description };
+          const { title, description, archived } = readMetaJson(dir);
+          meta[slug] = { lastModified, title, description, archived };
         }
       }
       return `export const PROTOTYPE_META = ${JSON.stringify(meta, null, 2)};`;

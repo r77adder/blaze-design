@@ -215,26 +215,37 @@ function Index() {
             </div>
           </>
         )}
-        {iosPrototypeRoutes.length > 0 && (
-          <>
-            <div style={{ fontFamily: FONT_STACK, fontSize: 11, fontWeight: 500, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 16 }}>iOS</div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                gap: 20,
-                marginBottom: 40,
-              }}
-            >
-              {/* Sort so 'mobile-app' (the unified prototype) is first */}
-              {[...iosPrototypeRoutes]
-                .sort((a, b) => (a.slug === 'mobile-app' ? -1 : b.slug === 'mobile-app' ? 1 : a.slug.localeCompare(b.slug)))
-                .map((r) => (
-                  <Card key={r.slug} route={r} prefix="/ios" />
-                ))}
-            </div>
-          </>
-        )}
+        {iosPrototypeRoutes.length > 0 && (() => {
+          // Sort so 'mobile-app' (the unified prototype) is first, then split
+          // archived prototypes into their own group at the bottom.
+          const sorted = [...iosPrototypeRoutes].sort((a, b) =>
+            a.slug === 'mobile-app' ? -1 : b.slug === 'mobile-app' ? 1 : a.slug.localeCompare(b.slug));
+          const active = sorted.filter((r) => !r.archived);
+          const archived = sorted.filter((r) => r.archived);
+          const gridStyle: React.CSSProperties = {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: 20,
+            marginBottom: 40,
+          };
+          const labelStyle: React.CSSProperties = { fontFamily: FONT_STACK, fontSize: 11, fontWeight: 500, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 16 };
+          return (
+            <>
+              <div style={labelStyle}>iOS</div>
+              <div style={gridStyle}>
+                {active.map((r) => <Card key={r.slug} route={r} prefix="/ios" />)}
+              </div>
+              {archived.length > 0 && (
+                <>
+                  <div style={labelStyle}>iOS · Archived</div>
+                  <div style={{ ...gridStyle, opacity: 0.6 }}>
+                    {archived.map((r) => <Card key={r.slug} route={r} prefix="/ios" />)}
+                  </div>
+                </>
+              )}
+            </>
+          );
+        })()}
       </div>
     </main>
   );
