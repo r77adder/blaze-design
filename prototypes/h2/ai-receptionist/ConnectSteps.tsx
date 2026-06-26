@@ -9,7 +9,7 @@ import Check2 from '@/icons/20/Check2';
  * decides WHICH steps appear from the abilities picked on the train step.
  *
  * - ConnectStepBody: optional H3 sub-sections + a gray box holding the
- *   secondary connect button (Twilio also gets a "have Blaze help" button).
+ *   secondary connect button (plus an optional "have Blaze help" button).
  * - ComplianceForm: the A2P form rendered right in the step.
  * Skipping is handled by the parent's footer ("Skip for now").
  */
@@ -183,30 +183,6 @@ function FormField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 // ── Content ──────────────────────────────────────────────────────────
-
-export const TWILIO_SETUP: ConnectContent = {
-  intro: 'Twilio gives your receptionist a real phone number to answer calls and text from. It takes about 10 minutes.',
-  phases: [
-    {
-      heading: 'Create your Twilio account',
-      steps: [
-        'Go to twilio.com and sign up with your email — it’s free to start.',
-        'Confirm your email and phone number when Twilio asks.',
-      ],
-    },
-    {
-      heading: 'Get a phone number',
-      steps: [
-        'In Twilio, choose a local number for your business.',
-        'Pick one that can do both calls and texts, then claim it.',
-      ],
-    },
-  ],
-  connectLabel: 'Connect with Twilio',
-  connectCaption: 'You’ll sign in to Twilio and approve access — Blaze handles the rest, no codes to copy.',
-  connectedLabel: 'Twilio connected',
-  helpLabel: 'Have someone from Blaze help you',
-};
 
 export const COMPLIANCE_SETUP: ConnectContent = {
   intro: 'Before your receptionist can text customers, phone carriers need to confirm your business is real. Fill this out, or skip and finish it later.',

@@ -15,9 +15,11 @@ import Check from '@/icons/16/Check';
 import ChevronDown from '@/icons/20/ChevronDown';
 import ArrowRight from '@/icons/20/ArrowRight';
 import ArrowLeft from '@/icons/20/ArrowLeft';
+import PhoneCall01 from '@/icons/16/PhoneCall01';
+import UserProfile from '@/icons/20/UserProfile';
+import ArrowSwitchHorizontal from '@/icons/20/ArrowSwitchHorizontal';
 import {
   ConnectStepBody,
-  TWILIO_SETUP,
   CALENDAR_SETUP,
   CRM_SETUP,
 } from './ConnectSteps';
@@ -31,10 +33,10 @@ import { ChatDemoPanel, CallDemoModal } from './DemoExperience';
  * Screens:
  *   sales — a hero that pitches the receptionist (mirrors the DFY cold state),
  *           the voice + greeting, and chat/demo-call try-outs at the bottom.
- *   train — agent name + the four selectable ability cards. The selection
- *           drives a DYNAMIC flow of connect steps:
- *             Connect Twilio → phone numbers → A2P compliance → calendar → CRM,
- *           only for the abilities chosen. Each connect step is skippable.
+ *   calls — "Take calls & talk to customers" + the business number. We
+ *           provision the agent's phone line automatically (no Twilio account
+ *           setup). Then: forwarding & human line → A2P compliance → calendar
+ *           → CRM. Each optional step is skippable.
  *   The last step's CTA is "Activate receptionist".
  *
  * No persistence — prototype only.
@@ -87,7 +89,7 @@ const ABILITY_CARDS: AbilityCardData[] = [
     brandHex: '#f22f46',
     title: 'Take calls & talk to customers',
     description:
-      'Answer inbound calls, talk to leads and customers, answer their questions, and route them to the right place. You’ll need a Twilio integration plus the ability to set up separate lines and forwarding with your current provider.',
+      'Your agent answers inbound calls, handles questions, and routes each caller. It runs on its own phone line we set up automatically — all you add here is your existing business number.',
   },
   {
     id: 'texts',
@@ -115,9 +117,9 @@ const ABILITY_CARDS: AbilityCardData[] = [
   },
 ];
 
-type ConnectId = 'twilio' | 'calendar' | 'crm';
+type ConnectId = 'calendar' | 'crm';
 type DemoId = 'chat' | 'call';
-type Screen = 'sales' | 'twilio' | 'phone' | 'compliance' | 'calendar' | 'crm';
+type Screen = 'sales' | 'calls' | 'phone' | 'compliance' | 'calendar' | 'crm';
 
 // Each setup step is framed by the ability it unlocks. `phone` is a
 // continuation of the mandatory calls setup, so it carries no ability header.
@@ -150,7 +152,7 @@ export function SdrColdDiy() {
 
   // No upfront ability picker — every setup step is shown and the user decides
   // on each one. Optional steps can be skipped from the footer.
-  const screens: Screen[] = ['sales', 'twilio', 'phone', 'compliance', 'calendar', 'crm'];
+  const screens: Screen[] = ['sales', 'calls', 'phone', 'compliance', 'calendar', 'crm'];
 
   const safeIdx = Math.min(stepIdx, screens.length - 1);
   const screen = screens[safeIdx];
@@ -164,7 +166,6 @@ export function SdrColdDiy() {
   const phoneBlocked = screen === 'phone' && numbersClash;
 
   const stepDone =
-    screen === 'twilio' ? connected.has('twilio') :
     screen === 'calendar' ? connected.has('calendar') :
     screen === 'crm' ? connected.has('crm') :
     screen === 'compliance' ? complianceStarted :
@@ -187,7 +188,7 @@ export function SdrColdDiy() {
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* scrolling body — centered column */}
-      <div style={{ flex: '1 0 auto', width: '100%', maxWidth: screen === 'compliance' ? 940 : screen === 'sales' ? 1320 : 720, margin: '0 auto', paddingBottom: 32, display: shortStep ? 'flex' : undefined, flexDirection: shortStep ? 'column' : undefined, justifyContent: shortStep ? 'center' : undefined }}>
+      <div style={{ flex: '1 0 auto', width: '100%', maxWidth: screen === 'sales' ? 1320 : screen === 'compliance' ? 880 : 820, margin: '0 auto', paddingBottom: 32, display: shortStep ? 'flex' : undefined, flexDirection: shortStep ? 'column' : undefined, justifyContent: shortStep ? 'center' : undefined }}>
         {screen === 'sales' && (
           <div
             style={{
@@ -289,45 +290,66 @@ export function SdrColdDiy() {
           </div>
         )}
 
-        {screen === 'twilio' && (
+        {screen === 'calls' && (
           <div>
             <StepHeader ability={ABILITY_BY_ID.calls} />
-            <ConnectStepBody
-              content={TWILIO_SETUP}
-              done={connected.has('twilio')}
-              onConnect={() => connect('twilio', `Twilio connected · Number ${BLAZE_NUMBER} provisioned`)}
-              onHelp={() => showToast({ message: 'A Blaze specialist will reach out to set up Twilio with you.' })}
-              hideConnect
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+              <Field label="Your business number">
+                <div style={{ background: 'var(--dark-2)', border: '1px solid var(--dark-4)', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <Text variant="secondary" style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--dark-60)' }}>
+                    The number your customers already call — enter it just as they’d dial it.
+                  </Text>
+                  <Input
+                    autoFocus
+                    value={businessNumber}
+                    onChange={(e) => setBusinessNumber(e.target.value)}
+                    placeholder="+1 (512) 555-0100"
+                    inputMode="tel"
+                    inputSize="lg"
+                    style={{ width: 240 }}
+                  />
+                </div>
+              </Field>
+
+              <Field label="How it works">
+                <CallFlow />
+              </Field>
+
+              <Field label="What you’ll need to set this up">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <Requirement
+                    icon={ArrowSwitchHorizontal}
+                    title="Call forwarding on your business line"
+                    desc="So you keep the number customers already know, you’ll point it at your agent. Most carriers turn this on with a quick code — we’ll show you exactly how (it’s usually *72)."
+                  />
+                  <Requirement
+                    icon={UserProfile}
+                    title="A direct line for human handoffs"
+                    desc="A separate number the agent transfers to when a caller needs a person — any mobile, desk phone, or teammate’s line works, or create a free one."
+                  />
+                </div>
+              </Field>
+            </div>
           </div>
         )}
 
         {screen === 'phone' && (
-          <Section
-            title="Setup forwarding & extra line"
-            subtitle="Customers keep calling the number they already know — forward it to your agent’s number so the AI picks up every call, day or night. When a caller needs a person, your agent hands off to a direct human line."
-          >
-            <Field label="Enter your business number and set up forwarding to your agent number" hint="The number your customers already call.">
-              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                <Input
-                  value={businessNumber}
-                  onChange={(e) => setBusinessNumber(e.target.value)}
-                  placeholder="+1 (512) 555-0100"
-                  inputMode="tel"
-                  inputSize="lg"
-                  style={{ width: 240, flexShrink: 0 }}
-                />
-                <div style={{ flex: 1, minWidth: 280 }}>
-                  <Disclosure summary="How do I forward my business number?" items={FORWARDING_STEPS} />
-                </div>
-              </div>
-            </Field>
-
+          <div>
+            <StepHeader
+              ability={{
+                icon: ArrowSwitchHorizontal,
+                brandHex: ABILITY_BY_ID.calls.brandHex,
+                title: 'Setup forwarding & extra line',
+                description:
+                  'Customers keep calling the number they already know — forward it to your agent’s number so the AI picks up every call, day or night. When a caller needs a person, your agent hands off to a direct human line.',
+              }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <Field
               label="Your agent number"
               hint="Auto-provisioned by Blaze. Forward your business number to this number so the AI answers your calls."
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <div
                   style={{
                     display: 'inline-flex',
@@ -337,6 +359,7 @@ export function SdrColdDiy() {
                     border: '1px solid var(--dark-8)',
                     borderRadius: 8,
                     background: 'var(--dark-2)',
+                    flexShrink: 0,
                   }}
                 >
                   <span style={{ fontSize: 16, letterSpacing: '0.32px', fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
@@ -345,6 +368,9 @@ export function SdrColdDiy() {
                   <StatusPill tone="success" size="sm">
                     Ready
                   </StatusPill>
+                </div>
+                <div style={{ flex: 1, minWidth: 280 }}>
+                  <Disclosure summary="How do I forward my business number?" items={FORWARDING_STEPS} />
                 </div>
               </div>
             </Field>
@@ -374,7 +400,8 @@ export function SdrColdDiy() {
                 loop back. Enter a direct line that reaches a person.
               </Callout>
             )}
-          </Section>
+            </div>
+          </div>
         )}
 
         {screen === 'compliance' && (
@@ -457,28 +484,7 @@ export function SdrColdDiy() {
           )}
         </div>
 
-        {screen === 'twilio' && !connected.has('twilio') ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Button
-              variant="secondary"
-              size="md"
-              onPress={() => showToast({ message: 'A Blaze specialist will reach out to set up Twilio with you.' })}
-            >
-              Have someone from Blaze help you
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              endIcon={ArrowRight}
-              onPress={() => {
-                connect('twilio', `Twilio connected · Number ${BLAZE_NUMBER} provisioned`);
-                next();
-              }}
-            >
-              Connect with Twilio
-            </Button>
-          </div>
-        ) : screen === 'compliance' && !complianceStarted ? (
+        {screen === 'compliance' && !complianceStarted ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Button
               variant="ghost"
@@ -546,30 +552,6 @@ export function SdrColdDiy() {
 
 // ─── Local layout primitives ─────────────────────────────────────────
 
-function Section({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div>
-      <Heading level={2} style={{ margin: subtitle ? '0 0 6px' : '0 0 24px' }}>
-        {title}
-      </Heading>
-      {subtitle && (
-        <Text variant="primary" style={{ display: 'block', fontSize: 16, lineHeight: 1.5, margin: '0 0 32px' }}>
-          {subtitle}
-        </Text>
-      )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>{children}</div>
-    </div>
-  );
-}
-
 function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -625,9 +607,115 @@ function Disclosure({ summary, items }: { summary: string; items: string[] }) {
   );
 }
 
+// A small left-to-right explainer of the call path: a customer dials the
+// number they already know, it forwards to the agent, and the agent hands off
+// to a human line when a caller needs a person.
+function CallFlow() {
+  return (
+    <div
+      style={{
+        border: '1px solid var(--dark-8)',
+        borderRadius: 12,
+        background: 'var(--dark-2)',
+        padding: '24px 20px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        gap: 4,
+        flexWrap: 'wrap',
+      }}
+    >
+      <FlowNode icon={PhoneCall01} color="var(--status-posting)" title="Customer calls" sub="your business number" />
+      <FlowConnector label="Call forwarding" />
+      <FlowNode icon={Voice} color="var(--purple)" title="AI agent answers" sub="your assigned agent number" />
+      <FlowConnector label="Live handoff" />
+      <FlowNode icon={UserProfile} color="var(--dark-60)" title="Transfers to you" sub="direct human line" />
+    </div>
+  );
+}
+
+function FlowNode({
+  icon: Icon,
+  color,
+  title,
+  sub,
+}: {
+  icon: ComponentType<IconProps>;
+  color: string;
+  title: string;
+  sub: string;
+}) {
+  return (
+    <div style={{ flex: '1 1 120px', minWidth: 110, maxWidth: 180, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 10 }}>
+      <span
+        style={{
+          width: 59,
+          height: 59,
+          borderRadius: '50%',
+          background: `color-mix(in srgb, ${color} 12%, transparent)`,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Icon size={24} color={color} />
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Heading level={5} style={{ margin: 0 }}>{title}</Heading>
+        <Text style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.35 }}>{sub}</Text>
+      </div>
+    </div>
+  );
+}
+
+function FlowConnector({ label }: { label: string }) {
+  return (
+    <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, paddingTop: 12, width: 84 }}>
+      <ArrowRight size={20} color="var(--dark-40)" />
+      <Text style={{ fontSize: 12, color: 'var(--dark-60)', textAlign: 'center', lineHeight: 1.3 }}>{label}</Text>
+    </div>
+  );
+}
+
+// A single "what you'll need" prerequisite row: an icon tile, a title, and a
+// plain-language explanation of what it is and why it's needed.
+function Requirement({
+  icon: Icon,
+  title,
+  desc,
+}: {
+  icon: ComponentType<IconProps>;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
+      <span
+        style={{
+          flexShrink: 0,
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background: 'var(--dark-4)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 1,
+        }}
+      >
+        <Icon size={20} color="var(--dark-80)" />
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Text style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.4 }}>{title}</Text>
+        <Text style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</Text>
+      </div>
+    </div>
+  );
+}
+
 // Header banner that frames a setup step by the ability it unlocks: brand icon,
 // title, optionality badge, the migrated ability copy, and its requirements.
-function StepHeader({ ability }: { ability: AbilityCardData }) {
+function StepHeader({ ability }: { ability: Pick<AbilityCardData, 'icon' | 'brandHex' | 'title' | 'description'> }) {
   const Icon = ability.icon;
   return (
     <div style={{ marginBottom: 28 }}>
@@ -647,7 +735,7 @@ function StepHeader({ ability }: { ability: AbilityCardData }) {
       </div>
 
       <Heading level={2} style={{ margin: '0 0 8px' }}>{ability.title}</Heading>
-      <Text variant="primary" style={{ display: 'block', fontSize: 16, lineHeight: 1.55, maxWidth: 620 }}>
+      <Text variant="primary" style={{ display: 'block', fontSize: 16, lineHeight: 1.55 }}>
         {ability.description}
       </Text>
     </div>
