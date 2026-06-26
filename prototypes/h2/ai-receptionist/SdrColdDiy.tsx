@@ -44,6 +44,12 @@ import { ChatDemoPanel, CallDemoModal } from './DemoExperience';
 
 const BLAZE_NUMBER = '+1 (512) 323-9502';
 
+// Normalize every stroked icon on the calls screen to a true 1.5px stroke,
+// regardless of each icon's native viewBox (e.g. PhoneCall01 is 17, the rest
+// are 20). non-scaling-stroke renders strokeWidth in screen px, not viewBox
+// units. Filled icons (the Voice waveform) have no stroke attr, so unaffected.
+const ICON_STROKE_CSS = '.blz-cold-calls svg [stroke]{vector-effect:non-scaling-stroke;}';
+
 const VOICE_OPTIONS = [
   { value: 'warm-professional', label: 'Warm & professional' },
   { value: 'crisp-efficient', label: 'Crisp & efficient' },
@@ -291,7 +297,8 @@ export function SdrColdDiy() {
         )}
 
         {screen === 'calls' && (
-          <div>
+          <div className="blz-cold-calls">
+            <style>{ICON_STROKE_CSS}</style>
             <StepHeader ability={ABILITY_BY_ID.calls} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
               <Field label="Your business number">
@@ -670,9 +677,22 @@ function FlowNode({
 
 function FlowConnector({ label }: { label: string }) {
   return (
-    <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, paddingTop: 12, width: 84 }}>
-      <ArrowRight size={20} color="var(--dark-40)" />
-      <Text style={{ fontSize: 12, color: 'var(--dark-60)', textAlign: 'center', lineHeight: 1.3 }}>{label}</Text>
+    <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '8px 8px 0' }}>
+      <span
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 8,
+          background: 'var(--light-100)',
+          border: '1px solid var(--dark-8)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ArrowRight size={24} color="var(--dark-60)" />
+      </span>
+      <Text style={{ fontSize: 12, color: 'var(--dark-60)', textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap' }}>{label}</Text>
     </div>
   );
 }
@@ -689,21 +709,20 @@ function Requirement({
   desc: string;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, border: '1px solid var(--dark-8)', borderRadius: 10 }}>
       <span
         style={{
           flexShrink: 0,
-          width: 36,
-          height: 36,
+          width: 52,
+          height: 52,
           borderRadius: 8,
           background: 'var(--dark-4)',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: 1,
         }}
       >
-        <Icon size={20} color="var(--dark-80)" />
+        <Icon size={24} color="var(--dark-80)" />
       </span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Text style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.4 }}>{title}</Text>
