@@ -251,7 +251,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
     <label style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
       <Text variant="primary" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         {label}
-        {required && <span style={{ color: 'var(--dark-40)' }}>*</span>}
+        {required && <span style={{ color: 'var(--dark-60)' }}>*</span>}
       </Text>
       {children}
     </label>
@@ -655,7 +655,7 @@ export const ComplianceSection = forwardRef<
           </StatusPill>
         )}
         {!isResubmit && (
-          <span style={{ flexShrink: 0, color: 'var(--dark-40)', display: 'inline-flex' }}>
+          <span style={{ flexShrink: 0, color: 'var(--dark-60)', display: 'inline-flex' }}>
             {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </span>
         )}
@@ -819,7 +819,7 @@ export const ComplianceSection = forwardRef<
           }
         >
           {!allReady && (
-            <Text variant="secondary" style={{ color: 'var(--dark-40)', fontSize: 14 }}>
+            <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 14 }}>
               Complete every section to submit for review
             </Text>
           )}
@@ -873,7 +873,7 @@ function OptinUploader({
               position: 'relative',
             }}
           >
-            <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}>
+            <span style={{ color: 'var(--dark-60)', display: 'inline-flex' }}>
               <CoverImage size={20} />
             </span>
             <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 12, textAlign: 'center' }}>
@@ -926,13 +926,13 @@ function OptinUploader({
             }}
           >
             <Upload size={20} />
-            <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 13 }}>
+            <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 14 }}>
               Add Screenshot
             </Text>
           </button>
         )}
       </div>
-      <Text variant="secondary" style={{ display: 'block', marginTop: 8, color: 'var(--dark-40)', fontSize: 12 }}>
+      <Text variant="secondary" style={{ display: 'block', marginTop: 8, color: 'var(--dark-60)', fontSize: 12 }}>
         Supported formats: PNG, JPG, GIF, WebP
       </Text>
     </div>

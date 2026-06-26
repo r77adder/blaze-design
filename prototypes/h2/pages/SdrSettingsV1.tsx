@@ -242,7 +242,7 @@ function SubTabStrip({ value, onChange }: { value: SettingsSubTab; onChange: (v:
             }}
           >
             <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{t.label}</span>
-            <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{t.sub}</span>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>{t.sub}</span>
           </button>
         );
       })}
@@ -331,7 +331,7 @@ function ChannelRow({ channel, settings, update }: ChannelRowProps) {
             <ChannelGlyph channel={channel} size={20} />
           </span>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{channelLabel(channel)}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{channelLabel(channel)}</div>
           </div>
         </div>
         <Toggle
@@ -716,7 +716,7 @@ function StepRow({
           borderRadius: '50%',
           background: 'var(--dark-4)',
           color: 'var(--dark-90)',
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: 500,
           marginTop: 2,
         }}
@@ -760,7 +760,7 @@ function StepRow({
 
 const inputStyle: React.CSSProperties = {
   fontFamily: 'inherit',
-  fontSize: 13,
+  fontSize: 14,
   color: 'var(--dark-90)',
   padding: '6px 8px',
   border: '1px solid var(--dark-8)',
@@ -887,7 +887,7 @@ function NumberInput({
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
   return (
     <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
-      {label && <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{label}</span>}
+      {label && <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>{label}</span>}
       <span
         role="switch"
         aria-checked={checked}
@@ -960,15 +960,15 @@ function VoicePersonalitySection({ settings, setSettings }: SectionProps) {
                 boxShadow: selected ? '0 0 0 1px var(--dark-90) inset' : 'none',
               }}
             >
-              <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{voice.name}</span>
-              <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{voice.description}</span>
+              <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{voice.name}</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>{voice.description}</span>
               <span
                 role="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   showToast({ message: `Previewing ${voice.name}…` });
                 }}
-                style={{ fontSize: 13, color: 'var(--dark-90)', marginTop: 4, textDecoration: 'underline' }}
+                style={{ fontSize: 14, color: 'var(--dark-90)', marginTop: 4, textDecoration: 'underline' }}
               >
                 ▶ Preview
               </span>
@@ -1111,7 +1111,7 @@ function EscalationRulesSection({ settings, setSettings }: SectionProps) {
           border: '1px solid var(--dark-8)',
           borderRadius: 8,
           marginBottom: 20,
-          fontSize: 13,
+          fontSize: 14,
           color: 'var(--dark-60)',
         }}
       >
@@ -1140,7 +1140,7 @@ function EscalationRulesSection({ settings, setSettings }: SectionProps) {
             padding: '10px 14px',
             background: 'var(--dark-2)',
             borderBottom: '1px solid var(--dark-8)',
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-60)',
           }}
         >
@@ -1168,7 +1168,7 @@ function EscalationRulesSection({ settings, setSettings }: SectionProps) {
           >
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{t.label}</div>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>{t.description}</div>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>{t.description}</div>
             </div>
             <ActionSelect
               value={t.duringHours}
@@ -1251,10 +1251,10 @@ function WindowCard({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span aria-hidden style={{ width: 10, height: 10, borderRadius: '50%', background: dot }} />
-        <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
+        <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
       </div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 2 }}>{line1}</div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 10 }}>{line2}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 2 }}>{line1}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 10 }}>{line2}</div>
       <StatusPill tone={pillTone} size="sm">{pillLabel}</StatusPill>
     </div>
   );
@@ -1636,7 +1636,7 @@ function RadioCard({
       <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
         {description && (
-          <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>
+          <span style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>
         )}
       </span>
     </button>

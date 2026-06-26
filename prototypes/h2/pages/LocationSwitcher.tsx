@@ -49,7 +49,7 @@ export function LocationSwitcher({
         />
         <span style={{ fontSize: 14, color: 'var(--dark-90)', whiteSpace: 'nowrap' }}>
           <span style={{ fontWeight: 500 }}>{current.neighborhood}</span>
-          <span style={{ color: 'var(--dark-40)', margin: '0 6px' }}>·</span>
+          <span style={{ color: 'var(--dark-60)', margin: '0 6px' }}>·</span>
           <span style={{ color: 'var(--dark-60)' }}>{current.street}</span>
         </span>
         <ChevronDown size={16} color="var(--dark-60)" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
@@ -73,7 +73,7 @@ export function LocationSwitcher({
               padding: 4,
             }}
           >
-            <div style={{ fontSize: 11, color: 'var(--dark-40)', padding: '8px 10px 6px' }}>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)', padding: '8px 10px 6px' }}>
               {AUSTIN_LOCATIONS.length} locations connected
             </div>
             {AUSTIN_LOCATIONS.map((loc) => {
@@ -117,7 +117,7 @@ export function LocationSwitcher({
                     <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.35 }}>
                       {loc.street}
                     </span>
-                    <span style={{ fontSize: 11, color: 'var(--dark-40)', lineHeight: 1.35 }}>
+                    <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.35 }}>
                       {loc.cityState}
                     </span>
                   </div>

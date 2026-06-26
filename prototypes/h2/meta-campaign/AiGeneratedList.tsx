@@ -186,7 +186,7 @@ function AiRow({
             background:
               'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 100%)',
             color: 'var(--light-100)',
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: '0.2px',
           }}
         >
@@ -288,7 +288,7 @@ function FormatDropdown({
           borderRadius: 8,
           cursor: 'pointer',
           fontFamily: 'inherit',
-          fontSize: 13,
+          fontSize: 14,
           letterSpacing: '0.26px',
           color: 'var(--dark-90)',
           minHeight: 32,
@@ -338,7 +338,7 @@ function FormatDropdown({
                   borderRadius: 6,
                   cursor: 'pointer',
                   fontFamily: 'inherit',
-                  fontSize: 13,
+                  fontSize: 14,
                   letterSpacing: '0.26px',
                   color: 'var(--dark-90)',
                   textAlign: 'left',

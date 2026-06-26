@@ -162,7 +162,7 @@ export function LandscapePage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <Heading level={3}>Sources cited in this analysis</Heading>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>14 references ↓</Text>
+            <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>14 references ↓</Text>
           </div>
           <Card padding="md">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>

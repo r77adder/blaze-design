@@ -115,7 +115,7 @@ function SourceMark({ source, label }: { source: string; label: string }) {
   else {
     monogram = true;
     inner = (
-      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--light-100)' }}>
+      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--light-100)' }}>
         {label.charAt(0).toUpperCase()}
       </span>
     );
@@ -245,7 +245,7 @@ function SourceRow({
               </div>
             ) : (
               row.note && (
-                <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 6 }}>{row.note}</div>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 6 }}>{row.note}</div>
               )
             )}
           </>
@@ -332,7 +332,7 @@ export function ConnectSourcesModal({
       </Modal.Content>
       <Modal.Footer>
         <Modal.FooterContent slot="left">
-          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>
             {connectedCount === 0
               ? 'Connect at least one source to get started'
               : `${connectedCount} source${connectedCount === 1 ? '' : 's'} connected`}
@@ -442,7 +442,7 @@ export function ConnectSourcesPage({
             <span />
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>
               {connectedCount === 0
                 ? 'Connect at least one source to get started'
                 : `${connectedCount} source${connectedCount === 1 ? '' : 's'} connected`}
@@ -539,19 +539,19 @@ export function ReputationColdView() {
                   height: 28,
                   borderRadius: '50%',
                   background: 'var(--dark-8)',
-                  color: 'var(--dark-40)',
+                  color: 'var(--dark-60)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 13,
-                  fontWeight: 600,
+                  fontSize: 14,
+                  fontWeight: 500,
                   marginBottom: 14,
                 }}
               >
                 {i + 1}
               </div>
               <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6, lineHeight: 1.3 }}>{title}</div>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</div>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</div>
             </div>
           ))}
         </div>

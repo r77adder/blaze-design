@@ -402,8 +402,8 @@ export function FeedCardThumb({ card, hideBadges = false }: { card: FeedCard; hi
           </>
         )}
         <div style={{ padding: '32px 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 11, color: 'var(--dark-80)', lineHeight: '15px', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.liBody}</div>
-          <div style={{ fontSize: 10, color: BRAND_COLORS.linkedin, fontWeight: 500 }}>{card.liTag}</div>
+          <div style={{ fontSize: 12, color: 'var(--dark-80)', lineHeight: '15px', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.liBody}</div>
+          <div style={{ fontSize: 12, color: BRAND_COLORS.linkedin, fontWeight: 500 }}>{card.liTag}</div>
         </div>
         {card.imageUrl && (
           <div style={{ width: '100%', minHeight: 200, overflow: 'hidden' }}>
@@ -427,10 +427,10 @@ export function FeedCardThumb({ card, hideBadges = false }: { card: FeedCard; hi
             <div style={{ position: 'absolute', top: 8, right: 8 }}><CompetitorBadge k={card.competitor} /></div>
           </>
         )}
-        <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, color: BRAND_COLORS.googleResultText, border: `1px solid ${BRAND_COLORS.googleResultText}`, padding: '0 4px', borderRadius: 3, width: 'fit-content' }}>Sponsored</span>
-        <div style={{ fontSize: 11, color: BRAND_COLORS.googleResultUrl }}>{card.googleUrl}</div>
+        <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 600, color: BRAND_COLORS.googleResultText, border: `1px solid ${BRAND_COLORS.googleResultText}`, padding: '0 4px', borderRadius: 3, width: 'fit-content' }}>Sponsored</span>
+        <div style={{ fontSize: 12, color: BRAND_COLORS.googleResultUrl }}>{card.googleUrl}</div>
         <div style={{ fontSize: 14, color: BRAND_COLORS.googleResultLink, fontWeight: 500, lineHeight: '18px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.googleHeadline}</div>
-        <div style={{ fontSize: 11, color: 'var(--dark-80)', lineHeight: '15px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.googleDesc}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-80)', lineHeight: '15px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{card.googleDesc}</div>
       </div>
     );
   }
@@ -457,8 +457,8 @@ export function FeedCardThumb({ card, hideBadges = false }: { card: FeedCard; hi
       </div>
       <div style={{ height: 44, background: BRAND_COLORS.metaSurface, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px', gap: 8 }}>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <strong style={{ fontSize: 11, color: 'var(--dark-90)' }}>{card.metaBrand}</strong>
-          <span style={{ fontSize: 10, color: 'var(--dark-60)' }}>{card.metaSub}</span>
+          <strong style={{ fontSize: 12, color: 'var(--dark-90)' }}>{card.metaBrand}</strong>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{card.metaSub}</span>
         </div>
         <Button
           size="xs"
@@ -467,7 +467,7 @@ export function FeedCardThumb({ card, hideBadges = false }: { card: FeedCard; hi
             background: BRAND_COLORS.metaCtaBg,
             color: 'var(--dark-90)',
             border: 'none',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
           }}
         >
@@ -809,7 +809,7 @@ function PlatformStatsRow({ card }: { card: FeedCard }) {
     >
       {parts.map((p, i) => (
         <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          {i > 0 && <span style={{ color: 'var(--dark-40)' }}>·</span>}
+          {i > 0 && <span style={{ color: 'var(--dark-60)' }}>·</span>}
           {p}
         </span>
       ))}

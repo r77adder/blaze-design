@@ -2261,7 +2261,7 @@ function SettingsSection({
         <Text style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
           {title}
         </Text>
-        <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{description}</Text>
+        <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>{description}</Text>
       </div>
       {children}
     </div>
@@ -2285,7 +2285,7 @@ function SubField({
         <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
           {label}
           {optional && (
-            <span style={{ fontWeight: 400, color: 'var(--dark-40)' }}> (optional)</span>
+            <span style={{ fontWeight: 400, color: 'var(--dark-60)' }}> (optional)</span>
           )}
         </Text>
       )}
@@ -2378,7 +2378,7 @@ function PresetChip({
         background: active ? 'var(--dark-90)' : 'var(--light-100)',
         color: active ? 'var(--light-100)' : 'var(--dark-80)',
         fontFamily: "'Sohne', sans-serif",
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: 500,
         cursor: 'pointer',
         transition: 'border-color 160ms ease, background 160ms ease',

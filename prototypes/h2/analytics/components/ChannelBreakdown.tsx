@@ -40,7 +40,7 @@ export function ChannelBreakdown() {
           <Num strong>{fmtInt(row.visitors)}</Num>
           <Num>{fmtInt(row.leads)}</Num>
           <Num>{fmtPct(row.visitors / totalVisitors, 0)}</Num>
-          <span aria-hidden style={{ display: 'inline-flex', justifyContent: 'flex-end', color: 'var(--dark-40)' }}>
+          <span aria-hidden style={{ display: 'inline-flex', justifyContent: 'flex-end', color: 'var(--dark-60)' }}>
             <ChevronRight size={16} />
           </span>
         </RowButton>

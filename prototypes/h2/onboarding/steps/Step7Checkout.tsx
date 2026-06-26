@@ -113,7 +113,7 @@ export function Step7Checkout() {
               borderRadius: 6,
               color: 'var(--purple)',
               fontWeight: 500,
-              fontSize: 13,
+              fontSize: 14,
               marginBottom: 24,
             }}
           >
@@ -126,7 +126,7 @@ export function Step7Checkout() {
                 color: 'var(--light-100)',
                 fontFamily: '"Times New Roman", Georgia, serif',
                 fontSize: 14,
-                fontWeight: 700,
+                fontWeight: 500,
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -136,7 +136,7 @@ export function Step7Checkout() {
             </span>
             Blaze
           </div>
-          <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 13, marginBottom: 6 }}>
+          <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 14, marginBottom: 6 }}>
             Subscribe to {plan.label} plan — {summaryTermBadge}
           </Text>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
@@ -171,7 +171,7 @@ export function Step7Checkout() {
                   }}
                 >
                   <Check2 size={14} color="#04af00" />
-                  <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 13 }}>
+                  <Text variant="secondary" style={{ color: 'var(--dark-90)', fontSize: 14 }}>
                     {feature.label}
                   </Text>
                 </div>

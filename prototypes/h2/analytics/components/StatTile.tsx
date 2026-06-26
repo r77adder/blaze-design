@@ -46,7 +46,7 @@ export function StatTile({
         <div
           style={{
             fontFamily: FONT,
-            fontSize: 30,
+            fontSize: 26,
             fontWeight: 400,
             lineHeight: 1,
             letterSpacing: '0.2px',
@@ -71,7 +71,7 @@ export function StatTile({
             {up ? '▲' : '▼'}
           </span>
           {fmtDelta(delta)}
-          <span style={{ color: 'var(--dark-40)', fontWeight: 400 }}>vs. previous</span>
+          <span style={{ color: 'var(--dark-60)', fontWeight: 400 }}>vs. previous</span>
         </div>
       </div>
     </Card>

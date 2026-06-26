@@ -147,7 +147,7 @@ export function OnbPlan() {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
-                    <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500, fontSize: 15 }}>
+                    <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500, fontSize: 16 }}>
                       {p.title}
                     </Text>
                     <span style={{ flexShrink: 0 }}>

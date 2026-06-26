@@ -33,7 +33,7 @@ export function SelfReportedModule() {
                 background: isAi ? 'rgba(124, 92, 252, 0.06)' : 'transparent',
               }}
             >
-              <span style={{ fontFamily: FONT, fontSize: 13, lineHeight: 1.35, letterSpacing: tracking(13), color: 'var(--dark-80)' }}>
+              <span style={{ fontFamily: FONT, fontSize: 14, lineHeight: 1.35, letterSpacing: tracking(13), color: 'var(--dark-80)' }}>
                 {row.label}
               </span>
               <span style={{ display: 'block', height: 10, borderRadius: 5, background: 'var(--dark-4)', overflow: 'hidden' }}>
@@ -66,7 +66,7 @@ export function SelfReportedModule() {
           borderRadius: 8,
           padding: '10px 12px',
           fontFamily: FONT,
-          fontSize: 13,
+          fontSize: 14,
           lineHeight: 1.5,
           letterSpacing: tracking(13),
           color: 'var(--dark-80)',

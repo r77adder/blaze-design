@@ -200,11 +200,11 @@ function TypeAndTime({ post }: { post: Post }) {
   const TypeIcon = meta.icon;
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 400, color: 'var(--dark-80)' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 400, color: 'var(--dark-80)' }}>
         <TypeIcon size={16} color={meta.color} />
         {meta.label}
       </span>
-      <span style={{ fontSize: 13, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+      <span style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
         {post.time.toLowerCase().replace(/\s/g, '')}
       </span>
     </div>
@@ -215,12 +215,12 @@ function Caption({ text }: { text: string }) {
   const truncated = text.length > 78;
   const shown = truncated ? text.slice(0, 78).replace(/\s+\S*$/, '') : text;
   return (
-    <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>
+    <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.45 }}>
       {shown}
       {truncated && (
         <>
           {' … '}
-          <span style={{ color: 'var(--dark-40)' }}>more</span>
+          <span style={{ color: 'var(--dark-60)' }}>more</span>
         </>
       )}
     </div>
@@ -270,11 +270,11 @@ function PostCard({ post, dayFull, onOpen }: { post: Post; dayFull: string; onOp
           >
             {post.title}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--dark-40)' }}>{dayFull}</div>
+          <div style={{ fontSize: 14, color: 'var(--dark-60)' }}>{dayFull}</div>
           {post.body && (
             <div
               style={{
-                fontSize: 13,
+                fontSize: 14,
                 color: 'var(--dark-60)',
                 lineHeight: 1.5,
                 display: '-webkit-box',
@@ -396,7 +396,7 @@ function DayColumn({
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{day.date}</span>
-          <span style={{ fontSize: 14, fontWeight: 400, color: isToday ? 'var(--dark-60)' : 'var(--dark-40)' }}>
+          <span style={{ fontSize: 14, fontWeight: 400, color: isToday ? 'var(--dark-60)' : 'var(--dark-60)' }}>
             {day.name}
           </span>
         </span>
@@ -410,8 +410,8 @@ function DayColumn({
               margin: 'auto',
               padding: '28px 8px',
               textAlign: 'center',
-              color: 'var(--dark-40)',
-              fontSize: 13,
+              color: 'var(--dark-60)',
+              fontSize: 14,
             }}
           >
             Nothing scheduled
@@ -700,7 +700,7 @@ function OrganicSocialRouteInner() {
               onPress={() => showToast({ message: 'Unscheduled posts coming soon' })}
             >
               Unscheduled
-              <span style={{ marginLeft: 6, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>4</span>
+              <span style={{ marginLeft: 6, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>4</span>
             </Button>
           </div>
 
@@ -896,7 +896,7 @@ function RecentsTab({ onOpen }: { onOpen: (row: RecentRow) => void }) {
           gap: 16,
           alignItems: 'center',
           padding: '12px 20px',
-          color: 'var(--dark-40)',
+          color: 'var(--dark-60)',
           fontSize: 12,
           fontWeight: 500,
           letterSpacing: '0.04em',
@@ -935,7 +935,7 @@ function RecentsTab({ onOpen }: { onOpen: (row: RecentRow) => void }) {
               e.currentTarget.style.background = 'transparent';
             }}
           >
-            <span style={{ color: 'var(--dark-40)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ color: 'var(--dark-60)', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
               {i + 1}
             </span>
             <img
@@ -970,7 +970,7 @@ function RecentsTab({ onOpen }: { onOpen: (row: RecentRow) => void }) {
               </span>
               <span
                 style={{
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: 500,
                   color: 'var(--dark-90)',
                   letterSpacing: '-0.05px',
@@ -984,7 +984,7 @@ function RecentsTab({ onOpen }: { onOpen: (row: RecentRow) => void }) {
               </span>
               <span
                 style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   color: 'var(--dark-60)',
                   lineHeight: 1.5,
                   display: '-webkit-box',
@@ -998,8 +998,8 @@ function RecentsTab({ onOpen }: { onOpen: (row: RecentRow) => void }) {
               </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontSize: 13, color: 'var(--dark-90)' }}>{r.date}</span>
-              <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.time}</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-90)' }}>{r.date}</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>{r.time}</span>
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               {r.status === 'new' ? (

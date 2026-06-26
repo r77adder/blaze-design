@@ -16,7 +16,7 @@ export function BrandProfile() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 32, marginTop: 24 }}>
         <ProfileSection title="Business Name">
-          <Text style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>
+          <Text style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
             Blanchard's Coffee Roasting Company
           </Text>
         </ProfileSection>
@@ -83,7 +83,7 @@ function ProfileSection({ title, children }: { title: string; children: ReactNod
             border: 'none',
             cursor: 'pointer',
             color: 'var(--dark-90)',
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             fontFamily: 'inherit',
             padding: 0,

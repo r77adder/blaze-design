@@ -348,9 +348,9 @@ function PhoneMockup({
   if (isAd) {
     return (
       <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, padding: 16, background: 'var(--light-100)', maxWidth: 420 }}>
-        <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, color: '#202124', border: '1px solid #202124', padding: '0 4px', borderRadius: 3, marginBottom: 8 }}>Sponsored</div>
+        <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 600, color: '#202124', border: '1px solid #202124', padding: '0 4px', borderRadius: 3, marginBottom: 8 }}>Sponsored</div>
         <div style={{ fontSize: 18, color: '#1A0DAB', fontWeight: 500, lineHeight: '24px', marginBottom: 8 }}>{headline}</div>
-        <div style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: '19px', marginBottom: 12 }}>{body}</div>
+        <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: '19px', marginBottom: 12 }}>{body}</div>
         <Button variant="primary" size="sm" onPress={() => undefined}>{cta}</Button>
       </div>
     );
@@ -359,11 +359,11 @@ function PhoneMockup({
     <div style={{ border: '14px solid var(--dark-90)', borderRadius: 32, padding: 16, background: 'var(--light-100)', maxWidth: 320, margin: '0 auto', minHeight: 360 }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
         <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--brand)' }} />
-        <strong style={{ fontSize: 13 }}>CertaPro Painters of Austin</strong>
-        <span style={{ fontSize: 11, color: 'var(--dark-60)', marginLeft: 'auto' }}>{platform}</span>
+        <strong style={{ fontSize: 14 }}>CertaPro Painters of Austin</strong>
+        <span style={{ fontSize: 12, color: 'var(--dark-60)', marginLeft: 'auto' }}>{platform}</span>
       </div>
       <div style={{ background: card.type === 'organic-li' ? '#F3F2EF' : 'var(--dark-4)', borderRadius: 8, height: 160, marginBottom: 10 }} />
-      <div style={{ fontSize: 13, color: 'var(--dark-90)', lineHeight: '18px' }}>{draft}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: '18px' }}>{draft}</div>
     </div>
   );
 }

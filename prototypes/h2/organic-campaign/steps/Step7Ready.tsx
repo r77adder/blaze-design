@@ -130,7 +130,7 @@ export function Step7Ready() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: 'var(--dark-60)',
                     letterSpacing: '0.26px',
                   }}
@@ -139,7 +139,7 @@ export function Step7Ready() {
                 </div>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: 'var(--dark-60)',
                     letterSpacing: '0.26px',
                   }}

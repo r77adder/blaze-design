@@ -85,7 +85,7 @@ export function AgentBubble({ children }: { children: ReactNode }) {
           padding: '10px 14px',
           borderRadius: 14,
           borderTopLeftRadius: 4,
-          fontSize: 15,
+          fontSize: 16,
           lineHeight: 1.5,
           maxWidth: '100%',
         }}
@@ -107,7 +107,7 @@ export function UserBubble({ children }: { children: ReactNode }) {
           padding: '10px 14px',
           borderRadius: 14,
           borderTopRightRadius: 4,
-          fontSize: 15,
+          fontSize: 16,
           lineHeight: 1.5,
           maxWidth: '80%',
         }}
@@ -220,7 +220,7 @@ export function CardShell({
           )
         ) : (
           <div style={{ marginTop: 12 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--positive-60)', fontSize: 13, fontWeight: 500 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--positive-60)', fontSize: 14, fontWeight: 500 }}>
               <Check2 size={14} color="var(--positive-60)" />
               Confirmed
             </span>
@@ -233,7 +233,7 @@ export function CardShell({
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', marginBottom: 8 }}>
+    <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 8 }}>
       {children}
     </Text>
   );

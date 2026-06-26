@@ -66,7 +66,7 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
         <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--dark-90)', lineHeight: 1.2, marginBottom: 4 }}>
           CertaPro Painters of Austin
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, marginBottom: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, marginBottom: 8, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 600, color: 'var(--dark-90)' }}>4.7</span>
           <span style={{ color: '#F5B400', display: 'inline-flex', gap: 1 }}>
             {[0, 1, 2, 3, 4].map((i) => <StarFilled key={i} size={13} />)}
@@ -90,7 +90,7 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
             }}
           >
             <CheckSm size={14} color="#34A853" />
-            <span style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>Manage your Business Profile</span>
+            <span style={{ fontSize: 14, color: 'white', fontWeight: 500 }}>Manage your Business Profile</span>
           </div>
         </div>
 
@@ -111,8 +111,8 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
                 border: 'none',
                 borderBottom: activeTab === t ? '3px solid #1A73E8' : '3px solid transparent',
                 padding: '8px 16px',
-                fontSize: 13,
-                fontWeight: activeTab === t ? 600 : 400,
+                fontSize: 14,
+                fontWeight: activeTab === t ? 500 : 400,
                 color: activeTab === t ? '#1A73E8' : 'var(--dark-60)',
                 cursor: 'pointer',
               }}
@@ -141,12 +141,12 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
             }}
           >
             <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 2 }}>Start advertising on Google</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 2 }}>Start advertising on Google</div>
               <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Reach more customers with Google Ads</div>
             </div>
             <button
               onClick={() => setAdDismissed(true)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--dark-40)', display: 'flex' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--dark-60)', display: 'flex' }}
             >
               <Close size={16} />
             </button>
@@ -181,7 +181,7 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
                   >
                     <Ic size={16} />
                   </div>
-                  <span style={{ fontSize: 10, color: 'var(--dark-60)', textAlign: 'center', maxWidth: 52, lineHeight: 1.3 }}>{label}</span>
+                  <span style={{ fontSize: 12, color: 'var(--dark-60)', textAlign: 'center', maxWidth: 52, lineHeight: 1.3 }}>{label}</span>
                 </div>
               ))}
             </div>
@@ -191,18 +191,18 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
             {/* Address + website */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
               <div style={{ flexShrink: 0, marginTop: 1 }}><Marker03 size={15} color="var(--dark-60)" /></div>
-              <span style={{ fontSize: 13, color: 'var(--dark-80)' }}>{addressLine}</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-80)' }}>{addressLine}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
               <div style={{ flexShrink: 0, marginTop: 1 }}><Globe size={15} color="var(--dark-60)" /></div>
-              <span style={{ fontSize: 13, color: '#1A73E8' }}>certapro.com/austin</span>
+              <span style={{ fontSize: 14, color: '#1A73E8' }}>certapro.com/austin</span>
             </div>
 
             {/* Missing info */}
             <div style={{ fontSize: 12, color: 'var(--dark-60)', paddingLeft: 25, marginBottom: 14 }}>
               Add missing information:
               <span style={{ color: '#1A73E8', marginLeft: 4 }}>Phone number</span>
-              <span style={{ color: 'var(--dark-40)', margin: '0 4px' }}>·</span>
+              <span style={{ color: 'var(--dark-60)', margin: '0 4px' }}>·</span>
               <span style={{ color: '#1A73E8' }}>Business hours</span>
             </div>
 
@@ -218,7 +218,7 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
                     alt=""
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 11, color: 'white', background: 'rgba(0,0,0,0.45)', padding: '2px 6px', borderRadius: 4 }}>By owner</div>
+                  <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 12, color: 'white', background: 'rgba(0,0,0,0.45)', padding: '2px 6px', borderRadius: 4 }}>By owner</div>
                 </div>
                 <div style={{ position: 'relative', height: 90, borderRadius: 8, overflow: 'hidden' }}>
                   <img
@@ -226,7 +226,7 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
                     alt=""
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 11, color: 'white', background: 'rgba(0,0,0,0.45)', padding: '2px 6px', borderRadius: 4 }}>By owner</div>
+                  <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 12, color: 'white', background: 'rgba(0,0,0,0.45)', padding: '2px 6px', borderRadius: 4 }}>By owner</div>
                 </div>
               </div>
             </div>
@@ -302,16 +302,16 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
             {/* Review card */}
             <div style={{ background: 'var(--dark-2)', border: '1px solid var(--dark-4)', borderRadius: 10, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#4285F4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 15, fontWeight: 600, flexShrink: 0 }}>K</div>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#4285F4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 16, fontWeight: 600, flexShrink: 0 }}>K</div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>Kimberly Voliva</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>Kimberly Voliva</div>
                   <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>2 weeks ago</div>
                 </div>
               </div>
               <div style={{ color: '#F5B400', display: 'flex', gap: 1, marginBottom: 6 }}>
                 {[0, 1, 2, 3, 4].map((i) => <StarFilled key={i} size={13} />)}
               </div>
-              <div style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.55 }}>
+              <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.55 }}>
                 Absolutely thrilled with the results! The team was professional, punctual, and the finish is flawless.
                 They did a full interior repaint and the house looks brand new. Highly recommend!
               </div>
@@ -321,7 +321,7 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
 
         {activeTab === 'about' && (
           <>
-            <div style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.6, marginBottom: 14 }}>
+            <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.6, marginBottom: 14 }}>
               Your local painters in Austin, TX. CertaPro Painters of Austin handles residential and commercial
               painting across the Austin metro — interior and exterior, cabinet refinishing, color consultation,
               and more. We make the process easy and convenient.
@@ -329,15 +329,15 @@ function GoogleMapsPreview({ location }: { location?: BusinessLocation } = {}) {
             <div style={{ borderTop: '1px solid var(--dark-8)', marginBottom: 14 }} />
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
               <div style={{ flexShrink: 0 }}><Marker03 size={15} color="var(--dark-60)" /></div>
-              <span style={{ fontSize: 13, color: 'var(--dark-80)' }}>{addressLine}</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-80)' }}>{addressLine}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
               <div style={{ flexShrink: 0 }}><Globe size={15} color="var(--dark-60)" /></div>
-              <span style={{ fontSize: 13, color: '#1A73E8' }}>certapro.com/austin</span>
+              <span style={{ fontSize: 14, color: '#1A73E8' }}>certapro.com/austin</span>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <div style={{ flexShrink: 0 }}><PhoneCall01 size={15} color="var(--dark-60)" /></div>
-              <span style={{ fontSize: 13, color: '#1A73E8' }}>Add phone number</span>
+              <span style={{ fontSize: 14, color: '#1A73E8' }}>Add phone number</span>
             </div>
           </>
         )}
@@ -432,7 +432,7 @@ function ProfilePreviewTab({
               <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 2 }}>
                 Google changed your business name
               </div>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)' }}>
                 Google updated your name from <strong style={{ color: 'var(--dark-90)' }}>CertaPro Painters of Austin</strong> to <strong style={{ color: 'var(--dark-90)' }}>CertaPro Painters Austin</strong>. This may affect your search rankings.
               </div>
             </div>
@@ -545,7 +545,7 @@ function ProfileConsistencyTab() {
   };
   const tdStyle: React.CSSProperties = {
     padding: '16px',
-    fontSize: 13,
+    fontSize: 14,
     verticalAlign: 'top',
     borderBottom: '1px solid var(--dark-4)',
   };
@@ -597,11 +597,11 @@ function ProfileConsistencyTab() {
                   {/* Field name + status icon */}
                   <td style={{ ...tdStyle, fontWeight: 500, color: 'var(--dark-90)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13, color: statusColor, flexShrink: 0 }}>{statusIcon}</span>
+                      <span style={{ fontSize: 14, color: statusColor, flexShrink: 0 }}>{statusIcon}</span>
                       {d.field}
                     </div>
                     {d.status === 'ok' && (
-                      <div style={{ fontSize: 11, color: 'var(--status-approved)', marginTop: 4 }}>All match</div>
+                      <div style={{ fontSize: 12, color: 'var(--status-approved)', marginTop: 4 }}>All match</div>
                     )}
                   </td>
                   {/* One cell per platform */}
@@ -611,13 +611,13 @@ function ProfileConsistencyTab() {
                     return (
                       <td key={platform} style={{ ...tdStyle, color: v.ok ? 'var(--dark-80)' : 'var(--dark-90)', fontStyle: v.ok ? 'normal' : 'italic' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5 }}>
-                          <span style={{ fontSize: 11, color: v.ok ? 'var(--status-approved)' : '#EF6800', marginTop: 1, flexShrink: 0 }}>
+                          <span style={{ fontSize: 12, color: v.ok ? 'var(--status-approved)' : '#EF6800', marginTop: 1, flexShrink: 0 }}>
                             {v.ok ? '✓' : '⚠'}
                           </span>
                           <span style={{ wordBreak: 'break-word' }}>{v.value}</span>
                         </div>
                         {!v.ok && (
-                          <a href="#" style={{ display: 'inline-block', marginTop: 6, fontSize: 11, color: 'var(--dark-60)', background: 'var(--dark-4)', borderRadius: 5, padding: '3px 8px', textDecoration: 'none' }}>
+                          <a href="#" style={{ display: 'inline-block', marginTop: 6, fontSize: 12, color: 'var(--dark-60)', background: 'var(--dark-4)', borderRadius: 5, padding: '3px 8px', textDecoration: 'none' }}>
                             Edit ↗
                           </a>
                         )}

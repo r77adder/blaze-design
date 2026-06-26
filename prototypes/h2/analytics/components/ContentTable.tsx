@@ -31,7 +31,7 @@ export function ContentTable({ rows, onSelect }: { rows: AssetRollup[]; onSelect
         </RowStatic>
 
         {rows.length === 0 && (
-          <div style={{ padding: '24px 8px', fontFamily: FONT, fontSize: 13, color: 'var(--dark-60)' }}>
+          <div style={{ padding: '24px 8px', fontFamily: FONT, fontSize: 14, color: 'var(--dark-60)' }}>
             No assets match this filter.
           </div>
         )}

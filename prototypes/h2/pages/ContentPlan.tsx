@@ -351,7 +351,7 @@ function Sidebar({
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-80)' }}>CertaPro Austin</div>
-          <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>Pro Plan</div>
+          <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Pro Plan</div>
         </div>
       </div>
     </nav>
@@ -364,7 +364,7 @@ function SidebarSectionLabel({ children }: { children: ReactNode }) {
       style={{
         fontSize: 12,
         fontWeight: 400,
-        color: 'var(--dark-40)',
+        color: 'var(--dark-60)',
         letterSpacing: 0.5,
         textTransform: 'uppercase',
         padding: '8px 8px 4px',
@@ -743,7 +743,7 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
         padding: '16px 24px 8px',
         fontSize: 12,
         fontWeight: 400,
-        color: 'var(--dark-40)',
+        color: 'var(--dark-60)',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
       }}
@@ -808,7 +808,7 @@ function PostRow({
           }}
         >
           {post.text || (
-            <span style={{ color: 'var(--dark-40)', fontStyle: 'italic' }}>
+            <span style={{ color: 'var(--dark-60)', fontStyle: 'italic' }}>
               No caption yet — add content
             </span>
           )}
@@ -818,7 +818,7 @@ function PostRow({
             <span
               style={{
                 fontSize: 12,
-                color: 'var(--dark-40)',
+                color: 'var(--dark-60)',
                 background: 'var(--dark-4)',
                 padding: '2px 6px',
                 borderRadius: 4,
@@ -836,7 +836,7 @@ function PostRow({
         <div style={{ fontSize: 14, color: 'var(--dark-80)', fontWeight: 500, whiteSpace: 'nowrap' }}>
           {post.date}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>{post.time}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{post.time}</div>
       </div>
 
       <StatusPill tone={meta.tone} size="sm" style={{ flexShrink: 0 }}>
@@ -861,7 +861,7 @@ function PostRow({
             border: 'none',
             background: 'transparent',
             cursor: 'pointer',
-            color: 'var(--dark-40)',
+            color: 'var(--dark-60)',
             padding: 0,
           }}
         >
@@ -959,7 +959,7 @@ function Thumb({ needsContent }: { needsContent: boolean }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'var(--dark-40)',
+        color: 'var(--dark-60)',
       }}
     >
       {needsContent ? (
@@ -1164,7 +1164,7 @@ function CampaignCard({
           <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.3 }}>
             {campaign.name}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>
             {campaign.start} – {campaign.end}
           </div>
         </div>
@@ -1190,7 +1190,7 @@ function CampaignCard({
             }}
           />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--dark-40)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--dark-60)' }}>
           <span>{campaign.progress}% complete</span>
           <span>{campaign.posts} posts</span>
         </div>
@@ -1219,7 +1219,7 @@ function CampaignCard({
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--dark-40)', marginLeft: 'auto' }}>{campaign.goal}</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)', marginLeft: 'auto' }}>{campaign.goal}</div>
       </div>
     </div>
   );
@@ -1281,7 +1281,7 @@ function ContentPreviewModal({
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>CertaPro Austin</div>
-                  <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>@certaproaustin · Instagram</div>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>@certaproaustin · Instagram</div>
                 </div>
               </div>
               <div
@@ -1292,7 +1292,7 @@ function ContentPreviewModal({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--dark-40)',
+                  color: 'var(--dark-60)',
                 }}
               >
                 <svg viewBox="0 0 32 32" fill="none" width={32} height={32}>
@@ -1388,7 +1388,7 @@ function CreateContentModal({
                 gap: 12,
                 textAlign: 'center',
                 cursor: 'pointer',
-                color: 'var(--dark-40)',
+                color: 'var(--dark-60)',
               }}
             >
               <svg viewBox="0 0 32 32" fill="none" width={32} height={32}>
@@ -1397,7 +1397,7 @@ function CreateContentModal({
                 <path d="M4 22l7-7 5 5 4-4 8 8" stroke="currentColor" strokeWidth={1.3} strokeLinejoin="round" />
               </svg>
               <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-80)' }}>Add Media</div>
-              <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>Click to select from library or upload new</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Click to select from library or upload new</div>
             </div>
           </FormGroup>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -1510,12 +1510,12 @@ function UploadContentModal({ close, onUpload }: StackModalProps & { onUpload: (
               gap: 12,
               textAlign: 'center',
               cursor: 'pointer',
-              color: 'var(--dark-40)',
+              color: 'var(--dark-60)',
             }}
           >
             <Upload />
             <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-80)' }}>Drag & drop your media here</div>
-            <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>PNG, JPG, GIF, MP4 · Max 50MB per file</div>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>PNG, JPG, GIF, MP4 · Max 50MB per file</div>
             <Button variant="secondary" size="sm">
               Browse Files
             </Button>
@@ -1793,11 +1793,11 @@ function PlatformChips({
 function MetricCard({ value, label }: { value: string; label: string }) {
   return (
     <div style={{ background: 'var(--dark-2)', borderRadius: 10, padding: 14 }}>
-      <div style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)' }}>{value}</div>
+      <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)' }}>{value}</div>
       <div
         style={{
           fontSize: 12,
-          color: 'var(--dark-40)',
+          color: 'var(--dark-60)',
           marginTop: 2,
           textTransform: 'uppercase',
           letterSpacing: 0.4,
@@ -1894,7 +1894,7 @@ function UpcomingRow({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--dark-40)',
+          color: 'var(--dark-60)',
         }}
       >
         <svg viewBox="0 0 20 20" fill="none" width={18} height={18}>

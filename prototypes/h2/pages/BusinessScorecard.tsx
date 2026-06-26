@@ -78,7 +78,7 @@ function HeroCard() {
           </span>
         </GaugeRing>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <Text style={{ fontSize: 13, fontWeight: 400, color: 'var(--dark-60)' }}>Online health</Text>
+          <Text style={{ fontSize: 14, fontWeight: 400, color: 'var(--dark-60)' }}>Online health</Text>
           <Heading level={5} style={{ margin: 0, color: statusColor(TOTAL_STATUS) }}>
             {statusLabel(TOTAL_STATUS)}
           </Heading>
@@ -180,7 +180,7 @@ function AreaSection({
             strokeWidth={4}
             animate
           >
-            <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '0.3px' }}>
+            <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '0.3px' }}>
               {score}
             </span>
           </GaugeRing>
@@ -231,7 +231,7 @@ function AreaSection({
                 <Text
                   variant="secondary"
                   color="var(--dark-60)"
-                  style={{ fontSize: 13, lineHeight: 1.5, display: 'block', marginTop: 2 }}
+                  style={{ fontSize: 14, lineHeight: 1.5, display: 'block', marginTop: 2 }}
                 >
                   {check.desc}
                 </Text>

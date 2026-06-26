@@ -5,10 +5,10 @@ import { SectionCard, MoreLink } from './SectionCard';
 function Stage({ label, count }: { label: string; count: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 0', minWidth: 0 }}>
-      <span style={{ fontFamily: FONT, fontSize: 26, fontWeight: 500, lineHeight: 1, color: 'var(--dark-90)' }}>
+      <span style={{ fontFamily: FONT, fontSize: 26, fontWeight: 400, lineHeight: 1, color: 'var(--dark-90)' }}>
         {fmtInt(count)}
       </span>
-      <span style={{ fontFamily: FONT, fontSize: 13, letterSpacing: tracking(13), color: 'var(--dark-60)' }}>{label}</span>
+      <span style={{ fontFamily: FONT, fontSize: 14, letterSpacing: tracking(13), color: 'var(--dark-60)' }}>{label}</span>
     </div>
   );
 }
@@ -16,10 +16,10 @@ function Stage({ label, count }: { label: string; count: number }) {
 function Step({ rate }: { rate: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0, padding: '0 4px' }}>
-      <span aria-hidden style={{ fontFamily: FONT, fontSize: 16, color: 'var(--dark-40)' }}>
+      <span aria-hidden style={{ fontFamily: FONT, fontSize: 16, color: 'var(--dark-60)' }}>
         →
       </span>
-      <span style={{ fontFamily: FONT, fontSize: 11, letterSpacing: tracking(11), color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
+      <span style={{ fontFamily: FONT, fontSize: 12, letterSpacing: tracking(11), color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtPct(rate)}
       </span>
     </div>

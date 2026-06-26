@@ -721,25 +721,25 @@ function CampaignRow({
           </div>
         )}
       </div>
-      <div style={{ fontSize: 12, color: isPaused ? 'var(--dark-40)' : 'var(--dark-80)' }}>
+      <div style={{ fontSize: 12, color: isPaused ? 'var(--dark-60)' : 'var(--dark-80)' }}>
         {campaign.campaignType}
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <CampaignStatusPill status={campaign.status} />
       </div>
-      <div style={{ fontSize: 12, color: isPaused ? 'var(--dark-40)' : 'var(--dark-80)' }}>
+      <div style={{ fontSize: 12, color: isPaused ? 'var(--dark-60)' : 'var(--dark-80)' }}>
         {campaign.bidStrategy}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 500, color: isPaused ? 'var(--dark-60)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtMoney(campaign.spend)}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 14, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontSize: 14, color: isPaused ? 'var(--dark-60)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtInt(campaign.clicks)}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 500, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 500, color: isPaused ? 'var(--dark-60)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtInt(campaign.conversions)}
       </div>
-      <div style={{ textAlign: 'right', fontSize: 14, color: isPaused ? 'var(--dark-40)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontSize: 14, color: isPaused ? 'var(--dark-60)' : 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {campaign.conversions > 0 ? fmtMoney(campaign.cpa) : '—'}
       </div>
     </button>
@@ -936,7 +936,7 @@ function FatigueSummaryRow({
       >
         {signal}
       </span>
-      <span style={{ marginLeft: 'auto', color: 'var(--dark-40)', display: 'inline-flex' }} aria-hidden>
+      <span style={{ marginLeft: 'auto', color: 'var(--dark-60)', display: 'inline-flex' }} aria-hidden>
         <ChevronRightSmall size={16} />
       </span>
     </button>
@@ -1011,8 +1011,8 @@ function LiveCampaign({
             <div style={{ fontSize: 12, color: 'var(--dark-60)', marginBottom: 6 }}>{k.label}</div>
             <div
               style={{
-                fontSize: 20,
-                fontWeight: 500,
+                fontSize: 26,
+                fontWeight: 400,
                 color: 'var(--dark-90)',
                 marginBottom: 4,
                 fontVariantNumeric: 'tabular-nums',
@@ -1037,7 +1037,7 @@ function LiveCampaign({
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <h3 style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', margin: 0 }}>CTR — last 14 days</h3>
-          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>vs. industry benchmark</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>vs. industry benchmark</span>
         </div>
         <svg viewBox="0 0 600 160" width="100%" height="160" preserveAspectRatio="none" style={{ display: 'block' }}>
           <defs>
@@ -1645,8 +1645,8 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, flexShrink: 0 }}>
               <span
                 style={{
-                  fontSize: 32,
-                  fontWeight: 500,
+                  fontSize: 26,
+                  fontWeight: 400,
                   letterSpacing: '-0.6px',
                   color: 'var(--dark-90)',
                   fontVariantNumeric: 'tabular-nums',
@@ -1655,7 +1655,7 @@ function WizardSummary({ budget, onBudgetChange }: { budget: number; onBudgetCha
                 {conv}
               </span>
               <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>
-                estimate requests <span style={{ color: 'var(--dark-40)' }}>/ day</span>
+                estimate requests <span style={{ color: 'var(--dark-60)' }}>/ day</span>
               </span>
             </div>
             <input
@@ -1736,7 +1736,7 @@ function KeywordsPrepModal({ close }: StackModalProps) {
                 style={{
                   marginLeft: 'auto',
                   fontSize: 12,
-                  color: 'var(--dark-40)',
+                  color: 'var(--dark-60)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
@@ -1846,7 +1846,7 @@ function Chip({ term, onRemove }: { term: string; onRemove: () => void }) {
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          color: 'var(--dark-40)',
+          color: 'var(--dark-60)',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -2000,7 +2000,7 @@ function NegativesPrepModal({ close }: StackModalProps) {
                 style={{
                   marginLeft: 'auto',
                   fontSize: 12,
-                  color: 'var(--dark-40)',
+                  color: 'var(--dark-60)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >

@@ -145,19 +145,19 @@ export function Stage2AdSet() {
               background: 'var(--dark-2)',
               border: '1px solid var(--dark-8)',
               borderRadius: 8,
-              fontSize: 15,
+              fontSize: 16,
               color: 'var(--dark-90)',
             }}
           >
             <span style={{ fontWeight: 500 }}>Pixel</span>
             <span style={{ color: 'var(--dark-60)' }}>·</span>
             <span>{adSetDraft.pixelName}</span>
-            <span style={{ fontSize: 13, color: 'var(--dark-60)', marginLeft: 'auto' }}>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)', marginLeft: 'auto' }}>
               {adSetDraft.pixelId}
             </span>
             <span
               style={{
-                fontSize: 13,
+                fontSize: 14,
                 color: 'var(--status-approved)',
                 fontWeight: 500,
                 flexShrink: 0,
@@ -214,7 +214,7 @@ export function Stage2AdSet() {
                   borderRadius: 10,
                   cursor: 'pointer',
                   fontFamily: 'inherit',
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: 500,
                   textAlign: 'left',
                   display: 'flex',
@@ -223,7 +223,7 @@ export function Stage2AdSet() {
                 }}
               >
                 <span>{mode === 'advantage-plus' ? 'Advantage+ audience' : 'Original audiences'}</span>
-                <span style={{ fontSize: 13, color: 'var(--dark-60)', fontWeight: 400 }}>
+                <span style={{ fontSize: 14, color: 'var(--dark-60)', fontWeight: 400 }}>
                   {mode === 'advantage-plus'
                     ? 'Default — Meta finds the audience; inputs below act as suggestions.'
                     : 'Manual targeting. Use inputs below as hard filters.'}
@@ -268,7 +268,7 @@ export function Stage2AdSet() {
                   onChange={(v) => setAdSetField('ageMin', Number(v))}
                 />
               </div>
-              <span style={{ color: 'var(--dark-60)', fontSize: 15 }}>–</span>
+              <span style={{ color: 'var(--dark-60)', fontSize: 16 }}>–</span>
               <div style={{ flex: 1, opacity: restricted ? 0.6 : 1 }}>
                 <TextField
                   size="sm"
@@ -399,7 +399,7 @@ export function Stage2AdSet() {
                   borderRadius: 10,
                   cursor: 'pointer',
                   fontFamily: 'inherit',
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: 500,
                   textAlign: 'left',
                   display: 'flex',
@@ -410,7 +410,7 @@ export function Stage2AdSet() {
                 <span>
                   {mode === 'advantage-plus' ? 'Advantage+ placements' : 'Manual placements'}
                 </span>
-                <span style={{ fontSize: 13, color: 'var(--dark-60)', fontWeight: 400 }}>
+                <span style={{ fontSize: 14, color: 'var(--dark-60)', fontWeight: 400 }}>
                   {mode === 'advantage-plus'
                     ? 'Default — Meta picks the best mix.'
                     : 'Pick which surfaces to show on.'}
@@ -520,7 +520,7 @@ function summaryRowStyle(): CSSProperties {
     display: 'flex',
     alignItems: 'baseline',
     gap: 8,
-    fontSize: 15,
+    fontSize: 16,
     color: 'var(--dark-90)',
     lineHeight: 1.4,
   };
@@ -553,7 +553,7 @@ function DeliverySummary({ adSetDraft }: { adSetDraft: ReturnType<typeof useMeta
         <span style={summaryLabelStyle}>Pixel</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           {adSetDraft.pixelName}
-          <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+          <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>
             {adSetDraft.pixelId}
           </span>
         </span>
@@ -800,7 +800,7 @@ function SectionLabel({ icon, children }: { icon?: ReactNode; children: ReactNod
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
       {icon}
-      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{children}</span>
+      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{children}</span>
     </div>
   );
 }

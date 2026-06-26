@@ -46,7 +46,7 @@ export function CreativeReadyModal({
             />
           ))}
         </div>
-        <Text variant="primary" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 15, lineHeight: 1.55 }}>
+        <Text variant="primary" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 16, lineHeight: 1.55 }}>
           We generated <strong style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{count} ads, posts, and videos</strong> from
           your brand, goals, and the examples you liked. Take a look and approve the ones you want to ship.
         </Text>

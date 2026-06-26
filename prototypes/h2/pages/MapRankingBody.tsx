@@ -259,7 +259,7 @@ function LandingView({ onConnect }: { onConnect: () => void }) {
       <div style={{ marginBottom: 40 }}>
         <div
           style={{
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             color: 'var(--dark-60)',
             textAlign: 'center',
@@ -323,7 +323,7 @@ function LandingView({ onConnect }: { onConnect: () => void }) {
               >
                 {title}
               </div>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</div>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</div>
             </div>
           ))}
         </div>
@@ -494,10 +494,10 @@ function AuditingView({ onDone }: { onDone: () => void }) {
               >
                 {isDone && <Check size={11} color="var(--light-100)" />}
               </span>
-              <Text variant="secondary" style={{ flex: 1, fontWeight: 500, color: isDone || isActive ? 'var(--dark-90)' : 'var(--dark-40)' }}>
+              <Text variant="secondary" style={{ flex: 1, fontWeight: 500, color: isDone || isActive ? 'var(--dark-90)' : 'var(--dark-60)' }}>
                 {s.field}
               </Text>
-              <Text variant="metadata" style={{ color: isDone ? (s.suggested ? 'var(--purple)' : 'var(--status-approved)') : 'var(--dark-40)' }}>
+              <Text variant="metadata" style={{ color: isDone ? (s.suggested ? 'var(--purple)' : 'var(--status-approved)') : 'var(--dark-60)' }}>
                 {isDone ? s.result : isActive ? 'Checking…' : ''}
               </Text>
             </div>
@@ -1084,7 +1084,7 @@ function HoursEditor({
                 border: 'none',
                 padding: 0,
                 fontFamily: 'inherit',
-                fontSize: 13,
+                fontSize: 14,
                 color: 'var(--dark-80)',
                 cursor: 'pointer',
               }}
@@ -1100,7 +1100,7 @@ function HoursEditor({
             {d.closed ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 34 }}>
                 {dayLabel}
-                <span style={{ fontSize: 13, color: 'var(--dark-40)' }}>Closed all day</span>
+                <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>Closed all day</span>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1117,7 +1117,7 @@ function HoursEditor({
                       />
                       {r.open !== '24 hours' && (
                         <>
-                          <span style={{ color: 'var(--dark-40)', fontSize: 13 }}>–</span>
+                          <span style={{ color: 'var(--dark-60)', fontSize: 14 }}>–</span>
                           <Select
                             value={r.close}
                             onChange={(v) => setRange(i, ri, 'close', v)}
@@ -1219,7 +1219,7 @@ function PostStatusBadge({ status }: { status: PostStatus }) {
     <span
       style={{
         flexShrink: 0,
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: 500,
         color: s.color,
         background: s.bg,
@@ -1269,7 +1269,7 @@ function PostCard({ post }: { post: ProposedPost }) {
           >
             CertaPro Austin
           </span>
-          <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>
             {post.date}
           </span>
         </div>
@@ -1343,7 +1343,7 @@ function PostCard({ post }: { post: ProposedPost }) {
           </span>
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               color: 'rgba(255,255,255,0.85)',
               letterSpacing: '0.05px',
             }}
@@ -1385,7 +1385,7 @@ function PostCard({ post }: { post: ProposedPost }) {
             background: 'transparent',
             padding: 0,
             fontFamily: 'inherit',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 500,
             color: 'var(--dark-60)',
             cursor: 'pointer',
@@ -1416,7 +1416,7 @@ function Avatar() {
         justifyContent: 'center',
         fontFamily: '"Times New Roman", Georgia, serif',
         fontSize: 14,
-        fontWeight: 700,
+        fontWeight: 500,
         flexShrink: 0,
       }}
     >
@@ -1464,11 +1464,11 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
               <StarFilled key={i} size={14} />
             ))}
           </span>
-          <span style={{ fontSize: 13, color: '#1A73E8' }}>187 reviews</span>
+          <span style={{ fontSize: 14, color: '#1A73E8' }}>187 reviews</span>
         </div>
 
         {/* Category */}
-        <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 10 }}>Painting contractor</div>
+        <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 10 }}>Painting contractor</div>
 
         {/* Verified badge */}
         <div
@@ -1506,7 +1506,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
                 border: '1px solid var(--dark-8)',
                 borderRadius: 20,
                 padding: '7px 13px',
-                fontSize: 13,
+                fontSize: 14,
                 color: 'var(--dark-80)',
                 cursor: 'pointer',
               }}
@@ -1524,7 +1524,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
           <div style={{ flexShrink: 0, marginTop: 1 }}>
             <Marker03 size={15} color="var(--dark-60)" />
           </div>
-          <div style={{ fontSize: 13 }}>
+          <div style={{ fontSize: 14 }}>
             <div style={{ color: 'var(--dark-80)' }}>{addressLine}</div>
             <div style={{ color: '#1A73E8', marginTop: 3 }}>Edit your business information</div>
           </div>
@@ -1534,7 +1534,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
         <div style={{ fontSize: 12, color: 'var(--dark-60)', paddingLeft: 25, marginBottom: 14 }}>
           Add missing information:
           <span style={{ color: '#1A73E8', marginLeft: 4 }}>Phone number</span>
-          <span style={{ color: 'var(--dark-40)', margin: '0 4px' }}>·</span>
+          <span style={{ color: 'var(--dark-60)', margin: '0 4px' }}>·</span>
           <span style={{ color: '#1A73E8' }}>Business hours</span>
         </div>
 
@@ -1561,7 +1561,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
                 border: '1px solid var(--dark-8)',
                 borderRadius: 8,
                 padding: '9px 0',
-                fontSize: 13,
+                fontSize: 14,
                 color: 'var(--dark-80)',
                 cursor: 'pointer',
               }}
@@ -1578,7 +1578,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
                 border: '1px solid var(--dark-8)',
                 borderRadius: 8,
                 padding: '9px 0',
-                fontSize: 13,
+                fontSize: 14,
                 color: 'var(--dark-80)',
                 cursor: 'pointer',
               }}
@@ -1593,7 +1593,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
         {/* Description */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 12, color: 'var(--dark-60)', marginBottom: 5 }}>From CertaPro Painters of Austin</div>
-          <div style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.55 }}>
             Your local painters in Austin, TX. CertaPro Painters of Austin handles residential and commercial
             painting across the Austin metro — interior and exterior, cabinet refinishing, color consultation,
             and more.
@@ -1648,7 +1648,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
                   >
                     {post.title}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>
                     Scheduled · {post.date}
                   </div>
                 </div>
@@ -1662,7 +1662,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
               border: '1px solid var(--dark-8)',
               borderRadius: 8,
               padding: '8px 16px',
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-80)',
               cursor: 'pointer',
             }}
@@ -1700,7 +1700,7 @@ export function GooglePreview({ location }: { location?: BusinessLocation } = {}
                 >
                   <Ic size={22} />
                 </div>
-                <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>{label}</span>
+                <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</span>
               </div>
             ))}
           </div>
@@ -1724,7 +1724,7 @@ function GoogleMapsPackPreview() {
   const organic   = PACK_BUSINESSES.filter((b) => !b.isSponsored);
 
   return (
-    <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', fontSize: 13 }}>
+    <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', fontSize: 14 }}>
       {/* Card header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--dark-4)' }}>
         <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
@@ -1738,18 +1738,18 @@ function GoogleMapsPackPreview() {
       {/* Sponsored entry */}
       {sponsored.map((b) => (
         <div key={b.name} style={{ padding: '10px 12px', background: '#FAFAFA', borderBottom: '1px solid var(--dark-8)' }}>
-          <div style={{ fontSize: 10, color: 'var(--dark-40)', marginBottom: 4 }}>Sponsored</div>
+          <div style={{ fontSize: 12, color: 'var(--dark-60)', marginBottom: 4 }}>Sponsored</div>
           <div style={{ fontWeight: 500, color: 'var(--dark-90)', marginBottom: 3 }}>{b.name}</div>
           <div style={{ fontSize: 12, color: 'var(--dark-60)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
             <span style={{ color: '#F5B400' }}>★</span>
             <span>{b.rating}</span>
-            <span style={{ color: 'var(--dark-40)' }}>({b.reviews})</span>
-            <span style={{ color: 'var(--dark-40)' }}>·</span>
+            <span style={{ color: 'var(--dark-60)' }}>({b.reviews})</span>
+            <span style={{ color: 'var(--dark-60)' }}>·</span>
             <span style={{ color: 'var(--status-approved)' }}>{b.open}</span>
           </div>
           <div style={{ display: 'flex', gap: 5, marginTop: 7 }}>
             {(['Get quote', 'Book', 'Directions'] as const).map((a) => (
-              <button key={a} style={{ fontSize: 11, padding: '3px 8px', background: 'var(--dark-4)', border: '1px solid var(--dark-8)', borderRadius: 12, color: 'var(--dark-80)', cursor: 'pointer', fontFamily: 'inherit' }}>{a}</button>
+              <button key={a} style={{ fontSize: 12, padding: '3px 8px', background: 'var(--dark-4)', border: '1px solid var(--dark-8)', borderRadius: 12, color: 'var(--dark-80)', cursor: 'pointer', fontFamily: 'inherit' }}>{a}</button>
             ))}
           </div>
         </div>
@@ -1759,7 +1759,7 @@ function GoogleMapsPackPreview() {
       <div style={{ display: 'flex' }}>
         {/* Listings */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-60)', padding: '10px 14px 8px', borderBottom: '1px solid var(--dark-4)' }}>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-60)', padding: '10px 14px 8px', borderBottom: '1px solid var(--dark-4)' }}>
             Businesses
           </div>
           {organic.map((b, i) => (
@@ -1775,24 +1775,24 @@ function GoogleMapsPackPreview() {
                 alignItems: 'flex-start',
               }}
             >
-              <span style={{ fontSize: 14, color: b.isYou ? '#1A73E8' : 'var(--dark-40)', fontWeight: 500, minWidth: 18, flexShrink: 0, lineHeight: 1.5, fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: 14, color: b.isYou ? '#1A73E8' : 'var(--dark-60)', fontWeight: 500, minWidth: 18, flexShrink: 0, lineHeight: 1.5, fontVariantNumeric: 'tabular-nums' }}>
                 {i + 1}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                <div style={{ fontWeight: b.isYou ? 500 : 400, color: 'var(--dark-90)', fontSize: 15, lineHeight: 1.3 }}>
+                <div style={{ fontWeight: b.isYou ? 500 : 400, color: 'var(--dark-90)', fontSize: 16, lineHeight: 1.3 }}>
                   {b.name}
-                  {b.isYou && <span style={{ fontSize: 13, color: '#1A73E8', fontWeight: 400, marginLeft: 6 }}>You</span>}
+                  {b.isYou && <span style={{ fontSize: 14, color: '#1A73E8', fontWeight: 400, marginLeft: 6 }}>You</span>}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--dark-60)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                   {b.years} years in business
                 </div>
               </div>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                 <span style={{ color: '#F5B400' }}>★</span>
                 <span>{b.rating}</span>
-                <span style={{ color: 'var(--dark-40)' }}>({b.reviews})</span>
-                <span style={{ color: 'var(--dark-40)' }}>·</span>
+                <span style={{ color: 'var(--dark-60)' }}>({b.reviews})</span>
+                <span style={{ color: 'var(--dark-60)' }}>·</span>
                 <span style={{ color: b.open.startsWith('Open') ? 'var(--status-approved)' : 'var(--dark-60)' }}>{b.open}</span>
               </div>
               <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -1804,7 +1804,7 @@ function GoogleMapsPackPreview() {
             </div>
           ))}
           <div style={{ padding: '10px 14px', borderTop: '1px solid var(--dark-4)' }}>
-            <button style={{ fontSize: 13, color: '#1A73E8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+            <button style={{ fontSize: 14, color: '#1A73E8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
               View on Google →
             </button>
           </div>
@@ -2013,7 +2013,7 @@ function GoogleMapsPackPreview() {
               position: 'absolute',
               top: 8,
               right: 8,
-              fontSize: 11,
+              fontSize: 12,
               background: 'var(--light-100)',
               border: '1px solid var(--dark-8)',
               borderRadius: 4,
@@ -2113,27 +2113,27 @@ function ReviewCard({ review }: { review: PendingReview }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 13,
-              fontWeight: 600,
+              fontSize: 14,
+              fontWeight: 500,
               flexShrink: 0,
             }}
           >
             {review.author[0]}
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.2 }}>{review.author}</div>
-            <div style={{ fontSize: 11, color: 'var(--dark-60)', lineHeight: 1.2 }}>{review.location} · {review.time}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.2 }}>{review.author}</div>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.2 }}>{review.location} · {review.time}</div>
           </div>
         </div>
         <StarRow count={review.stars} />
       </div>
 
       {/* Review body */}
-      <div style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.55 }}>{review.body}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.55 }}>{review.body}</div>
 
       {/* AI reply */}
       <div style={{ background: 'var(--dark-2)', border: '1px solid var(--dark-4)', borderRadius: 8, padding: '10px 12px' }}>
-        <div style={{ fontSize: 11, color: 'var(--dark-40)', fontWeight: 500, marginBottom: 5 }}>Blaze draft reply</div>
+        <div style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 500, marginBottom: 5 }}>Blaze draft reply</div>
         {editing ? (
           <textarea
             autoFocus
@@ -2142,7 +2142,7 @@ function ReviewCard({ review }: { review: PendingReview }) {
             rows={3}
             style={{
               width: '100%',
-              fontSize: 13,
+              fontSize: 14,
               fontFamily: 'inherit',
               background: 'var(--light-100)',
               border: '1px solid var(--dark-15)',
@@ -2156,7 +2156,7 @@ function ReviewCard({ review }: { review: PendingReview }) {
             }}
           />
         ) : (
-          <div style={{ fontSize: 13, color: 'var(--dark-80)', lineHeight: 1.55 }}>{draft}</div>
+          <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: 1.55 }}>{draft}</div>
         )}
       </div>
 
@@ -2401,7 +2401,7 @@ function MetricCard({ icon: Ic, label, value, delta, deltaKind, unit, foot }: Me
       <div
         style={{
           fontSize: 26,
-          fontWeight: 500,
+          fontWeight: 400,
           color: 'var(--dark-90)',
           letterSpacing: '-0.4px',
           fontVariantNumeric: 'tabular-nums',
@@ -2431,7 +2431,7 @@ function MetricCard({ icon: Ic, label, value, delta, deltaKind, unit, foot }: Me
         )}
         {unit && <span style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>{unit}</span>}
       </div>
-      <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 4 }}>{foot}</div>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 4 }}>{foot}</div>
     </div>
   );
 }

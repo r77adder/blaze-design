@@ -401,10 +401,10 @@ function GapFixLine({ label, body, tone }: { label: string; body: string; tone: 
   const accent = tone === 'warn' ? 'var(--red-70)' : 'var(--positive-50)';
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr', columnGap: 10 }}>
-      <Text variant="metadata" style={{ color: accent, fontWeight: 500, fontSize: 13 }}>
+      <Text variant="metadata" style={{ color: accent, fontWeight: 500, fontSize: 14 }}>
         {label}
       </Text>
-      <Text variant="secondary" style={{ color: 'var(--dark-80)', fontSize: 13, lineHeight: 1.45 }}>
+      <Text variant="secondary" style={{ color: 'var(--dark-80)', fontSize: 14, lineHeight: 1.45 }}>
         {body}
       </Text>
     </div>

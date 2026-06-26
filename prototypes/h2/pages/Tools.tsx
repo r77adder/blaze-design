@@ -306,7 +306,7 @@ function FootnoteText(): ReactNode {
       style={{
         display: 'block',
         marginTop: 12,
-        color: 'var(--dark-40)',
+        color: 'var(--dark-60)',
         textAlign: 'center',
       }}
     >

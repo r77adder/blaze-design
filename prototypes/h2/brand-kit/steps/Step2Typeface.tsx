@@ -125,7 +125,7 @@ export function Step2Typeface() {
             padding: '8px 12px',
             borderRadius: 8,
             fontFamily: 'Sohne, sans-serif',
-            fontSize: 13,
+            fontSize: 14,
             letterSpacing: '0.26px',
           }}
           onMouseEnter={(e) => {
@@ -191,7 +191,7 @@ function TypefaceCard({
       >
         {typeface.displayName}
       </span>
-      <Text color="var(--dark-60)" style={{ fontSize: 13 }}>
+      <Text color="var(--dark-60)" style={{ fontSize: 14 }}>
         {typeface.supportingName}
       </Text>
 
@@ -272,7 +272,7 @@ function InstagramPreview({ typeface }: { typeface: TypefaceOption }) {
           />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-          <Text color="var(--dark-90)" style={{ fontSize: 13, fontWeight: 500 }}>
+          <Text color="var(--dark-90)" style={{ fontSize: 14, fontWeight: 500 }}>
             radiant_health
           </Text>
           <Text color="var(--dark-60)" style={{ fontSize: 12 }}>
@@ -369,7 +369,7 @@ function InstagramPreview({ typeface }: { typeface: TypefaceOption }) {
         style={{
           padding: '4px 14px 14px',
           fontFamily: 'Sohne, sans-serif',
-          fontSize: 13,
+          fontSize: 14,
           lineHeight: 1.35,
           letterSpacing: '0.26px',
           color: 'var(--dark-90)',

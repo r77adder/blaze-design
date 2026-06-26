@@ -343,7 +343,7 @@ function StatusPill({ status, dontPostReasons, isPast, resubmitNote, tooltipPlac
       backgroundColor: cfg.bg,
       backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
       border:`1px solid ${cfg.border}`,
-      fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
+      fontSize:12, fontWeight:400, color:cfg.color, fontFamily:F,
       letterSpacing:'0.22px', whiteSpace:'nowrap',
     }}>
       {cfg.label}
@@ -434,7 +434,7 @@ function PaidSearchCard({
         <p style={{ margin: '0 0 2px', fontSize: 12, color: dark60, fontFamily: F, lineHeight: 1.4 }}>
           {post.adCampaignGoal}
         </p>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: dark90, fontFamily: F, lineHeight: 1.4 }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F, lineHeight: 1.4 }}>
           {post.adCampaignTarget}
         </p>
       </div>
@@ -444,12 +444,12 @@ function PaidSearchCard({
 
       {/* Ad variants — compact */}
       <div style={{ padding: '10px 14px 46px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
-        <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: dark60, fontFamily: F, letterSpacing: '0.2px' }}>
+        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, color: dark60, fontFamily: F, letterSpacing: '0.2px' }}>
           {variants.length} variant{variants.length !== 1 ? 's' : ''} being tested
         </p>
         {variants.map(v => (
           <div key={v.label} style={{ borderLeft: `2px solid ${dark8}`, paddingLeft: 10 }}>
-            <p style={{ margin: '0 0 2px', fontSize: 13, color: '#1a73e8', fontFamily: F, lineHeight: 1.4, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.headline}</p>
+            <p style={{ margin: '0 0 2px', fontSize: 14, color: '#1a73e8', fontFamily: F, lineHeight: 1.4, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.headline}</p>
             <p style={{ margin: 0, fontSize: 12, color: dark60, fontFamily: F, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.description}</p>
           </div>
         ))}
@@ -566,7 +566,7 @@ function ReputationCard({
       <div style={{ padding: '12px 12px 8px', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         <SourceBadge source={post.reputationSource} />
         {post.reputationRating !== undefined && <StarRating rating={post.reputationRating} />}
-        <span style={{ fontSize: 11, color: dark40, fontFamily: F, marginLeft: 'auto' }}>{post.timeAgo}</span>
+        <span style={{ fontSize: 12, color: dark40, fontFamily: F, marginLeft: 'auto' }}>{post.timeAgo}</span>
         {showCheckbox && (
           <span
             onClick={(e) => e.stopPropagation()}
@@ -580,15 +580,15 @@ function ReputationCard({
 
       {/* Handle */}
       <div style={{ padding: '0 12px 8px' }}>
-        <span style={{ fontSize: 11, color: dark60, fontFamily: F }}>{post.reputationHandle}</span>
+        <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>{post.reputationHandle}</span>
         {post.engagementLabel && (
-          <span style={{ fontSize: 11, color: dark40, fontFamily: F }}> · {post.engagementLabel}</span>
+          <span style={{ fontSize: 12, color: dark40, fontFamily: F }}> · {post.engagementLabel}</span>
         )}
       </div>
 
       {/* Review title + body */}
       <div style={{ padding: '0 12px 10px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: dark90, fontFamily: F, lineHeight: 1.4 }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F, lineHeight: 1.4 }}>
           {post.reputationTitle ?? post.caption}
         </p>
         <p style={{ margin: 0, fontSize: 12, color: dark80, fontFamily: F, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
@@ -599,14 +599,14 @@ function ReputationCard({
       {/* AI draft (if any) */}
       {post.aiDraft && (
         <div style={{ margin: '0 10px 10px', background: 'rgba(124,92,252,0.05)', border: '1px solid rgba(124,92,252,0.15)', borderRadius: 7, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontSize: 10, fontWeight: 500, fontFamily: F, display: 'flex', alignItems: 'center', gap: 3,
+          <span style={{ fontSize: 12, fontWeight: 500, fontFamily: F, display: 'flex', alignItems: 'center', gap: 3,
             color: post.draftNeedsHumanReview ? '#8a6800' : '#5c3fc4' }}>
             {post.draftNeedsHumanReview
               ? <><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#8a6800" strokeWidth="1.2"/><path d="M6 4v2.5" stroke="#8a6800" strokeWidth="1.2" strokeLinecap="round"/><circle cx="6" cy="9" r="0.7" fill="#8a6800"/></svg> Needs human review · {post.draftTone}</>
               : <><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4.2 7.5L8 3" stroke="#5c3fc4" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg> AI draft · {post.draftTone}</>
             }
           </span>
-          <p style={{ margin: 0, fontSize: 11, color: dark80, fontFamily: F, lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
+          <p style={{ margin: 0, fontSize: 12, color: dark80, fontFamily: F, lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
             "{post.aiDraft}"
           </p>
         </div>
@@ -629,7 +629,7 @@ function ReputationCard({
       {/* Confidence pill — bottom right (internal mode only) */}
       {mode === 'internal' && post.confidence !== undefined && (
         <div style={{ position: 'absolute', bottom: 10, right: 12, zIndex: 5 }}>
-          <span style={{ fontSize: 11, color: dark60, fontFamily: F, background: dark4, borderRadius: 4, padding: '2px 7px' }}>
+          <span style={{ fontSize: 12, color: dark60, fontFamily: F, background: dark4, borderRadius: 4, padding: '2px 7px' }}>
             Confidence {post.confidence}%
           </span>
         </div>
@@ -754,7 +754,7 @@ function ContentCard({
       <div style={{ height: HEADER_H, display:'flex', alignItems:'center', gap:4, padding:'12px 12px 2px', flexShrink:0 }}>
         <TypeIcon type={post.type} size={14} />
         <span style={{ fontSize:12, color:dark60, fontFamily:F, flex:1, letterSpacing:'0.24px' }}>{TYPE_LABEL[post.type]}</span>
-        <span style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', whiteSpace:'nowrap' }}>{post.date}</span>
+        <span style={{ fontSize:12, color:dark40, fontFamily:F, letterSpacing:'0.22px', whiteSpace:'nowrap' }}>{post.date}</span>
       </div>
 
       {isBlog ? (
@@ -775,7 +775,7 @@ function ContentCard({
                 display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
                 {post.caption}
               </p>
-              <p style={{ margin:0, fontSize:11, color:dark40, fontFamily:F }}>July 8, 2025</p>
+              <p style={{ margin:0, fontSize:12, color:dark40, fontFamily:F }}>July 8, 2025</p>
               <p style={{ margin:0, fontSize:12, color:dark60, fontFamily:F, lineHeight:1.55, letterSpacing:'0.24px',
                 display:'-webkit-box', WebkitLineClamp:6, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
                 A fresh coat of paint is one of the highest-return improvements you can make to your home — protecting siding and trim from the Texas sun while instantly lifting curb appeal. The secret is in the prep: power-washing, scraping, sanding, and caulking every surface before the first coat is what makes a CertaPro finish last for years, not months.
@@ -824,7 +824,7 @@ function ContentCard({
               {post.type === 'carousel' && post.slides && (
                 <div style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'2px 6px', display:'flex', alignItems:'center', gap:3 }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="white" strokeWidth="1.6"/><path d="M2 7v10M22 7v10" stroke="white" strokeWidth="1.6" strokeLinecap="round"/></svg>
-                  <span style={{ fontSize:10, color:'white', fontFamily:F }}>{post.slides}</span>
+                  <span style={{ fontSize:12, color:'white', fontFamily:F }}>{post.slides}</span>
                 </div>
               )}
             </div>
@@ -841,7 +841,7 @@ function ContentCard({
           }}>
             {/* Subject / headline */}
             <div style={{ padding:'10px 12px 8px', flexShrink:0 }}>
-              <p style={{ margin:0, fontSize:13, fontWeight:500, color:dark90, fontFamily:F, lineHeight:1.4, textAlign:'center',
+              <p style={{ margin:0, fontSize:14, fontWeight:500, color:dark90, fontFamily:F, lineHeight:1.4, textAlign:'center',
                 display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
                 {post.caption}
               </p>
@@ -852,7 +852,7 @@ function ContentCard({
             </div>
             {/* Body copy */}
             <div style={{ flex:1, padding:'8px 12px 10px', overflow:'hidden' }}>
-              <p style={{ margin:0, fontSize:11, color:dark60, fontFamily:F, lineHeight:1.55, letterSpacing:'0.22px',
+              <p style={{ margin:0, fontSize:12, color:dark60, fontFamily:F, lineHeight:1.55, letterSpacing:'0.22px',
                 display:'-webkit-box', WebkitLineClamp:7, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
                 A fresh coat of paint is one of the highest-return improvements you can make to your home — protecting siding and trim from the Texas sun while instantly lifting curb appeal. The secret is in the prep: power-washing, scraping, sanding, and caulking every surface before the first coat is what makes a CertaPro finish last for years, not months.
               </p>
@@ -1263,7 +1263,7 @@ function PaidSearchLaunchModal({ close, post }: { close: () => void; post: Post 
           {/* Ad variants */}
           <div style={{ border: `1px solid ${dark8}`, borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px 10px', borderBottom: `1px solid ${dark8}` }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: dark90, fontFamily: F }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>
                 Ads being tested · {variants.length} variant{variants.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -1271,13 +1271,13 @@ function PaidSearchLaunchModal({ close, post }: { close: () => void; post: Post 
               {variants.map(v => (
                 <div key={v.label} style={{ border: `1px solid ${dark8}`, borderRadius: 10, padding: '14px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: dark60, fontFamily: F, background: dark4, border: `1px solid ${dark8}`, borderRadius: 5, padding: '2px 7px', letterSpacing: '0.4px' }}>{v.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: dark60, fontFamily: F, background: dark4, border: `1px solid ${dark8}`, borderRadius: 5, padding: '2px 7px', letterSpacing: '0.4px' }}>{v.label}</span>
                     <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>Sponsored</span>
                     <span style={{ fontSize: 12, color: dark40, fontFamily: F }}>·</span>
                     <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>{post.adUrl}</span>
                   </div>
-                  <p style={{ margin: '0 0 4px', fontSize: 15, color: '#1a73e8', fontFamily: F, lineHeight: 1.4, cursor: 'pointer' }}>{v.headline}</p>
-                  <p style={{ margin: 0, fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.6 }}>{v.description}</p>
+                  <p style={{ margin: '0 0 4px', fontSize: 16, color: '#1a73e8', fontFamily: F, lineHeight: 1.4, cursor: 'pointer' }}>{v.headline}</p>
+                  <p style={{ margin: 0, fontSize: 14, color: dark80, fontFamily: F, lineHeight: 1.6 }}>{v.description}</p>
                 </div>
               ))}
             </div>
@@ -1285,7 +1285,7 @@ function PaidSearchLaunchModal({ close, post }: { close: () => void; post: Post 
 
           {/* Expected results */}
           <div style={{ border: `1px solid ${dark8}`, borderRadius: 10, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: dark90, fontFamily: F }}>Expected results</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>Expected results</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <span style={{ fontSize: 32, fontWeight: 700, color: dark90, fontFamily: F, lineHeight: 1 }}>3</span>
               <span style={{ fontSize: 14, color: dark60, fontFamily: F }}>estimate requests / day</span>
@@ -1293,13 +1293,13 @@ function PaidSearchLaunchModal({ close, post }: { close: () => void; post: Post 
                 <div style={{ width: '30%', height: '100%', background: '#1a73e8', borderRadius: 99 }} />
               </div>
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: dark60, fontFamily: F }}>
+            <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F }}>
               Backed by <strong style={{ color: dark90 }}>$40/day</strong> · ~$13.33 per estimate request · 28.6k impressions
             </p>
           </div>
 
           {/* Agent prep */}
-          <p style={{ margin: 0, fontSize: 13, color: dark60, fontFamily: F }}>
+          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F }}>
             Agent also prepared:{' '}
             <span style={{ color: '#1a73e8', textDecoration: 'underline', cursor: 'pointer' }}>47 keywords</span>
             {' · '}
@@ -1414,7 +1414,7 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
 
         {/* Right: credits + avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'flex-end' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: dark90, fontFamily: F }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: dark90, fontFamily: F }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
             82 Credits
           </span>
@@ -1429,23 +1429,23 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
 
         {/* DIY — left assistant panel for editing the generated post */}
         <div style={{ width: 280, flexShrink: 0, background: white, borderRight: `1px solid ${dark8}`, display: 'flex', flexDirection: 'column', padding: '20px 20px 0', overflowY: 'auto' }}>
-            <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 400, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
               Blaze can improve this post by:
             </p>
             <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {diySuggestions.map((s, i) => (
-                <li key={i} style={{ fontSize: 13, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
+                <li key={i} style={{ fontSize: 14, color: dark80, fontFamily: F, lineHeight: 1.5 }}>
                   <span style={{ marginRight: 4 }}>{s.emoji}</span>
                   <strong style={{ fontWeight: 500, color: dark90 }}>{s.label}</strong>{': '}
                   <span style={{ color: dark60 }}>{s.detail}</span>
                 </li>
               ))}
             </ol>
-            <p style={{ margin: '20px 0 12px', fontSize: 13, color: dark80, fontFamily: F }}>What would you like to do?</p>
+            <p style={{ margin: '20px 0 12px', fontSize: 14, color: dark80, fontFamily: F }}>What would you like to do?</p>
             <div style={{ flex: 1 }} />
             <div style={{ borderTop: `1px solid ${dark8}`, paddingTop: 12, paddingBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${dark8}`, borderRadius: 8, padding: '8px 10px', background: white }}>
-                <input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Ask Blaze to change something..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, color: dark90, fontFamily: F, background: 'transparent' }} />
+                <input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Ask Blaze to change something..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, color: dark90, fontFamily: F, background: 'transparent' }} />
                 <button style={{ width: 26, height: 26, borderRadius: 99, border: 'none', background: dark90, color: white, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
@@ -1466,7 +1466,7 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
             {/* View as label + social icons — pinned left of post card */}
             <div style={{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>View as</span>
+              <span style={{ fontSize: 12, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>View as</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
                 {(['instagram','facebook','linkedin','x','google'] as const).map((p, i) => (
                   <SocialIcon key={p} platform={p} active={i === 0} />
@@ -1531,7 +1531,7 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
               </div>
               {/* Caption */}
               <div style={{ padding: '0 14px 14px' }}>
-                <p style={{ margin: 0, fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
+                <p style={{ margin: 0, fontSize: 14, color: dark90, fontFamily: F, lineHeight: 1.5 }}>
                   <strong style={{ fontWeight: 500 }}>Account Not Connected</strong>{' '}
                   <span style={{ color: dark80 }}>
                     {captionExpanded || post.caption.length <= CAPTION_LIMIT
@@ -1567,10 +1567,10 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
             <div style={{ flex: 1, padding: '20px 16px', overflowY: 'auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Posting on */}
             <div>
-              <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Posting on</p>
+              <p style={{ margin: '0 0 6px', fontSize: 12, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Posting on</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {/* DIY drafts aren't scheduled yet — prompt to schedule instead of showing a date. */}
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{status === 'draft' ? 'Schedule Post' : post.date}</p>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F, flex: 1 }}>{status === 'draft' ? 'Schedule Post' : post.date}</p>
                 <button style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
@@ -1579,7 +1579,7 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
 
             {/* Posting to */}
             <div>
-              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Posting to</p>
+              <p style={{ margin: '0 0 10px', fontSize: 12, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Posting to</p>
               {[
                 { name: 'Instagram', platform: 'instagram', connected: false },
                 { name: 'Facebook', platform: 'facebook', connected: true },
@@ -1589,7 +1589,7 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
               ].map(acct => (
                 <div key={acct.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <SocialIcon platform={acct.platform} active={acct.connected} />
-                  <span style={{ fontSize: 13, color: dark90, fontFamily: F, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acct.name}</span>
+                  <span style={{ fontSize: 14, color: dark90, fontFamily: F, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acct.name}</span>
                   {acct.connected
                     ? <div style={{ width: 18, height: 18, borderRadius: 99, background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke={dark40} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
                     : <Button variant="secondary" size="xs" onPress={() => {}}>Connect</Button>
@@ -1600,14 +1600,14 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
 
             {/* Campaign */}
             <div>
-              <p style={{ margin: '0 0 6px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Campaign</p>
-              <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 500, color: dark90, fontFamily: F }}>Spring Exterior Refresh</p>
+              <p style={{ margin: '0 0 6px', fontSize: 12, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Campaign</p>
+              <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>Spring Exterior Refresh</p>
               <p style={{ margin: 0, fontSize: 12, color: dark60, fontFamily: F }}>🏡 Home Services Content</p>
             </div>
 
             {/* Quick Edits */}
             <div>
-              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Quick Edits</p>
+              <p style={{ margin: '0 0 10px', fontSize: 12, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Quick Edits</p>
               {[
                 {
                   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke={dark60} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
@@ -1624,14 +1624,14 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
               ].map(item => (
                 <button key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 4 }}>
                   {item.icon}
-                  <span style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</span>
+                  <span style={{ fontSize: 14, color: dark90, fontFamily: F }}>{item.label}</span>
                 </button>
               ))}
             </div>
 
             {/* Redesign */}
             <div>
-              <p style={{ margin: '0 0 10px', fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Redesign</p>
+              <p style={{ margin: '0 0 10px', fontSize: 12, color: dark40, fontFamily: F, letterSpacing: '0.22px' }}>Redesign</p>
               {[
                 { icon: '↻', label: 'Regenerate Design', sub: 'Blaze will generate new design' },
                 { icon: '🖼', label: 'Replace with Image', sub: 'Swap design with your own' },
@@ -1639,8 +1639,8 @@ function ReviewPage({ post, status, allPosts, onClose, onApprove, onRemoveApprov
                 <button key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 8, textAlign: 'left' }}>
                   <span style={{ fontSize: 16, lineHeight: 1.2 }}>{item.icon}</span>
                   <div>
-                    <div style={{ fontSize: 13, color: dark90, fontFamily: F }}>{item.label}</div>
-                    <div style={{ fontSize: 11, color: dark40, fontFamily: F }}>{item.sub}</div>
+                    <div style={{ fontSize: 14, color: dark90, fontFamily: F }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: dark40, fontFamily: F }}>{item.sub}</div>
                   </div>
                 </button>
               ))}
@@ -1703,7 +1703,7 @@ function TurnOffConfirmModal({ close, onConfirm }: { close: () => void; onConfir
             borderRadius: 8, padding: '10px 12px',
           }}>
             <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
-            <p style={{ margin: 0, fontSize: 13, color: '#7a4800', fontFamily: F, lineHeight: 1.55 }}>
+            <p style={{ margin: 0, fontSize: 14, color: '#7a4800', fontFamily: F, lineHeight: 1.55 }}>
               Any content currently awaiting your approval will be auto-approved and scheduled to post.
             </p>
           </div>
@@ -1741,7 +1741,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
       <Modal.Header onClose={close}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Approval Settings</span>
-          <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>
+          <span style={{ fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.5 }}>
             Choose which content types need your sign-off before they go live.
           </span>
         </div>
@@ -1752,7 +1752,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, paddingBottom: 16 }}>
             <div>
               <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 500, color: dark90, fontFamily: F }}>Approvals</p>
-              <p style={{ margin: 0, fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.55 }}>
+              <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.55 }}>
                 Require my sign-off before content goes live. When off, content publishes automatically as soon as it’s generated.
               </p>
             </div>
@@ -1764,7 +1764,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
             <>
               <div style={{ height: 1, background: dark8, margin: '0 0 16px' }} />
               <div style={{ paddingLeft: 20, borderLeft: `2px solid ${dark8}` }}>
-              <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 500, color: dark40, fontFamily: F, letterSpacing: '0.8px' }}>
+              <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 500, color: dark40, fontFamily: F, letterSpacing: '0.8px' }}>
                 Approval required per content type
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -1781,7 +1781,7 @@ function ApprovalSettingsModal({ close }: { close: () => void }) {
                       <p style={{ margin: '0 0 6px', fontSize: 12, color: dark60, fontFamily: F, lineHeight: 1.5 }}>{ct.desc}</p>
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 99,
-                        fontSize: 11, fontFamily: F,
+                        fontSize: 12, fontFamily: F,
                         background: types[ct.key] ? 'rgba(32,161,79,0.08)' : dark4,
                         color: types[ct.key] ? green : dark60,
                         border: `1px solid ${types[ct.key] ? 'rgba(32,161,79,0.25)' : dark15}`,
@@ -1845,7 +1845,7 @@ function CelebrationModal({ close, campaignName = 'Campaign', postCount = 0, dat
 
       <Modal.Content>
         <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
-          <p style={{ margin:0, fontSize:15, fontWeight:400, color:dark60, fontFamily:F, lineHeight:1.65, letterSpacing:'0.3px' }}>
+          <p style={{ margin:0, fontSize:16, fontWeight:400, color:dark60, fontFamily:F, lineHeight:1.65, letterSpacing:'0.3px' }}>
             <strong style={{ color:dark90, fontWeight:500 }}>{campaignName}</strong> has been approved and ready to publish. Your posts will go live according to their scheduled times for the accounts that you have connected.
           </p>
           <div style={{
@@ -1854,17 +1854,17 @@ function CelebrationModal({ close, campaignName = 'Campaign', postCount = 0, dat
             border:`1px solid ${dark4}`,
           }}>
             <div>
-              <div style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', marginBottom:2 }}>Campaign</div>
+              <div style={{ fontSize:12, color:dark40, fontFamily:F, letterSpacing:'0.22px', marginBottom:2 }}>Campaign</div>
               <div style={{ fontSize:14, fontWeight:500, color:dark90, fontFamily:F, maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{campaignName}</div>
             </div>
             <div style={{ width:1, height:32, background:dark8 }} />
             <div>
-              <div style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', marginBottom:2 }}>Schedule</div>
+              <div style={{ fontSize:12, color:dark40, fontFamily:F, letterSpacing:'0.22px', marginBottom:2 }}>Schedule</div>
               <div style={{ fontSize:14, fontWeight:500, color:dark90, fontFamily:F }}>{dateRange}</div>
             </div>
             <div style={{ width:1, height:32, background:dark8 }} />
             <div>
-              <div style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', marginBottom:2 }}>Posts approved</div>
+              <div style={{ fontSize:12, color:dark40, fontFamily:F, letterSpacing:'0.22px', marginBottom:2 }}>Posts approved</div>
               <div style={{ fontSize:14, fontWeight:500, color:green, fontFamily:F }}>{postCount} posts</div>
             </div>
           </div>
@@ -1905,7 +1905,7 @@ function InternalStatusPill({ status }: { status: InternalPillState }) {
       backgroundColor: cfg.bg,
       backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
       border: `1px solid ${cfg.border}`,
-      fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
+      fontSize:12, fontWeight:400, color:cfg.color, fontFamily:F,
       letterSpacing:'0.22px', whiteSpace:'nowrap',
     }}>{cfg.label}</span>
   );
@@ -1952,7 +1952,7 @@ function LocalSEOCard({
       <div style={{ height: 36, display: 'flex', alignItems: 'center', gap: 4, padding: '12px 12px 2px', flexShrink: 0 }}>
         {GoogleG}
         <span style={{ fontSize: 12, color: dark60, fontFamily: F, flex: 1, letterSpacing: '0.24px' }}>Business Profile</span>
-        <span style={{ fontSize: 11, color: dark40, fontFamily: F, letterSpacing: '0.22px', whiteSpace: 'nowrap' }}>{post.date}</span>
+        <span style={{ fontSize: 12, color: dark40, fontFamily: F, letterSpacing: '0.22px', whiteSpace: 'nowrap' }}>{post.date}</span>
       </div>
 
       {/* Caption + Learn more + image */}
@@ -2055,16 +2055,16 @@ function FilterMenu({
     fontFamily: F, textAlign: 'left',
   });
   const sectionLabelStyle: React.CSSProperties = {
-    margin: '4px 8px 6px', fontSize: 13, color: dark40, fontFamily: F,
+    margin: '4px 8px 6px', fontSize: 14, color: dark40, fontFamily: F,
   };
   const renderRow = (
     key: string, label: string, selected: boolean, count: number,
     onClick: () => void, redBadge = false,
   ) => (
     <button key={key} onClick={onClick} style={rowStyle(selected)}>
-      <span style={{ fontSize: 15, color: dark90, fontWeight: selected ? 500 : 400, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 16, color: dark90, fontWeight: selected ? 500 : 400, whiteSpace: 'nowrap' }}>{label}</span>
       {redBadge && count > 0
-        ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 99, background: red, color: white, fontSize: 11, fontWeight: 600, padding: '0 5px', lineHeight: 1 }}>{count}</span>
+        ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 99, background: red, color: white, fontSize: 12, fontWeight: 600, padding: '0 5px', lineHeight: 1 }}>{count}</span>
         : <span style={{ fontSize: 14, color: dark40 }}>{count}</span>}
       {selected && <span style={{ marginLeft: 'auto', display: 'inline-flex', color: dark90 }}><Check2 size={16} /></span>}
     </button>
@@ -2284,7 +2284,7 @@ function ApprovalV2Inner() {
       </div>
       <div style={{ textAlign:'center' }}>
         <p style={{ margin:'0 0 4px', fontSize:16, fontWeight:500, color:dark90, fontFamily:F }}>No content matches your filters</p>
-        <p style={{ margin:0, fontSize:13, color:dark60, fontFamily:F }}>Try adjusting or clearing your filters to see more content.</p>
+        <p style={{ margin:0, fontSize:14, color:dark60, fontFamily:F }}>Try adjusting or clearing your filters to see more content.</p>
       </div>
       <Button variant="secondary" size="sm" onPress={clearFilters}>Clear filter</Button>
     </div>
@@ -2298,7 +2298,7 @@ function ApprovalV2Inner() {
           {filterMenu}
           <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
           {/* Credits — self-serve concept */}
-          <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:dark90, fontFamily:F, whiteSpace:'nowrap' }}>
+          <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:14, color:dark90, fontFamily:F, whiteSpace:'nowrap' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM5 16l.8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8L5 16z" fill={dark90}/></svg>
             82 Credits
           </span>
@@ -2352,7 +2352,7 @@ function ApprovalV2Inner() {
 
         const SectionHeader = ({ label, count }: { label: string; count: number }) => (
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <span style={{ fontSize:13, fontWeight:500, color:dark40, fontFamily:F, letterSpacing:'0.26px', whiteSpace:'nowrap' }}>
+            <span style={{ fontSize:14, fontWeight:500, color:dark40, fontFamily:F, letterSpacing:'0.26px', whiteSpace:'nowrap' }}>
               {label} <span style={{ fontWeight:400 }}>({count})</span>
             </span>
             <div style={{ flex:1, height:1, background:dark8 }} />

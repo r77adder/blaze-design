@@ -44,7 +44,7 @@ export function Step6SourceMaterials() {
           <p
             style={{
               margin: 0,
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               lineHeight: 1.55,
               letterSpacing: '0.26px',
@@ -67,7 +67,7 @@ export function Step6SourceMaterials() {
               justifyContent: 'space-between',
             }}
           >
-            <div style={{ fontSize: 13, color: 'var(--dark-90)', fontWeight: 500 }}>
+            <div style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 500 }}>
               85 images, 2 videos
             </div>
             <button type="button" style={pillButtonStyle}>
@@ -108,7 +108,7 @@ export function Step6SourceMaterials() {
           <p
             style={{
               margin: 0,
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               lineHeight: 1.55,
               letterSpacing: '0.26px',
@@ -131,7 +131,7 @@ export function Step6SourceMaterials() {
               justifyContent: 'space-between',
             }}
           >
-            <div style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+            <div style={{ fontSize: 14, color: 'var(--dark-60)' }}>
               Drop files here or click to upload
             </div>
             <button type="button" style={uploadButtonStyle}>
@@ -189,7 +189,7 @@ const pillButtonStyle: React.CSSProperties = {
   background: 'var(--light-100)',
   color: 'var(--dark-90)',
   fontFamily: 'inherit',
-  fontSize: 13,
+  fontSize: 14,
   cursor: 'pointer',
 };
 

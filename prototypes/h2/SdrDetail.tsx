@@ -477,7 +477,7 @@ function SystemRow({ msg, muted = false }: { msg: Message; muted?: boolean }) {
       }}
     >
       <span style={{ flex: 1 }}>{msg.content}</span>
-      <span style={{ color: 'var(--dark-40)', flexShrink: 0 }}>{formatRelative(msg.timestamp)}</span>
+      <span style={{ color: 'var(--dark-60)', flexShrink: 0 }}>{formatRelative(msg.timestamp)}</span>
     </div>
   );
 }
@@ -541,7 +541,7 @@ function BookingCard({ lead, onReschedule, onSetOutcome }: { lead: Lead; onResch
             {lead.location}
           </Text>
         )}
-        <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45, marginTop: 2 }}>
+        <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.45, marginTop: 2 }}>
           {lead.location === 'Phone call'
             ? 'Matthew will call at the scheduled time. Reschedule from the contact’s calendar if anything changes.'
             : 'Matthew will arrive at the scheduled time. Reschedule from the contact’s calendar if anything changes.'}
@@ -762,7 +762,7 @@ function ThreadPane({
         )}
         {/* end-of-exchange feedback */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 12, marginTop: 4 }}>
-          <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+          <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)' }}>
             Did the AI handle this well?
           </Text>
           <FeedbackButtons context="Conversation" />
@@ -1040,7 +1040,7 @@ function LeadBox({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 14, fontWeight: isActive ? 500 : 400, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {req}
         </span>
         <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
@@ -1139,7 +1139,7 @@ function ContactTimeline({
               <div style={{ fontSize: 14, color: ev.isActive ? 'var(--dark-90)' : 'var(--dark-60)', fontWeight: isLeadStart ? 500 : 400, lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {ev.label}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 1 }}>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 1 }}>
                 {formatRelative(ev.timestamp)}
               </div>
             </button>
@@ -1236,7 +1236,7 @@ function Sidebar({
         <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--dark-8)' }}>
           <Text
             variant="metadata"
-            style={{ display: 'block', fontSize: 11, color: 'var(--dark-60)', fontWeight: 400, marginBottom: 8, letterSpacing: '0.04em' }}
+            style={{ display: 'block', fontSize: 12, color: 'var(--dark-60)', fontWeight: 400, marginBottom: 8, letterSpacing: '0.04em' }}
           >
             Leads from this contact
           </Text>
@@ -1301,7 +1301,7 @@ function Sidebar({
       <div style={{ padding: '16px 20px' }}>
         <Text
           variant="metadata"
-          style={{ display: 'block', fontSize: 11, color: 'var(--dark-60)', fontWeight: 400, marginBottom: 12, letterSpacing: '0.04em' }}
+          style={{ display: 'block', fontSize: 12, color: 'var(--dark-60)', fontWeight: 400, marginBottom: 12, letterSpacing: '0.04em' }}
         >
           Timeline
         </Text>

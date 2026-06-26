@@ -227,8 +227,8 @@ export function FeedItemModal({
             style={{
               marginLeft: 'auto',
               fontVariantNumeric: 'tabular-nums',
-              color: 'var(--dark-40)',
-              fontSize: '11.5px',
+              color: 'var(--dark-60)',
+              fontSize: '12px',
             }}
           >
             {item.time}

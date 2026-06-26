@@ -11,7 +11,7 @@ const ENGINE_COLS = 'minmax(0,1fr) 64px 48px';
 
 function StatChevron() {
   return (
-    <span aria-hidden style={{ display: 'inline-flex', alignSelf: 'flex-end', paddingBottom: 2, color: 'var(--dark-40)' }}>
+    <span aria-hidden style={{ display: 'inline-flex', alignSelf: 'flex-end', paddingBottom: 2, color: 'var(--dark-60)' }}>
       <ChevronRight size={16} />
     </span>
   );
@@ -21,7 +21,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <span style={{ fontFamily: FONT, fontSize: 12, letterSpacing: tracking(12), color: 'var(--dark-60)' }}>{label}</span>
-      <span style={{ fontFamily: FONT, fontSize: 24, fontWeight: 400, lineHeight: 1, color: 'var(--dark-90)' }}>{value}</span>
+      <span style={{ fontFamily: FONT, fontSize: 26, fontWeight: 400, lineHeight: 1, color: 'var(--dark-90)' }}>{value}</span>
     </div>
   );
 }
@@ -60,7 +60,7 @@ export function AiSearchCard() {
           <MiniStat label="Conversion" value={fmtPct(aiCvr)} />
         </div>
 
-        <p style={{ margin: 0, fontFamily: FONT, fontSize: 13, lineHeight: 1.5, letterSpacing: tracking(13), color: 'var(--dark-60)' }}>
+        <p style={{ margin: 0, fontFamily: FONT, fontSize: 14, lineHeight: 1.5, letterSpacing: tracking(13), color: 'var(--dark-60)' }}>
           Low volume, high intent — AI search converts at{' '}
           <strong style={{ fontWeight: 500, color: 'var(--dark-90)' }}>≈{ratio}×</strong> the site-wide rate.{' '}
           {selfReportedAi} leads said an AI assistant referred them — more than we can measure directly.

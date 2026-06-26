@@ -84,7 +84,7 @@ export function GoogleAdsPage() {
                 <td style={{ ...tdStyle, textAlign: 'right' }}>$0</td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>0.0x</td>
                 <td style={tdStyle}><StatusPill tone="neutral">Draft</StatusPill></td>
-                <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--dark-40)' }}>⋯</td>
+                <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--dark-60)' }}>⋯</td>
               </tr>
             </tbody>
           </table>
@@ -163,7 +163,7 @@ function GoogleAdTile({ card }: { card: GoogleAdCard }) {
 
       <div style={{ padding: 12, borderTop: '1px solid var(--dark-4)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Text variant="metadata" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--dark-60)' }}>
-          <Avatar fallback={competitor.initials} size="sm" style={{ background: competitor.color, color: 'var(--light-100)', fontSize: 10, fontWeight: 700, width: 22, height: 22 }} />
+          <Avatar fallback={competitor.initials} size="sm" style={{ background: competitor.color, color: 'var(--light-100)', fontSize: 12, fontWeight: 700, width: 22, height: 22 }} />
           <strong style={{ color: 'var(--dark-90)' }}>{competitor.name}</strong> · {card.meta}
         </Text>
         <PerfSignalRow signals={card.signals} flat />

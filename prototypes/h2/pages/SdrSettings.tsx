@@ -462,7 +462,7 @@ function SystemPromptSection({
               resize: 'vertical',
               lineHeight: 1.6,
               fontFamily: "'Sohne', sans-serif",
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-90)',
             }}
           />
@@ -562,7 +562,7 @@ function ChatTestPanel({
             style={{
               width: 32, height: 32, borderRadius: '50%', background: 'var(--brand)',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, fontWeight: 700, color: 'var(--dark-90)', flexShrink: 0,
+              fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', flexShrink: 0,
             }}
           >
             {agentName.charAt(0).toUpperCase()}
@@ -603,7 +603,7 @@ function ChatTestPanel({
               >
                 {msg.text}
               </div>
-              <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>{msg.ts}</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{msg.ts}</span>
             </div>
           );
         })}
@@ -632,7 +632,7 @@ function ChatTestPanel({
           style={{
             width: 36, height: 36, borderRadius: 8, border: 'none', padding: 0, flexShrink: 0,
             background: draft.trim().length > 0 ? 'var(--dark-90)' : 'var(--dark-8)',
-            color: draft.trim().length > 0 ? 'var(--light-100)' : 'var(--dark-40)',
+            color: draft.trim().length > 0 ? 'var(--light-100)' : 'var(--dark-60)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             cursor: draft.trim().length > 0 ? 'pointer' : 'not-allowed',
             transition: 'background 120ms ease',
@@ -754,7 +754,7 @@ function UnifiedChannelCard({
             <ChannelGlyph channel={channel} size={20} />
           </span>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{channelLabel(channel)}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{channelLabel(channel)}</div>
             <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{channelHint(channel)}</div>
           </div>
         </div>
@@ -843,7 +843,7 @@ function UnifiedChannelCard({
               borderRadius: 8,
             }}
           >
-            <span style={{ fontSize: 13, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>Respond within</span>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>Respond within</span>
             <NumberInput
               value={settings.slaSeconds}
               onChange={(v) => update((c) => ({ ...c, slaSeconds: v }))}
@@ -851,7 +851,7 @@ function UnifiedChannelCard({
               max={3600}
               disabled={dimmed}
             />
-            <span style={{ fontSize: 13, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>seconds</span>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>seconds</span>
           </div>
         </div>
 
@@ -904,7 +904,7 @@ function UnifiedChannelCard({
                           transition: 'border-color 120ms ease, box-shadow 120ms ease',
                         }}
                       >
-                        <div style={{ fontSize: 13, fontWeight: 500 }}>{t.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 500 }}>{t.label}</div>
                         <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.4 }}>{t.description}</div>
                       </button>
                     );
@@ -915,7 +915,7 @@ function UnifiedChannelCard({
               <div>
                 <FieldLabel>Steps</FieldLabel>
                 {settings.flowSteps.length === 0 ? (
-                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', padding: '4px 0', fontSize: 13 }}>
+                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', padding: '4px 0', fontSize: 14 }}>
                     No follow-up steps — the AI replies once and waits.
                   </Text>
                 ) : (
@@ -1016,7 +1016,7 @@ function StepRow({
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 28, height: 28, borderRadius: '50%', background: 'var(--dark-4)',
-          color: 'var(--dark-90)', fontSize: 13, fontWeight: 500, marginTop: 2,
+          color: 'var(--dark-90)', fontSize: 14, fontWeight: 500, marginTop: 2,
         }}
       >
         {index + 1}
@@ -1037,7 +1037,7 @@ function StepRow({
 }
 
 const inputStyle: React.CSSProperties = {
-  fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.26px', color: 'var(--dark-90)',
+  fontFamily: 'inherit', fontSize: 14, letterSpacing: '0.26px', color: 'var(--dark-90)',
   padding: '6px 8px', border: '1px solid var(--dark-8)', borderRadius: 6,
   background: 'var(--light-100)', outline: 'none', width: '100%', boxSizing: 'border-box',
 };
@@ -1109,7 +1109,7 @@ function NumberInput({ value, onChange, min, max, disabled }: { value: number; o
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
   return (
     <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
-      {label && <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{label}</span>}
+      {label && <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>{label}</span>}
       <span
         role="switch"
         aria-checked={checked}
@@ -1253,7 +1253,7 @@ function EscalationRulesSection({ settings, setSettings }: SectionProps) {
       sub="Different situations call for different responses depending on when the call comes in. Set a behavior per trigger for each time window."
     >
       <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 160px 40px', gap: 12, padding: '10px 14px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 13, color: 'var(--dark-60)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 160px 40px', gap: 12, padding: '10px 14px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 14, color: 'var(--dark-60)' }}>
           <span>Trigger</span>
           <span>During hours</span>
           <span>After hours</span>
@@ -1530,10 +1530,10 @@ function WindowCard({ dot, title, line1, line2, pillTone, pillLabel }: { dot: st
     <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, padding: 18, background: 'var(--light-100)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span aria-hidden style={{ width: 10, height: 10, borderRadius: '50%', background: dot }} />
-        <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
+        <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
       </div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 2 }}>{line1}</div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 10 }}>{line2}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 2 }}>{line1}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 10 }}>{line2}</div>
       <StatusPill tone={pillTone} size="sm">{pillLabel}</StatusPill>
     </div>
   );
@@ -1566,7 +1566,7 @@ function KnowledgeBaseSection({
           resize: 'vertical',
           lineHeight: 1.6,
           fontFamily: "'Sohne', sans-serif",
-          fontSize: 13,
+          fontSize: 14,
         }}
       />
     </SectionShell>
@@ -1674,10 +1674,10 @@ function A2pStatusToken({ status, onOpen }: { status: A2pStatus; onOpen: () => v
       }}
     >
       <StatusPill tone={meta.tone} size="sm">{meta.label}</StatusPill>
-      <Text color="var(--dark-60)" style={{ fontSize: 13, lineHeight: 1.5, whiteSpace: 'nowrap' }}>
+      <Text color="var(--dark-60)" style={{ fontSize: 14, lineHeight: 1.5, whiteSpace: 'nowrap' }}>
         {meta.help}
       </Text>
-      <span style={{ flexShrink: 0, color: 'var(--dark-40)', display: 'inline-flex' }}>
+      <span style={{ flexShrink: 0, color: 'var(--dark-60)', display: 'inline-flex' }}>
         <ArrowRight size={16} />
       </span>
     </button>
@@ -1892,7 +1892,7 @@ function CustomerMessagesSection() {
           <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span
               style={{
-                fontSize: 11, fontWeight: 500,
+                fontSize: 12, fontWeight: 500,
                 color: r.type === 'sms' ? 'var(--status-posting)' : 'var(--purple)',
                 background: r.type === 'sms' ? 'rgba(1,121,207,0.08)' : 'rgba(124,92,252,0.08)',
                 padding: '3px 8px', borderRadius: 6, flexShrink: 0,
@@ -1915,7 +1915,7 @@ function CustomerMessagesSection() {
               style={{
                 width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 border: '1px solid var(--dark-8)', borderRadius: 6, background: 'none',
-                cursor: 'pointer', color: 'var(--dark-40)', flexShrink: 0, padding: 0,
+                cursor: 'pointer', color: 'var(--dark-60)', flexShrink: 0, padding: 0,
               }}
             >
               <Close size={14} />
@@ -1950,7 +1950,7 @@ function OutcomesSection({ settings, setSettings }: SectionProps) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
             <div>
               <Heading level={5}>Accept escalations</Heading>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>
                 Allow the AI to interrupt the owner when a hot prospect can't wait.
               </div>
             </div>
@@ -2012,7 +2012,7 @@ function OutcomesSection({ settings, setSettings }: SectionProps) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
                 <div>
                   <Heading level={5}>Email + ICS calendar invite</Heading>
-                  <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>Confirmation email with .ics file to prospect and owner.</div>
+                  <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>Confirmation email with .ics file to prospect and owner.</div>
                 </div>
                 <Toggle checked={config.emailIcsEnabled} onChange={(v) => update((c) => ({ ...c, emailIcsEnabled: v }))} />
               </div>
@@ -2022,7 +2022,7 @@ function OutcomesSection({ settings, setSettings }: SectionProps) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: '1px solid var(--dark-8)', borderRadius: config.bookingSmsEnabled ? '10px 10px 0 0' : 10 }}>
                   <div>
                     <Heading level={5}>SMS notification</Heading>
-                    <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>Text a phone number when a booking is confirmed.</div>
+                    <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>Text a phone number when a booking is confirmed.</div>
                   </div>
                   <Toggle checked={config.bookingSmsEnabled} onChange={(v) => update((c) => ({ ...c, bookingSmsEnabled: v }))} />
                 </div>
@@ -2248,7 +2248,7 @@ function NotificationsSection({ onConfigureEscalations }: { onConfigureEscalatio
         sub="Pick which receptionist activity pings you, and how. SMS and email can arrive in real-time, or be rolled into a once-a-day digest."
       >
         <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: EVENT_GRID, gap: 12, padding: '10px 16px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 13, color: 'var(--dark-60)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: EVENT_GRID, gap: 12, padding: '10px 16px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 14, color: 'var(--dark-60)' }}>
             <span>Event</span>
             <span style={{ textAlign: 'center' }}>Push</span>
             <span style={{ textAlign: 'center' }}>SMS</span>
@@ -2358,7 +2358,7 @@ function NotificationsSection({ onConfigureEscalations }: { onConfigureEscalatio
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
             <div>
               <Heading level={5}>Pause non-urgent notifications</Heading>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>Quietly batch routine pings during off hours.</div>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>Quietly batch routine pings during off hours.</div>
             </div>
             <Toggle checked={config.quietHoursEnabled} onChange={(v) => update((c) => ({ ...c, quietHoursEnabled: v }))} />
           </div>
@@ -2657,7 +2657,7 @@ function TextareaField({ label, value, onChange, rows, placeholder }: { label: s
         onChange={(e) => onChange(e.target.value)}
         rows={rows ?? 3}
         placeholder={placeholder}
-        style={{ ...textInputStyle, resize: 'vertical', lineHeight: 1.6, fontFamily: "'Sohne', sans-serif", fontSize: 13 }}
+        style={{ ...textInputStyle, resize: 'vertical', lineHeight: 1.6, fontFamily: "'Sohne', sans-serif", fontSize: 14 }}
       />
     </div>
   );
@@ -2697,7 +2697,7 @@ function RadioCard({ selected, onClick, title, description }: { selected: boolea
       <Icon size={20} />
       <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
-        {description && <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>}
+        {description && <span style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>}
       </span>
     </button>
   );

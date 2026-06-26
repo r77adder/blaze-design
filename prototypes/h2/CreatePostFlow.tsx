@@ -421,7 +421,7 @@ function DatePicker({ value, onChange }: { value: string; onChange: (next: strin
           fontSize: 14,
           cursor: cell.current ? 'pointer' : 'default',
           background: isSelected ? 'var(--dark-90)' : isToday ? 'var(--dark-8)' : 'transparent',
-          color: isSelected ? 'var(--light-100)' : cell.current ? 'var(--dark-90)' : 'var(--dark-40)',
+          color: isSelected ? 'var(--light-100)' : cell.current ? 'var(--dark-90)' : 'var(--dark-60)',
           fontWeight: isSelected ? 500 : 400,
         }}
       >
@@ -453,7 +453,7 @@ function DatePicker({ value, onChange }: { value: string; onChange: (next: strin
           {/* weekday header */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
             {DOW_LABELS.map((d, i) => (
-              <span key={i} style={{ textAlign: 'center', fontSize: 13, color: 'var(--dark-60)', padding: '4px 0' }}>{d}</span>
+              <span key={i} style={{ textAlign: 'center', fontSize: 14, color: 'var(--dark-60)', padding: '4px 0' }}>{d}</span>
             ))}
           </div>
           {/* day grid */}
@@ -463,11 +463,11 @@ function DatePicker({ value, onChange }: { value: string; onChange: (next: strin
           {/* footer */}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, marginTop: 16, paddingTop: 4 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>Selected date</span>
-              <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{WEEKDAY_SHORT[selected.getDay()]}, {MONTH_SHORT[selected.getMonth()]} {selected.getDate()}</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>Selected date</span>
+              <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{WEEKDAY_SHORT[selected.getDay()]}, {MONTH_SHORT[selected.getMonth()]} {selected.getDate()}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>Time of day</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>Time of day</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: '1px solid var(--dark-15)', borderRadius: 8, padding: '7px 10px' }}>
                 <select
                   value={time}
@@ -547,7 +547,7 @@ function ChooserRow({
       </span>
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
         <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.05px' }}>{label}</span>
-        <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>
+        <span style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>
       </span>
       <ChevronRight size={20} color="var(--dark-40)" />
     </button>
@@ -1041,7 +1041,7 @@ function SourceTile({ img, selected, onClick }: { img: string; selected: boolean
 function SectionHeader({ title, right }: { title: ReactNode; right?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-      <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
+      <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
       {right}
     </div>
   );
@@ -1063,7 +1063,7 @@ function SelectSourceModal({
   const brandTiles = PRODUCT_IMAGES;
   const uploadTiles = [MY_AVATARS[0].img];
   const seeAll = (
-    <button type="button" style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-60)', cursor: 'pointer' }}>
+    <button type="button" style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-60)', cursor: 'pointer' }}>
       See All
     </button>
   );
@@ -1089,7 +1089,7 @@ function SelectSourceModal({
         <div style={{ marginBottom: 24 }}>
           <SectionHeader
             title="Generate with AI"
-            right={<button type="button" style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-60)', cursor: 'pointer' }}>Generate your own</button>}
+            right={<button type="button" style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-60)', cursor: 'pointer' }}>Generate your own</button>}
           />
           <SourceRow>
             <button
@@ -1107,7 +1107,7 @@ function SelectSourceModal({
                 justifyContent: 'center',
                 gap: 6,
                 fontFamily: 'inherit',
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: 500,
                 color: 'var(--dark-90)',
                 cursor: 'pointer',
@@ -1128,8 +1128,8 @@ function SelectSourceModal({
             title={
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 From Your Brand Kit
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 400, color: 'var(--dark-60)' }}>
-                  <span style={{ width: 18, height: 18, borderRadius: 5, background: 'var(--dark-90)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>B</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 14, fontWeight: 400, color: 'var(--dark-60)' }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 5, background: 'var(--dark-90)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>B</span>
                   Craft Coffee Advocate
                   <ChevronDown size={14} />
                 </span>
@@ -1229,7 +1229,7 @@ function PhonePreview({
         display: 'flex',
         justifyContent: 'center',
         textAlign: 'center',
-        fontSize: 13,
+        fontSize: 14,
         pointerEvents: 'none',
       }}
     >
@@ -1342,7 +1342,7 @@ function MusicThumb({ size }: { size: number }) {
   return (
     <div style={{ width: size, height: size, borderRadius: 8, flexShrink: 0, background: 'var(--dark-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
       <Note2 size={Math.round(size * 0.3)} color="var(--dark-40)" />
-      <span style={{ fontSize: 10, color: 'var(--dark-40)' }}>Music</span>
+      <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>Music</span>
     </div>
   );
 }
@@ -1393,7 +1393,7 @@ function StockAudioTile({ track, onSelect }: { track: { name: string; duration: 
         ) : (
           <>
             <Note2 size={16} color="var(--dark-40)" />
-            <span style={{ fontSize: 10, color: 'var(--dark-40)' }}>Music</span>
+            <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>Music</span>
           </>
         )}
       </div>
@@ -1419,16 +1419,16 @@ function SelectAudioModal({
     <Modal.Root size="lg" aria-labelledby="select-audio-title" data-testid="select-audio-modal">
       <Modal.Header title="Select audio" id="select-audio-title" onClose={close} compact />
       <Modal.Content compact>
-        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 12 }}>From Brand Kit</div>
+        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 12 }}>From Brand Kit</div>
         <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid var(--dark-15)', background: 'var(--light-100)', borderRadius: 8, padding: '8px 14px', fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)', cursor: 'pointer', marginBottom: 24 }}>
           <svg width={18} height={18} viewBox="0 0 20 20" fill="none"><path d="M13.2357 14.3751H14.375C16.3084 14.3751 17.6563 12.9838 17.6563 11.25C17.6563 9.84758 16.7661 8.4856 15.4516 8.16777C15.4067 7.01874 14.8967 6.1607 14.1926 5.70813C13.5021 5.26425 12.6494 5.21033 11.8969 5.54942C11.2936 4.38376 10.1044 3.43774 8.54145 3.43774C6.21651 3.43774 4.5779 5.61334 4.69639 7.83225C3.34714 8.19246 2.34375 9.50049 2.34375 11.0548C2.34375 12.8863 3.73334 14.3751 5.44268 14.3751H6.71875" stroke="var(--dark-90)" strokeWidth="1.4" strokeLinecap="round" /><path d="M10 8.90649V16.5627M10 8.90649L7.26562 11.6409M10 8.90649L12.7344 11.6409" stroke="var(--dark-90)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Upload Audio
         </button>
 
-        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 12 }}>Stock audio</div>
+        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 12 }}>Stock audio</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--dark-8)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
           <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--dark-40)" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-          <span style={{ fontSize: 14, color: 'var(--dark-40)' }}>Search for audio…</span>
+          <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>Search for audio…</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           {STOCK_AUDIO.map((t) => (
@@ -1675,7 +1675,7 @@ export function ScriptSettingsModal({
                         trigger={
                           <span style={{ display: 'flex', flexDirection: 'column', gap: 1, whiteSpace: 'normal', textAlign: 'left' }}>
                             <span style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.2 }}>{ANGLE_BY_ID[angle]?.name ?? ''}</span>
-                            <span style={{ fontSize: 11, color: 'var(--dark-60)', lineHeight: 1.3 }}>{ANGLE_BY_ID[angle]?.desc ?? ''}</span>
+                            <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.3 }}>{ANGLE_BY_ID[angle]?.desc ?? ''}</span>
                           </span>
                         }
                       >
@@ -1698,12 +1698,12 @@ export function ScriptSettingsModal({
                         productImage ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, border: '1px solid var(--dark-8)', borderRadius: 8, background: 'var(--light-100)', padding: 5 }}>
                             <div style={{ width: 32, height: 32, borderRadius: 6, flexShrink: 0, backgroundImage: `url('${productImage}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                            <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Product</span>
+                            <span style={{ flex: 1, minWidth: 0, fontSize: 14, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Product</span>
                             <IconButton icon={Edit3} size="sm" variant="tertiary" aria-label="Change product image" onPress={openProductPicker} />
                             <IconButton icon={Trash2} size="sm" variant="tertiary" aria-label="Remove product image" onPress={() => setProductImage(null)} />
                           </div>
                         ) : (
-                          <button type="button" onClick={openProductPicker} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', marginTop: 8, border: '1px dashed var(--dark-15)', borderRadius: 8, background: 'var(--light-100)', padding: '8px 10px', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-60)', cursor: 'pointer' }}>
+                          <button type="button" onClick={openProductPicker} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', marginTop: 8, border: '1px dashed var(--dark-15)', borderRadius: 8, background: 'var(--light-100)', padding: '8px 10px', fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-60)', cursor: 'pointer' }}>
                             <FilePlus1 />
                             Add product image
                           </button>
@@ -1786,7 +1786,7 @@ export function ScriptSettingsModal({
                   )}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                  <span style={{ fontSize: 12, color: script.length > scriptMax ? 'var(--red-70)' : 'var(--dark-40)' }}>
+                  <span style={{ fontSize: 12, color: script.length > scriptMax ? 'var(--red-70)' : 'var(--dark-60)' }}>
                     {script.length}/{scriptMax}
                   </span>
                 </div>
@@ -1814,7 +1814,7 @@ export function ScriptSettingsModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
                     <div style={{ width: 80, height: 80, borderRadius: 8, flexShrink: 0, backgroundColor: 'var(--dark-8)', backgroundImage: refImage ? `url('${refImage}')` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Avatar</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Avatar</div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{avatarName}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1835,7 +1835,7 @@ export function ScriptSettingsModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
                     <div style={{ width: 80, height: 80, borderRadius: 8, flexShrink: 0, backgroundColor: 'var(--dark-8)', backgroundImage: refImage ? `url('${refImage}')` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Reference image</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Reference image</div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{imageFileName(refImage)}</div>
                     </div>
                     <Button variant="secondary" size="sm" onPress={openImagePicker}>Change</Button>
@@ -1847,7 +1847,7 @@ export function ScriptSettingsModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '8px 20px 8px 8px' }}>
                     <MusicThumb size={80} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Music</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Music</div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{music}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1874,7 +1874,7 @@ export function ScriptSettingsModal({
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, color: 'var(--dark-40)' }}>Caption style</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Caption style</div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{captions ? captionStyle : 'No caption'}</div>
                     </div>
                     <Button variant="secondary" size="sm" onPress={openCaptionPicker}>Change</Button>
@@ -2120,7 +2120,7 @@ function PostRow({
 
         {/* All video types show the script microcopy; non-video shows Add context. */}
         {isVideo ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--dark-40)', fontSize: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--dark-60)', fontSize: 12 }}>
             <InformationCircleSmall size={16} color="var(--dark-40)" />
             Topic seeds the script. Review and edit in {isAvatar ? 'Script & Settings' : 'Video Settings'}.
           </div>
@@ -2195,7 +2195,7 @@ function AddContextModal({ close }: StackModalProps) {
           <span style={{ width: 48, height: 48, borderRadius: 99, background: 'var(--dark-8)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
             <Plus size={20} color="var(--dark-60)" />
           </span>
-          <span style={{ fontSize: 15, color: 'var(--dark-90)' }}>No context added yet.</span>
+          <span style={{ fontSize: 16, color: 'var(--dark-90)' }}>No context added yet.</span>
           <span style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 16 }}>Add a website or upload files to get started.</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <ContextActionButton
@@ -2352,8 +2352,8 @@ function CampaignOption({
     >
       {thumb}
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
-        <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{subtitle}</span>
+        <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+        <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>{subtitle}</span>
       </span>
       {selected && <CampaignCheck />}
     </button>
@@ -2409,7 +2409,7 @@ export function NewPostModal({
             {selectedCampaign ? (
               <>
                 <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedCampaign.title}</span>
-                <span style={{ color: 'var(--dark-40)' }}>•</span>
+                <span style={{ color: 'var(--dark-60)' }}>•</span>
                 <span style={{ color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>{selectedCampaign.range}</span>
               </>
             ) : (
@@ -2432,7 +2432,7 @@ export function NewPostModal({
               }
             />
             <div style={{ height: 1, background: 'var(--dark-8)', margin: '6px 0' }} />
-            <div style={{ fontSize: 13, color: 'var(--dark-60)', padding: '4px 12px 6px' }}>Active campaigns</div>
+            <div style={{ fontSize: 14, color: 'var(--dark-60)', padding: '4px 12px 6px' }}>Active campaigns</div>
             {activeCampaigns.map((c) => (
               <CampaignOption
                 key={c.id}
@@ -2443,7 +2443,7 @@ export function NewPostModal({
                 onClick={() => { setCampaignId(c.id); close(); }}
               />
             ))}
-            <div style={{ fontSize: 13, color: 'var(--dark-60)', padding: '10px 12px 6px' }}>Future campaigns</div>
+            <div style={{ fontSize: 14, color: 'var(--dark-60)', padding: '10px 12px 6px' }}>Future campaigns</div>
             {futureCampaigns.map((c) => (
               <CampaignOption
                 key={c.id}

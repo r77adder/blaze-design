@@ -15,8 +15,8 @@ const ROW_COLS = 'minmax(0,1fr) 56px 44px';
 function HeaderStat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <span style={{ fontFamily: FONT, fontSize: 11, letterSpacing: tracking(11), color: 'var(--dark-60)' }}>{label}</span>
-      <Heading level={3} style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</Heading>
+      <span style={{ fontFamily: FONT, fontSize: 12, letterSpacing: tracking(11), color: 'var(--dark-60)' }}>{label}</span>
+      <Heading level={2} style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</Heading>
     </div>
   );
 }
@@ -117,7 +117,7 @@ export function SourceDrawer() {
       )}
 
       {blaze.length === 0 && external.length === 0 && (
-        <span style={{ fontFamily: FONT, fontSize: 13, color: 'var(--dark-60)', padding: '0 8px' }}>
+        <span style={{ fontFamily: FONT, fontSize: 14, color: 'var(--dark-60)', padding: '0 8px' }}>
           No source detail for this channel yet.
         </span>
       )}

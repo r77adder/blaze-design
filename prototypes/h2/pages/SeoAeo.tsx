@@ -406,8 +406,8 @@ const STRUCTURE_IMPACTS: Record<string, Record<string, { dots: number; label: st
   },
   schema: {
     Google:     { dots: 3, label: 'High', color: 'var(--green-50)' },
-    ChatGPT:    { dots: 1, label: 'Low',  color: 'var(--dark-40)' },
-    Perplexity: { dots: 1, label: 'Low',  color: 'var(--dark-40)' },
+    ChatGPT:    { dots: 1, label: 'Low',  color: 'var(--dark-60)' },
+    Perplexity: { dots: 1, label: 'Low',  color: 'var(--dark-60)' },
     Gemini:     { dots: 2, label: 'Med',  color: 'var(--orange-70)' },
   },
 };
@@ -628,9 +628,9 @@ function SetupModal({ onClose }: { onClose: () => void }) {
   ];
 
   const StatusIcon = ({ status }: { status: string }) => {
-    if (status === 'error') return <span style={{ fontSize: 15, color: 'var(--red-50)' }}>✕</span>;
-    if (status === 'warning') return <span style={{ fontSize: 15, color: 'var(--orange-70)' }}>⚠</span>;
-    return <span style={{ fontSize: 15, color: 'var(--green-50)' }}>✓</span>;
+    if (status === 'error') return <span style={{ fontSize: 16, color: 'var(--red-50)' }}>✕</span>;
+    if (status === 'warning') return <span style={{ fontSize: 16, color: 'var(--orange-70)' }}>⚠</span>;
+    return <span style={{ fontSize: 16, color: 'var(--green-50)' }}>✓</span>;
   };
 
   const errorCount = discrepancies.filter((d) => d.status === 'error').length;
@@ -750,7 +750,7 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28CA41' }} />
           </div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            <span style={{ fontSize: 13, color: 'var(--dark-80)', fontWeight: 500, maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+            <span style={{ fontSize: 14, color: 'var(--dark-80)', fontWeight: 500, maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
             <StatusPill tone="warning" size="sm">Scheduled</StatusPill>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -781,7 +781,7 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
                 <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>Blog Post</Text>
               </div>
               <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.25, color: 'var(--dark-90)', marginBottom: 20, fontFamily: 'Georgia, serif' }}>{title}</h1>
-              <p style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--dark-80)', marginBottom: 24 }}>
+              <p style={{ fontSize: 16, lineHeight: 1.75, color: 'var(--dark-80)', marginBottom: 24 }}>
                 Hiring a painter in Austin is more than picking the lowest bid. The right crew balances prep work, paint quality, and clear communication — and the wrong one can leave you with peeling trim a year later. This guide walks through the seven painters Austin homeowners recommend most, what each one is known for, and how to pick the right fit for your project.
               </p>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--dark-90)', marginBottom: 16, fontFamily: 'Georgia, serif' }}>Choosing the right Austin painter</h2>
@@ -793,11 +793,11 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
                   </div>
                 </div>
               </div>
-              <p style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--dark-80)', marginBottom: 16 }}>
+              <p style={{ fontSize: 16, lineHeight: 1.75, color: 'var(--dark-80)', marginBottom: 16 }}>
                 Not every painter is the right fit for every job. Whether you're refinishing a kitchen, repainting a stucco exterior, or running an HOA repaint project, the right crew balances prep, communication, and finish quality. Here's what to look for before you sign.
               </p>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--dark-90)', marginBottom: 10 }}>Top picks for Austin in 2026</h3>
-              <ul style={{ paddingLeft: 20, lineHeight: 2, color: 'var(--dark-80)', fontSize: 15 }}>
+              <ul style={{ paddingLeft: 20, lineHeight: 2, color: 'var(--dark-80)', fontSize: 16 }}>
                 <li>CertaPro Painters of Austin — best for residential + HOA repaints</li>
                 <li>Five Star Painting of South Austin — best for interior repaints</li>
                 <li>Paper Moon Painting — best for color consultation</li>
@@ -805,7 +805,7 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
 
               {/* Ask Blaze bar */}
               <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--dark-4)', border: '1px solid var(--dark-4)', borderRadius: 10, padding: '10px 14px' }}>
-                <input placeholder="Ask Blaze to edit or generate..." style={{ flex: 1, border: 'none', background: 'none', fontSize: 13, color: 'var(--dark-80)', outline: 'none', fontFamily: 'inherit' }} readOnly />
+                <input placeholder="Ask Blaze to edit or generate..." style={{ flex: 1, border: 'none', background: 'none', fontSize: 14, color: 'var(--dark-80)', outline: 'none', fontFamily: 'inherit' }} readOnly />
                 <IconButton icon={Send} variant="primary" size="xs" aria-label="Send to Blaze" />
               </div>
             </div>
@@ -832,7 +832,7 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
                       <text x="60" y="58" textAnchor="middle" fontSize="20" fontWeight="800" style={{ fill: 'var(--dark-90)' }}>{score}</text>
                       <text x="60" y="70" textAnchor="middle" fontSize="8" style={{ fill: 'var(--dark-60)' }}>Content SEO Score</text>
                     </svg>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', width: 100, marginTop: -4, fontSize: 10, color: 'var(--dark-40)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', width: 100, marginTop: -4, fontSize: 12, color: 'var(--dark-60)' }}>
                       <span>0</span><span>Suggested 1</span><span>100</span>
                     </div>
                   </div>
@@ -860,7 +860,7 @@ function ViewPostModal({ row, onClose }: { row: ContentRow | null; onClose: () =
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--dark-60)', marginBottom: 8 }}>What last happened</div>
                   <div style={{ display: 'flex', gap: 8, fontSize: 12, color: 'var(--dark-60)', alignItems: 'flex-start' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--dark-15)', marginTop: 4, flexShrink: 0 }} />
-                    <div>You made 1 edit <span style={{ color: 'var(--dark-40)' }}>May 19, 2026</span></div>
+                    <div>You made 1 edit <span style={{ color: 'var(--dark-60)' }}>May 19, 2026</span></div>
                   </div>
                   <Button variant="tertiary" size="xs" style={{ marginTop: 8 }}>History</Button>
                 </div>
@@ -953,7 +953,7 @@ function SetupChecklist({ onLearnMore, onConfigureStructure, onFixProfile, onCon
           onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--dark-4)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
         >
-          <Text variant="metadata" style={{ color: 'var(--dark-40)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 16 }}>
+          <Text variant="metadata" style={{ color: 'var(--dark-60)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 16 }}>
             {step.num}.
           </Text>
           <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500, flexShrink: 0 }}>
@@ -1106,7 +1106,7 @@ function ClusterTableRow({
         onClick={onToggle}
         style={{ cursor: 'pointer', background: hovered ? 'var(--dark-2)' : 'var(--light-100)' }}
       >
-        <td style={{ ...tdStyle, color: 'var(--dark-40)', verticalAlign: 'middle' }}>
+        <td style={{ ...tdStyle, color: 'var(--dark-60)', verticalAlign: 'middle' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <DragHandle visible={hovered && !locked} />
             <ChevronDown
@@ -1149,7 +1149,7 @@ function ClusterTableRow({
           <span style={{ color: 'var(--dark-15)', margin: '0 4px' }}>/</span>
           <span style={{ color: 'var(--dark-90)' }}>{group.seedAiVol}</span>
         </td>
-        <td style={{ ...tdStyle, color: 'var(--dark-40)' }}>—</td>
+        <td style={{ ...tdStyle, color: 'var(--dark-60)' }}>—</td>
         <td style={{ ...tdStyle, color: 'var(--dark-60)' }}>{group.firstScheduled}</td>
         <td style={tdStyle}>
           <StatusPillFor status={group.status} />
@@ -1221,7 +1221,7 @@ function PostChildRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <td style={{ ...childTd, color: 'var(--dark-40)', fontSize: 12 }}>
+      <td style={{ ...childTd, color: 'var(--dark-60)', fontSize: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <DragHandle visible={hovered && !locked} />
           {clusterNum}.{index}
@@ -1409,12 +1409,12 @@ function DashboardTab({ onLearnMore, onScheduleFrequency, onAddCluster, onOpenAn
                 </span>
                 <ArrowRight size={14} color="var(--dark-40)" />
               </div>
-              <div style={{ fontSize: 26, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 {m.value}
                 <span style={{ fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', padding: '4px 8px', borderRadius: 5, lineHeight: 1, background: 'var(--green-10)', color: 'var(--status-approved)' }}>{m.delta}</span>
                 {m.unit && <span style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>{m.unit}</span>}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 4 }}>{m.foot}</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 4 }}>{m.foot}</div>
             </button>
           );
         })}
@@ -1431,11 +1431,11 @@ function DashboardTab({ onLearnMore, onScheduleFrequency, onAddCluster, onOpenAn
             </span>
             <ArrowRight size={14} color="var(--dark-40)" />
           </div>
-          <div style={{ fontSize: 26, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums', display: 'flex', alignItems: 'baseline', gap: 8 }}>
             14
             <span style={{ fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', padding: '4px 8px', borderRadius: 5, lineHeight: 1, background: 'var(--dark-4)', color: 'var(--dark-60)' }}>4 / wk</span>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--dark-40)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ width: 14, height: 14, borderRadius: 3, background: '#21759B', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: 'var(--light-100)', flexShrink: 0 }}>W</span>
             www.bestpainter.com
           </div>
@@ -1569,7 +1569,7 @@ function AnalyticsTab() {
   };
   const tdStyle: React.CSSProperties = {
     padding: '11px 12px',
-    fontSize: 13,
+    fontSize: 14,
     color: 'var(--dark-90)',
     borderBottom: '1px solid var(--dark-4)',
     verticalAlign: 'middle',
@@ -1601,7 +1601,7 @@ function AnalyticsTab() {
           <div>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>AI Share of Voice</Text>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
-              <div style={{ fontSize: 32, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>29%</div>
+              <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>29%</div>
               <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>+6 pts vs. last week</Text>
             </div>
           </div>
@@ -1618,7 +1618,7 @@ function AnalyticsTab() {
           <div>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>Average Position</Text>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
-              <div style={{ fontSize: 32, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>2.1</div>
+              <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>2.1</div>
               <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>+0.4 vs. last week</Text>
             </div>
           </div>
@@ -1635,7 +1635,7 @@ function AnalyticsTab() {
           <div>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>Citations this week</Text>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
-              <div style={{ fontSize: 32, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>28</div>
+              <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>28</div>
               <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>+8 vs. last week (20)</Text>
             </div>
           </div>
@@ -1652,7 +1652,7 @@ function AnalyticsTab() {
           <div>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>Market Share</Text>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
-              <div style={{ fontSize: 32, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>12%</div>
+              <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>12%</div>
               <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>+2 pts of AI mentions</Text>
             </div>
           </div>
@@ -1677,8 +1677,8 @@ function AnalyticsTab() {
         <div style={{ border: '1px solid var(--dark-4)', borderRadius: 12, padding: '18px 20px', background: 'var(--light-100)' }}>
           <SparklineSvg />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>Feb 24</Text>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>May 12</Text>
+            <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>Feb 24</Text>
+            <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>May 12</Text>
           </div>
         </div>
       </div>
@@ -1711,7 +1711,7 @@ function AnalyticsTab() {
             {COMPETITORS.map((c) => {
               return (
                 <tr key={c.rank}>
-                  <td style={{ ...tdStyle, color: c.isYou ? 'var(--purple)' : 'var(--dark-40)', fontWeight: c.isYou ? 700 : 500 }}>
+                  <td style={{ ...tdStyle, color: c.isYou ? 'var(--purple)' : 'var(--dark-60)', fontWeight: c.isYou ? 700 : 500 }}>
                     {c.rank}
                   </td>
                   <td style={{ ...tdStyle, fontWeight: c.isYou ? 700 : 500 }}>
@@ -1732,10 +1732,10 @@ function AnalyticsTab() {
                   </td>
                   <td style={tdStyle}>{c.avgPos}</td>
                   <td style={tdStyle}>{c.citations}</td>
-                  <td style={{ ...tdStyle, color: c.wowUp === true ? 'var(--green-50)' : c.wowUp === false ? 'var(--red-70)' : 'var(--dark-40)' }}>
+                  <td style={{ ...tdStyle, color: c.wowUp === true ? 'var(--green-50)' : c.wowUp === false ? 'var(--red-70)' : 'var(--dark-60)' }}>
                     {c.wow}
                   </td>
-                  <td style={{ ...tdStyle, fontSize: 16, textAlign: 'center', color: c.wowUp === true ? 'var(--green-50)' : c.wowUp === false ? 'var(--red-70)' : 'var(--dark-40)' }}>
+                  <td style={{ ...tdStyle, fontSize: 16, textAlign: 'center', color: c.wowUp === true ? 'var(--green-50)' : c.wowUp === false ? 'var(--red-70)' : 'var(--dark-60)' }}>
                     {c.wowUp === true ? '↑' : c.wowUp === false ? '↓' : '→'}
                   </td>
                 </tr>
@@ -1784,7 +1784,7 @@ function AnalyticsTab() {
                       }
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{q.aiVol}</td>
-                    <td style={{ ...tdStyle, color: q.trendUp === true ? 'var(--green-50)' : q.trendUp === false ? 'var(--red-70)' : 'var(--dark-40)' }}>
+                    <td style={{ ...tdStyle, color: q.trendUp === true ? 'var(--green-50)' : q.trendUp === false ? 'var(--red-70)' : 'var(--dark-60)' }}>
                       {q.trend}
                     </td>
                     <td style={tdStyle}>
@@ -1825,7 +1825,7 @@ function AnalyticsTab() {
                   <Text variant="secondary" style={{ fontWeight: 500, display: 'block', color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.title}
                   </Text>
-                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', marginTop: 2 }}>
+                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
                     {item.type} · {item.date} · {item.platforms}
                   </Text>
                 </div>
@@ -1915,7 +1915,7 @@ function TargetCountrySelect({ onChange }: { onChange?: () => void }) {
                   onMouseEnter={(e) => { if (!sel) e.currentTarget.style.background = 'var(--dark-2)'; }}
                   onMouseLeave={(e) => { if (!sel) e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: sel ? 600 : 400 }}>{c}</span>
+                  <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: sel ? 500 : 400}}>{c}</span>
                   {sel && (
                     <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--dark-90)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <CheckSm size={11} color="var(--light-100)" />
@@ -1986,7 +1986,7 @@ function SetupTab() {
               <span
                 style={{
                   display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 99,
-                  fontSize: 11, fontFamily: 'inherit', whiteSpace: 'nowrap',
+                  fontSize: 12, fontFamily: 'inherit', whiteSpace: 'nowrap',
                   background: blogRequiresApproval ? 'rgba(32,161,79,0.1)' : 'var(--dark-4)',
                   color: blogRequiresApproval ? '#20a14f' : 'var(--dark-60)',
                   border: `1px solid ${blogRequiresApproval ? 'rgba(32,161,79,0.25)' : 'var(--dark-15)'}`,
@@ -2080,7 +2080,7 @@ function HowWeWriteContent() {
         {/* Answer-first region */}
         <div style={{ borderBottom: '1px solid var(--dark-4)', height: 130, display: 'flex', flexDirection: 'column', background: 'var(--dark-2)', overflow: 'hidden' }}>
           <div style={{ height: 52, background: 'var(--dark-8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>Image</Text>
+            <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>Image</Text>
           </div>
           <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ height: 8, borderRadius: 2, background: 'var(--dark-15)', width: '90%' }} />
@@ -2098,7 +2098,7 @@ function HowWeWriteContent() {
             <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '95%' }} />
             <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '70%' }} />
             <div style={{ height: 6, borderRadius: 2, background: 'var(--dark-8)', width: '90%' }} />
-            <Text variant="metadata" style={{ color: 'var(--dark-40)', marginTop: 2 }}>schema</Text>
+            <Text variant="metadata" style={{ color: 'var(--dark-60)', marginTop: 2 }}>schema</Text>
           </div>
         </div>
 
@@ -2280,7 +2280,7 @@ function KeywordRankingRow({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ color: 'var(--dark-90)' }}>{r.keyword}</div>
-            <Text variant="metadata" style={{ color: 'var(--dark-40)', display: 'block', marginTop: 1 }}>{r.url}</Text>
+            <Text variant="metadata" style={{ color: 'var(--dark-60)', display: 'block', marginTop: 1 }}>{r.url}</Text>
           </div>
           <div style={{ opacity: hovered ? 1 : 0, transition: 'opacity 120ms', flexShrink: 0 }}>
             <Button size="sm" variant="secondary">View post</Button>
@@ -2297,7 +2297,7 @@ function KeywordRankingRow({
             {delta > 0 ? `↑ +${delta}` : `↓ ${delta}`}
           </span>
         ) : (
-          <span style={{ color: 'var(--dark-40)' }}>—</span>
+          <span style={{ color: 'var(--dark-60)' }}>—</span>
         )}
       </td>
       <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{r.searchVol}</td>
@@ -2317,7 +2317,7 @@ function SeoAnalyticsTab() {
   };
   const tdStyle: React.CSSProperties = {
     padding: '11px 12px',
-    fontSize: 13,
+    fontSize: 14,
     color: 'var(--dark-90)',
     borderBottom: '1px solid var(--dark-4)',
     verticalAlign: 'middle',
@@ -2339,7 +2339,7 @@ function SeoAnalyticsTab() {
         {/* Top row: main stat on the left, 3 side stats on the right. */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 32, marginBottom: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <span style={{ fontSize: 36, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>4,821</span>
+            <span style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1 }}>4,821</span>
             <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>organic visits / mo</Text>
           </div>
           <div style={{ display: 'flex', gap: 32 }}>
@@ -2352,7 +2352,7 @@ function SeoAnalyticsTab() {
                 <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 4 }}>{s.label}</Text>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                   <span style={{ fontSize: 18, fontWeight: 400, color: 'var(--dark-90)' }}>{s.value}</span>
-                  <span style={{ fontSize: 11, color: s.up ? 'var(--green-50)' : 'var(--dark-40)' }}>{s.up ? '↑' : '↓'}</span>
+                  <span style={{ fontSize: 12, color: s.up ? 'var(--green-50)' : 'var(--dark-60)' }}>{s.up ? '↑' : '↓'}</span>
                 </div>
               </div>
             ))}
@@ -2360,8 +2360,8 @@ function SeoAnalyticsTab() {
         </div>
         <OrgTrafficSparkline />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-          <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>Jan</Text>
-          <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>May</Text>
+          <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>Jan</Text>
+          <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>May</Text>
         </div>
         </div>
       </div>
@@ -2411,11 +2411,11 @@ function SeoAnalyticsTab() {
           </div>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
             <div style={{ textAlign: 'right' }}>
-              <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>Total backlinks</Text>
+              <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>Total backlinks</Text>
               <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>847</Text>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>Referring domains</Text>
+              <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>Referring domains</Text>
               <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>124</Text>
             </div>
             <StatusPill tone="success" size="sm">+8 new domains this month</StatusPill>
@@ -2507,7 +2507,7 @@ function PlatformLogo({ p, size = 28 }: { p: (typeof PLATFORM_OPTIONS)[number]; 
     return <Brand size={size} />;
   }
   return (
-    <div style={{ width: size, height: size, borderRadius: 7, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: p.color, flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: 7, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 500, color: p.color, flexShrink: 0 }}>
       {p.icon}
     </div>
   );
@@ -2630,7 +2630,7 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 
           {/* How Blaze does it */}
           <div style={{ marginBottom: 40 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-60)', textAlign: 'center', marginBottom: 16, letterSpacing: '0.02em' }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-60)', textAlign: 'center', marginBottom: 16, letterSpacing: '0.02em' }}>
               How Blaze does it
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
@@ -2658,7 +2658,7 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                     <Ic size={18} color="var(--dark-60)" />
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6, lineHeight: 1.3 }}>{title}</div>
-                  <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</div>
+                  <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>{desc}</div>
                 </div>
               ))}
             </div>
@@ -2727,9 +2727,9 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)' }}>Topic cluster</th>
-                <th style={{ paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)', width: 110 }}>Difficulty</th>
-                <th style={{ paddingBottom: 10, textAlign: 'right', fontSize: 12, color: 'var(--dark-40)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)', width: 140 }}>Search / AI vol.</th>
+                <th style={{ paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-60)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)' }}>Topic cluster</th>
+                <th style={{ paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-60)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)', width: 110 }}>Difficulty</th>
+                <th style={{ paddingBottom: 10, textAlign: 'right', fontSize: 12, color: 'var(--dark-60)', fontWeight: 500, borderBottom: '1px solid var(--dark-4)', width: 140 }}>Search / AI vol.</th>
               </tr>
             </thead>
             <tbody>
@@ -2749,9 +2749,9 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                         ) : (
                           <span style={{ width: 22, height: 22, borderRadius: 5, border: '1px solid var(--dark-15)', flexShrink: 0, display: 'block' }} />
                         )}
-                        <span style={{ fontSize: 15, color: 'var(--dark-90)', fontWeight: 600 }}>
+                        <span style={{ fontSize: 16, color: 'var(--dark-90)', fontWeight: 600 }}>
                           {c.label}
-                          <span style={{ color: 'var(--dark-40)', fontWeight: 400, fontSize: 13 }}> · {c.keywords} keywords</span>
+                          <span style={{ color: 'var(--dark-60)', fontWeight: 400, fontSize: 14 }}> · {c.keywords} keywords</span>
                         </span>
                       </div>
                     </td>
@@ -2802,13 +2802,13 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, border: `1px solid ${selected ? 'var(--dark-90)' : 'var(--dark-8)'}`, background: 'var(--light-100)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.15s' }}
                 >
                   <PlatformLogo p={p} size={28} />
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{p.label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{p.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', lineHeight: 1.6 }}>
+          <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.6 }}>
             Not sure which platform your site uses? Check with your web developer or look in your website admin panel. You can also skip this and connect later in Settings — but posts will stay in draft until you do.
           </Text>
 
@@ -2865,7 +2865,7 @@ function PlanActiveModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-40)', lineHeight: 1.6 }}>
+        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.6 }}>
           SEO is a long game — most businesses start seeing traction around month 3, then it compounds. Blaze runs in the background so you don't have to think about it.
         </Text>
       </Modal.Content>
@@ -2962,7 +2962,7 @@ function ConnectBlogModal({ onClose }: { onClose: () => void }) {
                 }}
               >
                 <PlatformLogo p={p} size={28} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-90)' }}>{p.label}</span>
+                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{p.label}</span>
               </button>
             );
           })}
@@ -3004,7 +3004,7 @@ function AddKeywordsModal({ cluster, onClose }: { cluster: TopicCluster; onClose
   }
 
   const thStyle: React.CSSProperties = {
-    paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)',
+    paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-60)',
     fontWeight: 500, borderBottom: '1px solid var(--dark-4)',
   };
 
@@ -3021,7 +3021,7 @@ function AddKeywordsModal({ cluster, onClose }: { cluster: TopicCluster; onClose
         }
       />
       <Modal.Content compact={false}>
-        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>Topic cluster</Text>
+        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>Topic cluster</Text>
         <Text variant="secondary" style={{ display: 'block', fontWeight: 600, color: 'var(--dark-90)', marginBottom: 16 }}>{cluster}</Text>
 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -3085,7 +3085,7 @@ function AddClusterModal({ onClose }: { onClose: () => void }) {
   }
 
   const thStyle: React.CSSProperties = {
-    paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-40)',
+    paddingBottom: 10, textAlign: 'left', fontSize: 12, color: 'var(--dark-60)',
     fontWeight: 500, borderBottom: '1px solid var(--dark-4)',
   };
 
@@ -3129,9 +3129,9 @@ function AddClusterModal({ onClose }: { onClose: () => void }) {
                       ) : (
                         <span style={{ width: 20, height: 20, borderRadius: 4, border: '1px solid var(--dark-15)', flexShrink: 0, display: 'block' }} />
                       )}
-                      <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 600 }}>
+                      <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 500}}>
                         {c.label}
-                        <span style={{ color: 'var(--dark-40)', fontWeight: 400, fontSize: 12 }}> · {c.keywords} keywords</span>
+                        <span style={{ color: 'var(--dark-60)', fontWeight: 400, fontSize: 12 }}> · {c.keywords} keywords</span>
                       </span>
                     </div>
                   </td>

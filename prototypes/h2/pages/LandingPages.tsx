@@ -253,18 +253,18 @@ function HubView({ pages, onOpenPage }: { pages: Page[]; onOpenPage: (p: Page) =
                 <div style={{ fontSize: 12, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
                   {p.cvr === '—' ? (
                     <>
-                      <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-40)', letterSpacing: '-0.2px' }}>—</div>
-                      <div style={{ fontSize: 12, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Not published</div>
+                      <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-60)', letterSpacing: '-0.2px' }}>—</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-60)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Not published</div>
                     </>
                   ) : (
                     <>
                       <div style={{ fontSize: 18, fontWeight: 500, letterSpacing: '-0.2px' }}>{p.cvr}</div>
-                      <div style={{ fontSize: 12, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>CVR</div>
+                      <div style={{ fontSize: 12, color: 'var(--dark-60)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>CVR</div>
                     </>
                   )}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{p.channel}</div>
-                <div style={{ color: 'var(--dark-40)', cursor: 'pointer', padding: '4px 8px', borderRadius: 6, textAlign: 'center' }} title="More" onClick={(e) => e.stopPropagation()}>
+                <div style={{ color: 'var(--dark-60)', cursor: 'pointer', padding: '4px 8px', borderRadius: 6, textAlign: 'center' }} title="More" onClick={(e) => e.stopPropagation()}>
                   ⋯
                 </div>
               </div>
@@ -368,7 +368,7 @@ function CampaignChooserModal({
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{c.headline}</div>
-                  <div style={{ color: 'var(--dark-40)', fontSize: 12 }}>{c.type}</div>
+                  <div style={{ color: 'var(--dark-60)', fontSize: 12 }}>{c.type}</div>
                 </div>
               </div>
             );
@@ -1095,14 +1095,14 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
           >
             certapro.com/austin/exterior
           </code>
-          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>Published 2 min ago</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>Published 2 min ago</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, marginBottom: 18 }}>
           <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 14, padding: '18px 20px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <h3 style={{ fontSize: 16, fontWeight: 500, letterSpacing: '0.05px', color: 'var(--dark-90)' }}>Conversion Insights</h3>
-              <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>Last 14 days · simulated</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Last 14 days · simulated</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 18 }}>
               {[
@@ -1111,10 +1111,10 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
                 { lbl: 'CVR', val: '4.6%', delta: '+0.3 pts' },
               ].map((k) => (
                 <div key={k.lbl}>
-                  <div style={{ fontSize: 12, color: 'var(--dark-40)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, color: 'var(--dark-60)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500, marginBottom: 4 }}>
                     {k.lbl}
                   </div>
-                  <div style={{ fontSize: 24, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums' }}>{k.val}</div>
+                  <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', letterSpacing: '-0.4px', fontVariantNumeric: 'tabular-nums' }}>{k.val}</div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'rgb(32,161,79)', marginTop: 2 }}>{k.delta}</div>
                 </div>
               ))}
@@ -1127,7 +1127,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '0.05px' }}>AI Suggestions</span>
-              <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{SUGGESTIONS.length} new</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{SUGGESTIONS.length} new</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {SUGGESTIONS.map((s) => {
@@ -1228,7 +1228,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
           <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
               Top sources
             </div>
             {[
@@ -1255,7 +1255,7 @@ function PublishedView({ pageName, onEdit }: { pageName: string; onEdit: () => v
             ))}
           </div>
           <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 10 }}>
               Section engagement
             </div>
             {[

@@ -137,7 +137,7 @@ function AlertCard({ alert, onDismiss }: { alert: AlertItem; onDismiss: () => vo
           <span style={{ marginRight: 4 }}>{alert.typeIcon}</span>
           {alert.typeLabel}
         </StatusPill>
-        <Text variant="metadata" style={{ color: 'var(--dark-40)', marginLeft: 'auto' }}>{alert.time}</Text>
+        <Text variant="metadata" style={{ color: 'var(--dark-60)', marginLeft: 'auto' }}>{alert.time}</Text>
       </div>
 
       {/* headline */}

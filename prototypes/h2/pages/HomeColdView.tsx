@@ -326,7 +326,7 @@ export function HomeColdView({ businessName }: { businessName?: string }) {
             variant="metadata"
             style={{
               display: 'block',
-              color: 'var(--dark-40)',
+              color: 'var(--dark-60)',
               fontSize: 12,
               marginTop: 16,
               textAlign: 'center',
@@ -399,7 +399,7 @@ function BrandKitRow({
           style={{
             color: 'var(--dark-90)',
             fontWeight: 500,
-            fontSize: 15,
+            fontSize: 16,
           }}
         >
           Finalize your Brand kit
@@ -426,7 +426,7 @@ function BrandKitRow({
             background: 'rgba(4, 175, 0, 0.12)',
             color: '#04af00',
             borderRadius: 999,
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             flexShrink: 0,
           }}
@@ -503,7 +503,7 @@ function FlowRow({
             borderRadius: 99,
             background: 'var(--dark-90)',
             color: 'var(--light-100)',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
@@ -514,7 +514,7 @@ function FlowRow({
         </span>
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500, fontSize: 15 }}>
+        <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500, fontSize: 16 }}>
           {title}
         </Text>
         <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 3, lineHeight: 1.45 }}>
@@ -531,7 +531,7 @@ function FlowRow({
             background: 'rgba(4, 175, 0, 0.12)',
             color: '#04af00',
             borderRadius: 999,
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             flexShrink: 0,
           }}
@@ -599,7 +599,7 @@ function FeatureRow({
           style={{
             color: 'var(--dark-90)',
             fontWeight: 500,
-            fontSize: 15,
+            fontSize: 16,
           }}
         >
           {TOOL_LABEL[id]}
@@ -626,7 +626,7 @@ function FeatureRow({
             background: 'rgba(4, 175, 0, 0.12)',
             color: '#04af00',
             borderRadius: 999,
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 500,
             flexShrink: 0,
           }}
@@ -684,7 +684,7 @@ function AllDoneBanner({ onCta }: { onCta: () => void }) {
         style={{
           display: 'block',
           color: 'var(--dark-60)',
-          fontSize: 15,
+          fontSize: 16,
           lineHeight: 1.5,
           marginBottom: 20,
           maxWidth: 480,

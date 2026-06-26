@@ -121,7 +121,7 @@ export function CrosspostWarningModal({
           <span
             style={{
               fontSize: 12,
-              color: 'var(--dark-40)',
+              color: 'var(--dark-60)',
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
             }}

@@ -64,7 +64,7 @@ export function SourceByStageTable({
           <Num>{fmtInt(row.leads)}</Num>
           <Num>{fmtInt(row.clients)}</Num>
           <Num>{fmtPct(conversionRate(row.visitors, row.leads))}</Num>
-          <span aria-hidden style={{ display: 'inline-flex', justifyContent: 'flex-end', color: 'var(--dark-40)' }}>
+          <span aria-hidden style={{ display: 'inline-flex', justifyContent: 'flex-end', color: 'var(--dark-60)' }}>
             <ChevronRight size={16} />
           </span>
         </RowButton>

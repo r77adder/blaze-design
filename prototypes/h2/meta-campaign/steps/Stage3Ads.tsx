@@ -719,13 +719,13 @@ function AiVariantTile({
         </div>
 
         {/* Concept name */}
-        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.3 }}>
+        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.3 }}>
           {concept.name}
         </div>
 
         {/* Resolved headline + CTA caption */}
         <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.5 }}>
-          {resolved.headline} <span style={{ color: 'var(--dark-40)' }}>·</span> CTA — {resolved.cta}
+          {resolved.headline} <span style={{ color: 'var(--dark-60)' }}>·</span> CTA — {resolved.cta}
         </div>
 
         {/* Ad name (click to edit) */}
@@ -1170,7 +1170,7 @@ function CopyField({
             border: '1px solid var(--dark-8)',
             borderRadius: 8,
             fontFamily: "'Sohne', sans-serif",
-            fontSize: 13,
+            fontSize: 14,
             lineHeight: 1.5,
             color: 'var(--dark-90)',
             resize: 'vertical',
@@ -1279,7 +1279,7 @@ function AddConceptControl({
                     onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
                       {t.name}
                     </span>
                     <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.4 }}>

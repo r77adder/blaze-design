@@ -148,7 +148,7 @@ export function ChatDemoPanel({ agentName, onClose }: { agentName: string; onClo
               padding: 0,
               flexShrink: 0,
               background: draft.trim().length > 0 ? 'var(--dark-90)' : 'var(--dark-8)',
-              color: draft.trim().length > 0 ? 'var(--light-100)' : 'var(--dark-40)',
+              color: draft.trim().length > 0 ? 'var(--light-100)' : 'var(--dark-60)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -226,7 +226,7 @@ export function CallDemoModal({ agentName, onClose }: { agentName: string; onClo
         <div style={{ padding: '24px 24px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, background: 'var(--dark-90)' }}>
           <Avatar agentName={agentName} size={56} />
           <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--light-100)' }}>{agentName}</div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
             <span aria-hidden style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--status-approved)' }} />
             Live · {mmss}
           </div>
@@ -236,14 +236,14 @@ export function CallDemoModal({ agentName, onClose }: { agentName: string; onClo
         <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12, minHeight: 220 }}>
           {CALL_SCRIPT.slice(0, revealed).map((l, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <Text style={{ fontSize: 11, fontWeight: 500, color: 'var(--dark-40)' }}>
+              <Text style={{ fontSize: 12, fontWeight: 500, color: 'var(--dark-60)' }}>
                 {l.who === 'agent' ? agentName : 'Caller'}
               </Text>
               <Text style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--dark-80)' }}>{l.line}</Text>
             </div>
           ))}
           {revealed < CALL_SCRIPT.length && (
-            <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-40)' }}>…</Text>
+            <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)' }}>…</Text>
           )}
         </div>
 

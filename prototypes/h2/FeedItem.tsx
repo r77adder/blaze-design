@@ -113,8 +113,8 @@ export function FeedItem({ item, onAction, onOpen }: FeedItemProps) {
             style={{
               marginLeft: 'auto',
               fontVariantNumeric: 'tabular-nums',
-              color: 'var(--dark-40)',
-              fontSize: '11.5px',
+              color: 'var(--dark-60)',
+              fontSize: '12px',
             }}
           >
             {item.time}
@@ -141,7 +141,7 @@ export function FeedItem({ item, onAction, onOpen }: FeedItemProps) {
             display: 'block',
             lineHeight: 1.55,
             color: 'var(--dark-60)',
-            fontSize: '13.5px',
+            fontSize: '14px',
             marginBottom: thumbnails.length > 0 || item.primary ? 14 : 0,
           }}
         >

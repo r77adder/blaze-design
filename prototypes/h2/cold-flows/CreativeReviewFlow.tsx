@@ -201,7 +201,7 @@ function AssetCard({ asset }: { asset: GeneratedAsset }) {
               zIndex: 1,
               padding: '32px 16px 16px',
               textAlign: 'center',
-              color: textOnly ? 'var(--dark-40)' : 'var(--light-100)',
+              color: textOnly ? 'var(--dark-60)' : 'var(--light-100)',
               textShadow: textOnly ? 'none' : '0 1px 7px rgba(0,0,0,0.45)',
             }}
           >
@@ -227,7 +227,7 @@ function AssetCard({ asset }: { asset: GeneratedAsset }) {
               </Button>
             </div>
           )}
-          <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', marginBottom: 2 }}>
+          <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 2 }}>
             {asset.topic}
           </Text>
           <div style={{ margin: '0 0 8px' }}>
@@ -374,7 +374,7 @@ function MiniBtn({ title, onClick, children }: { title: string; onClick: () => v
         borderRadius: 7,
         border: 'none',
         cursor: 'pointer',
-        fontSize: 13,
+        fontSize: 14,
         background: 'rgba(255,255,255,0.9)',
         color: 'var(--dark-80)',
         backdropFilter: 'blur(4px)',
@@ -543,13 +543,13 @@ export function Calendar() {
           {tracks.map((track) => (
             <div key={track.id}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <HoverInput value={track.name} onChange={(v) => renameTrack(track.id, v)} style={{ fontSize: 14, letterSpacing: '0.28px', fontWeight: 600, maxWidth: 280 }} />
+                <HoverInput value={track.name} onChange={(v) => renameTrack(track.id, v)} style={{ fontSize: 14, letterSpacing: '0.28px', fontWeight: 500, maxWidth: 280 }} />
                 {tracks.length > 1 && <RemoveX onClick={() => removeTrack(track.id)} />}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8 }}>
                 {DAYS.map((d) => (
                   <div key={d} style={{ minHeight: 112, display: 'flex', flexDirection: 'column', borderRadius: 8, background: 'var(--dark-2)', border: '1px solid var(--dark-4)', padding: 8 }}>
-                    <Text variant="metadata" style={{ color: 'var(--dark-40)', marginBottom: 6 }}>
+                    <Text variant="metadata" style={{ color: 'var(--dark-60)', marginBottom: 6 }}>
                       {d}
                     </Text>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
@@ -563,7 +563,7 @@ export function Calendar() {
                           </Text>
                           <button
                             onClick={() => removeItem(track.id, d, s.id)}
-                            style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: 4, border: 'none', background: 'var(--dark-6)', color: 'var(--dark-60)', cursor: 'pointer', fontSize: 10, lineHeight: 1 }}
+                            style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: 4, border: 'none', background: 'var(--dark-6)', color: 'var(--dark-60)', cursor: 'pointer', fontSize: 12, lineHeight: 1 }}
                           >
                             ✕
                           </button>
@@ -645,10 +645,10 @@ export function Calendar() {
             <Card key={i}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <div style={{ width: 64, flexShrink: 0, borderRadius: 8, background: 'var(--dark-2)', padding: '6px 4px', textAlign: 'center' }}>
-                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>
+                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>
                     Week
                   </Text>
-                  <HoverInput value={w.week} onChange={(v) => setThemes(themes.map((x, j) => (j === i ? { ...x, week: v } : x)))} style={{ textAlign: 'center', fontSize: 14, letterSpacing: '0.28px', fontWeight: 600, padding: '2px 4px' }} />
+                  <HoverInput value={w.week} onChange={(v) => setThemes(themes.map((x, j) => (j === i ? { ...x, week: v } : x)))} style={{ textAlign: 'center', fontSize: 14, letterSpacing: '0.28px', fontWeight: 500, padding: '2px 4px' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

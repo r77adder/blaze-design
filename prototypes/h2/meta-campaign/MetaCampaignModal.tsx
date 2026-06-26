@@ -92,7 +92,7 @@ export function MetaCampaignModal() {
               <span style={{ display: 'inline-flex' }}>
                 <MetaBrand size={20} />
               </span>
-              <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>
+              <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
                 New Meta campaign
               </span>
             </div>
@@ -109,13 +109,13 @@ export function MetaCampaignModal() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: current ? 500 : 400,
                         color: current
                           ? 'var(--dark-90)'
                           : done
                             ? 'var(--dark-60)'
-                            : 'var(--dark-40)',
+                            : 'var(--dark-60)',
                       }}
                     >
                       <span

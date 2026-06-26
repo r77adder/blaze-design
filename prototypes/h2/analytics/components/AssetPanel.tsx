@@ -28,8 +28,8 @@ function FieldLabel({ children }: { children: ReactNode }) {
 function HeaderStat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <span style={{ fontFamily: FONT, fontSize: 11, letterSpacing: tracking(11), color: 'var(--dark-60)' }}>{label}</span>
-      <Heading level={3} style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</Heading>
+      <span style={{ fontFamily: FONT, fontSize: 12, letterSpacing: tracking(11), color: 'var(--dark-60)' }}>{label}</span>
+      <Heading level={2} style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</Heading>
     </div>
   );
 }
@@ -58,7 +58,7 @@ function SourceField({ label, value, onClick, thumbSeed }: { label: string; valu
             {thumbSeed && <Thumb size={36} seed={thumbSeed} />}
             <span style={{ fontFamily: FONT, fontSize: 14, letterSpacing: tracking(14), color: 'var(--dark-90)', fontWeight: 500 }}>{value}</span>
           </span>
-          <span aria-hidden style={{ display: 'inline-flex', color: 'var(--dark-40)' }}>
+          <span aria-hidden style={{ display: 'inline-flex', color: 'var(--dark-60)' }}>
             <ChevronRight size={16} />
           </span>
         </div>

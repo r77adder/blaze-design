@@ -133,7 +133,7 @@ export function Step3ContentMix() {
             alignSelf: 'start',
           }}
         >
-          <div style={{ fontSize: 13, color: 'var(--dark-60)', letterSpacing: '0.26px' }}>
+          <div style={{ fontSize: 14, color: 'var(--dark-60)', letterSpacing: '0.26px' }}>
             This amount uses
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -147,12 +147,12 @@ export function Step3ContentMix() {
             >
               {totalCredits}
             </div>
-            <div style={{ fontSize: 13, color: 'var(--dark-60)' }}>credits / week</div>
+            <div style={{ fontSize: 14, color: 'var(--dark-60)' }}>credits / week</div>
           </div>
           <p
             style={{
               margin: 0,
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               lineHeight: 1.55,
               letterSpacing: '0.26px',
@@ -174,7 +174,7 @@ export function Step3ContentMix() {
           <p
             style={{
               margin: 0,
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               lineHeight: 1.55,
               letterSpacing: '0.26px',
@@ -250,7 +250,7 @@ function ContentCard({ type, qty }: { type: ContentType; qty: number }) {
       </div>
       <div
         style={{
-          fontSize: 15,
+          fontSize: 16,
           fontWeight: 500,
           color: 'var(--dark-90)',
           marginBottom: 4,
@@ -260,7 +260,7 @@ function ContentCard({ type, qty }: { type: ContentType; qty: number }) {
       </div>
       <div
         style={{
-          fontSize: 13,
+          fontSize: 14,
           color: 'var(--dark-60)',
           lineHeight: 1.4,
           marginBottom: 8,
@@ -305,7 +305,7 @@ const breakdownStyle: React.CSSProperties = {
   padding: 0,
   color: 'var(--dark-90)',
   fontFamily: 'inherit',
-  fontSize: 13,
+  fontSize: 14,
   fontWeight: 500,
   cursor: 'pointer',
   alignSelf: 'flex-start',
@@ -320,7 +320,7 @@ const adjustStyle: React.CSSProperties = {
   padding: 0,
   color: 'var(--dark-60)',
   fontFamily: 'inherit',
-  fontSize: 13,
+  fontSize: 14,
   cursor: 'pointer',
   alignSelf: 'flex-start',
 };

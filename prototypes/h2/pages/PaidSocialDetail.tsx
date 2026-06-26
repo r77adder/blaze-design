@@ -350,7 +350,7 @@ function KpiTile({ kpi, timeRange }: { kpi: KpiSpec; timeRange: TimeRange }) {
         {kpi.label}
       </Text>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-        <span style={{ fontSize: 26, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.1 }}>
+        <span style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', lineHeight: 1.1 }}>
           {kpi.value}
         </span>
         <DeltaBadge delta={kpi.delta} timeRange={timeRange} />
@@ -372,7 +372,7 @@ function DeltaBadge({ delta, timeRange }: { delta: number; timeRange: TimeRange 
       <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
         <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>—</span>
         {compareLabel && (
-          <span style={{ fontSize: 11, color: 'var(--dark-60)' }}>{compareLabel}</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{compareLabel}</span>
         )}
       </span>
     );
@@ -401,7 +401,7 @@ function DeltaBadge({ delta, timeRange }: { delta: number; timeRange: TimeRange 
       </span>
       <span>{Math.abs(delta)}%</span>
       {compareLabel && (
-        <span style={{ fontSize: 11, color: 'var(--dark-60)', fontWeight: 400 }}>
+        <span style={{ fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>
           {compareLabel}
         </span>
       )}
@@ -952,7 +952,7 @@ function AdSetHeader({
             textAlign: 'left',
           }}
         >
-          <Text style={{ color: 'var(--dark-90)', fontSize: 15, fontWeight: 500 }}>
+          <Text style={{ color: 'var(--dark-90)', fontSize: 16, fontWeight: 500 }}>
             {section.adSetName}
           </Text>
         </button>
@@ -1207,14 +1207,14 @@ function AdCard({ ad }: { ad: Ad }) {
 function AdStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-      <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 11, display: 'block' }}>
+      <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 12, display: 'block' }}>
         {label}
       </Text>
-      <Text style={{ color: 'var(--dark-90)', fontSize: 15, fontWeight: 500 }}>
+      <Text style={{ color: 'var(--dark-90)', fontSize: 16, fontWeight: 500 }}>
         {value}
       </Text>
       {sub && (
-        <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 11 }}>
+        <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 12 }}>
           {sub}
         </Text>
       )}
@@ -1250,7 +1250,7 @@ function AdRow({ ad, isLast }: { ad: Ad; isLast: boolean }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 4,
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--purple)',
                 fontWeight: 500,
               }}
@@ -1297,7 +1297,7 @@ function AdRow({ ad, isLast }: { ad: Ad; isLast: boolean }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 4,
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--status-connect)',
                 fontWeight: 500,
               }}
@@ -1527,7 +1527,7 @@ function AddAdSetDialog({
         </Text>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 11, letterSpacing: '0.22px' }}>
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 12, letterSpacing: '0.22px' }}>
             Recommended themes
           </Text>
           {availableThemes.length === 0 ? (
@@ -1544,10 +1544,10 @@ function AddAdSetDialog({
                   onClick={() => createThemed(t)}
                   style={{ borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 2 }}
                 >
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
                     {t.name}
                   </span>
-                  <span style={{ fontSize: 11, color: 'var(--dark-60)', lineHeight: 1.4 }}>
+                  <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.4 }}>
                     {t.rationale}
                   </span>
                 </Card>
@@ -1557,7 +1557,7 @@ function AddAdSetDialog({
         </div>
 
         <div style={{ borderTop: '1px solid var(--dark-8)', paddingTop: 12, marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 11, letterSpacing: '0.22px' }}>
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 12, letterSpacing: '0.22px' }}>
             Or name your own theme
           </Text>
           <TextField
@@ -1732,7 +1732,7 @@ function EditAudienceDialog({
 }
 
 const editLabelStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   letterSpacing: '0.22px',
   color: 'var(--dark-60)',
   fontWeight: 500,
@@ -1781,7 +1781,7 @@ function ScaleAdDialog({ close, ad }: StackModalProps & { ad: Ad }) {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 500,
             color: 'var(--status-approved)',
             letterSpacing: '0.22px',
@@ -1796,7 +1796,7 @@ function ScaleAdDialog({ close, ad }: StackModalProps & { ad: Ad }) {
         </Text>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
-          <span style={{ fontSize: 11, color: 'var(--dark-60)', letterSpacing: '0.22px' }}>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)', letterSpacing: '0.22px' }}>
             Where should this winner go?
           </span>
           {destinations.map((d) => {
@@ -1817,10 +1817,10 @@ function ScaleAdDialog({ close, ad }: StackModalProps & { ad: Ad }) {
                   background: selected ? 'var(--dark-2)' : undefined,
                 }}
               >
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
                   {d.title}
                 </span>
-                <span style={{ fontSize: 11, color: 'var(--dark-60)', lineHeight: 1.4 }}>
+                <span style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.4 }}>
                   {d.body}
                 </span>
               </Card>
@@ -1829,7 +1829,7 @@ function ScaleAdDialog({ close, ad }: StackModalProps & { ad: Ad }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 11, color: 'var(--dark-60)', letterSpacing: '0.22px' }}>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)', letterSpacing: '0.22px' }}>
             Starting daily budget
           </span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>

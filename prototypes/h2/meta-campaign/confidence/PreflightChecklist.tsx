@@ -98,7 +98,7 @@ function ChecklistRow({ check, isLast }: { check: PreflightCheck; isLast: boolea
         <Text
           style={{
             color: check.status === 'green' ? 'var(--dark-60)' : 'var(--dark-90)',
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: check.status === 'green' ? 400 : 500,
             display: 'block',
           }}

@@ -283,7 +283,7 @@ function Agenda() {
                 borderRadius: '50%',
                 background: 'var(--dark-4)',
                 color: 'var(--dark-60)',
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 600,
                 display: 'inline-flex',
                 alignItems: 'center',

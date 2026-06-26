@@ -456,7 +456,7 @@ function CompetitorTable({ onDrill }: { onDrill: (k: CompetitorKey) => void }) {
                 {row.latestActivity}
               </Text>
             </div>
-            <div style={{ color: 'var(--dark-40)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ color: 'var(--dark-60)', display: 'flex', alignItems: 'center' }}>
               <ChevronRightSmall size={16} />
             </div>
           </button>

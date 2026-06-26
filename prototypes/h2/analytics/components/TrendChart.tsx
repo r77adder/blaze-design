@@ -77,11 +77,11 @@ function MetricTab({
       }}
     >
       <span style={{ fontFamily: FONT, fontSize: 14, letterSpacing: tracking(14), color: 'var(--dark-60)' }}>{tile.label}</span>
-      <span style={{ fontFamily: FONT, fontSize: 28, fontWeight: 400, lineHeight: 1, letterSpacing: '0.2px', color: 'var(--dark-90)' }}>
+      <span style={{ fontFamily: FONT, fontSize: 26, fontWeight: 400, lineHeight: 1, letterSpacing: '0.2px', color: 'var(--dark-90)' }}>
         {tile.value}
       </span>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: FONT, fontSize: 14, letterSpacing: tracking(14), fontWeight: 500, color: up ? 'var(--status-approved)' : 'var(--red-70)' }}>
-        <span aria-hidden style={{ fontSize: 10 }}>{up ? '▲' : '▼'}</span>
+        <span aria-hidden style={{ fontSize: 12 }}>{up ? '▲' : '▼'}</span>
         {fmtDelta(tile.delta)}
         <span style={{ color: 'var(--dark-60)', fontWeight: 400 }}>vs. previous</span>
       </span>
@@ -167,7 +167,7 @@ export function TrendChart({
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
           {[data[0]!, data[midIndex]!, data[data.length - 1]!].map((d, i) => (
-            <span key={i} style={{ fontFamily: FONT, fontSize: 11, letterSpacing: tracking(11), color: 'var(--dark-40)' }}>
+            <span key={i} style={{ fontFamily: FONT, fontSize: 12, letterSpacing: tracking(11), color: 'var(--dark-60)' }}>
               {formatShortDate(d.date)}
             </span>
           ))}

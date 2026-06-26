@@ -42,7 +42,7 @@ function Lead({ children }: { children: ReactNode }) {
 function KV({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div style={{ display: 'flex', gap: 10, marginBottom: 8, alignItems: 'flex-start' }}>
-      <Text variant="metadata" style={{ color: 'var(--dark-40)', width: 92, flexShrink: 0, paddingTop: 2 }}>
+      <Text variant="metadata" style={{ color: 'var(--dark-60)', width: 92, flexShrink: 0, paddingTop: 2 }}>
         {label}
       </Text>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -87,7 +87,7 @@ function chipBtn(active: boolean, bg: string, color: string): React.CSSPropertie
     borderRadius: 8,
     cursor: 'pointer',
     fontFamily: 'inherit',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 500,
     background: active ? bg : 'var(--light-100)',
     color: active ? color : 'var(--dark-60)',
@@ -153,7 +153,7 @@ export function ProfileCard({ profile, onContinue }: { profile: BusinessProfile;
       <KV label="What they do" value={editing ? <EditArea value={pitch} onChange={setPitch} /> : pitch} />
       <KV label="Audience" value={audience} />
       <KV label="Positioning" value={editing ? <EditArea value={positioning} onChange={setPositioning} /> : positioning} />
-      <Text variant="metadata" style={{ display: 'block', marginTop: 4, color: 'var(--dark-40)' }}>
+      <Text variant="metadata" style={{ display: 'block', marginTop: 4, color: 'var(--dark-60)' }}>
         I also captured your customer segments, services, and {ACCOUNT.founder}’s founder bio.
       </Text>
     </CardShell>
@@ -208,7 +208,7 @@ export function CompetitorsCard({ sel, setSel, onContinue }: { sel: Sel; setSel:
                   <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
                     {c.name}
                   </Text>
-                  <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>
+                  <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
                     {c.handle}
                   </Text>
                 </div>
@@ -275,7 +275,7 @@ export function MarketCreativeCard({ sel, setSel, onContinue }: { sel: Sel; setS
             <div key={item.id} style={{ border: '1px solid var(--dark-8)', borderRadius: 10, overflow: 'hidden', background: 'var(--light-100)' }}>
               {item.kind === 'search' && item.searchAd ? (
                 <div style={{ padding: 12, background: 'var(--dark-2)' }}>
-                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>Ad · {item.searchAd.url}</Text>
+                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>Ad · {item.searchAd.url}</Text>
                   <Text variant="secondary" style={{ display: 'block', color: 'var(--action-50)', fontWeight: 500, marginTop: 2 }}>{item.searchAd.title}</Text>
                   <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2, lineHeight: 1.4 }}>{item.searchAd.desc}</Text>
                 </div>
@@ -285,7 +285,7 @@ export function MarketCreativeCard({ sel, setSel, onContinue }: { sel: Sel; setS
                 </div>
               )}
               <div style={{ padding: 10 }}>
-                <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>{item.source} · {item.channel}</Text>
+                <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>{item.source} · {item.channel}</Text>
                 <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', marginTop: 2, lineHeight: 1.4 }}>{item.headline}</Text>
                 <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                   <button type="button" onClick={() => setSel((s) => ({ ...s, likedAds: toggle(s.likedAds, item.id) }))} style={chipBtn(liked, 'var(--positive-10)', 'var(--positive-60)')}>
@@ -345,8 +345,8 @@ export function LookCard({ sel, setSel, onContinue }: { sel: Sel; setSel: SetSel
           <div style={{ height: 8, background: accent }} />
           <div style={{ padding: 14 }}>
             <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 18, color: 'var(--dark-90)' }}>CertaPro</div>
-            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: 'var(--dark-60)', marginTop: 4, lineHeight: 1.4 }}>{sel.taglines[0] ?? TAGLINES[0]}</div>
-            <div style={{ marginTop: 12, display: 'inline-block', padding: '6px 12px', borderRadius: 8, background: accent, color: 'var(--light-100)', fontSize: 13, fontWeight: 600 }}>Get a free estimate</div>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: 'var(--dark-60)', marginTop: 4, lineHeight: 1.4 }}>{sel.taglines[0] ?? TAGLINES[0]}</div>
+            <div style={{ marginTop: 12, display: 'inline-block', padding: '6px 12px', borderRadius: 8, background: accent, color: 'var(--light-100)', fontSize: 14, fontWeight: 500}}>Get a free estimate</div>
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 200 }}>
@@ -372,7 +372,7 @@ export function LookCard({ sel, setSel, onContinue }: { sel: Sel; setSel: SetSel
                 <span style={{ fontFamily: `'${f.family}', sans-serif`, fontSize: 26, fontWeight: f.role === 'Display' ? 700 : 400, color: 'var(--dark-90)', lineHeight: 1 }}>Ag</span>
                 <div>
                   <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{f.family}</Text>
-                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)' }}>{f.role}</Text>
+                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>{f.role}</Text>
                 </div>
               </div>
             ))}
@@ -457,7 +457,7 @@ export function MajorEventsCard({ onContinue }: { onContinue: () => void }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {MAJOR_EVENTS.map((e, i) => (
           <div key={e.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
-            <span style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, background: 'var(--dark-4)', color: 'var(--dark-80)', fontSize: 13, fontWeight: 500, minWidth: 64, textAlign: 'center' }}>
+            <span style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, background: 'var(--dark-4)', color: 'var(--dark-80)', fontSize: 14, fontWeight: 500, minWidth: 64, textAlign: 'center' }}>
               {new Date(e.when + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
             </span>
             {editing ? (
@@ -510,7 +510,7 @@ export function CreativeGalleryCard({ sel, setSel, onContinue }: { sel: Sel; set
             return (
               <button key={it.id} type="button" onClick={() => setOpen(it)} style={{ position: 'relative', padding: 0, border: 'none', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', background: 'var(--dark-8)', aspectRatio: it.aspect }}>
                 <img src={imgFor(it)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <span style={{ position: 'absolute', top: 6, left: 6, padding: '2px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.55)', color: 'var(--light-100)', fontSize: 10, fontWeight: 500 }}>{it.type}</span>
+                <span style={{ position: 'absolute', top: 6, left: 6, padding: '2px 6px', borderRadius: 6, background: 'rgba(0,0,0,0.55)', color: 'var(--light-100)', fontSize: 12, fontWeight: 500 }}>{it.type}</span>
                 {(approved || changed) && (
                   <span style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: approved ? 'var(--positive-60)' : 'var(--brand)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                     {approved ? <Check2 size={13} color="var(--light-100)" /> : <Edit1 size={12} color="var(--dark-90)" />}
@@ -535,7 +535,7 @@ export function CreativeGalleryCard({ sel, setSel, onContinue }: { sel: Sel; set
                   <Close size={18} color="var(--dark-60)" />
                 </button>
               </div>
-              <div style={{ display: 'inline-block', alignSelf: 'flex-start', padding: '4px 10px', borderRadius: 8, background: 'var(--brand)', color: 'var(--dark-90)', fontSize: 13, fontWeight: 600 }}>{open.overlay}</div>
+              <div style={{ display: 'inline-block', alignSelf: 'flex-start', padding: '4px 10px', borderRadius: 8, background: 'var(--brand)', color: 'var(--dark-90)', fontSize: 14, fontWeight: 500}}>{open.overlay}</div>
               <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.5 }}>{open.caption}</Text>
               <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <Button variant="primary" size="sm" frontIcon={Check2} onPress={() => { setSel((s) => ({ ...s, approved: [...new Set([...s.approved, open.id])], changes: s.changes.filter((x) => x !== open.id) })); setOpen(null); }}>
@@ -577,7 +577,7 @@ export function ChangesSummaryCard({ sel, onContinue }: { sel: Sel; onContinue: 
         {rows.map(([k, v]) => (
           <div key={k} style={{ display: 'flex', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--dark-4)' }}>
             <Check2 size={16} color="var(--positive-60)" />
-            <Text variant="metadata" style={{ color: 'var(--dark-40)', width: 150, flexShrink: 0 }}>{k}</Text>
+            <Text variant="metadata" style={{ color: 'var(--dark-60)', width: 150, flexShrink: 0 }}>{k}</Text>
             <Text variant="secondary" style={{ color: 'var(--dark-90)', lineHeight: 1.4 }}>{v}</Text>
           </div>
         ))}
@@ -615,7 +615,7 @@ export function PlanCard({ sel, setSel, onStartTrial, onCheckout }: { sel: Sel; 
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text variant="smallList" style={{ color: 'var(--dark-90)', fontWeight: 600 }}>{DIY_PLANS[t].label}</Text>
-                {t === 'growth' && <span style={{ padding: '2px 8px', borderRadius: 999, background: 'var(--brand)', color: 'var(--dark-90)', fontSize: 11, fontWeight: 600 }}>Recommended</span>}
+                {t === 'growth' && <span style={{ padding: '2px 8px', borderRadius: 999, background: 'var(--brand)', color: 'var(--dark-90)', fontSize: 12, fontWeight: 600 }}>Recommended</span>}
               </div>
               <div style={{ marginTop: 4 }}>
                 <span style={{ fontSize: 22, fontWeight: 600, color: 'var(--dark-90)' }}>{fmtUsd(DIY_PLANS[t].monthlyByTerm[12])}</span>
@@ -633,7 +633,7 @@ export function PlanCard({ sel, setSel, onStartTrial, onCheckout }: { sel: Sel; 
           </div>
         ))}
       </div>
-      <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', marginTop: 8 }}>
+      <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 8 }}>
         Switch to {DIY_PLANS[other].label} above any time.
       </Text>
       {active && (

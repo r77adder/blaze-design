@@ -211,7 +211,7 @@ function BarButton({
         borderRadius: 6,
         cursor: 'pointer',
         fontFamily: 'inherit',
-        fontSize: 13,
+        fontSize: 14,
         color: 'var(--dark-60)',
         transition: 'background 120ms ease, color 120ms ease',
       }}

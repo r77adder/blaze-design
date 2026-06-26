@@ -121,7 +121,7 @@ export function LocationPickerModal({
                   <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
                     {loc.name}
                   </span>
-                  <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.4 }}>
+                  <span style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.4 }}>
                     {fullAddress(loc)} · {loc.neighborhood}
                   </span>
                 </div>

@@ -244,7 +244,7 @@ function OverviewTab({ onJump }: { onJump: (t: TabKey) => void }) {
               }}
             >
               <div style={{ fontSize: 18, marginBottom: 6 }}>{s.icon}</div>
-              <div style={{ fontSize: 22, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 2, letterSpacing: '-0.2px' }}>
+              <div style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', marginBottom: 2, letterSpacing: '-0.2px' }}>
                 {s.value}
               </div>
               <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{s.label}</div>

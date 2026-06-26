@@ -72,7 +72,7 @@ export function WhyPopover({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <Stars size={14} color="var(--purple)" />
-            <Heading level={6} style={{ color: 'var(--dark-90)', fontSize: 13, margin: 0 }}>
+            <Heading level={6} style={{ color: 'var(--dark-90)', fontSize: 14, margin: 0 }}>
               {title}
             </Heading>
           </div>

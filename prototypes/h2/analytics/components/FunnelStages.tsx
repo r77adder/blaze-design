@@ -26,7 +26,7 @@ function StageBar({ label, count, share, color }: { label: string; count: number
           style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${Math.max(share * 100, 1.5)}%`, background: color, borderRadius: 4 }}
         />
       </div>
-      <span style={{ fontFamily: FONT, fontSize: 20, fontWeight: 400, textAlign: 'right', color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+      <span style={{ fontFamily: FONT, fontSize: 26, fontWeight: 400, textAlign: 'right', color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtInt(count)}
       </span>
     </div>
@@ -36,10 +36,10 @@ function StageBar({ label, count, share, color }: { label: string; count: number
 function StepConnector({ rate, label }: { rate: number; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-      <span aria-hidden style={{ display: 'inline-flex', color: 'var(--dark-40)' }}>
+      <span aria-hidden style={{ display: 'inline-flex', color: 'var(--dark-60)' }}>
         <ArrowDown size={20} />
       </span>
-      <span style={{ fontFamily: FONT, fontSize: 13, letterSpacing: tracking(13), color: 'var(--dark-60)' }}>
+      <span style={{ fontFamily: FONT, fontSize: 14, letterSpacing: tracking(13), color: 'var(--dark-60)' }}>
         <strong style={{ fontWeight: 500, fontSize: 16, color: 'var(--dark-90)' }}>{fmtPct(rate)}</strong> {label}
       </span>
     </div>

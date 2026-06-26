@@ -110,7 +110,7 @@ export function MetaAdsPage() {
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ width: 22, height: 22, background: 'linear-gradient(135deg,#0064E0,#0085FF)', color: 'var(--light-100)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, borderRadius: 4 }}>M</span>
+                        <span style={{ width: 22, height: 22, background: 'linear-gradient(135deg,#0064E0,#0085FF)', color: 'var(--light-100)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, borderRadius: 4 }}>M</span>
                         <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>{row.name}</Text>
                       </div>
                     </td>
@@ -127,7 +127,7 @@ export function MetaAdsPage() {
                     <td style={tdStyle}>
                       <StatusPill tone="neutral">Draft</StatusPill>
                     </td>
-                    <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--dark-40)' }}>⋯</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--dark-60)' }}>⋯</td>
                   </tr>
                 );
               })}
@@ -180,13 +180,13 @@ function MetaAdTile({ card }: { card: MetaAdCard }) {
           to preserve the recognizable platform aesthetic of the ad preview. */}
       <div style={{ padding: 12, background: 'var(--light-100)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <Avatar fallback={competitor.initials} size="sm" style={{ background: competitor.color, color: 'var(--light-100)', fontSize: 10, fontWeight: 700 }} />
+          <Avatar fallback={competitor.initials} size="sm" style={{ background: competitor.color, color: 'var(--light-100)', fontSize: 12, fontWeight: 700 }} />
           <div>
-            <strong style={{ fontSize: 13 }}>{competitor.name}</strong>
-            <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>Sponsored · 🌐</div>
+            <strong style={{ fontSize: 14 }}>{competitor.name}</strong>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>Sponsored · 🌐</div>
           </div>
         </div>
-        <div style={{ fontSize: 13, color: 'var(--dark-90)', lineHeight: '18px', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        <div style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: '18px', marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {card.body}
         </div>
         <div style={{ height: 160, background: gradFor(card.grad), display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, fontSize: 40 }}>
@@ -195,7 +195,7 @@ function MetaAdTile({ card }: { card: MetaAdCard }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 4px', borderTop: '1px solid var(--dark-4)', marginTop: 10 }}>
           <div>
             <strong style={{ fontSize: 12, color: 'var(--dark-90)' }}>{card.brand}</strong>
-            <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>{card.sub}</div>
+            <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>{card.sub}</div>
           </div>
           {/* Keep raw button: this is the FB-style CTA inside the mock, not a real action. */}
           <button type="button" style={{ background: FB_CTA_BG, border: 'none', color: 'var(--dark-90)', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{card.cta}</button>
@@ -263,7 +263,7 @@ function challengerTagStyle(kind: 'champion' | 'alt'): React.CSSProperties {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
-    fontSize: 11,
+    fontSize: 12,
     padding: '2px 8px',
     borderRadius: 4,
     background: kind === 'champion' ? 'rgba(124, 92, 252, 0.12)' : 'var(--dark-4)',

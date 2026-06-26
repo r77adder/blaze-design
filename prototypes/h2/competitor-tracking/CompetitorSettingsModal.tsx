@@ -46,7 +46,7 @@ export function CompetitorSettingsModal({
       />
       <Modal.Content>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-          <Avatar fallback={c.initials} size="lg" style={{ background: c.color, color: 'var(--light-100)', fontSize: 14, fontWeight: 700 }} />
+          <Avatar fallback={c.initials} size="lg" style={{ background: c.color, color: 'var(--light-100)', fontSize: 14, fontWeight: 500}} />
           <div>
             <Text variant="smallList">{c.name}</Text>
             <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)' }}>{profile.trackingSince} · Daily refresh</Text>

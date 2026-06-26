@@ -49,7 +49,7 @@ export function ContactHistory({ contact, leads, onOpenLead }: ContactHistoryPro
         <Avatar fallback={initials(contact.name)} size={48} />
         <div>
           <Heading level={3} style={{ marginBottom: 4 }}>{contact.name}</Heading>
-          <Text variant="secondary" style={{ fontSize: 13 }}>
+          <Text variant="secondary" style={{ fontSize: 14 }}>
             {contact.phone} · {contact.email}
           </Text>
         </div>
@@ -110,15 +110,15 @@ function LeadSection({ lead, onOpenLead }: { lead: Lead; onOpenLead: (id: string
       >
         <Text
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
-            color: 'var(--dark-40)',
+            color: 'var(--dark-60)',
             letterSpacing: '0.06em',
           }}
         >
           LEAD
         </Text>
-        <Text style={{ fontSize: 13, color: 'var(--dark-80)' }}>
+        <Text style={{ fontSize: 14, color: 'var(--dark-80)' }}>
           {channelLabel} · {formatRelative(lead.created_at)}
         </Text>
         <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
@@ -153,7 +153,7 @@ function LeadSection({ lead, onOpenLead }: { lead: Lead; onOpenLead: (id: string
             type="button"
             onClick={() => onOpenLead(lead.id)}
             style={{
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--purple)',
               background: 'none',
               border: 'none',
@@ -217,14 +217,14 @@ function ActivityRow({
         <Text
           style={{
             flex: 1,
-            fontSize: 13,
+            fontSize: 14,
             color: trigger ? 'var(--dark-90)' : 'var(--dark-60)',
             lineHeight: 1.45,
           }}
         >
           {msg.content}
         </Text>
-        <Text style={{ fontSize: 12, color: 'var(--dark-40)', flexShrink: 0 }}>
+        <Text style={{ fontSize: 12, color: 'var(--dark-60)', flexShrink: 0 }}>
           {formatRelative(msg.timestamp)}
         </Text>
       </div>
@@ -246,10 +246,10 @@ function ActivityRow({
         <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
           <Voice size={14} color="var(--status-posting)" />
         </span>
-        <Text style={{ flex: 1, fontSize: 13, color: 'var(--dark-90)', lineHeight: 1.45 }}>
+        <Text style={{ flex: 1, fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.45 }}>
           {msg.role === 'system' ? 'Voicemail' : `${msg.role === 'ai' ? 'AI' : 'Call'}`} · {dur}
         </Text>
-        <Text style={{ fontSize: 12, color: 'var(--dark-40)', flexShrink: 0 }}>
+        <Text style={{ fontSize: 12, color: 'var(--dark-60)', flexShrink: 0 }}>
           {formatRelative(msg.timestamp)}
         </Text>
       </div>
@@ -261,7 +261,7 @@ function ActivityRow({
     ai: 'var(--purple)',
     prospect: 'var(--dark-60)',
     owner: 'var(--status-posting)',
-    system: 'var(--dark-40)',
+    system: 'var(--dark-60)',
   };
   const roleLabel: Record<Message['role'], string> = {
     ai: 'AI',
@@ -294,7 +294,7 @@ function ActivityRow({
       <div style={{ flex: 1, minWidth: 0 }}>
         <span
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
             color: roleColor[msg.role],
             marginRight: 6,
@@ -304,7 +304,7 @@ function ActivityRow({
         </span>
         <Text
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-80)',
             lineHeight: 1.45,
           }}
@@ -312,7 +312,7 @@ function ActivityRow({
           {msg.content.length > 120 ? `${msg.content.slice(0, 117)}…` : msg.content}
         </Text>
       </div>
-      <Text style={{ fontSize: 12, color: 'var(--dark-40)', flexShrink: 0, marginTop: 2 }}>
+      <Text style={{ fontSize: 12, color: 'var(--dark-60)', flexShrink: 0, marginTop: 2 }}>
         {formatRelative(msg.timestamp)}
       </Text>
     </div>

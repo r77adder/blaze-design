@@ -211,7 +211,7 @@ function DetailThumb({ card }: { card: FeedCard }) {
       <div style={{ background: '#F3F2EF', padding: '44px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', minHeight: 280 }}>
         <div style={{ position: 'absolute', top: 12, left: 12 }}><ChannelBadge channel="linkedin" /></div>
         <div style={{ position: 'absolute', top: 12, right: 100 }}><CompetitorBadge k={card.competitor} /></div>
-        <p style={{ fontSize: 15, color: 'var(--dark-90)', lineHeight: '21px', margin: 0 }}>{card.liBody}</p>
+        <p style={{ fontSize: 16, color: 'var(--dark-90)', lineHeight: '21px', margin: 0 }}>{card.liBody}</p>
         <div style={{ fontSize: 12, color: '#0A66C2', fontWeight: 500 }}>{card.liTag}</div>
       </div>
     );
@@ -221,8 +221,8 @@ function DetailThumb({ card }: { card: FeedCard }) {
       <div style={{ background: 'var(--light-100)', padding: '44px 24px 24px', position: 'relative', minHeight: 200 }}>
         <div style={{ position: 'absolute', top: 12, left: 12 }}><ChannelBadge channel="google" /></div>
         <div style={{ position: 'absolute', top: 12, right: 100 }}><CompetitorBadge k={card.competitor} /></div>
-        <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, color: '#202124', border: '1px solid #202124', padding: '0 4px', borderRadius: 3 }}>Sponsored</span>
-        <div style={{ fontSize: 13, color: '#5F6368', marginTop: 6 }}>{card.googleUrl}</div>
+        <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 600, color: '#202124', border: '1px solid #202124', padding: '0 4px', borderRadius: 3 }}>Sponsored</span>
+        <div style={{ fontSize: 14, color: '#5F6368', marginTop: 6 }}>{card.googleUrl}</div>
         <div style={{ fontSize: 20, color: '#1A0DAB', fontWeight: 500, lineHeight: '26px', margin: '4px 0 8px' }}>{card.googleHeadline}</div>
         <div style={{ fontSize: 14, color: 'var(--dark-80)', lineHeight: '20px' }}>{card.googleDesc}</div>
       </div>
@@ -236,7 +236,7 @@ function DetailThumb({ card }: { card: FeedCard }) {
       <div style={{ height: 240, background: gradFor(card.grad), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>{card.metaImage}</div>
       <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F0F2F5' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <strong style={{ fontSize: 13, color: 'var(--dark-90)' }}>{card.metaBrand}</strong>
+          <strong style={{ fontSize: 14, color: 'var(--dark-90)' }}>{card.metaBrand}</strong>
           <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{card.metaSub}</span>
         </div>
         <Button variant="secondary" size="xs" onPress={() => undefined}>{card.metaCta}</Button>

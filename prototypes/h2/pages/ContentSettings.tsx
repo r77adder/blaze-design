@@ -134,7 +134,7 @@ function VideoPreferencesBody() {
                   padding: '5px 8px',
                 }}
               >
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand)', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--brand)', whiteSpace: 'nowrap' }}>
                   Caption preview
                 </span>
               </span>

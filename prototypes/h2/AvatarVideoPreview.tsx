@@ -26,7 +26,7 @@ interface PreviewPost {
 // Section eyebrow — sentence/title case per the H2 no-all-caps rule.
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--dark-40)', fontFamily: F, letterSpacing: '0.22px' }}>
+    <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--dark-60)', fontFamily: F, letterSpacing: '0.22px' }}>
       {children}
     </p>
   );
@@ -166,10 +166,10 @@ export function AvatarVideoPreview({
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left — Blaze suggestions */}
         <div style={{ width: 280, flexShrink: 0, background: 'var(--light-100)', borderRight: '1px solid var(--dark-8)', display: 'flex', flexDirection: 'column', padding: '20px 20px 0', overflowY: 'auto' }}>
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--dark-80)', fontFamily: F, lineHeight: 1.5 }}>Blaze can improve this video by:</p>
+          <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--dark-80)', fontFamily: F, lineHeight: 1.5 }}>Blaze can improve this video by:</p>
           <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {suggestions.map((s, i) => (
-              <li key={i} style={{ fontSize: 13, color: 'var(--dark-80)', fontFamily: F, lineHeight: 1.5 }}>
+              <li key={i} style={{ fontSize: 14, color: 'var(--dark-80)', fontFamily: F, lineHeight: 1.5 }}>
                 <span style={{ marginRight: 4 }}>{s.emoji}</span>
                 <strong style={{ fontWeight: 500, color: 'var(--dark-90)' }}>{s.label}</strong>
                 {': '}
@@ -177,7 +177,7 @@ export function AvatarVideoPreview({
               </li>
             ))}
           </ol>
-          <p style={{ margin: '20px 0 12px', fontSize: 13, color: 'var(--dark-80)', fontFamily: F }}>What would you like to do?</p>
+          <p style={{ margin: '20px 0 12px', fontSize: 14, color: 'var(--dark-80)', fontFamily: F }}>What would you like to do?</p>
           <div style={{ flex: 1 }} />
           <div style={{ borderTop: '1px solid var(--dark-8)', paddingTop: 12, paddingBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--dark-8)', borderRadius: 8, padding: '8px 10px', background: 'var(--light-100)' }}>
@@ -185,7 +185,7 @@ export function AvatarVideoPreview({
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder="Ask Blaze to change something..."
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, color: 'var(--dark-90)', fontFamily: F, background: 'transparent' }}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, color: 'var(--dark-90)', fontFamily: F, background: 'transparent' }}
               />
               <button style={{ width: 26, height: 26, borderRadius: 99, border: 'none', background: 'var(--dark-90)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -198,16 +198,16 @@ export function AvatarVideoPreview({
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, overflowY: 'auto' }}>
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
             <div style={{ position: 'absolute', right: '100%', top: 0, marginRight: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, color: 'var(--dark-40)', fontFamily: F }}>View as</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-60)', fontFamily: F }}>View as</span>
               {accounts.map((a, i) => (
-                <div key={a.name} style={{ width: 30, height: 30, borderRadius: 99, background: i === 0 ? 'var(--dark-90)' : 'var(--dark-4)', color: i === 0 ? '#fff' : 'var(--dark-60)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontFamily: F }}>
+                <div key={a.name} style={{ width: 30, height: 30, borderRadius: 99, background: i === 0 ? 'var(--dark-90)' : 'var(--dark-4)', color: i === 0 ? '#fff' : 'var(--dark-60)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: F }}>
                   {a.name.slice(0, 2)}
                 </div>
               ))}
             </div>
             <VideoFrame face={draft.refImage} caption={draft.script ?? post.title} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'var(--light-100)', borderRadius: 99, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: '1px solid var(--dark-8)' }}>
-              <span style={{ fontSize: 13, color: 'var(--dark-80)', fontFamily: F }}>Do you like the result?</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-80)', fontFamily: F }}>Do you like the result?</span>
               <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👎</button>
               <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16 }}>👍</button>
               <Button variant="secondary" size="sm" onPress={onClose}>Close</Button>
@@ -219,14 +219,14 @@ export function AvatarVideoPreview({
         <div style={{ width: 230, flexShrink: 0, background: 'var(--light-100)', borderLeft: '1px solid var(--dark-8)', padding: '20px 16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
             <Eyebrow>Posting on</Eyebrow>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', fontFamily: F }}>{post.time}</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', fontFamily: F }}>{post.time}</p>
           </div>
           <div style={{ height: 1, background: 'var(--dark-8)' }} />
           <div>
             <Eyebrow>Posting to</Eyebrow>
             {accounts.map((acct) => (
               <div key={acct.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 13, color: 'var(--dark-90)', fontFamily: F }}>{acct.name}</span>
+                <span style={{ fontSize: 14, color: 'var(--dark-90)', fontFamily: F }}>{acct.name}</span>
                 {acct.connected ? (
                   <div style={{ width: 18, height: 18, borderRadius: 99, background: 'var(--dark-4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="var(--dark-40)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -240,7 +240,7 @@ export function AvatarVideoPreview({
           <div style={{ height: 1, background: 'var(--dark-8)' }} />
           <div>
             <Eyebrow>Campaign</Eyebrow>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', fontFamily: F }}>{post.source}</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', fontFamily: F }}>{post.source}</p>
           </div>
           <div style={{ height: 1, background: 'var(--dark-8)' }} />
           <div>
@@ -252,7 +252,7 @@ export function AvatarVideoPreview({
             ].map((item) => (
               <button key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 4 }}>
                 <span>{item.icon}</span>
-                <span style={{ fontSize: 13, color: 'var(--dark-90)', fontFamily: F }}>{item.label}</span>
+                <span style={{ fontSize: 14, color: 'var(--dark-90)', fontFamily: F }}>{item.label}</span>
               </button>
             ))}
           </div>
@@ -262,15 +262,15 @@ export function AvatarVideoPreview({
             <button onClick={openRegenerate} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 8, textAlign: 'left' }}>
               <span style={{ fontSize: 16, lineHeight: 1.2 }}>↻</span>
               <div>
-                <div style={{ fontSize: 13, color: 'var(--dark-90)', fontFamily: F }}>Regenerate video</div>
-                <div style={{ fontSize: 12, color: 'var(--dark-40)', fontFamily: F }}>Edit script and style before generating</div>
+                <div style={{ fontSize: 14, color: 'var(--dark-90)', fontFamily: F }}>Regenerate video</div>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)', fontFamily: F }}>Edit script and style before generating</div>
               </div>
             </button>
             <button style={{ display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0', textAlign: 'left' }}>
               <span style={{ fontSize: 16, lineHeight: 1.2 }}>🎞</span>
               <div>
-                <div style={{ fontSize: 13, color: 'var(--dark-90)', fontFamily: F }}>Replace with Video</div>
-                <div style={{ fontSize: 12, color: 'var(--dark-40)', fontFamily: F }}>Swap video with your own</div>
+                <div style={{ fontSize: 14, color: 'var(--dark-90)', fontFamily: F }}>Replace with Video</div>
+                <div style={{ fontSize: 12, color: 'var(--dark-60)', fontFamily: F }}>Swap video with your own</div>
               </div>
             </button>
           </div>

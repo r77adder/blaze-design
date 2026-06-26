@@ -117,9 +117,9 @@ export function Step6PricingDiy() {
               <span style={{ fontSize: 28, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px' }}>
                 {fmtUsd(monthly)}
               </span>
-              <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>/ mo</span>
+              <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>/ mo</span>
             </div>
-            <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', fontSize: 12, marginTop: 2 }}>
+            <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 12, marginTop: 2 }}>
               {term === 1
                 ? 'Billed monthly, cancel any time'
                 : `${fmtUsd(termTotal)} total over ${term} months`}
@@ -172,7 +172,7 @@ export function Step6PricingDiy() {
                   variant="metadata"
                   style={{
                     color: 'var(--dark-60)',
-                    fontSize: 13,
+                    fontSize: 14,
                     fontVariantNumeric: 'tabular-nums',
                     textDecoration: 'line-through',
                     whiteSpace: 'nowrap',
@@ -285,13 +285,13 @@ function TermCard({
         <span style={{ fontSize: 26, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '-0.4px' }}>
           {fmtUsd(monthlyAtTerm)}
         </span>
-        <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>/mo</span>
+        <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>/mo</span>
       </div>
       <Text
         variant="metadata"
         style={{
           display: 'block',
-          color: 'var(--dark-40)',
+          color: 'var(--dark-60)',
           fontSize: 12,
           marginTop: 6,
           minHeight: 16,

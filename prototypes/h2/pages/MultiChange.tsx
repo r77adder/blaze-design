@@ -326,7 +326,7 @@ function LeftSidebar({
         <div
           style={{
             fontSize: 12,
-            color: 'var(--dark-40)',
+            color: 'var(--dark-60)',
             letterSpacing: 0.5,
             textTransform: 'uppercase',
             marginBottom: 6,
@@ -419,7 +419,7 @@ function ChatInput({
             </span>
           </div>
         )}
-        <div style={{ fontSize: 14, color: 'var(--dark-40)', flex: 1 }}>{placeholder}</div>
+        <div style={{ fontSize: 14, color: 'var(--dark-60)', flex: 1 }}>{placeholder}</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px' }}>
         <div
@@ -501,7 +501,7 @@ function ViewAsRail() {
         gap: 8,
       }}
     >
-      <div style={{ fontSize: 12, color: 'var(--dark-40)' }}>View as</div>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>View as</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
         {buttons.map((b) => {
           const isActive = active === b.id;
@@ -963,7 +963,7 @@ function SectionLabel({ children, style }: { children: ReactNode; style?: CSSPro
     <div
       style={{
         fontSize: 12,
-        color: 'var(--dark-40)',
+        color: 'var(--dark-60)',
         letterSpacing: 0.5,
         textTransform: 'uppercase',
         marginBottom: 8,
@@ -1098,7 +1098,7 @@ function ChangeBlock({
           <span
             style={{
               background: count > 0 ? PURPLE : 'var(--dark-8)',
-              color: count > 0 ? 'var(--light-100)' : 'var(--dark-40)',
+              color: count > 0 ? 'var(--light-100)' : 'var(--dark-60)',
               fontSize: 12,
               fontWeight: 700,
               borderRadius: 99,
@@ -1112,7 +1112,7 @@ function ChangeBlock({
           <span
             style={{
               fontSize: 12,
-              color: 'var(--dark-40)',
+              color: 'var(--dark-60)',
               transform: state.open ? 'rotate(90deg)' : 'rotate(0deg)',
               transition: 'transform 0.2s',
               display: 'inline-flex',
@@ -1127,7 +1127,7 @@ function ChangeBlock({
         <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid var(--dark-4)' }}>
           {el === 'audio' && state.versions.length <= 1 ? (
             <div style={{ padding: '9px 12px' }}>
-              <div style={{ fontSize: 12, color: 'var(--dark-40)', fontStyle: 'italic' }}>No changes queued</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', fontStyle: 'italic' }}>No changes queued</div>
             </div>
           ) : (
             state.versions.map((text, i) => (
@@ -1154,7 +1154,7 @@ function ChangeBlock({
               borderTop: '1px dashed var(--dark-8)',
               cursor: 'pointer',
               fontSize: 12,
-              color: 'var(--dark-40)',
+              color: 'var(--dark-60)',
             }}
           >
             <Plus12 /> Add another {meta.label.toLowerCase()} version
@@ -1250,7 +1250,7 @@ function QueueItem({
           style={{
             fontSize: 12,
             marginBottom: 2,
-            color: isCurrent ? 'var(--dark-40)' : PURPLE,
+            color: isCurrent ? 'var(--dark-60)' : PURPLE,
             fontWeight: isCurrent ? 400 : 600,
           }}
         >

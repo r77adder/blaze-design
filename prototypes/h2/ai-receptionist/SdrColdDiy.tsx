@@ -222,7 +222,7 @@ export function SdrColdDiy() {
               <Heading level={2} style={{ margin: '0 0 12px', letterSpacing: '-0.3px' }}>
                 Never miss another call.
               </Heading>
-              <Text style={{ display: 'block', fontSize: 15, color: 'var(--dark-80)', lineHeight: 1.6, maxWidth: 460, marginBottom: 28 }}>
+              <Text style={{ display: 'block', fontSize: 16, color: 'var(--dark-80)', lineHeight: 1.6, maxWidth: 460, marginBottom: 28 }}>
                 Your AI receptionist answers every call and text, books appointments, and hands off to you when
                 it matters — day or night. Set it up below, then hear it for yourself.
               </Text>
@@ -276,7 +276,7 @@ export function SdrColdDiy() {
                 gap: 18,
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 4 }}>What it can do</div>
+              <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 4 }}>What it can do</div>
               {HERO_CHECKLIST.map((item) => (
                 <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <span style={{ flexShrink: 0, marginTop: 2, display: 'inline-flex' }}>
@@ -561,7 +561,7 @@ function Section({
         {title}
       </Heading>
       {subtitle && (
-        <Text variant="primary" style={{ display: 'block', fontSize: 15, lineHeight: 1.5, margin: '0 0 32px' }}>
+        <Text variant="primary" style={{ display: 'block', fontSize: 16, lineHeight: 1.5, margin: '0 0 32px' }}>
           {subtitle}
         </Text>
       )}
@@ -647,7 +647,7 @@ function StepHeader({ ability }: { ability: AbilityCardData }) {
       </div>
 
       <Heading level={2} style={{ margin: '0 0 8px' }}>{ability.title}</Heading>
-      <Text variant="primary" style={{ display: 'block', fontSize: 15, lineHeight: 1.55, maxWidth: 620 }}>
+      <Text variant="primary" style={{ display: 'block', fontSize: 16, lineHeight: 1.55, maxWidth: 620 }}>
         {ability.description}
       </Text>
     </div>

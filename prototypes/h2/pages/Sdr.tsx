@@ -940,19 +940,19 @@ function SdrInner() {
               border: '1px solid var(--dark-15)',
               borderRadius: 6,
               padding: '0 8px',
-              fontSize: 13,
+              fontSize: 14,
               fontFamily: 'inherit',
               color: 'var(--dark-90)',
               background: 'var(--light-100)',
               outline: 'none',
             }}
           />
-          <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>% min</Text>
+          <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>% min</Text>
           {progressMin > 0 && (
             <button
               type="button"
               onClick={() => setProgressMin(0)}
-              style={{ fontSize: 12, color: 'var(--dark-40)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontFamily: 'inherit' }}
+              style={{ fontSize: 12, color: 'var(--dark-60)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontFamily: 'inherit' }}
             >
               Clear
             </button>
@@ -1020,9 +1020,9 @@ function SdrInner() {
                 >
                   <Heading level={3}>{g.ss.label}</Heading>
                   {g.status === 'human-handling' && (
-                    <Text style={{ fontSize: 13, color: 'var(--dark-40)' }}>(Human handling)</Text>
+                    <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>(Human handling)</Text>
                   )}
-                  <Text style={{ fontSize: 14, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{g.groupLeads.length}</Text>
+                  <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>{g.groupLeads.length}</Text>
                   <span style={{ marginLeft: 'auto', display: 'inline-flex' }}>
                     <ChevronIcon size={18} color="var(--dark-40)" />
                   </span>
@@ -1171,7 +1171,7 @@ function ContactTitleCluster({ contact, onBack }: { contact: Contact; onBack: ()
       <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
         {contact.name}
       </Text>
-      <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)' }}>
+      <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)' }}>
         Contact history
       </Text>
     </div>
@@ -1274,7 +1274,7 @@ function FiltersPopoverButton({
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <Text variant="metadata" style={{ fontSize: 11, fontWeight: 500, color: 'var(--dark-40)', letterSpacing: '0.04em' }}>
+      <Text variant="metadata" style={{ fontSize: 12, fontWeight: 500, color: 'var(--dark-60)', letterSpacing: '0.04em' }}>
         {label}
       </Text>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{children}</div>
@@ -1376,7 +1376,7 @@ function LeadRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps) {
                 borderRadius: 999,
                 background: 'var(--dark-60)',
                 color: 'var(--light-100)',
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 600,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1533,7 +1533,7 @@ function BookingRow({ lead, isLast, onOpen, onSetOutcome, contactLeadCount = 1 }
                 borderRadius: 999,
                 background: 'var(--dark-60)',
                 color: 'var(--light-100)',
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 600,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1667,7 +1667,7 @@ function SdrDashboard({ leads, isCold, onViewLeads, onOpenLead }: { leads: Lead[
               }}
             >
               <Text variant="secondary" style={{ fontSize: 12 }}>{m.label}</Text>
-              <span style={{ fontSize: 32, fontWeight: 400, color: 'var(--dark-90)', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              <span style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
                 {m.value}
               </span>
               <Text variant="secondary" style={{ fontSize: 12 }}>{m.sub}</Text>
@@ -1690,7 +1690,7 @@ function SdrDashboard({ leads, isCold, onViewLeads, onOpenLead }: { leads: Lead[
           >
             {actionLeads.length === 0 ? (
               <div style={{ padding: '8px 0' }}>
-                <Text variant="secondary" style={{ fontSize: 13 }}>No leads need attention right now.</Text>
+                <Text variant="secondary" style={{ fontSize: 14 }}>No leads need attention right now.</Text>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -1880,7 +1880,7 @@ function ColdDashboard() {
           </div>
           <div
             style={{
-              fontSize: 15,
+              fontSize: 16,
               color: 'var(--dark-80)',
               lineHeight: 1.6,
               maxWidth: 480,
@@ -1939,7 +1939,7 @@ function ColdDashboard() {
               <span style={{ flexShrink: 0, marginTop: 1, display: 'inline-flex' }}>
                 <Check size={14} color="var(--status-posting)" />
               </span>
-              <span style={{ fontSize: 13, letterSpacing: '0.26px', color: 'var(--dark-80)', lineHeight: 1.4 }}>{item}</span>
+              <span style={{ fontSize: 14, letterSpacing: '0.26px', color: 'var(--dark-80)', lineHeight: 1.4 }}>{item}</span>
             </div>
           ))}
         </div>
@@ -1967,19 +1967,19 @@ function ColdDashboard() {
                 height: 28,
                 borderRadius: '50%',
                 background: done ? 'var(--status-approved)' : 'var(--dark-8)',
-                color: done ? 'var(--light-100)' : 'var(--dark-40)',
+                color: done ? 'var(--light-100)' : 'var(--dark-60)',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: 14,
+                fontWeight: 500,
                 marginBottom: 14,
               }}
             >
               {step}
             </div>
-            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>{title}</div>
-            <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>{body}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>{title}</div>
+            <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>{body}</div>
           </div>
         ))}
       </div>
@@ -2036,8 +2036,8 @@ function ChannelBreakdownRows({ leads }: { leads: Lead[] }) {
       {rows.map((r) => (
         <div key={r.label}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <Text style={{ fontSize: 13, color: 'var(--dark-90)' }}>{r.label}</Text>
-            <Text style={{ fontSize: 13, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
+            <Text style={{ fontSize: 14, color: 'var(--dark-90)' }}>{r.label}</Text>
+            <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
               {r.count} · {r.pct}%
             </Text>
           </div>
@@ -2083,8 +2083,8 @@ function RequestTypeBreakdownRows({ leads }: { leads: Lead[] }) {
         return (
           <div key={label}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <Text variant="secondary" style={{ fontSize: 13 }}>{label}</Text>
-              <Text variant="secondary" style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+              <Text variant="secondary" style={{ fontSize: 14 }}>{label}</Text>
+              <Text variant="secondary" style={{ fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
                 {count} · {pct}%
               </Text>
             </div>
@@ -2208,7 +2208,7 @@ const OUTCOME_STYLES: Record<CallRecord['outcome'], { label: string; color: stri
   escalated:    { label: 'Escalated',   color: '#edb62c' },
   booked:       { label: 'Booked',      color: 'var(--status-approved)' },
   missed:       { label: 'Missed',      color: 'var(--red-70)' },
-  disqualified: { label: 'Disqualified', color: 'var(--dark-40)' },
+  disqualified: { label: 'Disqualified', color: 'var(--dark-60)' },
 };
 
 const BOOKING_STATUS_STYLES: Record<BookingRecord['status'], { label: string; tone: 'success' | 'warning' | 'neutral' }> = {
@@ -2259,7 +2259,7 @@ function SdrActivity() {
               left: 10,
               top: '50%',
               transform: 'translateY(-50%)',
-              color: 'var(--dark-40)',
+              color: 'var(--dark-60)',
               display: 'flex',
               pointerEvents: 'none',
             }}
@@ -2348,16 +2348,16 @@ function SdrActivity() {
                     <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.company}</Text>
                   </div>
                 </div>
-                <Text style={{ fontSize: 13, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
+                <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
                   {r.duration}
                 </Text>
-                <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.when}</Text>
+                <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>{r.when}</Text>
                 <span
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: 500,
                     color: OUTCOME_STYLES[r.outcome].color,
                   }}
@@ -2439,7 +2439,7 @@ function SdrActivity() {
                 </div>
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: 'var(--dark-60)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -2449,14 +2449,14 @@ function SdrActivity() {
                 >
                   {r.preview}
                 </Text>
-                <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.when}</Text>
+                <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>{r.when}</Text>
                 <span
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 4,
                     fontSize: 12,
-                    color: r.direction === 'inbound' ? 'var(--status-posting)' : 'var(--dark-40)',
+                    color: r.direction === 'inbound' ? 'var(--status-posting)' : 'var(--dark-60)',
                   }}
                 >
                   {r.direction === 'inbound' ? '↙' : '↗'}{' '}
@@ -2491,12 +2491,12 @@ function SdrActivity() {
                     </Text>
                     <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.company}</Text>
                   </div>
-                  <Text style={{ fontSize: 13, color: 'var(--dark-90)' }}>{r.service}</Text>
+                  <Text style={{ fontSize: 14, color: 'var(--dark-90)' }}>{r.service}</Text>
                   <div>
-                    <Text style={{ fontSize: 13, color: 'var(--dark-90)', display: 'block' }}>
+                    <Text style={{ fontSize: 14, color: 'var(--dark-90)', display: 'block' }}>
                       {r.scheduledFor}
                     </Text>
-                    <Text style={{ fontSize: 12, color: 'var(--dark-40)' }}>booked {r.bookedAt}</Text>
+                    <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>booked {r.bookedAt}</Text>
                   </div>
                   <StatusPill tone={bs.tone} size="sm">{bs.label}</StatusPill>
                 </div>
@@ -2530,8 +2530,8 @@ function BookingMetric({ label, value, sub }: { label: string; value: string; su
     <div style={{ flex: '1 1 0', minWidth: 140, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
       <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</Text>
       <div style={{ marginTop: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <Text style={{ fontSize: 24, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>{value}</Text>
-        {sub && <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{sub}</Text>}
+        <Text style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>{value}</Text>
+        {sub && <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>{sub}</Text>}
       </div>
     </div>
   );
@@ -2660,7 +2660,7 @@ function BookingsTab({
             <div style={{ marginBottom: past.length > 0 ? 32 : 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10, paddingLeft: 2 }}>
                 <Heading level={3}>Upcoming</Heading>
-                <Text style={{ fontSize: 14, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>
+                <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
                   {upcoming.length}
                 </Text>
               </div>
@@ -2673,7 +2673,7 @@ function BookingsTab({
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, paddingLeft: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                   <Heading level={3}>Past</Heading>
-                  <Text style={{ fontSize: 14, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>
+                  <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>
                     {filteredPast.length}
                   </Text>
                 </div>
@@ -2733,7 +2733,7 @@ function SdrBookingsPage() {
       {/* section: search + sub-tabs */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <div style={{ position: 'relative', display: 'inline-block' }}>
-          <span aria-hidden style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--dark-40)', display: 'flex', pointerEvents: 'none' }}>
+          <span aria-hidden style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--dark-60)', display: 'flex', pointerEvents: 'none' }}>
             <Search size={16} />
           </span>
           <input
@@ -2774,11 +2774,11 @@ function SdrBookingsPage() {
                   <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.contact}</Text>
                   <Text style={{ fontSize: 12, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.company}</Text>
                 </div>
-                <Text style={{ fontSize: 13, color: 'var(--dark-80)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.requestType}</Text>
-                <Text style={{ fontSize: 13, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.service}</Text>
+                <Text style={{ fontSize: 14, color: 'var(--dark-80)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.requestType}</Text>
+                <Text style={{ fontSize: 14, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.service}</Text>
                 <div>
-                  <Text style={{ fontSize: 13, color: 'var(--dark-90)', display: 'block' }}>{r.scheduledFor}</Text>
-                  <Text style={{ fontSize: 12, color: 'var(--dark-40)' }}>booked {r.bookedAt}</Text>
+                  <Text style={{ fontSize: 14, color: 'var(--dark-90)', display: 'block' }}>{r.scheduledFor}</Text>
+                  <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>booked {r.bookedAt}</Text>
                 </div>
               </div>
             ))}
@@ -2811,15 +2811,15 @@ function SdrBookingsPage() {
                   {r.unread && <span aria-label="Unread" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--status-posting)', flexShrink: 0 }} />}
                   {!r.unread && <span style={{ width: 7, flexShrink: 0 }} />}
                   <div style={{ minWidth: 0 }}>
-                    <Text style={{ fontSize: 14, fontWeight: r.unread ? 600 : 500, color: 'var(--dark-90)', display: 'block' }}>{r.contact}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', display: 'block' }}>{r.contact}</Text>
                     <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.company}</Text>
                   </div>
                 </div>
-                <Text style={{ fontSize: 13, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: r.unread ? 500 : 400 }}>
+                <Text style={{ fontSize: 14, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: r.unread ? 500 : 400 }}>
                   {r.preview}
                 </Text>
-                <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>{r.when}</Text>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: r.direction === 'inbound' ? 'var(--status-posting)' : 'var(--dark-40)' }}>
+                <Text style={{ fontSize: 14, color: 'var(--dark-60)' }}>{r.when}</Text>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: r.direction === 'inbound' ? 'var(--status-posting)' : 'var(--dark-60)' }}>
                   {r.direction === 'inbound' ? '↙' : '↗'}{' '}{r.direction === 'inbound' ? 'Inbound' : 'Outbound'}
                 </span>
               </div>

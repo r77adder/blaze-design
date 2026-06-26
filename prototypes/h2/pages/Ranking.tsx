@@ -268,7 +268,7 @@ function MatrixRow({ unit, isLast }: { unit: BaseUnit; isLast: boolean }) {
         const cell = MATRIX[unit][ch];
         return (
           <div key={ch} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Text variant="secondary" style={{ color: cell.active ? 'var(--dark-90)' : 'var(--dark-40)' }}>
+            <Text variant="secondary" style={{ color: cell.active ? 'var(--dark-90)' : 'var(--dark-60)' }}>
               {cell.active ? cell.count : '—'}
             </Text>
           </div>

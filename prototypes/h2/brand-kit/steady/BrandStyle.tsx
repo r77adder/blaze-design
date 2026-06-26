@@ -86,7 +86,7 @@ function LinkButton({ children, onPress, frontIcon: FrontIcon }: { children: Rea
         border: 'none',
         cursor: 'pointer',
         color: 'var(--dark-90)',
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: 500,
         fontFamily: 'inherit',
         padding: 0,
@@ -220,7 +220,7 @@ function VisualStyleCard() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 80 }}>
           <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>Selected style</Text>
-          <Text style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>Tunnel Vision</Text>
+          <Text style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>Tunnel Vision</Text>
         </div>
       </div>
     </Panel>
@@ -303,7 +303,7 @@ function FieldSelect({ label, value }: { label: string; value: string }) {
   const { showToast } = useToast();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <Text variant="secondary" style={{ fontSize: 11, color: 'var(--dark-60)' }}>{label}</Text>
+      <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</Text>
       <button
         type="button"
         onClick={() => showToast({ message: `Change ${label} coming soon` })}
@@ -317,7 +317,7 @@ function FieldSelect({ label, value }: { label: string; value: string }) {
           borderRadius: 8,
           cursor: 'pointer',
           color: 'var(--dark-90)',
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: 400,
           fontFamily: 'inherit',
           width: '100%',

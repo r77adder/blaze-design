@@ -70,7 +70,7 @@ export function Step1Details() {
           label={
             <>
               Call-to-Action{' '}
-              <span style={{ color: 'var(--dark-40)' }}>(optional)</span>
+              <span style={{ color: 'var(--dark-60)' }}>(optional)</span>
             </>
           }
         >
@@ -87,7 +87,7 @@ export function Step1Details() {
           label={
             <>
               Target Link{' '}
-              <span style={{ color: 'var(--dark-40)' }}>(optional)</span>
+              <span style={{ color: 'var(--dark-60)' }}>(optional)</span>
             </>
           }
         >
@@ -152,6 +152,6 @@ const tryDirectionStyle: React.CSSProperties = {
   marginTop: 4,
   color: 'var(--dark-60)',
   fontFamily: 'inherit',
-  fontSize: 13,
+  fontSize: 14,
   cursor: 'pointer',
 };

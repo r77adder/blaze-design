@@ -81,7 +81,7 @@ export function FlowTakeover({
           borderRadius: 10,
           boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
           fontFamily: 'inherit',
-          fontSize: 13,
+          fontSize: 14,
           color: 'var(--dark-60)',
           cursor: 'pointer',
         }}
@@ -204,7 +204,7 @@ export function SectionHeading({ title, desc, note, right }: { title: string; de
         </Text>
       )}
       {note && (
-        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', marginTop: 2 }}>
+        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 2 }}>
           {note}
         </Text>
       )}
@@ -220,7 +220,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
       </Text>
       {children}
       {hint && (
-        <Text variant="metadata" style={{ color: 'var(--dark-40)' }}>
+        <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
           {hint}
         </Text>
       )}
@@ -323,7 +323,7 @@ export function Markdown({ text }: { text: string }) {
           style={{ margin: '4px 0', paddingLeft: 22, display: 'flex', flexDirection: 'column', gap: 4, listStyle: 'disc' }}
         >
           {list.map((li, i) => (
-            <li key={i} style={{ fontSize: 15, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+            <li key={i} style={{ fontSize: 16, color: 'var(--dark-90)', lineHeight: 1.6 }}>
               {inlineMd(li, i)}
             </li>
           ))}
@@ -339,7 +339,7 @@ export function Markdown({ text }: { text: string }) {
     else {
       flush();
       blocks.push(
-        <p key={`p-${i}`} style={{ margin: 0, fontSize: 15, color: 'var(--dark-90)', lineHeight: 1.6 }}>
+        <p key={`p-${i}`} style={{ margin: 0, fontSize: 16, color: 'var(--dark-90)', lineHeight: 1.6 }}>
           {inlineMd(line, i)}
         </p>,
       );
@@ -479,8 +479,8 @@ export function ScorecardHeader({
     >
       <GaugeRing score={data.overall} max={data.overallMax} status={status} size={76} stroke={6}>
         <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-          <span style={{ fontSize: 22, fontWeight: 600, color: 'var(--dark-90)' }}>{data.overall}</span>
-          <span style={{ fontSize: 10, color: 'var(--dark-40)' }}>/ {data.overallMax}</span>
+          <span style={{ fontSize: 26, fontWeight: 400, color: 'var(--dark-90)' }}>{data.overall}</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>/ {data.overallMax}</span>
         </span>
       </GaugeRing>
       <div style={{ minWidth: 0 }}>
@@ -541,8 +541,8 @@ export function IntroScreen({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: 14,
+                fontWeight: 500,
               }}
             >
               {i + 1}

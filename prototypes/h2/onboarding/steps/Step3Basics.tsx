@@ -232,7 +232,7 @@ function ProfilesSection() {
 
 function Inline({ icon: Icon, children, muted }: { icon: typeof Instagram; children: ReactNode; muted?: boolean }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: muted ? 'var(--dark-40)' : 'var(--dark-80)', fontSize: 14 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: muted ? 'var(--dark-60)' : 'var(--dark-80)', fontSize: 14 }}>
       <Icon size={18} color="var(--dark-60)" />
       {children}
     </span>
@@ -279,7 +279,7 @@ function LogoBox() {
 
 function UploadButton() {
   return (
-    <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-90)', cursor: 'pointer' }}>
+    <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 8, fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)', cursor: 'pointer' }}>
       <Upload size={14} color="var(--dark-90)" />
       Upload Logo kit
     </button>

@@ -443,8 +443,8 @@ function KpiCard({ label, value, unit, delta, sub }: KpiCardProps) {
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
         <span
           style={{
-            fontSize: 24,
-            fontWeight: 500,
+            fontSize: 26,
+            fontWeight: 400,
             letterSpacing: '-0.3px',
             color: 'var(--dark-90)',
             fontVariantNumeric: 'tabular-nums',
@@ -452,11 +452,11 @@ function KpiCard({ label, value, unit, delta, sub }: KpiCardProps) {
         >
           {value}
         </span>
-        {unit && <span style={{ fontSize: 14, color: 'var(--dark-40)' }}>{unit}</span>}
+        {unit && <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>{unit}</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <StatusPill tone={DELTA_TONE[delta.tone]} size="sm">{delta.text}</StatusPill>
-        <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{sub}</span>
+        <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{sub}</span>
       </div>
     </div>
   );
@@ -534,7 +534,7 @@ function AiDraftBlock({ draft, readOnly, hideActions, approveLabel = 'Approve & 
       >
         {leadGlyph} · {draft.tone}
         {!hideActions && (
-          <span style={{ color: 'var(--dark-40)', fontWeight: 400, marginLeft: 'auto' }}>
+          <span style={{ color: 'var(--dark-60)', fontWeight: 400, marginLeft: 'auto' }}>
             Confidence {draft.confidence}%
           </span>
         )}
@@ -624,7 +624,7 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: Atte
           <SourceBadge source={item.source} label={item.sourceLabel} />
           {item.stars !== undefined && <Stars n={item.stars} />}
           <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.customer}</span>
-          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{item.when}</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.when}</span>
           {item.velocity && (
             <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.velocity}</span>
           )}
@@ -827,11 +827,11 @@ function MentionRow({ item, isLast }: { item: MentionItem; isLast: boolean }) {
         <StatusPill tone={SENTIMENT_TONES[item.sentiment]} size="sm">
           {SENTIMENT_LABELS[item.sentiment]}
         </StatusPill>
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--dark-40)' }}>{item.when}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--dark-60)' }}>{item.when}</span>
       </div>
       <div style={{ fontSize: 12, color: 'var(--dark-80)', lineHeight: 1.5 }}>{item.text}</div>
       {/* Second line: muted metadata — author + reactions/reach. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--dark-40)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--dark-60)' }}>
         <span style={{ color: 'var(--dark-60)', fontWeight: 500 }}>{item.author}</span>
         <span>{item.meta}</span>
       </div>
@@ -875,7 +875,7 @@ function TopicsTable() {
       <tbody>
         {TOPICS.map((row, i) => {
           const trendColor =
-            row.trend.dir === 'up' ? '#20A14F' : row.trend.dir === 'down' ? '#D92D20' : 'var(--dark-40)';
+            row.trend.dir === 'up' ? '#20A14F' : row.trend.dir === 'down' ? '#D92D20' : 'var(--dark-60)';
           const topicColor =
             row.topicTone === 'risk'
               ? '#B42318'
@@ -923,7 +923,7 @@ function ListeningPane() {
           micro-label is parked on the right of the H3. */}
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
         <Heading level={3}>Public mentions</Heading>
-        <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>live · 5 latest</span>
+        <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>live · 5 latest</span>
       </div>
       <div
         style={{
@@ -993,7 +993,7 @@ function ItemDetailModal({
           <span style={{ fontSize: 14, color: 'var(--dark-90)', fontWeight: 500 }}>
             {item.customer}
           </span>
-          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>· {item.when}</span>
+          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>· {item.when}</span>
         </div>
 
         {/* full review text */}
@@ -1062,7 +1062,7 @@ function ItemDetailModal({
                 >
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
                     <span style={{ fontSize: 12, color: 'var(--dark-90)', fontWeight: 500 }}>{h.who}</span>
-                    <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{h.when}</span>
+                    <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{h.when}</span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.55 }}>{h.text}</div>
                 </div>
@@ -1301,7 +1301,7 @@ function ReputationRouteInner() {
           <>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
               <Heading level={3}>Needs attention</Heading>
-              <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{reviewCount} items · sorted by impact</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{reviewCount} items · sorted by impact</span>
             </div>
             {attention.map((item) => (
               <AttentionCard
@@ -1314,7 +1314,7 @@ function ReputationRouteInner() {
             ))}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 32, marginBottom: 12 }}>
               <Heading level={3}>Auto-replied</Heading>
-              <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{AUTO_REPLIED.length} items · high-confidence drafts published</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{AUTO_REPLIED.length} items · high-confidence drafts published</span>
             </div>
             {AUTO_REPLIED.map((item) => (
               <AttentionCard

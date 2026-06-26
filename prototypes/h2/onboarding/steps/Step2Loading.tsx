@@ -71,7 +71,7 @@ export function Step2Loading() {
           <div>
             <Text
               variant="metadata"
-              style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 10, fontSize: 13 }}
+              style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 10, fontSize: 14 }}
             >
               Your website:
             </Text>
@@ -132,7 +132,7 @@ export function Step2Loading() {
           <div>
             <Text
               variant="metadata"
-              style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 10, fontSize: 13 }}
+              style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 10, fontSize: 14 }}
             >
               Brand profile:
             </Text>
@@ -160,7 +160,7 @@ export function Step2Loading() {
                 />
                 <Text
                   variant="primary"
-                  style={{ display: 'block', color: 'var(--dark-90)', fontSize: 15 }}
+                  style={{ display: 'block', color: 'var(--dark-90)', fontSize: 16 }}
                 >
                   Acme Studios (Example)
                 </Text>

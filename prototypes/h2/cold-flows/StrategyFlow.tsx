@@ -293,7 +293,7 @@ export function CreativeStep() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {taglines.map((t, i) => (
-                    <Text key={i} variant="primary" style={{ display: 'block', color: 'var(--dark-90)', fontSize: 15 }}>
+                    <Text key={i} variant="primary" style={{ display: 'block', color: 'var(--dark-90)', fontSize: 16 }}>
                       “{t}”
                     </Text>
                   ))}
@@ -351,7 +351,7 @@ export function CreativeStep() {
                       <span style={{ width: 28, height: 28, borderRadius: 6, background: c.hex, border: '1px solid var(--dark-8)', flexShrink: 0 }} />
                       <div>
                         <Text variant="smallList" style={{ display: 'block', color: 'var(--dark-90)' }}>{c.name}</Text>
-                        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', textTransform: 'uppercase' }}>{c.hex}</Text>
+                        <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', textTransform: 'uppercase' }}>{c.hex}</Text>
                       </div>
                     </div>
                   ))}
@@ -390,10 +390,10 @@ export function CreativeStep() {
                       <div style={{ fontFamily: `'${f.family}', sans-serif`, fontSize: 30, lineHeight: 1.1, color: 'var(--dark-90)', fontWeight: f.role === 'Display' ? 700 : f.role === 'Heading' ? 600 : 400 }}>
                         {f.family || 'Aa'}
                       </div>
-                      <div style={{ fontFamily: `'${f.family}', sans-serif`, fontSize: 15, color: 'var(--dark-60)', marginTop: 4 }}>
+                      <div style={{ fontFamily: `'${f.family}', sans-serif`, fontSize: 16, color: 'var(--dark-60)', marginTop: 4 }}>
                         The quick brown fox jumps over the lazy dog
                       </div>
-                      <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', marginTop: 6 }}>
+                      <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', marginTop: 6 }}>
                         {f.family} · {f.role}
                       </Text>
                     </div>
@@ -419,7 +419,7 @@ export function CreativeStep() {
                     border: '1.5px dashed var(--dark-12)',
                     background: 'var(--dark-2)',
                     cursor: 'pointer',
-                    color: 'var(--dark-40)',
+                    color: 'var(--dark-60)',
                     fontFamily: 'inherit',
                     fontSize: 14,
                   }}
@@ -428,7 +428,7 @@ export function CreativeStep() {
                   Drop inspiration images, or click to upload
                 </button>
               ) : (
-                <Text variant="secondary" style={{ color: 'var(--dark-40)' }}>
+                <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
                   No inspiration images yet — hit Edit to upload.
                 </Text>
               )
@@ -470,7 +470,7 @@ export function CreativeStep() {
             border: 'none',
             cursor: 'pointer',
             fontFamily: 'inherit',
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--light-60)',
             padding: '6px 10px',
           }}
@@ -521,13 +521,13 @@ function IgPreview({ tagline, seed = 1 }: { tagline?: string; seed?: number }) {
               justifyContent: 'center',
               color: 'var(--light-100)',
               fontSize: 14,
-              fontWeight: 600,
+              fontWeight: 500,
             }}
           >
             C
           </div>
           <div style={{ lineHeight: 1.25 }}>
-            <div style={{ color: 'var(--light-100)', fontSize: 14, fontWeight: 600 }}>certapro_austin</div>
+            <div style={{ color: 'var(--light-100)', fontSize: 14, fontWeight: 500}}>certapro_austin</div>
             <div style={{ color: 'var(--light-60)', fontSize: 12 }}>Just now</div>
           </div>
         </div>
@@ -621,7 +621,7 @@ function IgPreview({ tagline, seed = 1 }: { tagline?: string; seed?: number }) {
         </div>
 
         {/* caption */}
-        <Text variant="secondary" style={{ display: 'block', color: 'var(--light-60)', fontSize: 13, lineHeight: 1.5 }}>
+        <Text variant="secondary" style={{ display: 'block', color: 'var(--light-60)', fontSize: 14, lineHeight: 1.5 }}>
           <strong style={{ fontWeight: 600, color: 'var(--light-100)' }}>certapro_austin</strong> Booking spring exteriors now — clean lines, on
           time, spotless cleanup. <span style={{ color: 'var(--light-40)' }}>…more</span>
         </Text>
@@ -815,11 +815,11 @@ function SwipePreview({ item }: { item: SwipeItem }) {
           {item.channel}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--dark-90)', border: '1px solid var(--dark-15)', borderRadius: 4, padding: '0 5px', lineHeight: '17px' }}>Ad</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--dark-90)', border: '1px solid var(--dark-15)', borderRadius: 4, padding: '0 5px', lineHeight: '17px' }}>Ad</span>
           <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{ad.url}</span>
         </div>
         <div style={{ fontSize: 16, color: 'var(--action-50)', fontWeight: 500, lineHeight: 1.3, marginBottom: 3 }}>{ad.title}</div>
-        <div style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>{ad.desc}</div>
+        <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.45 }}>{ad.desc}</div>
       </div>
     );
   }
@@ -861,7 +861,7 @@ function AuditStep() {
         <div key={area.number} style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
             <GaugeRing score={area.score} max={area.maxScore} status={area.status}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-90)' }}>{area.score}</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{area.score}</span>
             </GaugeRing>
             <div style={{ flex: 1, minWidth: 0 }}>
               <Heading level={4} style={{ margin: 0 }}>
@@ -890,7 +890,7 @@ function AuditStep() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <Text variant="largeList">{c.title}</Text>
-                    <Text variant="metadata" style={{ color: 'var(--dark-40)', whiteSpace: 'nowrap' }}>
+                    <Text variant="metadata" style={{ color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>
                       {c.pts}
                     </Text>
                   </div>
@@ -1025,7 +1025,7 @@ export function GoalsStep() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {events.map((e, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, background: 'var(--dark-4)', color: 'var(--dark-80)', fontSize: 13, fontWeight: 500, minWidth: 76, textAlign: 'center' }}>
+                  <span style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 8, background: 'var(--dark-4)', color: 'var(--dark-80)', fontSize: 14, fontWeight: 500, minWidth: 76, textAlign: 'center' }}>
                     {e.when ? new Date(e.when + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
                   </span>
                   <Text variant="secondary" style={{ flex: 1, color: 'var(--dark-90)' }}>

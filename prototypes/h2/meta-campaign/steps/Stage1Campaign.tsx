@@ -112,7 +112,7 @@ export function Stage1Campaign() {
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>
+                <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>
                   {OBJECTIVE_LABEL[id]}
                 </span>
                 {isRecommended && (
@@ -121,7 +121,7 @@ export function Stage1Campaign() {
                   </StatusPill>
                 )}
               </span>
-              <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.45 }}>
+              <span style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.45 }}>
                 {OBJECTIVE_DESCRIPTION[id]}
               </span>
             </button>

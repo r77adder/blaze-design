@@ -118,7 +118,7 @@ function Step1({
       </Text>
 
       <div style={{ position: 'relative', marginBottom: 20 }}>
-        <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: 'var(--dark-40)' }}>🔍</span>
+        <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: 'var(--dark-60)' }}>🔍</span>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -128,7 +128,7 @@ function Step1({
           style={{
             width: '100%',
             padding: '12px 14px 12px 40px',
-            fontSize: 15,
+            fontSize: 16,
             border: '1px solid var(--dark-15)',
             borderRadius: 10,
             outline: 'none',

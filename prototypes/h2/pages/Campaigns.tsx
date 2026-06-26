@@ -745,14 +745,14 @@ function DetailView({ campaign: c, onSectionClick, onTurnOffCrosspost, onScrolle
               <path d="M16 3v4M8 3v4M3 11h18" />
             </svg>
           }>
-            {fmtDay(start)} – {fmtDay(end)} <span style={{ color: 'var(--dark-40)' }}>· {days} days</span>
+            {fmtDay(start)} – {fmtDay(end)} <span style={{ color: 'var(--dark-60)' }}>· {days} days</span>
           </DetailRow>
           <DetailRow label="Brand" icon={
             <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2 4 6v6c0 4.5 3.4 7.7 8 9 4.6-1.3 8-4.5 8-9V6l-8-4z" />
             </svg>
           }>
-            CertaPro Painters of Austin <span style={{ color: 'var(--dark-40)' }}>· from Brand Kit</span>
+            CertaPro Painters of Austin <span style={{ color: 'var(--dark-60)' }}>· from Brand Kit</span>
           </DetailRow>
           <DetailRow label="Audience" icon={
             <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
@@ -932,7 +932,7 @@ const PROMPT_ITEMS: PromptItem[] = [
 
 function PromptSelect({ children }: { children: ReactNode }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', border: '1px solid var(--dark-8)', borderRadius: 8, background: 'var(--light-100)', fontSize: 13, color: 'var(--dark-80)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', border: '1px solid var(--dark-8)', borderRadius: 8, background: 'var(--light-100)', fontSize: 14, color: 'var(--dark-80)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
       {children}
       <ChevronGlyph />
     </span>
@@ -952,7 +952,7 @@ function PromptRow({ p }: { p: PromptItem }) {
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-          <span style={{ fontSize: 13, color: 'var(--dark-60)', flex: 1 }}>Topic:</span>
+          <span style={{ fontSize: 14, color: 'var(--dark-60)', flex: 1 }}>Topic:</span>
           <button type="button" style={ghostTextBtn}>
             <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             Add Context
@@ -962,11 +962,11 @@ function PromptRow({ p }: { p: PromptItem }) {
             <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></svg>
           </button>
         </div>
-        <p style={{ margin: '0 0 10px', fontSize: 15, color: 'var(--dark-90)', lineHeight: 1.45 }}>{p.topic}</p>
+        <p style={{ margin: '0 0 10px', fontSize: 16, color: 'var(--dark-90)', lineHeight: 1.45 }}>{p.topic}</p>
         {p.context && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
             {p.context.map((ch) => (
-              <span key={ch} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px', border: '1px solid var(--dark-8)', borderRadius: 8, fontSize: 13, color: 'var(--dark-80)', background: 'var(--light-100)' }}>
+              <span key={ch} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 10px', border: '1px solid var(--dark-8)', borderRadius: 8, fontSize: 14, color: 'var(--dark-80)', background: 'var(--light-100)' }}>
                 {ch}
                 <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </span>
@@ -982,9 +982,9 @@ function PromptRow({ p }: { p: PromptItem }) {
             )}
             {p.type}
           </PromptSelect>
-          <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>Posting to</span>
+          <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>Posting to</span>
           <PromptSelect>{p.accounts} Accounts</PromptSelect>
-          <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>on</span>
+          <span style={{ fontSize: 14, color: 'var(--dark-60)' }}>on</span>
           <PromptSelect>{p.when}</PromptSelect>
         </div>
       </div>
@@ -1055,7 +1055,7 @@ function ReviewCard({ r }: { r: ReviewItem }) {
   return (
     <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 400, color: 'var(--dark-80)' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 400, color: 'var(--dark-80)' }}>
           {r.kind === 'still' ? (
             <StillImageIcon size={15} color={meta.color} />
           ) : (
@@ -1063,12 +1063,12 @@ function ReviewCard({ r }: { r: ReviewItem }) {
           )}
           {meta.label}
         </span>
-        <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{r.date}</span>
+        <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{r.date}</span>
       </div>
       {!portrait && r.caption && (
-        <div style={{ padding: '0 12px 10px', fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.4 }}>
+        <div style={{ padding: '0 12px 10px', fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.4 }}>
           {r.caption}
-          <span style={{ color: 'var(--dark-40)' }}> …more</span>
+          <span style={{ color: 'var(--dark-60)' }}> …more</span>
         </div>
       )}
       <div style={{ position: 'relative', aspectRatio: portrait ? '3 / 4' : '4 / 3', backgroundImage: `url('${r.img}')`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -1140,7 +1140,7 @@ function DetailRow({
       }}
     >
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--dark-60)' }}>
-        <span style={{ width: 18, height: 18, color: 'var(--dark-40)', display: 'inline-flex' }}>{icon}</span>
+        <span style={{ width: 18, height: 18, color: 'var(--dark-60)', display: 'inline-flex' }}>{icon}</span>
         {label}
       </span>
       <span style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5 }}>{children}</span>
@@ -1659,7 +1659,7 @@ function NewCampaignWizardModal({
                 padding: '11px 14px',
               }}
             >
-              <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Strategy</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Strategy</div>
               <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{strategy.name}</div>
             </div>
             <div
@@ -1670,7 +1670,7 @@ function NewCampaignWizardModal({
                 padding: '11px 14px',
               }}
             >
-              <div style={{ fontSize: 12, color: 'var(--dark-40)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Schedule</div>
+              <div style={{ fontSize: 12, color: 'var(--dark-60)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500, marginBottom: 4 }}>Schedule</div>
               <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{dateStr}</div>
             </div>
           </div>

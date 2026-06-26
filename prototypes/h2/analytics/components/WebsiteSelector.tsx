@@ -61,11 +61,8 @@ export function WebsiteSelector() {
         }}
       >
         <Favicon />
-        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
-          <span style={{ fontSize: 15, fontWeight: 500, letterSpacing: '0.2px', color: 'var(--dark-90)', lineHeight: 1.1 }}>
-            {active.domain}
-          </span>
-          <span style={{ fontSize: 11, letterSpacing: tracking(11), color: 'var(--dark-60)', lineHeight: 1.1 }}>{active.name}</span>
+        <span style={{ fontSize: 14, fontWeight: 400, letterSpacing: tracking(14), color: 'var(--dark-90)', lineHeight: 1.1 }}>
+          {active.domain}
         </span>
         <span style={{ display: 'inline-flex', color: 'var(--dark-60)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 120ms' }}>
           <ChevronDown size={16} />
@@ -162,7 +159,7 @@ export function WebsiteSelector() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--dark-60)',
-                fontSize: 15,
+                fontSize: 16,
                 lineHeight: 1,
                 flexShrink: 0,
               }}

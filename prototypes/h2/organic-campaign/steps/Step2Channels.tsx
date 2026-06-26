@@ -175,7 +175,7 @@ export function Step2Channels() {
         >
           <div
             style={{
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               marginBottom: 8,
               letterSpacing: '0.26px',
@@ -185,7 +185,7 @@ export function Step2Channels() {
           </div>
           <div
             style={{
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: 500,
               color: 'var(--dark-90)',
               marginBottom: 10,
@@ -197,7 +197,7 @@ export function Step2Channels() {
           <p
             style={{
               margin: 0,
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               lineHeight: 1.55,
               letterSpacing: '0.26px',
@@ -208,7 +208,7 @@ export function Step2Channels() {
           <p
             style={{
               margin: '12px 0 0',
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               lineHeight: 1.55,
               letterSpacing: '0.26px',

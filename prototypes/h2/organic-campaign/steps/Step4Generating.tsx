@@ -78,7 +78,7 @@ export function Step4Generating() {
         <div style={{ textAlign: 'left', maxWidth: 320 }}>
           <div
             style={{
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               marginBottom: 12,
               letterSpacing: '0.26px',
@@ -112,7 +112,7 @@ export function Step4Generating() {
                   padding: '4px 8px',
                   background: 'rgba(0,0,0,0.55)',
                   color: 'var(--light-100)',
-                  fontSize: 11,
+                  fontSize: 12,
                   letterSpacing: '0.22px',
                   textAlign: 'center',
                 }}
@@ -123,7 +123,7 @@ export function Step4Generating() {
             <p
               style={{
                 margin: 0,
-                fontSize: 13,
+                fontSize: 14,
                 color: 'var(--dark-90)',
                 lineHeight: 1.5,
                 letterSpacing: '0.26px',
@@ -136,7 +136,7 @@ export function Step4Generating() {
           </div>
         </div>
 
-        <div style={{ color: 'var(--dark-40)' }}>
+        <div style={{ color: 'var(--dark-60)' }}>
           <svg width="28" height="14" viewBox="0 0 28 14" fill="none">
             <path
               d="M0 7H26M26 7L20 1M26 7L20 13"
@@ -152,7 +152,7 @@ export function Step4Generating() {
         <div style={{ textAlign: 'left' }}>
           <div
             style={{
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-60)',
               marginBottom: 12,
               letterSpacing: '0.26px',
@@ -189,12 +189,12 @@ export function Step4Generating() {
                   justifyContent: 'center',
                 }}
               >
-                <span style={{ color: '#fff', fontSize: 10 }}>r</span>
+                <span style={{ color: '#fff', fontSize: 12 }}>r</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 500,
                     color: 'var(--dark-90)',
                   }}
@@ -233,7 +233,7 @@ export function Step4Generating() {
                   top: 12,
                   color: '#fff',
                   fontSize: 14,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   lineHeight: 1.05,
                   textShadow: '0 2px 6px rgba(0,0,0,0.4)',
                 }}
@@ -269,7 +269,7 @@ export function Step4Generating() {
             <div
               style={{
                 padding: '0 10px 10px',
-                fontSize: 10,
+                fontSize: 12,
                 color: 'var(--dark-60)',
                 lineHeight: 1.4,
               }}

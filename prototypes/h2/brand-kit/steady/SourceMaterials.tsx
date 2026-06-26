@@ -117,10 +117,10 @@ export function SourceMaterials() {
       {/* section: header row with primary action */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, paddingBottom: 20, borderBottom: '1px solid var(--dark-8)' }}>
         <div style={{ maxWidth: 640 }}>
-          <Heading level={4} style={{ margin: 0, fontSize: 15, fontWeight: 500 }}>
+          <Heading level={4} style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>
             Help Blaze learn about your brand
           </Heading>
-          <Text variant="secondary" style={{ display: 'block', marginTop: 4, fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>
+          <Text variant="secondary" style={{ display: 'block', marginTop: 4, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
             Upload marketing or brand materials (brochures, one-pagers, videos, press coverage, etc.).
             Blaze will analyze them and pull them into your content.
           </Text>
@@ -133,7 +133,7 @@ export function SourceMaterials() {
       {/* section: items count */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 24, marginBottom: 12 }}>
         <Heading level={3} style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>Source materials</Heading>
-        <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)' }}>45 items</Text>
+        <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)' }}>45 items</Text>
       </div>
 
       {/* section: table */}
@@ -198,7 +198,7 @@ function Row({ row, isLast }: { row: SourceRow; isLast: boolean }) {
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, gap: 2 }}>
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 500,
               color: 'var(--dark-90)',
               overflow: 'hidden',
@@ -241,12 +241,12 @@ function Row({ row, isLast }: { row: SourceRow; isLast: boolean }) {
             <ChevronDown size={12} color="var(--dark-60)" />
           </button>
         ) : (
-          <Text style={{ fontSize: 13, color: 'var(--dark-90)' }}>{row.type}</Text>
+          <Text style={{ fontSize: 14, color: 'var(--dark-90)' }}>{row.type}</Text>
         )}
       </div>
 
-      <Text style={{ fontSize: 13, color: 'var(--dark-90)' }}>{row.lastScanned}</Text>
-      <Text style={{ fontSize: 13, color: 'var(--dark-90)' }}>{row.added}</Text>
+      <Text style={{ fontSize: 14, color: 'var(--dark-90)' }}>{row.lastScanned}</Text>
+      <Text style={{ fontSize: 14, color: 'var(--dark-90)' }}>{row.added}</Text>
 
       {/* Hover actions overlay — anchored to the row's right edge. */}
       {hovered && row.url && <HoverActions onOpen={() => showToast({ message: 'Open link coming soon' })} onDelete={() => showToast({ message: 'Delete row coming soon' })} />}
@@ -407,7 +407,7 @@ function FormatBadge({ bg, label }: { bg: string; label: ReactNode }) {
         alignItems: 'center',
         justifyContent: 'center',
         color: 'var(--light-100)',
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: 700,
         letterSpacing: '0.3px',
         flexShrink: 0,

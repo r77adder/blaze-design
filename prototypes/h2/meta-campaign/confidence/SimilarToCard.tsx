@@ -126,10 +126,10 @@ function FallbackCard() {
 function RecapStat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-      <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 11, display: 'block' }}>
+      <Text variant="metadata" style={{ color: 'var(--dark-60)', fontSize: 12, display: 'block' }}>
         {label}
       </Text>
-      <Text style={{ color: 'var(--dark-90)', fontSize: 15, fontWeight: 500 }}>{value}</Text>
+      <Text style={{ color: 'var(--dark-90)', fontSize: 16, fontWeight: 500 }}>{value}</Text>
     </div>
   );
 }

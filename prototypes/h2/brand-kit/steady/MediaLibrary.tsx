@@ -112,7 +112,7 @@ export function MediaLibrary() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingBottom: 16, borderBottom: '1px solid var(--dark-8)' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <Heading level={2} style={{ margin: 0, fontSize: 22 }}>Media library</Heading>
-          <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)' }}>85 images, 12 videos</Text>
+          <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)' }}>85 images, 12 videos</Text>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <SortDropdown onPress={fire('Sort coming soon')} />
@@ -125,10 +125,10 @@ export function MediaLibrary() {
       {/* section: add-media row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, paddingTop: 20, paddingBottom: 24 }}>
         <div style={{ maxWidth: 640 }}>
-          <Heading level={4} style={{ margin: 0, fontSize: 15, fontWeight: 500 }}>
+          <Heading level={4} style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>
             Add media to keep your content fresh
           </Heading>
-          <Text variant="secondary" style={{ display: 'block', marginTop: 4, fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>
+          <Text variant="secondary" style={{ display: 'block', marginTop: 4, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
             Blaze uses your images and videos to create relevant social posts, blogs, and
             emails based on your{' '}
             <span style={{ textDecoration: 'underline', textDecorationColor: 'var(--dark-40)' }}>Campaigns</span>.
@@ -182,7 +182,7 @@ function MediaCard({ item }: { item: MediaItem }) {
               borderRadius: 999,
               background: 'rgba(0,0,0,0.7)',
               color: 'var(--light-100)',
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 500,
             }}
           >
@@ -199,7 +199,7 @@ function MediaCard({ item }: { item: MediaItem }) {
               borderRadius: 999,
               background: 'rgba(0,0,0,0.7)',
               color: 'var(--light-100)',
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 500,
             }}
           >
@@ -237,7 +237,7 @@ function MediaCard({ item }: { item: MediaItem }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
         <Text
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: 'var(--dark-90)',
             fontWeight: 500,
             overflow: 'hidden',
@@ -292,7 +292,7 @@ function SortDropdown({ onPress }: { onPress: () => void }) {
         borderRadius: 8,
         cursor: 'pointer',
         color: 'var(--dark-90)',
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: 500,
         fontFamily: 'inherit',
       }}

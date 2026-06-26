@@ -194,7 +194,7 @@ export function AddAdsModal({ open, campaign, targetConceptId, onClose }: AddAds
         <div style={headerStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
             <MetaBrand size={20} />
-            <Text style={{ color: 'var(--dark-90)', fontSize: 15, fontWeight: 500 }}>
+            <Text style={{ color: 'var(--dark-90)', fontSize: 16, fontWeight: 500 }}>
               Add ads to <span style={{ fontWeight: 600 }}>{targetAdSetName}</span>
             </Text>
             <span style={blazeBadgeStyle}>
@@ -265,7 +265,7 @@ export function AddAdsModal({ open, campaign, targetConceptId, onClose }: AddAds
                   padding: 24,
                   textAlign: 'center',
                   color: 'var(--dark-60)',
-                  fontSize: 13,
+                  fontSize: 14,
                   border: '1px dashed var(--dark-15)',
                   borderRadius: 12,
                 }}
@@ -343,7 +343,7 @@ export function AddAdsModal({ open, campaign, targetConceptId, onClose }: AddAds
                             borderRadius: 999,
                             background: SRC_PALETTE[tab].bg,
                             color: SRC_PALETTE[tab].fg,
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 500,
                           }}
                         >
@@ -359,7 +359,7 @@ export function AddAdsModal({ open, campaign, targetConceptId, onClose }: AddAds
                             borderRadius: 999,
                             background: 'rgba(0, 0, 0, 0.7)',
                             color: 'var(--light-100)',
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 500,
                           }}
                         >
@@ -368,13 +368,13 @@ export function AddAdsModal({ open, campaign, targetConceptId, onClose }: AddAds
                       </div>
                     )}
                     <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
                         {o.label}
                       </span>
                       {o.hook && (
                         <span
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             color: 'var(--dark-60)',
                             lineHeight: 1.4,
                             overflow: 'hidden',
@@ -397,7 +397,7 @@ export function AddAdsModal({ open, campaign, targetConceptId, onClose }: AddAds
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <Text
                   variant="secondary"
-                  style={{ color: 'var(--dark-60)', fontSize: 11, letterSpacing: '0.22px' }}
+                  style={{ color: 'var(--dark-60)', fontSize: 12, letterSpacing: '0.22px' }}
                 >
                   Adding {picked.length} ad{picked.length === 1 ? '' : 's'}
                 </Text>
@@ -427,7 +427,7 @@ export function AddAdsModal({ open, campaign, targetConceptId, onClose }: AddAds
                           borderRadius: 999,
                           background: SRC_PALETTE[p.sourceType].bg,
                           color: SRC_PALETTE[p.sourceType].fg,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: 500,
                         }}
                       >
@@ -504,7 +504,7 @@ function SharedCopyContext({ concept }: { concept: Concept }) {
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          fontSize: 11,
+          fontSize: 12,
           color: 'var(--purple)',
           fontWeight: 500,
         }}
@@ -513,7 +513,7 @@ function SharedCopyContext({ concept }: { concept: Concept }) {
         New ads will inherit this copy from "{concept.name}"
       </div>
       {concept.copy.headline && (
-        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
           {concept.copy.headline}
         </div>
       )}
@@ -522,7 +522,7 @@ function SharedCopyContext({ concept }: { concept: Concept }) {
           {concept.copy.primaryText}
         </div>
       )}
-      <div style={{ fontSize: 11, color: 'var(--dark-60)' }}>
+      <div style={{ fontSize: 12, color: 'var(--dark-60)' }}>
         CTA — {concept.copy.cta}
       </div>
     </div>
@@ -727,7 +727,7 @@ function BlazeGeneratedCard({
             borderRadius: 999,
             background: 'rgba(0, 0, 0, 0.6)',
             color: 'var(--light-100)',
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: 500,
           }}
         >
@@ -749,7 +749,7 @@ function BlazeGeneratedCard({
         >
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               letterSpacing: '0.22px',
               color: 'var(--dark-60)',
             }}
@@ -775,7 +775,7 @@ function BlazeGeneratedCard({
         </div>
 
         {/* Concept name */}
-        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.3 }}>
+        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.3 }}>
           {option.label}
         </div>
 

@@ -578,7 +578,7 @@ function FatigueSummaryRow({
       >
         {signal}
       </span>
-      <span style={{ marginLeft: 'auto', display: 'inline-flex', color: 'var(--dark-40)' }} aria-hidden>
+      <span style={{ marginLeft: 'auto', display: 'inline-flex', color: 'var(--dark-60)' }} aria-hidden>
         <ChevronRightSmall size={16} />
       </span>
     </button>

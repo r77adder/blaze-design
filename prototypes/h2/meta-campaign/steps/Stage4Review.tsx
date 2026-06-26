@@ -213,7 +213,7 @@ function SummaryCard({
             <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 12, letterSpacing: '0.22px' }}>
               {r.label}
             </Text>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--dark-90)', fontSize: 13 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--dark-90)', fontSize: 14 }}>
               {r.icon}
               {r.value}
             </span>
@@ -323,7 +323,7 @@ function AdSetCard({
               <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 12, letterSpacing: '0.22px' }}>
                 {r.label}
               </Text>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--dark-90)', fontSize: 13 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--dark-90)', fontSize: 14 }}>
                 {r.icon}
                 {r.value}
               </span>
@@ -357,7 +357,7 @@ function ConceptSection({ concept, campaignName }: { concept: Concept; campaignN
         }}
       >
         <StatusPill tone="accent" size="sm">Concept</StatusPill>
-        <Text style={{ color: 'var(--dark-90)', fontSize: 15, fontWeight: 500, display: 'block' }}>
+        <Text style={{ color: 'var(--dark-90)', fontSize: 16, fontWeight: 500, display: 'block' }}>
           {concept.name}
         </Text>
         <Text variant="secondary" style={{ color: 'var(--dark-60)', marginLeft: 'auto' }}>
@@ -389,7 +389,7 @@ function ConceptSection({ concept, campaignName }: { concept: Concept; campaignN
                   style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
                 />
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>
                     {resolved.headline}
                   </span>
                   <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>

@@ -56,7 +56,7 @@ export function ConnectStepBody({
             {phase.steps.map((step, i) => (
               <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
                 <span aria-hidden style={{ flexShrink: 0, width: 5, height: 5, borderRadius: '50%', background: 'var(--dark-40)', marginTop: 9 }} />
-                <Text style={{ fontSize: 15, lineHeight: 1.5, color: 'var(--dark-80)' }}>{step}</Text>
+                <Text style={{ fontSize: 16, lineHeight: 1.5, color: 'var(--dark-80)' }}>{step}</Text>
               </li>
             ))}
           </ul>
@@ -162,7 +162,7 @@ function DoneBadge({ label }: { label: string }) {
         borderRadius: 999,
         background: 'color-mix(in srgb, var(--status-approved) 12%, transparent)',
         color: 'var(--status-approved)',
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: 500,
         alignSelf: 'flex-start',
       }}
@@ -176,7 +176,7 @@ function DoneBadge({ label }: { label: string }) {
 function FormField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <Text style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{label}</Text>
+      <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{label}</Text>
       {children}
     </div>
   );

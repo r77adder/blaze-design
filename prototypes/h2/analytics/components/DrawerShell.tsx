@@ -82,7 +82,7 @@ export function DrawerShell({
                 borderRadius: 8,
                 cursor: 'pointer',
                 color: 'var(--dark-60)',
-                fontSize: 15,
+                fontSize: 16,
                 lineHeight: 1,
                 flexShrink: 0,
               }}
