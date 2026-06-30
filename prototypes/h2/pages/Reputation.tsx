@@ -1,13 +1,14 @@
 import { useState, type MouseEvent } from 'react';
 import { Button, Heading, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { Facebook, Google, Instagram, TikTok, Twitter } from '@/icons/20';
-import { StatusPill, TabChip, useToast } from '@/staging';
+import { AlertTriangle, Facebook, Google, Instagram, TikTok, Twitter } from '@/icons/20';
+import { Chip, StatusPill, TabChip, useToast } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { useDevState } from '../dev-state-context';
 import { ConnectSourcesPage, ReputationColdView } from './ReputationColdView';
 import { ReviewGenerationTab } from './ReviewGeneration';
+import { ComplianceSection, a2pFromDevState, type A2pStatus } from './SdrCompliance';
 
 /**
  * /h2/reputation — deep port of Blaze H2 Features/reputation.html.
@@ -952,7 +953,8 @@ function ListeningPane() {
 
 // ─── TABS ─────────────────────────────────────────────────────────
 
-type TabKey = 'reviews' | 'insights' | 'listening' | 'generate' | 'manage';
+type TabKey = 'reviews' | 'insights' | 'listening' | 'generate' | 'settings';
+type SettingsSubTab = 'sources' | 'compliance';
 
 // ─── ITEM-DETAIL MODAL ────────────────────────────────────────────
 
@@ -1189,6 +1191,74 @@ function EditDraftModal({
   );
 }
 
+// ─── SETTINGS TAB ─────────────────────────────────────────────────
+
+/**
+ * Settings tab — two sub-tabs:
+ *   - Manage sources: the full ConnectSourcesPage (moved here from its old
+ *     top-level "Manage Sources" tab).
+ *   - Compliance: the exact A2P / 10DLC ComplianceSection the AI receptionist
+ *     uses, with the same submit → carrier-review flow. The Compliance chip
+ *     carries a warning glyph while A2P needs attention.
+ */
+function ReputationSettings({
+  subTab,
+  onSubTab,
+  a2pStatus,
+  connectedSources,
+  onConnect,
+  onA2pStatusChange,
+}: {
+  subTab: SettingsSubTab;
+  onSubTab: (t: SettingsSubTab) => void;
+  a2pStatus: A2pStatus;
+  connectedSources: Set<string>;
+  onConnect: (key: string) => void;
+  onA2pStatusChange: (status: A2pStatus) => void;
+}) {
+  const needsAttention = a2pStatus === 'rejected' || a2pStatus === 'not-registered';
+  const attnColor = a2pStatus === 'rejected' ? 'var(--red-70)' : 'var(--status-connect)';
+
+  const chips = (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <Chip size="md" selected={subTab === 'sources'} onSelectionChange={() => onSubTab('sources')}>
+        Manage sources
+      </Chip>
+      <Chip
+        size="md"
+        selected={subTab === 'compliance'}
+        onSelectionChange={() => onSubTab('compliance')}
+        icon={needsAttention ? (props) => <AlertTriangle {...props} color={attnColor} /> : undefined}
+      >
+        Compliance
+      </Chip>
+    </div>
+  );
+
+  // Both sub-tabs share one container width (matching the Compliance form), so
+  // switching between them doesn't shift the layout.
+  return (
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px 0' }}>
+      {chips}
+      <div style={{ paddingTop: 28 }}>
+        {subTab === 'compliance' ? (
+          <ComplianceSection onStatusChange={onA2pStatusChange} />
+        ) : (
+          <ConnectSourcesPage
+            embedded
+            headingLevel={3}
+            hideSectionDescriptions
+            title="Manage your sources"
+            subhead="Connect or update the platforms Blaze monitors for reviews, comments, and mentions."
+            initialConnected={[...connectedSources]}
+            onConnect={onConnect}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── ROUTE ────────────────────────────────────────────────────────
 
 export function ReputationRoute() {
@@ -1203,9 +1273,24 @@ function ReputationRouteInner() {
   const { showToast } = useToast();
   const { openModal, closeModal } = useModals();
   const { getState } = useDevState();
-  const isCold = getState('/h2/reputation') === 'cold';
+  const devState = getState('/h2/reputation');
+  const isCold = devState === 'cold';
   const [tab, setTab] = useState<TabKey>('reviews');
+  const [settingsSub, setSettingsSub] = useState<SettingsSubTab>('sources');
   const [attention, setAttention] = useState<AttentionItem[]>(ATTENTION);
+
+  // Shared A2P verification status for this brand — owned by the Compliance
+  // sub-tab (which reports it up via onStatusChange) and read by the Review
+  // Requests wizard to gate SMS. Seeded from the dev-state controller, matching
+  // how the AI receptionist's settings seed it (steady = rejected).
+  const [a2pStatus, setA2pStatus] = useState<A2pStatus>(() =>
+    a2pFromDevState(devState as 'cold' | 'steady'),
+  );
+
+  const goToCompliance = () => {
+    setTab('settings');
+    setSettingsSub('compliance');
+  };
 
   const editAttentionDraft = (item: AttentionItem) => {
     if (!item.aiDraft) return;
@@ -1256,8 +1341,8 @@ function ReputationRouteInner() {
           { key: 'reviews', label: 'Reviews & Comments', count: reviewCount },
           { key: 'insights', label: 'Business Insights', count: 5 },
           { key: 'listening', label: 'Social Listening' },
-          { key: 'generate', label: 'Review Generation' },
-          { key: 'manage', label: 'Manage Sources' },
+          { key: 'generate', label: 'Review Requests' },
+          { key: 'settings', label: 'Settings' },
         ] as const
       ).map((t) => (
         <TabChip
@@ -1272,26 +1357,28 @@ function ReputationRouteInner() {
     </div>
   );
 
-  // "Review Generation" tab — setup surface for the review-request agent.
-  // Rendered as its own full surface (no KPI strip), like the manage tab.
+  // "Review Requests" tab — setup surface for the review-request agent.
+  // Rendered as its own full surface (no KPI strip), like the settings tab.
   if (tab === 'generate') {
     return (
       <H2Layout topbarCenter={topbarCenter}>
-        <ReviewGenerationTab />
+        <ReviewGenerationTab a2pStatus={a2pStatus} onStartCompliance={goToCompliance} />
       </H2Layout>
     );
   }
 
-  // "Manage Accounts" tab — the full connect page (grouped sources), seeded
-  // with what's already connected. Rendered for both connected + steady.
-  if (tab === 'manage') {
+  // "Settings" tab — Manage sources (the full connect page) + Compliance (the
+  // same A2P / 10DLC screen the AI receptionist uses), switched by sub-tabs.
+  if (tab === 'settings') {
     return (
       <H2Layout topbarCenter={topbarCenter}>
-        <ConnectSourcesPage
-          title="Manage your sources"
-          subhead="Connect or update the platforms Blaze monitors for reviews, comments, and mentions."
-          initialConnected={[...connectedSources]}
+        <ReputationSettings
+          subTab={settingsSub}
+          onSubTab={setSettingsSub}
+          a2pStatus={a2pStatus}
+          connectedSources={connectedSources}
           onConnect={(key) => setConnectedSources((prev) => new Set(prev).add(key))}
+          onA2pStatusChange={setA2pStatus}
         />
       </H2Layout>
     );

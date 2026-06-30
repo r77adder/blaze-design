@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { Button, Heading, Modal, Text, useModals } from '@/components';
+import { Button, Heading, IconButton, Modal, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { Chip, Select, StatusPill, TextField, Toggle, useToast } from '@/staging';
 import type { Icon } from '@/icons/Types';
@@ -9,23 +9,24 @@ import Mail from '@/icons/20/Mail';
 import MessageChat01 from '@/icons/20/MessageChat01';
 import Google from '@/icons/20/Google';
 import Facebook from '@/icons/20/Facebook';
-import Star from '@/icons/20/Star';
-import Check2 from '@/icons/20/Check2';
 import Plus from '@/icons/20/Plus';
 import Edit1 from '@/icons/20/Edit1';
 import Send1 from '@/icons/20/Send1';
-import ArrowLeft from '@/icons/20/ArrowLeft';
 import Lock3 from '@/icons/20/Lock3';
+import Trash2 from '@/icons/20/Trash2';
+import { AGENT_SMS_NUMBER, type A2pStatus } from './SdrCompliance';
 
 /**
- * /h2/reputation → "Review Generation" tab.
+ * /h2/reputation → "Review Requests" tab.
  *
  * Two surfaces:
- *   1. Campaign list — every review-generation campaign with its status
+ *   1. Campaign list — every review-request campaign with its status
  *      (Draft / Active / Paused / Complete). CRM-backed (ongoing) campaigns
  *      get an on/off toggle; one-time blasts get pause/resume controls.
- *   2. Setup wizard — walks the user through creating a campaign:
- *      customer list → review sites → messages → review & launch.
+ *   2. Setup wizard — a BDS modal that walks the user through creating a
+ *      campaign step by step (no breadcrumb stepper): customer list → review
+ *      sites → messages → review & launch. SMS stays gated behind A2P
+ *      compliance until the brand is verified (see ComplianceGate).
  *
  * Scoped-down port of Birdeye's review-request setup. Customer lists are
  * limited to CSV upload + CRM integration. Out of scope for v1:
@@ -50,6 +51,11 @@ interface Campaign {
   sent: number;
   collected: number;
   meta: string;
+  /** Draft-only: the wizard step the user left off on, so "Finish setup"
+   *  reopens the wizard right where they abandoned it. */
+  resumeStep?: number;
+  /** Draft-only: the uploaded CSV chip label to restore (CSV sources). */
+  draftCsvFile?: string;
 }
 
 const CRM_OPTIONS = [
@@ -80,6 +86,22 @@ const STATUS_LABEL: Record<CampaignStatus, string> = {
 };
 
 const SEED_CAMPAIGNS: Campaign[] = [
+  {
+    id: 'cabinet-draft',
+    name: 'Cabinet refinish spring push',
+    sourceType: 'csv',
+    sourceLabel: 'CSV · 312 contacts',
+    channels: { email: true, sms: false },
+    sites: ['google', 'facebook'],
+    status: 'draft',
+    sent: 0,
+    collected: 0,
+    meta: 'One-time blast · saved as draft',
+    // Picked up mid-way: customer list + sites done, abandoned on the
+    // messages step.
+    resumeStep: 2,
+    draftCsvFile: 'cabinet-customers-march.csv · 312 contacts',
+  },
   {
     id: 'spring-blast',
     name: 'Spring repaint follow-up',
@@ -140,49 +162,92 @@ const DEFAULT_EMAIL_SEQUENCE: EmailStep[] = [
 const DEFAULT_SMS_BODY =
   'Hi {first name}, thanks for choosing CertaPro! Mind leaving a quick review? {link}';
 
+const DEFAULT_CAMPAIGN_NAME = 'Review request campaign';
+
+// Per-step title + description — surfaced in the modal header (title +
+// subHeader) rather than in the step body.
+const STEP_META = [
+  {
+    title: 'Add your customer list',
+    description:
+      'Choose where this campaign pulls contacts from. Your choice sets whether it runs once or on an ongoing basis.',
+  },
+  {
+    title: 'Choose where to send reviewers',
+    description:
+      'Pick the review sites customers are asked to post to. The agent routes each request to one of these.',
+  },
+  {
+    title: 'Set up your messages',
+    description:
+      'Choose the channels this campaign uses and review what gets sent. All emails send from reviews@blaze.ai.',
+  },
+  {
+    title: 'Review & launch',
+    description:
+      'Give this campaign a name and confirm the setup. You can change everything later from the campaign list.',
+  },
+] as const;
+
 let campaignSeq = 0;
 
 // ═══════════════════════════════════════════════════════════════════
 // Root — switches between the campaign list and the setup wizard
 // ═══════════════════════════════════════════════════════════════════
 
-export function ReviewGenerationTab() {
+export function ReviewGenerationTab({
+  a2pStatus,
+  onStartCompliance,
+}: {
+  /** Shared A2P verification status — SMS is gated until this is `verified`. */
+  a2pStatus: A2pStatus;
+  /** Jump to the Settings → Compliance sub-tab from inside the wizard. */
+  onStartCompliance: () => void;
+}) {
   const { showToast } = useToast();
+  const { openModal, closeModal } = useModals();
   const [campaigns, setCampaigns] = useState<Campaign[]>(SEED_CAMPAIGNS);
-  const [view, setView] = useState<'list' | 'wizard'>('list');
 
   const setStatus = (id: string, status: CampaignStatus) =>
     setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
 
-  const addCampaign = (c: Campaign) => setCampaigns((prev) => [c, ...prev]);
+  // `initial` resumes an existing draft; omitted for a brand-new campaign.
+  const openWizard = (initial?: Campaign) =>
+    openModal(CampaignWizardModal, {
+      a2pStatus,
+      onStartCompliance,
+      initial,
+      onFinish: (campaign: Campaign, asDraft: boolean) => {
+        // Drop the draft we resumed (if any) so it isn't duplicated.
+        setCampaigns((prev) => [campaign, ...prev.filter((c) => c.id !== initial?.id)]);
+        closeModal();
+        showToast({
+          message: asDraft ? 'Saved as draft' : `“${campaign.name}” is now active`,
+        });
+      },
+    });
 
-  if (view === 'wizard') {
-    return (
-      <CampaignWizard
-        onCancel={() => setView('list')}
-        onFinish={(campaign, asDraft) => {
-          addCampaign(campaign);
-          setView('list');
-          showToast({
-            message: asDraft
-              ? 'Saved as draft'
-              : `“${campaign.name}” is now active`,
-          });
-        }}
-      />
-    );
-  }
+  const confirmDelete = (c: Campaign) =>
+    openModal(DeleteCampaignModal, {
+      name: c.name,
+      onConfirm: () => {
+        setCampaigns((prev) => prev.filter((x) => x.id !== c.id));
+        closeModal();
+        showToast({ message: `“${c.name}” deleted` });
+      },
+    });
 
   return (
     <CampaignList
       campaigns={campaigns}
-      onCreate={() => setView('wizard')}
+      onCreate={() => openWizard()}
       onToggle={(c) => {
         const next: CampaignStatus = c.status === 'active' ? 'paused' : 'active';
         setStatus(c.id, next);
         showToast({ message: next === 'active' ? `“${c.name}” resumed` : `“${c.name}” paused` });
       }}
-      onContinue={() => setView('wizard')}
+      onContinue={openWizard}
+      onDelete={confirmDelete}
     />
   );
 }
@@ -191,137 +256,215 @@ export function ReviewGenerationTab() {
 // Campaign list
 // ═══════════════════════════════════════════════════════════════════
 
+// Table layout — one container, divider-separated rows, columns aligned to a
+// shared grid (Campaign · Contacts · Type · Source · control).
+// The two trailing columns are fixed widths (not `auto`) so the control's
+// varying content — toggle, button, or nothing — plus the delete button never
+// shift the data columns out of alignment.
+const CAMPAIGN_GRID = 'minmax(0, 2.6fr) minmax(0, 1fr) minmax(0, 0.85fr) minmax(0, 1fr) 132px 36px';
+const CAMPAIGN_COLUMNS = ['Campaign', 'Contacts', 'Type', 'Source'] as const;
+
 function CampaignList({
   campaigns,
   onCreate,
   onToggle,
   onContinue,
+  onDelete,
 }: {
   campaigns: Campaign[];
   onCreate: () => void;
   onToggle: (c: Campaign) => void;
   onContinue: (c: Campaign) => void;
+  onDelete: (c: Campaign) => void;
 }) {
   return (
-    <div style={{ maxWidth: 820, margin: '0 auto', padding: '20px 4px 96px' }}>
+    <div style={{ maxWidth: 1040, margin: '0 auto', padding: '20px 4px 96px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 28 }}>
-        <span aria-hidden style={{ ...tileStyle, width: 44, height: 44, borderRadius: 11 }}>
-          <Star size={22} color="var(--purple)" />
-        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Heading level={2} style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.2px' }}>
-            Review Generation
-          </Heading>
-          <Text style={{ color: 'var(--dark-60)', fontSize: 14, lineHeight: 1.55 }}>
+          <Heading level={2}>Review Requests</Heading>
+          <Text style={{ display: 'block', color: 'var(--dark-60)', fontSize: 14, lineHeight: 1.55, marginTop: 6 }}>
             Ask happy customers for reviews over email and SMS, then route them to the sites that
             matter most. Each campaign runs from a customer list you choose.
           </Text>
         </div>
-        <Button variant="primary" size="md" frontIcon={Plus} onClick={onCreate}>
+        <Button variant="secondary" size="md" frontIcon={Plus} onClick={onCreate}>
           Create campaign
         </Button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-        <Heading level={3} style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-60)' }}>
-          Campaigns
-        </Heading>
-        <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{campaigns.length} total</span>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {campaigns.map((c) => (
-          <CampaignCard key={c.id} campaign={c} onToggle={() => onToggle(c)} onContinue={() => onContinue(c)} />
+      <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden', background: 'var(--light-100)' }}>
+        {/* Column header */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: CAMPAIGN_GRID,
+            gap: 16,
+            alignItems: 'center',
+            padding: '10px 18px',
+            borderBottom: '1px solid var(--dark-8)',
+          }}
+        >
+          {CAMPAIGN_COLUMNS.map((h) => (
+            <span key={h} style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+              {h}
+            </span>
+          ))}
+          <span />
+          <span />
+        </div>
+        {campaigns.map((c, i) => (
+          <CampaignRow
+            key={c.id}
+            campaign={c}
+            isFirst={i === 0}
+            onToggle={() => onToggle(c)}
+            onContinue={() => onContinue(c)}
+            onDelete={() => onDelete(c)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function CampaignCard({
+function CampaignRow({
   campaign: c,
+  isFirst,
   onToggle,
   onContinue,
+  onDelete,
 }: {
   campaign: Campaign;
+  isFirst: boolean;
   onToggle: () => void;
   onContinue: () => void;
+  onDelete: () => void;
 }) {
-  const channelText = [c.channels.email && 'Email', c.channels.sms && 'SMS'].filter(Boolean).join(' + ');
+  // Split the stored source label into its source + contacts halves so each
+  // can sit in its own column ("HubSpot · auto-sync" → "HubSpot" + "Auto-sync").
+  const isCrm = c.sourceType === 'crm';
+  const [sourceName, contactsRaw] = c.sourceLabel.split(' · ');
+  const contactsText = isCrm ? 'Auto-sync' : contactsRaw ?? '—';
+  const typeText = isCrm ? 'Ongoing' : 'One-time blast';
 
-  // Right-side control depends on status + source type.
-  // CRM (ongoing) campaigns flip on/off with a toggle; one-time blasts pause/resume
-  // with a button. Drafts resume setup; completed blasts are terminal.
+  // Right-side control depends on status + source type. Status itself lives in
+  // the pill beside the name, so the control only carries actions — never a
+  // second copy of the status. CRM (ongoing) campaigns flip on/off with a
+  // toggle; one-time blasts pause/resume with a button. Drafts resume setup;
+  // completed blasts are terminal (no control).
   let control: ReactNode = null;
   if (c.status === 'draft') {
     control = (
       <Button variant="secondary" size="sm" onClick={onContinue}>
-        Continue setup
+        Finish setup
       </Button>
     );
   } else if (c.status === 'complete') {
-    control = (
-      <StatusPill tone="info" size="md">
-        Complete
-      </StatusPill>
-    );
-  } else if (c.sourceType === 'crm') {
-    control = (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Text style={{ fontSize: 12, color: 'var(--dark-60)' }}>{c.status === 'active' ? 'On' : 'Off'}</Text>
-        <Toggle checked={c.status === 'active'} tone="success" onChange={onToggle} />
-      </div>
-    );
+    control = null;
   } else {
-    // one-time blast, currently active or paused
-    control = (
-      <Button variant="secondary" size="sm" onClick={onToggle}>
-        {c.status === 'active' ? 'Pause' : 'Resume'}
-      </Button>
-    );
+    // Active / paused — both CRM and one-time blasts flip on/off with a toggle.
+    control = <Toggle checked={c.status === 'active'} onChange={onToggle} />;
   }
+
+  const cellText: CSSProperties = { fontSize: 14, color: 'var(--dark-60)' };
 
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
+        display: 'grid',
+        gridTemplateColumns: CAMPAIGN_GRID,
         gap: 16,
-        background: 'var(--light-100)',
-        border: '1px solid var(--dark-8)',
-        borderRadius: 12,
+        alignItems: 'center',
         padding: '16px 18px',
+        borderTop: isFirst ? 'none' : '1px solid var(--dark-8)',
       }}
     >
-      <span aria-hidden style={tileStyle}>
-        {c.sourceType === 'csv' ? <Upload size={20} color="var(--purple)" /> : <Data size={20} color="var(--purple)" />}
-      </span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <Text style={{ fontWeight: 500, fontSize: 15, color: 'var(--dark-90)' }}>{c.name}</Text>
-          <StatusPill tone={STATUS_TONE[c.status]} size="sm">
-            {STATUS_LABEL[c.status]}
-          </StatusPill>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--dark-60)' }}>
-          <span>{c.meta}</span>
-          <Dot />
-          <span>{c.sourceLabel}</span>
-          <Dot />
-          <span>{channelText}</span>
-          <Dot />
-          <span>
-            {c.sent.toLocaleString()} sent · {c.collected} reviews
+      {/* Campaign */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        <span aria-hidden style={SOURCE_ACCENT[c.sourceType].tile}>
+          {isCrm ? (
+            <Data size={20} color={SOURCE_ACCENT.crm.icon} />
+          ) : (
+            <Upload size={20} color={SOURCE_ACCENT.csv.icon} />
+          )}
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <Text
+            style={{
+              fontWeight: 500,
+              fontSize: 14,
+              color: 'var(--dark-90)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              minWidth: 0,
+            }}
+          >
+            {c.name}
+          </Text>
+          <span style={{ flexShrink: 0 }}>
+            <StatusPill tone={STATUS_TONE[c.status]} size="sm">
+              {STATUS_LABEL[c.status]}
+            </StatusPill>
           </span>
-        </div>
+        </span>
       </div>
-      <div style={{ flexShrink: 0 }}>{control}</div>
+      {/* Contacts */}
+      <Text style={cellText}>{contactsText}</Text>
+      {/* Type */}
+      <Text style={cellText}>{typeText}</Text>
+      {/* Source */}
+      <Text style={cellText}>{sourceName}</Text>
+      {/* Control */}
+      <div style={{ justifySelf: 'end' }}>{control}</div>
+      {/* Delete */}
+      <div style={{ justifySelf: 'end' }}>
+        <IconButton
+          icon={Trash2}
+          size="sm"
+          variant="tertiary"
+          aria-label={`Delete ${c.name}`}
+          onPress={onDelete}
+        />
+      </div>
     </div>
   );
 }
 
-function Dot() {
-  return <span style={{ color: 'var(--dark-15)' }}>·</span>;
+// ═══════════════════════════════════════════════════════════════════
+// Delete confirmation
+// ═══════════════════════════════════════════════════════════════════
+
+function DeleteCampaignModal({
+  close,
+  name,
+  onConfirm,
+}: StackModalProps & {
+  name: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal.Root size="sm" aria-labelledby="delete-campaign-title" data-testid="delete-campaign-modal">
+      <Modal.Header title="Delete campaign?" id="delete-campaign-title" onClose={close} compact={false} />
+      <Modal.Content compact={false}>
+        <Text style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.55 }}>
+          “{name}” and its sending history will be removed. This can’t be undone.
+        </Text>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="ghost" onPress={close}>
+            Cancel
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="danger" onPress={onConfirm}>
+            Delete campaign
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -330,28 +473,52 @@ function Dot() {
 
 const STEPS = ['Customer list', 'Review sites', 'Messages', 'Review & launch'] as const;
 
-function CampaignWizard({
-  onCancel,
+function CampaignWizardModal({
+  close,
+  a2pStatus,
+  onStartCompliance,
+  initial,
   onFinish,
-}: {
-  onCancel: () => void;
+}: StackModalProps & {
+  a2pStatus: A2pStatus;
+  onStartCompliance: () => void;
+  /** When resuming a saved draft, seeds the form + starting step from it. */
+  initial?: Campaign;
   onFinish: (campaign: Campaign, asDraft: boolean) => void;
 }) {
   const { showToast } = useToast();
-  const { openModal, closeModal } = useModals();
 
-  const [step, setStep] = useState(0);
+  // Resume a saved draft where the user left off, else start fresh.
+  const [step, setStep] = useState(initial?.resumeStep ?? 0);
 
-  // form state
-  const [sourceType, setSourceType] = useState<SourceType | null>(null);
-  const [csvFile, setCsvFile] = useState<string | null>(null);
-  const [crm, setCrm] = useState('');
-  const [sites, setSites] = useState<Set<ReviewSiteKey>>(() => new Set<ReviewSiteKey>(['google']));
-  const [email, setEmail] = useState(true);
-  const [sms, setSms] = useState(true);
+  // form state — seeded from the draft when resuming
+  const [sourceType, setSourceType] = useState<SourceType | null>(initial?.sourceType ?? null);
+  const [csvFile, setCsvFile] = useState<string | null>(
+    initial && initial.sourceType === 'csv' ? initial.draftCsvFile ?? initial.sourceLabel : null,
+  );
+  const [crm, setCrm] = useState(
+    initial && initial.sourceType === 'crm'
+      ? CRM_OPTIONS.find((o) => o.label === initial.sourceLabel.split(' · ')[0])?.value ?? ''
+      : '',
+  );
+  const [sites, setSites] = useState<Set<ReviewSiteKey>>(
+    () => new Set<ReviewSiteKey>(initial?.sites ?? ['google']),
+  );
+  const [email, setEmail] = useState(initial?.channels.email ?? true);
+  // SMS starts off — it can only be switched on once A2P compliance is verified
+  // (see the ComplianceGate below).
+  const [sms, setSms] = useState(initial?.channels.sms ?? false);
   const [emailSequence, setEmailSequence] = useState<EmailStep[]>(DEFAULT_EMAIL_SEQUENCE);
   const [smsBody, setSmsBody] = useState(DEFAULT_SMS_BODY);
-  const [name, setName] = useState('');
+  // Campaign is named by default so the user can launch straight from the list.
+  const [name, setName] = useState(initial?.name ?? DEFAULT_CAMPAIGN_NAME);
+
+  const smsVerified = a2pStatus === 'verified';
+  // Leaving the wizard for the Compliance tab — close this modal first.
+  const goToCompliance = () => {
+    close();
+    onStartCompliance();
+  };
 
   const crmLabel = CRM_OPTIONS.find((o) => o.value === crm)?.label ?? '';
 
@@ -386,68 +553,28 @@ function CampaignWizard({
     };
   };
 
-  const editEmailStep = (s: EmailStep) =>
-    openModal(EditMessageModal, {
-      title: `Edit “${s.label}” email`,
-      subject: s.subject,
-      body: s.body,
-      footer: EMAIL_FOOTER,
-      footerNote: 'The unsubscribe line is required for compliance and can’t be edited.',
-      onSave: ({ subject, body }) => {
-        setEmailSequence((prev) => prev.map((p) => (p.id === s.id ? { ...p, subject: subject ?? p.subject, body } : p)));
-        closeModal();
-        showToast({ message: 'Email updated' });
-      },
-    });
-
-  const editSms = () =>
-    openModal(EditMessageModal, {
-      title: 'Edit SMS message',
-      body: smsBody,
-      footer: SMS_FOOTER,
-      footerNote: 'The opt-out line is required for compliance and can’t be edited.',
-      onSave: ({ body }) => {
-        setSmsBody(body);
-        closeModal();
-        showToast({ message: 'SMS message updated' });
-      },
-    });
+  const updateEmailStep = (id: string, patch: Partial<EmailStep>) =>
+    setEmailSequence((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
 
   const isLast = step === STEPS.length - 1;
+  const stepMeta = STEP_META[step];
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '20px 4px 96px' }}>
-      {/* back + title */}
-      <button
-        type="button"
-        onClick={onCancel}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          border: 'none',
-          background: 'transparent',
-          padding: 0,
-          marginBottom: 16,
-          cursor: 'pointer',
-          fontFamily: "'Sohne', sans-serif",
-          fontSize: 13,
-          color: 'var(--dark-60)',
-        }}
-      >
-        <ArrowLeft size={16} color="var(--dark-60)" />
-        All campaigns
-      </button>
-
-      <Heading level={2} style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.2px', marginBottom: 16 }}>
-        New review generation campaign
-      </Heading>
-
-      <Stepper current={step} />
-
-      <div style={{ marginTop: 28, marginBottom: 28 }}>
+    <Modal.Root size="lg" aria-labelledby="campaign-wizard-title" data-testid="campaign-wizard-modal">
+      <Modal.Header
+        title={stepMeta.title}
+        id="campaign-wizard-title"
+        onClose={close}
+        subHeader={
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', fontSize: 14, lineHeight: 1.5 }}>
+            {stepMeta.description}
+          </Text>
+        }
+      />
+      <Modal.Content>
+        <div>
         {step === 0 && (
-          <StepShell title="Add your customer list" description="Choose where this campaign pulls contacts from. Your choice sets whether it runs once or on an ongoing basis.">
+          <StepShell>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <SourceCard
                 icon={Upload}
@@ -456,6 +583,7 @@ function CampaignWizard({
                 description="Upload a spreadsheet of customers with their name, email, and phone. The campaign sends once."
                 selected={sourceType === 'csv'}
                 onSelect={() => setSourceType('csv')}
+                accent={SOURCE_ACCENT.csv}
               >
                 {sourceType === 'csv' &&
                   (csvFile ? (
@@ -465,7 +593,7 @@ function CampaignWizard({
                   ) : (
                     <Button
                       variant="secondary"
-                      size="sm"
+                      size="lg"
                       onClick={() => {
                         setCsvFile('customers-june.csv · 482 contacts');
                         showToast({ message: '482 contacts imported from CSV' });
@@ -483,13 +611,14 @@ function CampaignWizard({
                 description="Sync contacts from your CRM. New customers are added to the queue automatically as they come in."
                 selected={sourceType === 'crm'}
                 onSelect={() => setSourceType('crm')}
+                accent={SOURCE_ACCENT.crm}
               >
                 {sourceType === 'crm' && (
                   <Select
                     value={crm}
                     placeholder="Choose a CRM"
                     options={CRM_OPTIONS}
-                    size="sm"
+                    size="lg"
                     onChange={(v) => {
                       setCrm(v);
                       showToast({ message: `Connected to ${CRM_OPTIONS.find((o) => o.value === v)?.label}` });
@@ -503,7 +632,7 @@ function CampaignWizard({
         )}
 
         {step === 1 && (
-          <StepShell title="Choose where to send reviewers" description="Pick the review sites customers are asked to post to. The agent routes each request to one of these.">
+          <StepShell>
             <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
               {REVIEW_SITES.map((site, i) => (
                 <ToggleRow
@@ -521,30 +650,18 @@ function CampaignWizard({
         )}
 
         {step === 2 && (
-          <StepShell title="Set up your messages" description="Choose the channels this campaign uses and review what gets sent. All emails send from reviews@blaze.ai.">
+          <StepShell>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Email */}
               <ChannelBlock icon={Mail} title="Email" checked={email} onChange={setEmail}>
                 {email && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
                     {emailSequence.map((s) => (
-                      <div
+                      <EmailStepCard
                         key={s.id}
-                        style={{ background: 'var(--dark-2)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '12px 14px' }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                          <Text style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>{s.label}</Text>
-                          <StatusPill tone="neutral" size="sm">{s.timing}</StatusPill>
-                          <div style={{ marginLeft: 'auto' }}>
-                            <Button variant="ghost" size="sm" frontIcon={Edit1} onClick={() => editEmailStep(s)}>
-                              Edit
-                            </Button>
-                          </div>
-                        </div>
-                        <PreviewLine label="Subject" value={s.subject} />
-                        <PreviewLine label="Body" value={s.body} />
-                        <LockedFooter text={EMAIL_FOOTER} />
-                      </div>
+                        step={s}
+                        onChange={(patch) => updateEmailStep(s.id, patch)}
+                      />
                     ))}
                     <div>
                       <Button
@@ -560,44 +677,37 @@ function CampaignWizard({
                 )}
               </ChannelBlock>
 
-              {/* SMS */}
+              {/* SMS — toggling on when A2P isn't verified reveals the
+                  compliance gate instead of the message editor. */}
               <ChannelBlock icon={MessageChat01} title="SMS" checked={sms} onChange={setSms}>
-                {sms && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-                    <div style={{ background: 'var(--dark-2)', border: '1px solid var(--dark-8)', borderRadius: 10, padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                        <Text style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>Message</Text>
-                        <div style={{ marginLeft: 'auto' }}>
-                          <Button variant="ghost" size="sm" frontIcon={Edit1} onClick={editSms}>
-                            Edit
-                          </Button>
-                        </div>
+                {sms &&
+                  (smsVerified ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+                      <SmsMessageCard body={smsBody} onChange={setSmsBody} />
+                      <div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          frontIcon={Send1}
+                          onClick={() => showToast({ message: 'Test SMS sent to your number' })}
+                        >
+                          Send myself a test
+                        </Button>
                       </div>
-                      <PreviewLine label="Text" value={smsBody} />
-                      <LockedFooter text={SMS_FOOTER} />
                     </div>
-                    <div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        frontIcon={Send1}
-                        onClick={() => showToast({ message: 'Test SMS sent to your number' })}
-                      >
-                        Send myself a test
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                  ) : (
+                    <ComplianceGate onStart={goToCompliance} />
+                  ))}
               </ChannelBlock>
             </div>
           </StepShell>
         )}
 
         {step === 3 && (
-          <StepShell title="Review & launch" description="Give this campaign a name and confirm the setup. You can change everything later from the campaign list.">
+          <StepShell>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
-                <Text style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>
+                <Text style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>
                   Campaign name
                 </Text>
                 <TextField value={name} onChange={setName} fullWidth placeholder="e.g. Completed jobs — ongoing" />
@@ -611,35 +721,66 @@ function CampaignWizard({
             </div>
           </StepShell>
         )}
-      </div>
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="ghost" onPress={step === 0 ? close : () => setStep((s) => s - 1)}>
+            {step === 0 ? 'Cancel' : 'Back'}
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Modal.FooterButton variant="secondary" onPress={() => onFinish(buildCampaign('draft'), true)}>
+              Save as draft
+            </Modal.FooterButton>
+            {isLast ? (
+              <Modal.FooterButton variant="primary" isDisabled={!canNext} onPress={() => onFinish(buildCampaign('active'), false)}>
+                Create campaign
+              </Modal.FooterButton>
+            ) : (
+              <Modal.FooterButton variant="primary" isDisabled={!canNext} onPress={() => setStep((s) => s + 1)}>
+                Next
+              </Modal.FooterButton>
+            )}
+          </div>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
 
-      {/* footer */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          paddingTop: 20,
-          borderTop: '1px solid var(--dark-8)',
-        }}
-      >
-        <Button variant="ghost" size="md" onClick={step === 0 ? onCancel : () => setStep((s) => s - 1)}>
-          {step === 0 ? 'Cancel' : 'Back'}
-        </Button>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="secondary" size="md" onClick={() => onFinish(buildCampaign('draft'), true)}>
-            Save as draft
+// Shown inside the SMS channel block when A2P registration isn't verified yet —
+// SMS review requests can't send until the brand clears carrier compliance.
+function ComplianceGate({ onStart }: { onStart: () => void }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 12,
+        marginTop: 12,
+        padding: '12px 14px',
+        borderRadius: 10,
+        border: '1px solid rgba(237, 124, 44, 0.22)',
+        background: 'rgba(237, 124, 44, 0.08)',
+      }}
+    >
+      <span style={{ flexShrink: 0, marginTop: 1, color: 'var(--status-connect)', display: 'inline-flex' }}>
+        <Lock3 size={20} color="var(--status-connect)" />
+      </span>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Text style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark-90)' }}>
+          Finish A2P compliance to enable SMS
+        </Text>
+        <Text style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.5 }}>
+          SMS review requests need carrier-approved A2P 10DLC registration. Complete compliance under
+          Settings, then SMS unlocks here.
+        </Text>
+        <div>
+          <Button variant="secondary" size="sm" onClick={onStart}>
+            Complete compliance
           </Button>
-          {isLast ? (
-            <Button variant="primary" size="md" disabled={!canNext} onClick={() => onFinish(buildCampaign('active'), false)}>
-              Create campaign
-            </Button>
-          ) : (
-            <Button variant="primary" size="md" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>
-              Next
-            </Button>
-          )}
         </div>
       </div>
     </div>
@@ -648,60 +789,123 @@ function CampaignWizard({
 
 // ── Wizard sub-components ───────────────────────────────────────────
 
-function Stepper({ current }: { current: number }) {
+// Step title/description now live in the modal header, so this is just a
+// spacing wrapper around the step body.
+function StepShell({ children }: { children: ReactNode }) {
+  return <div>{children}</div>;
+}
+
+// Locked compliance footer note, shared by the inline message editors.
+function lockedFooterNote(kind: 'email' | 'sms') {
+  return kind === 'email'
+    ? 'The unsubscribe line is required for compliance and can’t be edited.'
+    : 'The opt-out line is required for compliance and can’t be edited.';
+}
+
+const messageCardStyle: CSSProperties = {
+  background: 'var(--dark-2)',
+  border: '1px solid var(--dark-8)',
+  borderRadius: 10,
+  padding: '12px 14px',
+};
+
+const inlineTextareaStyle: CSSProperties = {
+  width: '100%',
+  fontFamily: 'inherit',
+  fontSize: 14,
+  color: 'var(--dark-90)',
+  background: 'var(--light-100)',
+  border: '1px solid var(--dark-15)',
+  borderRadius: 9,
+  padding: '10px 12px',
+  outline: 'none',
+  resize: 'vertical',
+  lineHeight: 1.55,
+};
+
+// Email step card — preview by default, editable inline (no sub-modal).
+function EmailStepCard({ step, onChange }: { step: EmailStep; onChange: (patch: Partial<EmailStep>) => void }) {
+  const [editing, setEditing] = useState(false);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {STEPS.map((label, i) => {
-        const done = i < current;
-        const active = i === current;
-        return (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: i < STEPS.length - 1 ? 1 : '0 0 auto' }}>
-            <span
-              aria-hidden
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 24,
-                height: 24,
-                flexShrink: 0,
-                borderRadius: 999,
-                background: done || active ? 'var(--dark-90)' : 'var(--dark-8)',
-                color: done || active ? 'var(--light-100)' : 'var(--dark-60)',
-                fontSize: 12,
-                fontWeight: 500,
-              }}
-            >
-              {done ? <Check2 size={14} color="var(--light-100)" /> : i + 1}
-            </span>
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: active ? 500 : 400,
-                color: active ? 'var(--dark-90)' : 'var(--dark-60)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {label}
-            </Text>
-            {i < STEPS.length - 1 && <span style={{ flex: 1, height: 1, background: 'var(--dark-8)', minWidth: 12 }} />}
+    <div style={messageCardStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{step.label}</Text>
+        <StatusPill tone="neutral" size="sm">{step.timing}</StatusPill>
+        <div style={{ marginLeft: 'auto' }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            frontIcon={editing ? undefined : Edit1}
+            onClick={() => setEditing((e) => !e)}
+          >
+            {editing ? 'Done' : 'Edit'}
+          </Button>
+        </div>
+      </div>
+      {editing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div>
+            <Text style={{ display: 'block', fontSize: 14, color: 'var(--dark-60)', marginBottom: 4 }}>Subject</Text>
+            <TextField value={step.subject} onChange={(v) => onChange({ subject: v })} fullWidth />
           </div>
-        );
-      })}
+          <div>
+            <Text style={{ display: 'block', fontSize: 14, color: 'var(--dark-60)', marginBottom: 4 }}>Body</Text>
+            <textarea
+              value={step.body}
+              onChange={(e) => onChange({ body: e.target.value })}
+              rows={4}
+              style={{ ...inlineTextareaStyle, minHeight: 96 }}
+            />
+          </div>
+          <LockedFooter text={EMAIL_FOOTER} note={lockedFooterNote('email')} />
+        </div>
+      ) : (
+        <>
+          <PreviewLine label="Subject" value={step.subject} />
+          <PreviewLine label="Body" value={step.body} />
+          <LockedFooter text={EMAIL_FOOTER} />
+        </>
+      )}
     </div>
   );
 }
 
-function StepShell({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+// SMS message card — preview by default, editable inline (no sub-modal).
+function SmsMessageCard({ body, onChange }: { body: string; onChange: (v: string) => void }) {
+  const [editing, setEditing] = useState(false);
   return (
-    <div>
-      <Heading level={3} style={{ fontSize: 16, fontWeight: 500, letterSpacing: '-0.1px' }}>
-        {title}
-      </Heading>
-      <Text style={{ display: 'block', color: 'var(--dark-60)', fontSize: 14, lineHeight: 1.5, marginTop: 4, marginBottom: 18 }}>
-        {description}
-      </Text>
-      {children}
+    <div style={messageCardStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>Message</Text>
+        <div style={{ marginLeft: 'auto' }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            frontIcon={editing ? undefined : Edit1}
+            onClick={() => setEditing((e) => !e)}
+          >
+            {editing ? 'Done' : 'Edit'}
+          </Button>
+        </div>
+      </div>
+      {/* Sender — makes it clear the text comes from the agent's A2P number. */}
+      <PreviewLine label="From" value={AGENT_SMS_NUMBER} />
+      {editing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <textarea
+            value={body}
+            onChange={(e) => onChange(e.target.value)}
+            rows={3}
+            style={{ ...inlineTextareaStyle, minHeight: 72 }}
+          />
+          <LockedFooter text={SMS_FOOTER} note={lockedFooterNote('sms')} />
+        </div>
+      ) : (
+        <>
+          <PreviewLine label="Text" value={body} />
+          <LockedFooter text={SMS_FOOTER} />
+        </>
+      )}
     </div>
   );
 }
@@ -713,6 +917,7 @@ function SourceCard({
   description,
   selected,
   onSelect,
+  accent = { tile: tileStyle, icon: 'var(--purple)' },
   children,
 }: {
   icon: Icon;
@@ -721,13 +926,17 @@ function SourceCard({
   description: string;
   selected: boolean;
   onSelect: () => void;
+  accent?: { tile: CSSProperties; icon: string };
   children?: ReactNode;
 }) {
   return (
     <div
       style={{
-        border: selected ? '1px solid var(--purple)' : '1px solid var(--dark-8)',
-        background: selected ? 'rgba(124, 92, 252, 0.04)' : 'var(--light-100)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        border: selected ? '1px solid var(--dark-90)' : '1px solid var(--dark-8)',
+        background: selected ? 'var(--light-100)' : 'var(--dark-2)',
         borderRadius: 12,
         padding: '16px 18px',
       }}
@@ -735,7 +944,7 @@ function SourceCard({
       <button
         type="button"
         onClick={onSelect}
-        style={{ display: 'flex', alignItems: 'flex-start', gap: 14, border: 'none', background: 'transparent', padding: 0, textAlign: 'left', cursor: 'pointer', width: '100%' }}
+        style={{ display: 'flex', alignItems: 'flex-start', gap: 14, border: 'none', background: 'transparent', padding: 0, textAlign: 'left', cursor: 'pointer', flex: 1, minWidth: 0 }}
       >
         <span
           aria-hidden
@@ -745,24 +954,24 @@ function SourceCard({
             height: 18,
             flexShrink: 0,
             borderRadius: 999,
-            border: selected ? '5px solid var(--purple)' : '1.5px solid var(--dark-15)',
+            border: selected ? '5px solid var(--dark-90)' : '1.5px solid var(--dark-15)',
             background: 'var(--light-100)',
             marginTop: 11,
             boxSizing: 'border-box',
           }}
         />
-        <span aria-hidden style={tileStyle}>
-          <Icon size={20} color="var(--purple)" />
+        <span aria-hidden style={accent.tile}>
+          <Icon size={20} color={accent.icon} />
         </span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Text style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{title}</Text>
             <StatusPill tone="accent" size="sm">{tag}</StatusPill>
           </span>
-          <Text style={{ color: 'var(--dark-60)', fontSize: 13, lineHeight: 1.5 }}>{description}</Text>
+          <Text style={{ color: 'var(--dark-60)', fontSize: 14, lineHeight: 1.5 }}>{description}</Text>
         </span>
       </button>
-      {children && <div style={{ paddingLeft: 32, marginTop: 12 }}>{children}</div>}
+      {children && <div style={{ flexShrink: 0 }}>{children}</div>}
     </div>
   );
 }
@@ -789,7 +998,7 @@ function ToggleRow({
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <Text style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark-90)' }}>{title}</Text>
-        <Text style={{ display: 'block', color: 'var(--dark-60)', fontSize: 12 }}>{description}</Text>
+        <Text style={{ display: 'block', color: 'var(--dark-60)', fontSize: 14 }}>{description}</Text>
       </div>
       <Toggle checked={checked} onChange={onChange} />
     </div>
@@ -827,29 +1036,31 @@ function ChannelBlock({
 
 function PreviewLine({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', gap: 8, fontSize: 13, lineHeight: 1.5, marginBottom: 4 }}>
+    <div style={{ display: 'flex', gap: 8, fontSize: 14, lineHeight: 1.5, marginBottom: 4 }}>
       <span style={{ flexShrink: 0, width: 56, color: 'var(--dark-60)' }}>{label}</span>
       <span style={{ color: 'var(--dark-90)' }}>{value}</span>
     </div>
   );
 }
 
-function LockedFooter({ text }: { text: string }) {
+function LockedFooter({ text, note }: { text: string; note?: string }) {
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
         marginTop: 8,
         paddingTop: 8,
         borderTop: '1px dashed var(--dark-8)',
-        fontSize: 12,
+        fontSize: 14,
         color: 'var(--dark-40)',
       }}
     >
-      <Lock3 size={20} color="var(--dark-40)" />
-      <span style={{ lineHeight: 1.4 }}>{text}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <Lock3 size={20} color="var(--dark-40)" />
+        <span style={{ lineHeight: 1.4 }}>{text}</span>
+      </div>
+      {note && (
+        <Text style={{ display: 'block', fontSize: 14, color: 'var(--dark-40)', marginTop: 6 }}>{note}</Text>
+      )}
     </div>
   );
 }
@@ -857,118 +1068,12 @@ function LockedFooter({ text }: { text: string }) {
 function SummaryRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
     <div style={{ display: 'flex', gap: 16, padding: '12px 16px', borderBottom: last ? 'none' : '1px solid var(--dark-8)' }}>
-      <span style={{ flexShrink: 0, width: 120, fontSize: 13, color: 'var(--dark-60)' }}>{label}</span>
-      <span style={{ fontSize: 13, color: 'var(--dark-90)' }}>{value}</span>
+      <span style={{ flexShrink: 0, width: 120, fontSize: 14, color: 'var(--dark-60)' }}>{label}</span>
+      <span style={{ fontSize: 14, color: 'var(--dark-90)' }}>{value}</span>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// Edit message modal (compliance footer is locked)
-// ═══════════════════════════════════════════════════════════════════
-
-function EditMessageModal({
-  close,
-  title,
-  subject,
-  body,
-  footer,
-  footerNote,
-  onSave,
-}: StackModalProps & {
-  title: string;
-  subject?: string;
-  body: string;
-  footer: string;
-  footerNote: string;
-  onSave: (next: { subject?: string; body: string }) => void;
-}) {
-  const [subjectVal, setSubjectVal] = useState(subject ?? '');
-  const [bodyVal, setBodyVal] = useState(body);
-  const canSave = bodyVal.trim().length > 0 && (subject === undefined || subjectVal.trim().length > 0);
-
-  return (
-    <Modal.Root size="md" aria-labelledby="edit-message-title" data-testid="edit-message-modal">
-      <Modal.Header title={title} id="edit-message-title" onClose={close} compact={false} />
-      <Modal.Content compact={false}>
-        {subject !== undefined && (
-          <div style={{ marginBottom: 16 }}>
-            <Text style={{ display: 'block', fontSize: 12, color: 'var(--dark-60)', fontWeight: 500, marginBottom: 8 }}>
-              Subject
-            </Text>
-            <TextField value={subjectVal} onChange={setSubjectVal} fullWidth />
-          </div>
-        )}
-        <div>
-          <Text style={{ display: 'block', fontSize: 12, color: 'var(--dark-60)', fontWeight: 500, marginBottom: 8 }}>
-            Message
-          </Text>
-          <textarea
-            value={bodyVal}
-            onChange={(e) => setBodyVal(e.target.value)}
-            rows={6}
-            style={{
-              width: '100%',
-              fontFamily: 'inherit',
-              fontSize: 14,
-              color: 'var(--dark-90)',
-              background: 'var(--light-100)',
-              border: '1px solid var(--dark-15)',
-              borderRadius: 9,
-              padding: '10px 12px',
-              outline: 'none',
-              resize: 'vertical',
-              minHeight: 120,
-              lineHeight: 1.55,
-            }}
-          />
-        </div>
-
-        {/* Locked compliance footer */}
-        <div style={{ marginTop: 16 }}>
-          <Text style={{ display: 'block', fontSize: 12, color: 'var(--dark-60)', fontWeight: 500, marginBottom: 8 }}>
-            Required footer
-          </Text>
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              background: 'var(--dark-4)',
-              border: '1px solid var(--dark-8)',
-              borderRadius: 9,
-              padding: '10px 12px',
-              color: 'var(--dark-60)',
-              fontSize: 13,
-              lineHeight: 1.5,
-            }}
-          >
-            <Lock3 size={20} color="var(--dark-40)" />
-            <span>{footer}</span>
-          </div>
-          <Text style={{ display: 'block', fontSize: 12, color: 'var(--dark-40)', marginTop: 6 }}>
-            {footerNote}
-          </Text>
-        </div>
-      </Modal.Content>
-      <Modal.Footer>
-        <Modal.FooterContent slot="left">
-          <Modal.FooterButton variant="ghost" onPress={close}>
-            Cancel
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-        <Modal.FooterContent slot="right">
-          <Modal.FooterButton
-            variant="primary"
-            isDisabled={!canSave}
-            onPress={() => onSave({ subject: subject !== undefined ? subjectVal.trim() : undefined, body: bodyVal.trim() })}
-          >
-            Save
-          </Modal.FooterButton>
-        </Modal.FooterContent>
-      </Modal.Footer>
-    </Modal.Root>
-  );
-}
 
 // ── shared ─────────────────────────────────────────────────────────
 
@@ -982,4 +1087,11 @@ const tileStyle: CSSProperties = {
   borderRadius: 8,
   background: 'rgba(124, 92, 252, 0.10)',
   color: 'var(--purple)',
+};
+
+// Source-type accent — CSV upload (one-time) reads blue; CRM integration
+// (ongoing) reads purple, so the two are distinguishable at a glance.
+const SOURCE_ACCENT: Record<SourceType, { tile: CSSProperties; icon: string }> = {
+  csv: { tile: { ...tileStyle, background: 'rgba(1, 121, 207, 0.10)' }, icon: 'var(--status-posting)' },
+  crm: { tile: tileStyle, icon: 'var(--purple)' },
 };

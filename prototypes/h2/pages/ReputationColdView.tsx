@@ -362,6 +362,10 @@ export function ConnectSourcesPage({
   onConnect,
   onFinish,
   onBack,
+  embedded = false,
+  headingLevel = 1,
+  primarySubhead = false,
+  hideSectionDescriptions = false,
 }: {
   title?: string;
   subhead?: string;
@@ -369,49 +373,77 @@ export function ConnectSourcesPage({
   onConnect?: (key: string) => void;
   onFinish?: () => void;
   onBack?: () => void;
+  /** Drop the component's own page wrapper so it fills the parent container
+   *  (used when the surrounding tab already owns the width + padding). */
+  embedded?: boolean;
+  /** Heading level for the page title (1 = cold setup hero, 3 = Settings tab,
+   *  matching the Compliance tab). */
+  headingLevel?: 1 | 2 | 3;
+  /** Render the subhead as primary 16px text instead of secondary. */
+  primarySubhead?: boolean;
+  /** Hide the per-section descriptions under each group header. */
+  hideSectionDescriptions?: boolean;
 }) {
   const { connected, values, setValues, save, connectOauth } = useConnectState(initialConnected, onConnect);
   const connectedCount = connected.size;
   const showFooter = !!onFinish;
 
-  return (
+  const inner = (
     <>
-      <div style={{ width: '100%', maxWidth: 720, margin: '0 auto', padding: showFooter ? '40px 28px 112px' : '40px 28px 48px' }}>
-        <Heading level={1} style={{ marginBottom: 8 }}>
-          {title}
-        </Heading>
+      <Heading level={headingLevel} style={{ marginBottom: 8 }}>
+        {title}
+      </Heading>
+      {primarySubhead ? (
+        <Text variant="primary" style={{ display: 'block', fontSize: 16, lineHeight: 1.6, maxWidth: 560 }}>
+          {subhead}
+        </Text>
+      ) : (
         <Text variant="secondary" style={{ display: 'block', lineHeight: 1.6, maxWidth: 560 }}>
           {subhead}
         </Text>
+      )}
 
-        {SOURCE_GROUPS.map((group) => (
-          <section key={group.title} style={{ marginTop: 28 }}>
-            <Heading level={4} style={{ marginBottom: 2 }}>
-              {group.title}
-            </Heading>
+      {SOURCE_GROUPS.map((group) => (
+        <section key={group.title} style={{ marginTop: 28 }}>
+          <Heading level={4} style={{ marginBottom: hideSectionDescriptions ? 12 : 2 }}>
+            {group.title}
+          </Heading>
+          {!hideSectionDescriptions && (
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', marginBottom: 12 }}>
               {group.description}
             </Text>
-            <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, padding: '0 16px', background: 'var(--light-100)' }}>
-              {group.keys.map((k, i) => {
-                const row = SOURCE_BY_KEY[k];
-                return (
-                  <SourceRow
-                    key={k}
-                    row={row}
-                    isConnected={connected.has(k)}
-                    value={values[k] ?? ''}
-                    showDivider={i > 0}
-                    onChangeValue={(v) => setValues((prev) => ({ ...prev, [k]: v }))}
-                    onSave={() => save(k, row.label)}
-                    onOauthConnect={() => connectOauth(k, row.label)}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
+          )}
+          <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, padding: '0 16px', background: 'var(--light-100)' }}>
+            {group.keys.map((k, i) => {
+              const row = SOURCE_BY_KEY[k];
+              return (
+                <SourceRow
+                  key={k}
+                  row={row}
+                  isConnected={connected.has(k)}
+                  value={values[k] ?? ''}
+                  showDivider={i > 0}
+                  onChangeValue={(v) => setValues((prev) => ({ ...prev, [k]: v }))}
+                  onSave={() => save(k, row.label)}
+                  onOauthConnect={() => connectOauth(k, row.label)}
+                />
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </>
+  );
+
+  return (
+    <>
+      {embedded ? (
+        inner
+      ) : (
+        <div style={{ width: '100%', maxWidth: 720, margin: '0 auto', padding: showFooter ? '40px 28px 112px' : '40px 28px 48px' }}>
+          {inner}
+        </div>
+      )}
 
       {/* Fixed proceed footer — matches the SEO/AEO cold-state setup flow.
           Back sits on the left; the prompt sits next to the primary CTA.

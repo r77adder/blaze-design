@@ -24,6 +24,7 @@ import Edit1 from '@/icons/20/Edit1';
 import LinkAngled from '@/icons/20/LinkAngled';
 import Loader1 from '@/icons/20/Loader1';
 import Marker2 from '@/icons/20/Marker2';
+import MessageChat01 from '@/icons/20/MessageChat01';
 import ShieldChecked from '@/icons/20/ShieldChecked';
 import Trash2 from '@/icons/20/Trash2';
 import Upload from '@/icons/20/Upload';
@@ -82,6 +83,11 @@ type ReviewState = 'under-review' | 'approved' | 'failed';
  * - rejected       — one or more sections were rejected and need changes
  */
 export type A2pStatus = 'not-registered' | 'awaiting' | 'verified' | 'rejected';
+
+/** The registered A2P number the agent sends all outbound SMS from. Surfaced on
+ *  the compliance screen and in the review-request SMS step so it's clear where
+ *  texts originate. */
+export const AGENT_SMS_NUMBER = '+1 (512) 323-9502';
 
 /** Seed the shared A2P status from the H2 dev-state controller, matching the
  *  compliance form's own cold/steady seeding (cold = empty form, steady =
@@ -773,6 +779,40 @@ export const ComplianceSection = forwardRef<
           with a brief reason (and per-section detail when rejected). Hidden in
           the embedded DIY setup flow, where the step header already frames it. */}
       {!embedded && <SubmissionTracker status={a2pStatus} rejectionReasons={rejectionReasons} />}
+
+      {/* Agent SMS number — makes it clear which number all outbound texts
+          (review requests, replies, notifications) send from. */}
+      {!embedded && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '14px 16px',
+            borderRadius: 10,
+            border: '1px solid var(--dark-8)',
+            background: 'var(--dark-2)',
+          }}
+        >
+          <span style={{ flexShrink: 0, color: 'var(--dark-90)', display: 'inline-flex' }}>
+            <MessageChat01 size={20} />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text variant="primary" style={{ display: 'block', fontWeight: 500 }}>
+              Agent SMS number
+            </Text>
+            <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', fontSize: 14 }}>
+              All outbound texts from your agent send from this number.
+            </Text>
+          </div>
+          <Text
+            variant="primary"
+            style={{ fontWeight: 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}
+          >
+            {AGENT_SMS_NUMBER}
+          </Text>
+        </div>
+      )}
 
       {/* divider-separated sections, with generous spacing */}
       <div>
