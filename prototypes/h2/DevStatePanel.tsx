@@ -5,6 +5,7 @@ import { DEV_STATE_PATHS, useDevState, type DevState } from './dev-state-context
 import { useOnboarding } from './onboarding/onboarding-context';
 import { useApprovalAudience } from './approval-audience-context';
 import { CreativeReadyModal } from './CreativeReadyModal';
+import { AvatarAnnouncementModal } from './AvatarAnnouncementModal';
 import { CreativeReviewFlow } from './cold-flows/CreativeReviewFlow';
 
 /**
@@ -239,6 +240,11 @@ export function DevStatePanel() {
         text="▸ Review"
         title="Open the approve-creative review flow"
         onClick={() => setReviewOpen(true)}
+      />
+      <DevActionButton
+        text="▸ Avatar"
+        title="Pop the AI avatar video announcement modal"
+        onClick={() => openModal(AvatarAnnouncementModal)}
       />
     </div>
       {reviewOpen && (

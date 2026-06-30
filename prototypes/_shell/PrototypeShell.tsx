@@ -26,6 +26,9 @@ export interface PrototypeShellProps {
   onWorkspacePress?: () => void;
   /** Replaces the sidebar's default Invite / Help footer rows. */
   sidebarFooterItems?: SidebarFooterItem[];
+  /** Optional floating panel pinned to the bottom of the sidebar (e.g. a
+   *  "What's New" promo), rendered on top of the footer rows. */
+  sidebarPanel?: ReactNode;
   /** Remove the default 24px content padding so the child can own the full
    *  area (used by detail views with their own internal chrome / sticky
    *  composers). */
@@ -43,6 +46,7 @@ export function PrototypeShell({
   workspaceName,
   onWorkspacePress,
   sidebarFooterItems,
+  sidebarPanel,
   fullBleed,
   children,
 }: PrototypeShellProps) {
@@ -55,6 +59,7 @@ export function PrototypeShell({
         workspaceName={workspaceName}
         onWorkspacePress={onWorkspacePress}
         footerItems={sidebarFooterItems}
+        panel={sidebarPanel}
       />
       <div className={styles.main}>
         <TopBar

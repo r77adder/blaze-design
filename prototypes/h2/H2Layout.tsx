@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { H2_SECTIONS, PrototypeShell, type SidebarSection } from '../_shell';
 import { ALL_TOOLS, TOOL_LABEL, useTools, type ToolId } from './tools-context';
+import { AvatarPromoPanel } from './AvatarPromoPanel';
 
 const FILTERED_SECTION_LABELS = new Set(['Awareness', 'Conversion']);
 
@@ -123,6 +124,7 @@ export function H2Layout({ children, title, topbarRight, topbarCenter, fullBleed
       topbarRight={topbarRight}
       topbarCenter={topbarCenter}
       fullBleed={fullBleed}
+      sidebarPanel={<AvatarPromoPanel />}
     >
       {children}
     </PrototypeShell>

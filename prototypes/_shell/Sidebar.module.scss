@@ -13,6 +13,17 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  position: relative;
+}
+
+// Floating panel pinned to the bottom of the sidebar, sitting on top of the
+// footer rows. Used for temporary promos (e.g. a "What's New" entry point).
+.panel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 5;
 }
 
 // Header slot mirrors prod's `.header` redesign block:

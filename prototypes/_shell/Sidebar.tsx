@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { NavItem, NavSection, WorkspaceSelector } from '@/staging';
 import {
@@ -205,6 +206,9 @@ export interface SidebarProps {
   onWorkspacePress?: () => void;
   /** Replaces the default Invite / Help footer rows when provided. */
   footerItems?: SidebarFooterItem[];
+  /** Optional floating panel pinned to the bottom of the sidebar, on top of the
+   *  footer rows (e.g. a "What's New" promo). Dismissal is the panel's concern. */
+  panel?: ReactNode;
 }
 
 function NavItemEntry({ item, activeLabel, pathname, navigate }: {
@@ -247,6 +251,7 @@ export function Sidebar({
   workspaceName = 'Acme Co',
   onWorkspacePress,
   footerItems,
+  panel,
 }: SidebarProps) {
   const resolved: SidebarSection[] = sections
     ? sections
@@ -303,6 +308,7 @@ export function Sidebar({
             </>
           )}
       </div>
+      {panel && <div className={styles.panel}>{panel}</div>}
     </aside>
   );
 }
