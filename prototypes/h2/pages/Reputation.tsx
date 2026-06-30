@@ -7,6 +7,7 @@ import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
 import { useDevState } from '../dev-state-context';
 import { ConnectSourcesPage, ReputationColdView } from './ReputationColdView';
+import { ReviewGenerationTab } from './ReviewGeneration';
 
 /**
  * /h2/reputation — deep port of Blaze H2 Features/reputation.html.
@@ -951,7 +952,7 @@ function ListeningPane() {
 
 // ─── TABS ─────────────────────────────────────────────────────────
 
-type TabKey = 'reviews' | 'insights' | 'listening' | 'manage';
+type TabKey = 'reviews' | 'insights' | 'listening' | 'generate' | 'manage';
 
 // ─── ITEM-DETAIL MODAL ────────────────────────────────────────────
 
@@ -1255,6 +1256,7 @@ function ReputationRouteInner() {
           { key: 'reviews', label: 'Reviews & Comments', count: reviewCount },
           { key: 'insights', label: 'Business Insights', count: 5 },
           { key: 'listening', label: 'Social Listening' },
+          { key: 'generate', label: 'Review Generation' },
           { key: 'manage', label: 'Manage Sources' },
         ] as const
       ).map((t) => (
@@ -1269,6 +1271,16 @@ function ReputationRouteInner() {
       ))}
     </div>
   );
+
+  // "Review Generation" tab — setup surface for the review-request agent.
+  // Rendered as its own full surface (no KPI strip), like the manage tab.
+  if (tab === 'generate') {
+    return (
+      <H2Layout topbarCenter={topbarCenter}>
+        <ReviewGenerationTab />
+      </H2Layout>
+    );
+  }
 
   // "Manage Accounts" tab — the full connect page (grouped sources), seeded
   // with what's already connected. Rendered for both connected + steady.
