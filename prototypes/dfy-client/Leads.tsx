@@ -1,12 +1,19 @@
-import { useMemo, useState } from 'react';
-import { Heading, Text, Modal, useModals, type StackModalProps } from '@/components';
-import { StatusPill, Pill, Avatar } from '@/staging';
+import { useMemo, useRef, useState, type ComponentType } from 'react';
+import { createPortal } from 'react-dom';
+import { Heading, Text, Button, IconButton, Modal, useModals, type StackModalProps } from '@/components';
+import { StatusPill, Pill, Avatar, Checkbox } from '@/staging';
 import Voice from '@/icons/20/Voice';
 import MessageText2 from '@/icons/20/MessageText2';
 import MessageChat01 from '@/icons/20/MessageChat01';
 import ChevronDown from '@/icons/20/ChevronDown';
 import ChevronUp from '@/icons/20/ChevronUp';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
+import Download from '@/icons/20/Download';
+import Help from '@/icons/16/Help';
+import Send1 from '@/icons/20/Send1';
+import Check from '@/icons/16/Check';
+import ChevronRight from '@/icons/16/ChevronRight';
+import ArrowLeft from '@/icons/20/ArrowLeft';
 import {
   LEADS,
   type Lead,
@@ -14,15 +21,16 @@ import {
   STATUS_STYLES,
   SOURCE_LABELS,
   METHOD_LABELS,
-  LEAD_NEEDS_SUMMARY,
-  scoreHeadline,
+  MEDIUM_LABELS,
+  defaultMedium,
   formatRelative,
   conversationSummary,
   avatarColor,
   isUnread,
-  truncate,
   relativeMinutesAgo,
+  type Message,
 } from '../h2/sdr-data';
+import { STRATEGIST } from './HomeColdShared';
 import { ClientShell } from './shell';
 import { ColdState } from './ColdState';
 import { useClientState } from './dev-state';
@@ -32,7 +40,7 @@ import { useClientState } from './dev-state';
  * tab for Grain Design Flooring. Reuses H2's `LEADS` data in a read-only table
  * (clients watch the pipeline the receptionist is filling; they don't work the
  * queue). Each row is CLICKABLE → opens a view-only lead detail modal showing
- * the prospect, channel/method/status, score + qualification factors, and the
+ * the prospect, channel/method/status, qualification factors, and the
  * conversation summary.
  */
 
@@ -53,7 +61,7 @@ export function Leads() {
           description="Every call, text, and form your AI Receptionist captures, qualifies, and books will land here for you to follow."
           points={[
             'Inbound calls and texts captured 24/7',
-            'Qualification scores and full conversation summaries',
+            'Qualification details and full conversation summaries',
             'Booked appointments, ready to confirm',
           ]}
         />
@@ -61,22 +69,17 @@ export function Leads() {
     );
   }
 
-  const stats = useMemo(() => {
-    const booked = leads.filter((l) => l.status === 'resolved').length;
-    const avg = Math.round(leads.reduce((s, l) => s + l.score, 0) / Math.max(1, leads.length));
-    return { total: leads.length, booked, avg };
-  }, [leads]);
-
   return (
-    <ClientShell section="leads">
+    <ClientShell
+      section="leads"
+      topbarRight={
+        <Button variant="secondary" size="sm" frontIcon={Download} onPress={() => openModal(ExportLeadsModal, { leads })}>
+          Export
+        </Button>
+      }
+    >
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
-          <Kpi label="Leads captured" value={String(stats.total)} delta="this month" />
-          <Kpi label="Booked" value={String(stats.booked)} delta="appointments" />
-          <Kpi label="Avg. qualification" value={`${stats.avg}/100`} delta="lead score" />
-        </div>
-
-        <LeadsTable leads={leads} onOpen={(lead) => openModal(LeadDetailModal, { lead })} />
+        <LeadsTable leads={leads} onOpen={(list, index) => openModal(LeadDetailModal, { leads: list, index })} />
       </div>
     </ClientShell>
   );
@@ -84,12 +87,12 @@ export function Leads() {
 
 // ─── AI Receptionist–style leads inbox ──────────────────────────────
 // Mirrors the AI Receptionist's leads table (h2/pages/Sdr.tsx): leads grouped
-// by status into collapsible sections, with the same five columns — Prospect ·
-// Method · Call reason · What's needed · Time — and the same row treatment
-// (avatar, unread blue dot, muted "nothing new" rows). Row click opens the
-// existing view-only lead detail modal (link target unchanged).
+// by status into collapsible sections, with the columns Prospect · Method ·
+// Call reason · Time and the same row treatment (avatar, unread blue dot,
+// muted "nothing new" rows). Row click opens the existing view-only lead
+// detail modal (link target unchanged).
 
-const LEADS_GRID = '300px 68px 160px minmax(160px, 2fr) 64px';
+const LEADS_GRID = '300px 80px minmax(220px, 1fr) 80px';
 const STATUS_FUNNEL_ORDER: Status[] = ['human-handling', 'ai-handling', 'resolved', 'opted-out'];
 
 function initials(name: string): string {
@@ -119,20 +122,7 @@ function requestType(lead: Lead): string {
   return tag ?? 'General inquiry';
 }
 
-function latestSnippet(lead: Lead): string {
-  for (const t of [...lead.transcript].reverse()) {
-    if (t.type === 'text' && t.content) return t.content;
-    if (t.type === 'call' && t.call?.turns?.length) return t.call.turns[t.call.turns.length - 1].line;
-  }
-  return lead.transcript.length ? lead.transcript[lead.transcript.length - 1].content : '';
-}
-
-function whatsNeeded(lead: Lead): string {
-  return LEAD_NEEDS_SUMMARY[lead.id] ?? lead.suggested_next_action?.summary ?? latestSnippet(lead);
-}
-
 function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen: () => void }) {
-  const snippet = whatsNeeded(lead);
   const unread = isUnread(lead);
   const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
   const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
@@ -194,30 +184,6 @@ function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen
         </Text>
       </div>
 
-      {/* What's needed */}
-      <div style={{ minWidth: 0, overflow: 'hidden' }}>
-        {lead.status === 'ai-handling' && lead.callOutcome === 'live' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <StatusPill tone="danger" size="sm">Live</StatusPill>
-            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Call in progress</Text>
-          </div>
-        ) : lead.status === 'ai-handling' && lead.scheduled_at ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <StatusPill tone="success" size="sm">Scheduled</StatusPill>
-            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>Nothing needed</Text>
-          </div>
-        ) : lead.status === 'ai-handling' && lead.callOutcome === 'successful' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <StatusPill tone="success" size="sm">Call successful</StatusPill>
-            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(snippet, 36)}</Text>
-          </div>
-        ) : (
-          <div style={{ fontSize: 14, color: unread ? 'var(--dark-90)' : 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4, fontWeight: unread ? 500 : 400 }}>
-            {truncate(snippet, 60)}
-          </div>
-        )}
-      </div>
-
       {/* Time */}
       <div style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
         {formatRelative(lead.last_activity_at)}
@@ -226,7 +192,7 @@ function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen
   );
 }
 
-function LeadsTable({ leads, onOpen }: { leads: Lead[]; onOpen: (lead: Lead) => void }) {
+function LeadsTable({ leads, onOpen }: { leads: Lead[]; onOpen: (leads: Lead[], index: number) => void }) {
   const [collapsed, setCollapsed] = useState<Set<Status>>(() => new Set<Status>(['resolved', 'opted-out']));
   const sorted = useMemo(
     () => [...leads].sort((a, b) => relativeMinutesAgo(a.last_activity_at) - relativeMinutesAgo(b.last_activity_at)),
@@ -235,6 +201,8 @@ function LeadsTable({ leads, onOpen }: { leads: Lead[]; onOpen: (lead: Lead) => 
   const groups = STATUS_FUNNEL_ORDER
     .map((status) => ({ status, ss: STATUS_STYLES[status], groupLeads: sorted.filter((l) => l.status === status) }))
     .filter((g) => g.groupLeads.length > 0);
+  // Flat display order — powers the modal's up/down lead navigation.
+  const ordered = groups.flatMap((g) => g.groupLeads);
 
   return (
     <>
@@ -269,12 +237,11 @@ function LeadsTable({ leads, onOpen }: { leads: Lead[]; onOpen: (lead: Lead) => 
                     <span>Prospect</span>
                     <span>Method</span>
                     <span>Call reason</span>
-                    <span>What&apos;s needed</span>
                     <span>Time</span>
                   </div>
                 )}
                 {g.groupLeads.map((lead, i) => (
-                  <LeadRow key={lead.id} lead={lead} isLast={i === g.groupLeads.length - 1} onOpen={() => onOpen(lead)} />
+                  <LeadRow key={lead.id} lead={lead} isLast={i === g.groupLeads.length - 1} onOpen={() => onOpen(ordered, ordered.indexOf(lead))} />
                 ))}
               </div>
             )}
@@ -289,136 +256,533 @@ function LeadsTable({ leads, onOpen }: { leads: Lead[]; onOpen: (lead: Lead) => 
 }
 
 // ─── Lead detail modal (view-only) ──────────────────────────────────
+// Two columns: the main column is a chronological timeline of every touchpoint
+// (form submission → calls → texts → the proposed next step); the right rail
+// holds the lead's contact + qualification info, phone first.
 
-function LeadDetailModal({ lead, close }: StackModalProps & { lead: Lead }) {
+type Glyph = ComponentType<{ size?: number; color?: string }>;
+
+type TimelineItem =
+  | { kind: 'form'; source: string; need?: string; when: string }
+  | { kind: 'call'; title: string; duration?: string; summary: string; turns: { speaker: string; line: string }[]; when: string }
+  | { kind: 'text'; mediumLabel: string; messages: Message[]; summary?: string; when: string }
+  | { kind: 'system'; title: string; when: string };
+
+type SubPage =
+  | { kind: 'transcript'; title: string; turns: { speaker: string; line: string }[] }
+  | { kind: 'messages'; title: string; messages: Message[] };
+
+function firstName(name: string): string {
+  return name.split(/\s+/)[0];
+}
+
+const CITY_RE = /austin|round rock|cedar park|westlake|pflugerville|leander|lakeway|bee cave|dripping|tarrytown|mueller|hyde park|travis|north loop|sunset ridge|lakewood|brightline|salt traders/i;
+function leadLocation(lead: Lead): string | undefined {
+  return lead.location ?? lead.tags.find((t) => CITY_RE.test(t));
+}
+
+/** Group the raw transcript into human-readable touchpoints. Consecutive text
+ *  messages collapse into one conversation node; calls and system events stay
+ *  discrete. A synthetic first-touch node guarantees every lead opens on how it
+ *  came in — even a one-message lead shows its form/chat origin. */
+function buildTimeline(lead: Lead): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  const msgs = lead.transcript;
+
+  if (lead.channel === 'form') {
+    items.push({ kind: 'form', source: lead.first_touch_source, need: lead.scorecard.need, when: lead.first_seen });
+  } else if (lead.channel === 'chat') {
+    items.push({ kind: 'system', title: `Started a website chat · ${lead.first_touch_source}`, when: lead.first_seen });
+  }
+
+  let i = 0;
+  // Fold a leading capture/inbound marker into the first-touch node above,
+  // except keep the phone-tree path visible for inbound calls.
+  if (msgs[i]?.type === 'system' && /captur|form|landing|inbound|chat|option/i.test(msgs[i].content)) {
+    if (lead.channel === 'inbound-call') items.push({ kind: 'system', title: msgs[i].content, when: msgs[i].timestamp });
+    i += 1;
+  }
+
+  let firstTextRun = true;
+  while (i < msgs.length) {
+    const m = msgs[i];
+    if (m.type === 'system') {
+      // internal escalation notes are noise for the client-facing timeline
+      if (!/escalat/i.test(m.content)) items.push({ kind: 'system', title: m.content, when: m.timestamp });
+      i += 1;
+    } else if (m.type === 'call') {
+      const turns = m.call?.turns ?? [];
+      const callerLine = turns.find((t) => /caller|prospect|client/i.test(t.speaker))?.line;
+      items.push({
+        kind: 'call',
+        title: m.role === 'ai' ? 'AI-handled call' : 'Call',
+        duration: m.call?.duration,
+        summary: callerLine ?? m.content,
+        turns,
+        when: m.timestamp,
+      });
+      i += 1;
+    } else {
+      const run: Message[] = [];
+      while (i < msgs.length && msgs[i].type === 'text') { run.push(msgs[i]); i += 1; }
+      const med = run[0].medium ?? defaultMedium(run[0], lead.channel) ?? 'sms';
+      items.push({
+        kind: 'text',
+        mediumLabel: MEDIUM_LABELS[med],
+        messages: run,
+        summary: firstTextRun ? conversationSummary(lead) : undefined,
+        when: run[run.length - 1].timestamp,
+      });
+      firstTextRun = false;
+    }
+  }
+  return items;
+}
+
+const DOT: Record<TimelineItem['kind'], string> = {
+  form: 'var(--purple)',
+  call: 'var(--status-posting)',
+  text: 'var(--dark-30)',
+  system: 'var(--dark-15)',
+};
+
+function TimelineRow({ dot, isLast, children }: { dot: string; isLast?: boolean; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', gap: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 10 }}>
+        <span style={{ width: 7, height: 7, borderRadius: 99, background: dot, marginTop: 6, flexShrink: 0 }} />
+        {!isLast && <span style={{ flex: 1, width: 1, background: 'var(--dark-8)', marginTop: 3 }} />}
+      </div>
+      <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 22 }}>{children}</div>
+    </div>
+  );
+}
+
+function NodeHeader({ title, meta, when }: { title: string; meta?: string; when: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+      <Heading level={5}>{title}</Heading>
+      {meta && <Text variant="metadata" color="var(--dark-60)">· {meta}</Text>}
+      <Text variant="metadata" color="var(--dark-40)" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>{formatRelative(when)}</Text>
+    </div>
+  );
+}
+
+function PageLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <button type="button" onClick={onPress} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{label}</Text>
+      <ChevronRight size={16} color="var(--dark-60)" />
+    </button>
+  );
+}
+
+function CallTurns({ turns }: { turns: { speaker: string; line: string }[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'var(--dark-3)', borderRadius: 10 }}>
+      {turns.map((t, i) => (
+        <div key={i}>
+          <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 1 }}>{t.speaker}</Text>
+          <Text variant="secondary" style={{ color: 'var(--dark-90)', lineHeight: 1.5 }}>{t.line}</Text>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MessageThread({ messages }: { messages: Message[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {messages.map((m) => {
+        const mine = m.role === 'ai' || m.role === 'owner';
+        return (
+          <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '85%', padding: '8px 12px', borderRadius: 12, background: mine ? 'var(--dark-90)' : 'var(--dark-4)' }}>
+            <Text variant="secondary" style={{ color: mine ? 'var(--light-100)' : 'var(--dark-90)', lineHeight: 1.5 }}>{m.content}</Text>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TimelineNode({ item, isLast, onOpenPage }: { item: TimelineItem; isLast?: boolean; onOpenPage: (p: SubPage) => void }) {
+  if (item.kind === 'form') {
+    return (
+      <TimelineRow dot={DOT.form} isLast={isLast}>
+        <NodeHeader title="Form submission" when={item.when} />
+        <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block' }}>{item.source}</Text>
+        {item.need && <Text variant="secondary" style={{ display: 'block', marginTop: 4, color: 'var(--dark-90)', lineHeight: 1.5 }}>Requested: {item.need}</Text>}
+      </TimelineRow>
+    );
+  }
+  if (item.kind === 'call') {
+    return (
+      <TimelineRow dot={DOT.call} isLast={isLast}>
+        <NodeHeader title={item.title} meta={item.duration} when={item.when} />
+        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.5 }}>{item.summary}</Text>
+        {item.turns.length > 0 && (
+          <PageLink label="See full transcript" onPress={() => onOpenPage({ kind: 'transcript', title: 'Call transcript', turns: item.turns })} />
+        )}
+      </TimelineRow>
+    );
+  }
+  if (item.kind === 'text') {
+    return (
+      <TimelineRow dot={DOT.text} isLast={isLast}>
+        <NodeHeader title={`${item.mediumLabel} conversation`} meta={`${item.messages.length} message${item.messages.length === 1 ? '' : 's'}`} when={item.when} />
+        {item.summary && <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.5 }}>{item.summary}</Text>}
+        <PageLink label="See messages" onPress={() => onOpenPage({ kind: 'messages', title: `${item.mediumLabel} conversation`, messages: item.messages })} />
+      </TimelineRow>
+    );
+  }
+  return (
+    <TimelineRow dot={DOT.system} isLast={isLast}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Text variant="secondary" color="var(--dark-60)">{item.title}</Text>
+        <Text variant="metadata" color="var(--dark-40)" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>{formatRelative(item.when)}</Text>
+      </div>
+    </TimelineRow>
+  );
+}
+
+function NextActionStep({ lead }: { lead: Lead }) {
+  const [done, setDone] = useState(false);
+  const na = lead.suggested_next_action;
+  const isCall = na?.type === 'call-back';
+  const verb = isCall ? `Call ${firstName(lead.prospect.name)}` : 'Send follow-up';
+  const doneLabel = isCall ? 'Call logged' : 'Follow-up sent';
+  const ActionIcon: Glyph = isCall ? Voice : Send1;
+
+  return (
+    <TimelineRow dot="var(--brand)" isLast>
+      {na ? (
+        <div>
+          <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>Recommended next step</Text>
+          <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.4 }}>{na.summary}</Text>
+          <div style={{ marginTop: 10, padding: '12px 14px', background: 'var(--dark-2)', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
+            <Text variant="secondary" style={{ color: 'var(--dark-80)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{na.payload}</Text>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            {done ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Check size={16} color="var(--status-approved)" />
+                <Text variant="secondary" style={{ color: 'var(--status-approved)', fontWeight: 500 }}>{doneLabel}</Text>
+              </span>
+            ) : (
+              <Button variant="primary" size="md" frontIcon={ActionIcon} onPress={() => setDone(true)}>{verb}</Button>
+            )}
+          </div>
+        </div>
+      ) : lead.scheduled_at ? (
+        <div>
+          <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)' }}>Visit booked</Text>
+          <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginTop: 2 }}>{lead.scheduled_at}{lead.location ? ` · ${lead.location}` : ''}</Text>
+        </div>
+      ) : (
+        <Text variant="secondary" color="var(--dark-60)">No action needed right now — the AI receptionist is handling this lead.</Text>
+      )}
+    </TimelineRow>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+  return (
+    <div>
+      <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 2 }}>{label}</Text>
+      <Text variant="secondary" style={{ color: 'var(--dark-90)', lineHeight: 1.4, wordBreak: 'break-word' }}>{value}</Text>
+    </div>
+  );
+}
+
+function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lead[]; index: number }) {
+  const [idx, setIdx] = useState(index);
+  const [page, setPage] = useState<SubPage | null>(null);
+  const lead = leads[idx];
   const st = STATUS_STYLES[lead.status];
-  const summary = conversationSummary(lead);
   const sk = lead.scorecard;
-  const scorecardRows = [
-    ['Need', sk.need],
-    ['Budget', sk.budget],
-    ['Timeline', sk.timeline],
-    ['Decision-maker', sk.decisionMaker],
-    ...Object.entries(sk.custom ?? {}),
-  ].filter((r): r is [string, string] => Boolean(r[1]));
+  const timeline = buildTimeline(lead);
+  const go = (delta: number) => { setIdx((i) => Math.min(leads.length - 1, Math.max(0, i + delta))); setPage(null); };
+
+  // Transcript / message threads open as their own modal page — footer holds
+  // Back (to the lead detail) and a primary Done.
+  if (page) {
+    return (
+      <Modal.Root size="md" aria-labelledby="lead-subpage-title">
+        <Modal.Header title={page.title} id="lead-subpage-title" onClose={close} />
+        <Modal.Content>
+          {page.kind === 'transcript' ? <CallTurns turns={page.turns} /> : <MessageThread messages={page.messages} />}
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.FooterContent slot="left">
+            <Modal.FooterButton variant="subtle" frontIcon={ArrowLeft} onPress={() => setPage(null)}>Back</Modal.FooterButton>
+          </Modal.FooterContent>
+          <Modal.FooterContent slot="right">
+            <Modal.FooterButton variant="primary" onPress={() => setPage(null)}>Done</Modal.FooterButton>
+          </Modal.FooterContent>
+        </Modal.Footer>
+      </Modal.Root>
+    );
+  }
 
   return (
     <Modal.Root size="md" aria-labelledby="lead-detail-title">
-      <Modal.Header title={lead.prospect.name} id="lead-detail-title" onClose={close} />
-      <Modal.Content>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-          {/* status + score + channel strip */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <Modal.Header
+        title={lead.prospect.name}
+        id="lead-detail-title"
+        onClose={close}
+        actions={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <IconButton variant="tertiary" size="sm" icon={ChevronUp} aria-label="Previous lead" isDisabled={idx === 0} onPress={() => go(-1)} />
+            <Text variant="metadata" color="var(--dark-60)" style={{ whiteSpace: 'nowrap' }}>{idx + 1} / {leads.length}</Text>
+            <IconButton variant="tertiary" size="sm" icon={ChevronDown} aria-label="Next lead" isDisabled={idx === leads.length - 1} onPress={() => go(1)} />
+          </div>
+        }
+        subHeader={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <StatusPill tone={st.tone} size="sm">{st.label}</StatusPill>
-            <StatusPill tone={lead.score >= 80 ? 'success' : lead.score >= 60 ? 'info' : lead.score >= 40 ? 'warning' : 'danger'} size="sm">
-              {lead.score} · {scoreHeadline(lead.score)}
-            </StatusPill>
-            <Text variant="metadata" color="var(--dark-60)">
-              {SOURCE_LABELS[lead.channel]} · {METHOD_LABELS[lead.method]}
-            </Text>
+            <Text variant="secondary" color="var(--dark-60)">{SOURCE_LABELS[lead.channel]}</Text>
+          </div>
+        }
+      />
+      <Modal.Content withoutFooter>
+        <div style={{ display: 'flex', gap: 28, alignItems: 'stretch' }}>
+          {/* main — timeline of touchpoints, ending on the proposed next step */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {timeline.map((item, i) => (
+              <TimelineNode key={i} item={item} onOpenPage={setPage} />
+            ))}
+            <NextActionStep key={lead.id} lead={lead} />
           </div>
 
-          {/* prospect contact card */}
-          <Section title="Prospect">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px 24px' }}>
-              <Field label="Company" value={lead.prospect.company} />
-              <Field label="Source" value={lead.first_touch_source} />
-              <Field label="Phone" value={lead.prospect.phone} />
-              <Field label="Email" value={lead.prospect.email} />
+          {/* right rail — contact + qualification, phone first */}
+          <aside style={{ width: 244, flexShrink: 0, borderLeft: '1px solid var(--dark-8)', paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 4 }}>Phone</Text>
+              <a href={`tel:${lead.prospect.phone.replace(/[^\d+]/g, '')}`} style={{ textDecoration: 'none' }}>
+                <Text style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-90)' }}>{lead.prospect.phone}</Text>
+              </a>
             </div>
-          </Section>
+            <InfoRow label="Location" value={leadLocation(lead)} />
+            <InfoRow label="Email" value={lead.prospect.email} />
+            <InfoRow label="Company / household" value={lead.prospect.company} />
 
-          {/* conversation summary */}
-          <Section title="Conversation summary">
-            <Text variant="secondary" style={{ display: 'block', lineHeight: 1.6, color: 'var(--dark-80)' }}>
-              {summary}
-            </Text>
-            {lead.scheduled_at && (
-              <div
-                style={{
-                  marginTop: 12,
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  background: 'var(--dark-4)',
-                  fontSize: 14,
-                  color: 'var(--dark-80)',
-                }}
-              >
-                <strong style={{ fontWeight: 500, color: 'var(--dark-90)' }}>Appointment</strong> · {lead.scheduled_at}
-                {lead.location ? ` · ${lead.location}` : ''}
-              </div>
-            )}
-          </Section>
+            <div style={{ height: 1, background: 'var(--dark-8)' }} />
 
-          {/* qualification factors */}
-          {lead.factors.length > 0 && (
-            <Section title="Qualification factors">
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {lead.factors.map((f) => (
-                  <Pill key={f} size="md">{f}</Pill>
-                ))}
-              </div>
-            </Section>
-          )}
+            <InfoRow label="Need" value={sk.need} />
+            <InfoRow label="Budget" value={sk.budget} />
+            <InfoRow label="Timeline" value={sk.timeline} />
+            <InfoRow label="Decision-maker" value={sk.decisionMaker} />
+            {Object.entries(sk.custom ?? {}).map(([k, v]) => (
+              <InfoRow key={k} label={k} value={v} />
+            ))}
 
-          {/* scorecard */}
-          {scorecardRows.length > 0 && (
-            <Section title="Scorecard">
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {scorecardRows.map(([k, v], i) => (
-                  <div
-                    key={k}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '140px 1fr',
-                      gap: 12,
-                      padding: '9px 0',
-                      borderTop: i > 0 ? '1px solid var(--dark-8)' : 'none',
-                    }}
-                  >
-                    <Text variant="metadata" color="var(--dark-60)">{k}</Text>
-                    <Text variant="secondary" style={{ color: 'var(--dark-90)', lineHeight: 1.45 }}>{v}</Text>
+            {lead.factors.length > 0 && (
+              <>
+                <div style={{ height: 1, background: 'var(--dark-8)' }} />
+                <div>
+                  <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 8 }}>Qualification factors</Text>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {lead.factors.map((f) => (
+                      <Pill key={f} size="md">{f}</Pill>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </Section>
-          )}
+                </div>
+              </>
+            )}
+          </aside>
         </div>
       </Modal.Content>
     </Modal.Root>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section>
-      <Text
-        variant="metadata"
-        color="var(--dark-60)"
-        style={{ letterSpacing: '0.04em', display: 'block', marginBottom: 10 }}
-      >
-        {title}
-      </Text>
-      {children}
-    </section>
-  );
+// ─── Export to CSV ──────────────────────────────────────────────────
+// The header Export button opens this modal: tick which details to include
+// (each becomes a CSV column), preview the shape via the "?" hover, then
+// download. Clients unsure what to pull can ping their Blaze strategist.
+
+type ExportFieldKey = 'name' | 'phone' | 'email' | 'company' | 'reason' | 'method' | 'status' | 'activity';
+
+interface ExportField {
+  key: ExportFieldKey;
+  /** Doubles as the checkbox label and the CSV column header. */
+  label: string;
+  /** Short example shown beside the label for the less self-evident fields. */
+  hint?: string;
+  value: (lead: Lead) => string;
+  defaultOn: boolean;
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+const EXPORT_FIELDS: ExportField[] = [
+  { key: 'name', label: 'Name', value: (l) => l.prospect.name, defaultOn: true },
+  { key: 'phone', label: 'Phone', value: (l) => l.prospect.phone, defaultOn: true },
+  { key: 'email', label: 'Email', value: (l) => l.prospect.email, defaultOn: true },
+  { key: 'company', label: 'Company / location', value: (l) => l.location ?? l.prospect.company, defaultOn: true },
+  { key: 'reason', label: 'Call reason', value: (l) => requestType(l), defaultOn: true },
+  { key: 'method', label: 'Method', hint: 'Call, SMS, Chat', value: (l) => METHOD_LABELS[l.method], defaultOn: false },
+  { key: 'status', label: 'Status', hint: 'AI handling, Booked', value: (l) => STATUS_STYLES[l.status].label, defaultOn: false },
+  { key: 'activity', label: 'Last activity', hint: '14m ago, 2d ago', value: (l) => formatRelative(l.last_activity_at), defaultOn: false },
+];
+
+/** Quote a CSV cell only when it contains a comma, quote, or newline. */
+function csvCell(v: string): string {
+  return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+}
+
+function downloadLeadsCsv(fields: ExportField[], leads: Lead[]) {
+  const rows = [fields.map((f) => f.label), ...leads.map((l) => fields.map((f) => f.value(l)))];
+  const csv = rows.map((r) => r.map(csvCell).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'grain-design-flooring-leads.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/** Hover preview: a mini spreadsheet of the currently-checked columns filled
+ *  with a few real leads, so the client sees exactly what the CSV will hold.
+ *  Rendered in a portal with fixed positioning so it escapes the modal's
+ *  `overflow: auto` clip and can show every selected column in full. */
+function CsvPreview({ fields, leads, anchor }: { fields: ExportField[]; leads: Lead[]; anchor: DOMRect }) {
+  // Center the popover under the "?" trigger, clamping its width so it never
+  // runs off either edge of the viewport.
+  const centerX = anchor.left + anchor.width / 2;
+  const edgeGap = Math.min(centerX, window.innerWidth - centerX) - 12;
+  const base: React.CSSProperties = {
+    position: 'fixed', top: anchor.bottom + 8, left: centerX, transform: 'translateX(-50%)', zIndex: 3000,
+    background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10,
+    boxShadow: '0 12px 32px rgba(0,0,0,0.16)', padding: 14,
+    maxWidth: Math.max(240, Math.round(edgeGap * 2)),
+  };
+  if (fields.length === 0) {
+    return (
+      <div style={{ ...base, width: 240 }}>
+        <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.5 }}>Tick at least one column to preview your export.</Text>
+      </div>
+    );
+  }
+  const cell: React.CSSProperties = { border: '1px solid var(--dark-8)', padding: '6px 10px', whiteSpace: 'nowrap', textAlign: 'left' };
   return (
-    <div style={{ minWidth: 0 }}>
-      <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 2 }}>{label}</Text>
-      <Text variant="secondary" style={{ color: 'var(--dark-90)', wordBreak: 'break-word' }}>{value}</Text>
+    <div style={base}>
+      <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 10, letterSpacing: '0.04em' }}>This is how your CSV will look</Text>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: 12 }}>
+          <thead>
+            <tr>
+              {fields.map((f) => (
+                <th key={f.key} style={{ ...cell, fontWeight: 500, color: 'var(--dark-90)', background: 'var(--dark-4)' }}>{f.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map((l) => (
+              <tr key={l.id}>
+                {fields.map((f) => (
+                  <td key={f.key} style={{ ...cell, color: 'var(--dark-60)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.value(l)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function Kpi({ label, value, delta }: { label: string; value: string; delta: string }) {
+function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] }) {
+  const [selected, setSelected] = useState<Set<ExportFieldKey>>(
+    () => new Set(EXPORT_FIELDS.filter((f) => f.defaultOn).map((f) => f.key)),
+  );
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const helpRef = useRef<HTMLButtonElement>(null);
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
+  const activeFields = EXPORT_FIELDS.filter((f) => selected.has(f.key));
+
+  const toggle = (key: ExportFieldKey) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
   return (
-    <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px', background: 'var(--light-100)' }}>
-      <Text variant="metadata" color="var(--dark-60)" style={{ letterSpacing: '0.04em', display: 'block' }}>{label}</Text>
-      <Heading level={2} style={{ display: 'block', margin: '4px 0 2px' }}>{value}</Heading>
-      <Text variant="metadata" color="var(--dark-60)">{delta}</Text>
-    </div>
+    <Modal.Root size="md" aria-labelledby="export-leads-title">
+      <Modal.Header
+        title="Export leads to CSV"
+        id="export-leads-title"
+        onClose={close}
+        subHeader={
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', fontWeight: 400, lineHeight: 1.5 }}>
+            Choose which details to include. Each one you tick becomes a column in your CSV.{' '}
+            <span
+              style={{ display: 'inline-flex', verticalAlign: 'middle' }}
+              onMouseEnter={() => { setAnchor(helpRef.current?.getBoundingClientRect() ?? null); setPreviewOpen(true); }}
+              onMouseLeave={() => setPreviewOpen(false)}
+            >
+              <button
+                ref={helpRef}
+                type="button"
+                aria-label="Preview how the CSV columns will look"
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: 99, border: 'none', background: 'var(--dark-6)', cursor: 'help', padding: 0 }}
+              >
+                <Help size={12} color="var(--dark-60)" />
+              </button>
+            </span>
+          </Text>
+        }
+      />
+      <Modal.Content>
+        {previewOpen && anchor && createPortal(
+          <CsvPreview fields={activeFields} leads={leads.slice(0, 4)} anchor={anchor} />,
+          document.body,
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* options */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
+            {EXPORT_FIELDS.map((f) => (
+              <Checkbox key={f.key} size={18} style={{ gap: 12 }} checked={selected.has(f.key)} onChange={() => toggle(f.key)}>
+                <Text variant="primary" style={{ color: 'var(--dark-90)' }}>
+                  {f.label}
+                  {f.hint && <span style={{ color: 'var(--dark-60)', marginLeft: 5 }}>({f.hint})</span>}
+                </Text>
+              </Checkbox>
+            ))}
+          </div>
+
+          {/* not sure? contact your strategist — kept subtle */}
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--dark-5)', borderRadius: 10 }}>
+            <Avatar fallback={STRATEGIST.initials} size={28} style={{ background: 'var(--purple)', flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500, lineHeight: 1.3 }}>Not sure what to include?</Text>
+              <Text variant="secondary" style={{ color: 'var(--dark-90)', lineHeight: 1.3 }}>{STRATEGIST.name} · {STRATEGIST.title}</Text>
+            </div>
+            <Button variant="tertiary" size="sm">Message</Button>
+          </div>
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="subtle" onPress={close}>Cancel</Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', marginRight: 12 }}>{leads.length} leads</Text>
+          <Modal.FooterButton
+            variant="primary"
+            frontIcon={Download}
+            isDisabled={activeFields.length === 0}
+            onPress={() => { downloadLeadsCsv(activeFields, leads); close(); }}
+          >
+            Export CSV
+          </Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
   );
 }
+
