@@ -60,15 +60,18 @@ export interface ReportWeek {
 }
 
 interface InsightsReportProps {
-  eyebrow: string;
+  /** Optional eyebrow above the "Week of …" heading; omit to hide it. */
+  eyebrow?: string;
   /** First entry is the current week (selected by default). */
   weeks: ReportWeek[];
+  /** Size of the per-week subtitle line. Defaults to secondary (14px). */
+  subtitleVariant?: 'primary' | 'secondary';
   children: ReactNode;
 }
 
 /** Document-style shell: centered reading column, a header row with a week
  *  picker + Download Report button, and the print stylesheet. */
-export function InsightsReport({ eyebrow, weeks, children }: InsightsReportProps) {
+export function InsightsReport({ eyebrow, weeks, subtitleVariant = 'secondary', children }: InsightsReportProps) {
   const [week, setWeek] = useState(weeks[0]?.value);
   const selected = weeks.find((w) => w.value === week) ?? weeks[0];
 
@@ -89,14 +92,16 @@ export function InsightsReport({ eyebrow, weeks, children }: InsightsReportProps
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-          <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
-            {eyebrow}
-          </Text>
+          {eyebrow && (
+            <Text variant="metadata" style={{ color: 'var(--dark-60)' }}>
+              {eyebrow}
+            </Text>
+          )}
           <Heading level={2} style={{ margin: 0 }}>
             Week of {selected.label}
           </Heading>
           {selected.subtitle && (
-            <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
+            <Text variant={subtitleVariant} style={{ color: 'var(--dark-60)' }}>
               {selected.subtitle}
             </Text>
           )}

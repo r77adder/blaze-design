@@ -1,0 +1,29 @@
+/* Multi-line field — the lib has no standard textarea, so this mirrors the
+ * TextField chrome (8px radius, --dark-8 border, Sohne body, hover/focus). */
+.textArea {
+  font-family: 'Sohne', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.28px;
+  line-height: 1.5;
+  color: var(--dark-90);
+  background: var(--light-100);
+  border: 1px solid var(--dark-8);
+  border-radius: 8px;
+  padding: 10px 14px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.textArea::placeholder {
+  color: var(--dark-40);
+}
+
+.textArea:hover {
+  border-color: var(--dark-15);
+}
+
+.textArea:focus {
+  border-color: var(--dark-40);
+  box-shadow: 0 0 0 3px var(--dark-4);
+}

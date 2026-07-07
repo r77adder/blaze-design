@@ -102,10 +102,10 @@ function VerdictRow({ src, video = false, children }: { src: string; video?: boo
  * Paid Social → Insights. Weekly performance report for the live Meta
  * Traffic campaign, rendered verbatim from the marketing-ops doc.
  */
-export function PaidSocialInsightsView() {
+export function PaidSocialInsightsView({ hideEyebrow = false }: { hideEyebrow?: boolean } = {}) {
   return (
     <InsightsReport
-      eyebrow="Paid Social · CertaPro Austin"
+      eyebrow={hideEyebrow ? undefined : 'Paid Social · CertaPro Austin'}
       weeks={[
         { value: 'w0', label: 'Jun 1–7, 2026', subtitle: 'Campaign live Jun 2–5' },
         { value: 'w1', label: 'May 25–31, 2026' },

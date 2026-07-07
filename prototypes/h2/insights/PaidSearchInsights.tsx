@@ -17,10 +17,10 @@ import {
  * verdicts are kept verbatim; brand / search-term names are mapped to the
  * painting business so the tab stays coherent with the rest of the account.
  */
-export function PaidSearchInsightsView() {
+export function PaidSearchInsightsView({ hideEyebrow = false }: { hideEyebrow?: boolean } = {}) {
   return (
     <InsightsReport
-      eyebrow="Paid Search · CertaPro Austin"
+      eyebrow={hideEyebrow ? undefined : 'Paid Search · CertaPro Austin'}
       weeks={[
         { value: 'w0', label: 'Jun 1–7, 2026', subtitle: 'vs. May 25–31, 2026' },
         { value: 'w1', label: 'May 25–31, 2026', subtitle: 'vs. May 18–24, 2026' },
