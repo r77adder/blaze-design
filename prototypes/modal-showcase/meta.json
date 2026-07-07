@@ -1,4 +1,5 @@
 {
   "title": "Modal showcase",
-  "description": "Side-by-side demo of every Modal namespace part — Header, Footer, list sections, stacked modals."
+  "description": "Side-by-side demo of every Modal namespace part — Header, Footer, list sections, stacked modals.",
+  "archived": true
 }
