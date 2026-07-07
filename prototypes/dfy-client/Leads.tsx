@@ -746,7 +746,7 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
           {/* options */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
             {EXPORT_FIELDS.map((f) => (
-              <Checkbox key={f.key} size={18} style={{ gap: 12 }} checked={selected.has(f.key)} onChange={() => toggle(f.key)}>
+              <Checkbox key={f.key} style={{ gap: 12 }} checked={selected.has(f.key)} onChange={() => toggle(f.key)}>
                 <Text variant="primary" style={{ color: 'var(--dark-90)' }}>
                   {f.label}
                   {f.hint && <span style={{ color: 'var(--dark-60)', marginLeft: 5 }}>({f.hint})</span>}
