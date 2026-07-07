@@ -43,15 +43,6 @@ import { useDevState } from '../dev-state-context';
 
 // ─── DATA ────────────────────────────────────────────────────────────
 
-const KPIS = [
-  { label: 'Impressions', value: '6,210', delta: '↑ 11%', tone: 'up' as const },
-  { label: 'Clicks', value: '142', delta: '↑ 9%', tone: 'up' as const },
-  { label: 'CTR', value: '2.29%', delta: '↑ 0.3 pt', tone: 'up' as const },
-  { label: 'Estimate requests', value: '8', delta: '↑ 3', tone: 'up' as const },
-  { label: 'Spend', value: '$58.20', delta: '78% of daily', tone: 'flat' as const },
-  { label: 'Cost per lead', value: '$7.28', delta: 'on target', tone: 'up' as const },
-];
-
 interface FatigueFlag {
   ageDays: number;
   signal: string;
@@ -700,6 +691,359 @@ const CALLOUTS: string[] = [
 
 const DELTA_COLORS = { up: '#0E6B33', down: 'var(--status-failed)', flat: 'var(--dark-60)' };
 
+// ─── PER-CAMPAIGN DETAIL CONTENT ───────────────────────────────────────
+// Every campaign in the list drills into the same detail view, but with its
+// own version of the mock data. KPIs / summary / warnings are derived from
+// the Campaign record itself (see buildKpis + the warning logic in
+// LiveCampaign); the keyword and ad-copy content below is authored per
+// campaign so each reads as a distinct, plausible campaign.
+
+interface CampaignContent {
+  targeting: string;
+  keywordGroups: KwGroup[];
+  negativeKeywords: string[];
+  headlines: string[];
+  descriptions: string[];
+  sitelinks: Sitelink[];
+  callouts: string[];
+}
+
+const CAMPAIGN_CONTENT: Record<string, CampaignContent> = {
+  'exterior-painting-austin': {
+    targeting: 'homeowners 35–65 in Austin metro',
+    keywordGroups: KW_GROUPS,
+    negativeKeywords: NEGATIVE_KEYWORDS,
+    headlines: HEADLINES,
+    descriptions: DESCRIPTIONS,
+    sitelinks: SITELINKS,
+    callouts: CALLOUTS,
+  },
+
+  'branded-certapro': {
+    targeting: 'people searching CertaPro in Austin metro',
+    keywordGroups: [
+      buildKwGroup('Brand terms', 'exact', [
+        'certapro austin',
+        'certapro painters austin',
+        'certapro painting',
+        'certapro painters',
+        'certapro of austin',
+      ]),
+      buildKwGroup('Brand + service', 'phrase', [
+        'certapro exterior painting',
+        'certapro cabinet painting',
+        'certapro interior painters',
+        'certapro free estimate',
+        'certapro reviews',
+      ]),
+    ],
+    negativeKeywords: [
+      'certapro jobs',
+      'certapro careers',
+      'certapro franchise',
+      'certapro complaints',
+      'certapro lawsuit',
+      'certapro salary',
+      'is certapro legit',
+      'certapro reddit',
+      'certapro cost',
+    ],
+    headlines: [
+      'CertaPro Painters of Austin',
+      'The Name Austin Trusts',
+      'Free In-Home Estimate',
+      '187 5-Star Google Reviews',
+      '2-Year Workmanship Warranty',
+      'Locally Owned & Certified',
+    ],
+    descriptions: [
+      "Austin's trusted CertaPro team. Free in-home estimate and a 2-year warranty.",
+      'Interior, exterior & cabinet painting. Locally owned, professionally certified.',
+    ],
+    sitelinks: [
+      { headline: 'Free Estimate', url: 'certapro.com/estimate', description: 'Book your free in-home quote', description2: 'No obligation, fast response' },
+      { headline: 'Our Work', url: 'certapro.com/gallery', description: 'Before & after project photos', description2: 'Austin homes just like yours' },
+      { headline: 'Reviews', url: 'certapro.com/reviews', description: '187 5-star Google reviews', description2: 'See what neighbors say' },
+    ],
+    callouts: ['Free Estimates', '2-Year Warranty', 'Certified Pros', 'Locally Owned', '187 5-Star Reviews'],
+  },
+
+  'interior-painters': {
+    targeting: 'homeowners 30–60 searching interior painting in Austin',
+    keywordGroups: [
+      buildKwGroup('High-intent interior', 'exact', [
+        'interior painters near me',
+        'interior painting austin',
+        'interior house painters',
+        'interior painters austin tx',
+        'interior painting company austin',
+      ]),
+      buildKwGroup('Rooms & surfaces', 'phrase', [
+        'bedroom painting austin',
+        'ceiling painting austin',
+        'trim painting austin',
+        'accent wall painting',
+        'living room painting',
+        'kitchen wall painting',
+      ]),
+    ],
+    negativeKeywords: [
+      'diy interior painting',
+      'interior paint colors',
+      'how to paint interior',
+      'interior design',
+      'interior paint brands',
+      'cheap interior painting',
+      'sherwin williams interior',
+      'benjamin moore colors',
+    ],
+    headlines: [
+      'Interior Painters in Austin',
+      'Book in 60 Seconds',
+      'Free Color Consultation',
+      'Done in 2–3 Days',
+      'Spotless, On-Time Crews',
+      '2-Year Warranty',
+    ],
+    descriptions: [
+      'Interior painting across Austin metro. Free color consultation with every quote.',
+      'Neat, on-time crews for walls, ceilings, trim, and cabinets. 2-year warranty.',
+    ],
+    sitelinks: [
+      { headline: 'Free Estimate', url: 'certapro.com/interior', description: 'Book your free in-home quote', description2: 'Interior specialists' },
+      { headline: 'Color Consultation', url: 'certapro.com/color', description: 'Free with every estimate', description2: 'Pick the perfect palette' },
+      { headline: 'Gallery', url: 'certapro.com/gallery', description: 'Interior project photos', description2: 'Austin homes we painted' },
+    ],
+    callouts: ['Free Color Consult', 'Neat Crews', '2-Year Warranty', 'Fast Turnaround', 'Licensed & Insured'],
+  },
+
+  'cabinet-refinishing': {
+    targeting: 'homeowners 35–65 with kitchens in Austin metro',
+    keywordGroups: [
+      buildKwGroup('Cabinet refinishing', 'exact', [
+        'cabinet refinishing austin',
+        'cabinet painting austin',
+        'kitchen cabinet painting',
+        'cabinet refinishing near me',
+        'refinish kitchen cabinets austin',
+      ]),
+      buildKwGroup('Cost & options', 'phrase', [
+        'cabinet refinishing cost',
+        'refinish vs replace cabinets',
+        'cabinet painters near me',
+        'kitchen cabinet makeover',
+        'cabinet resurfacing austin',
+      ]),
+    ],
+    negativeKeywords: [
+      'diy cabinet refinishing',
+      'cabinet refinishing kit',
+      'rustoleum cabinet transformations',
+      'cabinet hardware',
+      'cabinet doors',
+      'how to refinish cabinets',
+      'cheap cabinet painting',
+      'ikea cabinets',
+    ],
+    headlines: [
+      'Cabinet Refinishing Austin',
+      'Half the Cost of Replacing',
+      'Factory-Smooth Finish',
+      'Done in 4–5 Days',
+      'Free In-Home Quote',
+      '2-Year Warranty',
+    ],
+    descriptions: [
+      'Refinish kitchen cabinets for half the cost of new. Factory-smooth, durable finish.',
+      "Austin's cabinet specialists. Free in-home quote and a 2-year warranty.",
+    ],
+    sitelinks: [
+      { headline: 'Free Quote', url: 'certapro.com/cabinets', description: 'Book your free in-home quote', description2: 'Cabinet specialists' },
+      { headline: 'Before & After', url: 'certapro.com/cabinet-work', description: 'See real cabinet makeovers', description2: 'Austin kitchens' },
+      { headline: 'Finishes', url: 'certapro.com/finishes', description: 'Colors & finish options', description2: 'Matte, satin, or gloss' },
+    ],
+    callouts: ['Half the Cost', 'Durable Finish', 'Free Quote', '2-Year Warranty', 'Certified Pros'],
+  },
+
+  'local-cedar-park': {
+    targeting: 'homeowners in Cedar Park & Round Rock',
+    keywordGroups: [
+      buildKwGroup('Cedar Park', 'phrase', [
+        'cedar park painters',
+        'painters cedar park tx',
+        'house painters cedar park',
+        'exterior painting cedar park',
+        'cedar park painting company',
+      ]),
+      buildKwGroup('Round Rock', 'phrase', [
+        'round rock painters',
+        'painters round rock tx',
+        'house painters round rock',
+        'exterior painting round rock',
+        'round rock painting company',
+      ]),
+    ],
+    negativeKeywords: [
+      'painters austin',
+      'painters georgetown',
+      'painters pflugerville',
+      'painters leander',
+      'diy painting',
+      'cedar park jobs',
+      'cheap painters',
+      'round rock isd',
+    ],
+    headlines: [
+      'Cedar Park & Round Rock Pros',
+      'Your Neighborhood Painters',
+      'Free On-Site Estimate',
+      '2-Year Warranty',
+      'Serving Cedar Park',
+      'Licensed & Insured',
+    ],
+    descriptions: [
+      'Painting for Cedar Park and Round Rock homes. Free on-site estimate.',
+      'Local, licensed, and insured. Interior, exterior, and cabinet painting.',
+    ],
+    sitelinks: [
+      { headline: 'Free Estimate', url: 'certapro.com/cedar-park', description: 'Book your free on-site quote', description2: 'Local crews' },
+      { headline: 'Service Area', url: 'certapro.com/areas', description: 'Cedar Park & Round Rock', description2: 'And nearby neighborhoods' },
+      { headline: 'Reviews', url: 'certapro.com/reviews', description: 'Rated 5 stars by neighbors', description2: 'See local reviews' },
+    ],
+    callouts: ['Local Crews', 'Free Estimate', 'Licensed & Insured', '2-Year Warranty', 'Neighborhood Trusted'],
+  },
+
+  'repaint-past-customers': {
+    targeting: 'past CertaPro customers in Austin metro',
+    keywordGroups: [
+      buildKwGroup('Repaint intent', 'phrase', [
+        'exterior repaint austin',
+        'house repaint austin',
+        'repaint my house',
+        'touch up painting austin',
+        'repaint cost austin',
+      ]),
+      buildKwGroup('Maintenance', 'broad', [
+        'paint touch up service',
+        'when to repaint house',
+        'exterior repaint cost',
+        'fade repair painting',
+        'refresh exterior paint',
+      ], 'paused'),
+    ],
+    negativeKeywords: [
+      'diy repaint',
+      'paint touch up kit',
+      'how to repaint',
+      'spray paint touch up',
+      'car repaint',
+      'furniture repaint',
+      'cheap repaint',
+    ],
+    headlines: [
+      'Time for a Repaint?',
+      'Welcome Back — 10% Off',
+      'Free In-Home Estimate',
+      'Your Trusted Painters',
+      'Book Your Touch-Up',
+      '2-Year Warranty',
+    ],
+    descriptions: [
+      'Loved your last project? Time for a refresh. 10% off for returning customers.',
+      'Interior, exterior, and cabinet repaints. Free in-home estimate.',
+    ],
+    sitelinks: [
+      { headline: 'Book Now', url: 'certapro.com/rebook', description: 'Schedule your repaint', description2: '10% off for returning' },
+      { headline: 'Past Projects', url: 'certapro.com/my-projects', description: 'Revisit your last job', description2: 'Match your colors' },
+      { headline: 'Referral Offer', url: 'certapro.com/referral', description: 'Refer a neighbor, save more', description2: 'Give $50, get $50' },
+    ],
+    callouts: ['10% Off Returning', 'Free Estimate', 'Trusted Crew', '2-Year Warranty', 'Referral Rewards'],
+  },
+
+  'commercial-hoa': {
+    targeting: 'property managers & business owners in Austin metro',
+    keywordGroups: [
+      buildKwGroup('Commercial', 'phrase', [
+        'commercial painters austin',
+        'office painting austin',
+        'retail painting austin',
+        'commercial painting company',
+        'warehouse painting austin',
+      ]),
+      buildKwGroup('HOA & multi-unit', 'phrase', [
+        'hoa painters austin',
+        'apartment painting austin',
+        'property management painting',
+        'multi unit painting austin',
+        'condo painting austin',
+      ]),
+    ],
+    negativeKeywords: [
+      'residential painters',
+      'house painters',
+      'diy painting',
+      'commercial paint supplier',
+      'paint manufacturer',
+      'commercial painting jobs',
+      'cheap commercial painting',
+    ],
+    headlines: [
+      'Commercial Painters Austin',
+      'HOA & Property Specialists',
+      'Licensed, Bonded & Insured',
+      'Minimal Disruption',
+      'Free Site Walkthrough',
+      'Volume Pricing',
+    ],
+    descriptions: [
+      'Commercial and HOA painting across Austin. Licensed, bonded, and insured.',
+      'Off-hours crews to minimize disruption. Free on-site walkthrough and bid.',
+    ],
+    sitelinks: [
+      { headline: 'Get a Bid', url: 'certapro.com/commercial', description: 'Free on-site walkthrough', description2: 'Fast, detailed bids' },
+      { headline: 'Commercial Work', url: 'certapro.com/commercial-work', description: 'Offices, retail & HOAs', description2: 'See past projects' },
+      { headline: 'Certifications', url: 'certapro.com/certifications', description: 'Licensed, bonded, insured', description2: 'Safety-trained crews' },
+    ],
+    callouts: ['Licensed & Bonded', 'Off-Hours Crews', 'Free Walkthrough', 'Volume Pricing', 'Insured'],
+  },
+};
+
+function getCampaignContent(id: string): CampaignContent {
+  return CAMPAIGN_CONTENT[id] ?? CAMPAIGN_CONTENT['exterior-painting-austin'];
+}
+
+// KPI tiles derived from a campaign's own numbers, so each campaign shows a
+// distinct, self-consistent metric strip (CTR = clicks/impressions, cost per
+// lead = spend/conversions, spend delta = % of daily budget).
+type KpiTile = { label: string; value: string; delta: string; tone: keyof typeof DELTA_COLORS };
+
+function buildKpis(c: Campaign): KpiTile[] {
+  if (c.impressions === 0) {
+    return [
+      { label: 'Impressions', value: '0', delta: 'no data yet', tone: 'flat' },
+      { label: 'Clicks', value: '0', delta: 'no data yet', tone: 'flat' },
+      { label: 'CTR', value: '—', delta: 'no data yet', tone: 'flat' },
+      { label: 'Estimate requests', value: '0', delta: 'no data yet', tone: 'flat' },
+      { label: 'Spend', value: '$0.00', delta: '0% of daily', tone: 'flat' },
+      { label: 'Cost per lead', value: '—', delta: 'paused', tone: 'flat' },
+    ];
+  }
+  const ctr = (c.clicks / c.impressions) * 100;
+  const cpl = c.conversions > 0 ? c.spend / c.conversions : 0;
+  const budgetPct = Math.round((c.spend / c.budget) * 100);
+  const over = budgetPct > 100;
+  const seed = Array.from(c.id).reduce((n, ch) => n + ch.charCodeAt(0), 0);
+  const pct = (i: number) => 5 + ((seed * (i + 2)) % 16);
+  return [
+    { label: 'Impressions', value: c.impressions.toLocaleString('en-US'), delta: `↑ ${pct(0)}%`, tone: 'up' },
+    { label: 'Clicks', value: c.clicks.toLocaleString('en-US'), delta: `↑ ${pct(1)}%`, tone: 'up' },
+    { label: 'CTR', value: `${ctr.toFixed(2)}%`, delta: `↑ 0.${1 + (seed % 5)} pt`, tone: 'up' },
+    { label: 'Estimate requests', value: c.conversions.toLocaleString('en-US'), delta: `↑ ${Math.max(1, Math.round(c.conversions * 0.25))}`, tone: 'up' },
+    { label: 'Spend', value: `$${c.spend.toFixed(2)}`, delta: `${budgetPct}% of daily`, tone: over ? 'down' : 'flat' },
+    { label: 'Cost per lead', value: c.conversions > 0 ? `$${cpl.toFixed(2)}` : '—', delta: over ? 'over budget' : 'on target', tone: over ? 'down' : 'up' },
+  ];
+}
+
 type View = 'empty' | 'campaigns' | 'live';
 type AnomalyAction = 'pause' | 'lower' | 'monitor';
 interface AnomalyState {
@@ -770,15 +1114,14 @@ function EmptyState({ onStart }: { onStart: () => void }) {
 
 function CampaignsList({
   anomaly,
-  onOpenLive,
+  onOpenCampaign,
 }: {
   anomaly: AnomalyState;
-  onOpenLive: () => void;
+  onOpenCampaign: (id: string) => void;
 }) {
-  const { openModal } = useModals();
-  const { showToast } = useToast();
   const showAnomaly = !anomaly.resolved;
-  // One consolidated banner — inline list of every fatigued campaign.
+  // One consolidated banner — inline list of every fatigued campaign. Each row
+  // drills into that campaign's detail view.
   const fatigued = CAMPAIGNS.filter((c) => c.fatigue);
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 28px 60px' }}>
@@ -789,16 +1132,7 @@ function CampaignsList({
               key: c.id,
               name: c.name,
               signal: c.fatigue!.signal,
-              onSelect: () => {
-                if (c.primary) {
-                  onOpenLive();
-                } else {
-                  openModal(FatigueRefreshModal, {
-                    fatigue: c.fatigue!,
-                    adName: `${c.name} — Asset combo`,
-                  });
-                }
-              },
+              onSelect: () => onOpenCampaign(c.id),
             }))}
           />
         </div>
@@ -841,10 +1175,7 @@ function CampaignsList({
             isFirst={i === 0}
             isLast={i === CAMPAIGNS.length - 1}
             showAnomaly={showAnomaly && !!c.anomaly}
-            onOpen={() => {
-              if (c.primary) onOpenLive();
-              else showToast({ message: `${c.name} — detail view not built for this prototype yet` });
-            }}
+            onOpen={() => onOpenCampaign(c.id)}
           />
         ))}
       </div>
@@ -1202,27 +1533,31 @@ function AdCopySection({
 }
 
 function LiveCampaign({
+  campaign,
   anomaly,
   onResolveAnomaly,
 }: {
+  campaign: Campaign;
   anomaly: AnomalyState;
   onResolveAnomaly: (action: AnomalyAction) => void;
 }) {
   const { openModal } = useModals();
   const { showToast } = useToast();
+  const content = getCampaignContent(campaign.id);
   // Live keyword + negative-keyword state for this campaign — editable from
-  // the dashboard below, independent of the wizard's pre-launch KW_GROUPS/
-  // NEGATIVE_KEYWORDS prep data.
-  const [keywordGroups, setKeywordGroups] = useState<KwGroup[]>(KW_GROUPS);
-  const [negativeKeywords, setNegativeKeywords] = useState<string[]>(NEGATIVE_KEYWORDS);
+  // the dashboard below, seeded from this campaign's own content. The parent
+  // remounts this component per campaign (key={campaign.id}), so switching
+  // campaigns resets the draft state cleanly.
+  const [keywordGroups, setKeywordGroups] = useState<KwGroup[]>(content.keywordGroups);
+  const [negativeKeywords, setNegativeKeywords] = useState<string[]>(content.negativeKeywords);
   // Ad copy — headlines, descriptions, sitelinks, and callouts. Each is its
   // own section with its own Edit affordance opening its own modal, so
   // updating one doesn't touch the others — unlike the wizard's Copy step,
   // which edits (and autosaves) all four together on one page.
-  const [headlines, setHeadlines] = useState<string[]>(HEADLINES);
-  const [descriptions, setDescriptions] = useState<string[]>(DESCRIPTIONS);
-  const [sitelinks, setSitelinks] = useState<Sitelink[]>(SITELINKS);
-  const [callouts, setCallouts] = useState<string[]>(CALLOUTS);
+  const [headlines, setHeadlines] = useState<string[]>(content.headlines);
+  const [descriptions, setDescriptions] = useState<string[]>(content.descriptions);
+  const [sitelinks, setSitelinks] = useState<Sitelink[]>(content.sitelinks);
+  const [callouts, setCallouts] = useState<string[]>(content.callouts);
   // Sitelinks are edited inline on the dashboard (no modal) — one card at a
   // time. `null` = nothing in edit mode; an index equal to the list length =
   // the "add new" card is open.
@@ -1311,41 +1646,53 @@ function LiveCampaign({
     showToast({ message: `${next === 'active' ? 'Resumed' : 'Paused'} "${theme}"` });
   };
 
-  // Issues surfaced in the summary banner.
+  // KPI strip + warnings both derive from this campaign's own record, so
+  // each campaign shows its own metrics and only the issues it actually has.
+  const kpis = buildKpis(campaign);
   const warningItems: FatigueSummaryItem[] = [
-    {
-      key: 'cpc',
-      name: 'CPC spike detected',
-      signal: 'CPC up 38% past 4h · "interior painters near me"',
-      onSelect: () => openModal(BidReviewModal, { onResolve: onResolveAnomaly }),
-    },
-    {
-      key: 'fatigue',
-      name: 'Creative fatigue detected',
-      signal: 'RSA Variant A · CTR -28% past 7d',
-      onSelect: () =>
-        openModal(FatigueRefreshModal, {
-          fatigue: CAMPAIGN_FATIGUE,
-          adName: 'Exterior painting — Austin metro · RSA · Variant A',
-        }),
-    },
+    ...(campaign.anomaly && !anomaly.resolved
+      ? [
+          {
+            key: 'cpc',
+            name: 'CPC spike detected',
+            signal: 'CPC up 38% past 4h · "interior painters near me"',
+            onSelect: () => openModal(BidReviewModal, { onResolve: onResolveAnomaly }),
+          },
+        ]
+      : []),
+    ...(campaign.fatigue
+      ? [
+          {
+            key: 'fatigue',
+            name: 'Creative fatigue detected',
+            signal: `RSA Variant A · ${campaign.fatigue.signal}`,
+            onSelect: () =>
+              openModal(FatigueRefreshModal, {
+                fatigue: campaign.fatigue!,
+                adName: `${campaign.name} · RSA · Variant A`,
+              }),
+          },
+        ]
+      : []),
   ];
 
   return (
     <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
       {/* Warning summary — one banner (header + clickable rows) listing every
-          issue that needs attention. The CPC row drops out once resolved,
-          leaving a 'resolved' confirmation above the banner. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
-        <FatigueSummaryBanner
-          title={`${warningItems.length} issue${warningItems.length === 1 ? ' needs' : 's need'} attention`}
-          items={warningItems}
-        />
-      </div>
+          issue that needs attention. Only renders when this campaign has
+          issues; the CPC row drops out once resolved. */}
+      {warningItems.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+          <FatigueSummaryBanner
+            title={`${warningItems.length} issue${warningItems.length === 1 ? ' needs' : 's need'} attention`}
+            items={warningItems}
+          />
+        </div>
+      )}
 
       {/* Campaign summary — sits just below the warnings. */}
       <div style={{ fontSize: 14, color: 'var(--dark-90)', marginBottom: 18 }}>
-        <strong>$80/day budget</strong> · Targeting homeowners 35–65 in Austin metro · Started 2h 14m ago
+        <strong>${campaign.budget}/day budget</strong> · Targeting {content.targeting} · {campaign.startedLabel}
       </div>
 
       {/* KPI strip */}
@@ -1357,7 +1704,7 @@ function LiveCampaign({
           marginBottom: 40,
         }}
       >
-        {KPIS.map((k) => (
+        {kpis.map((k) => (
           <div
             key={k.label}
             style={{
@@ -1391,51 +1738,81 @@ function LiveCampaign({
           action={<Text variant="secondary" color="var(--dark-60)">vs. industry benchmark</Text>}
         />
         <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: 16 }}>
-        <svg viewBox="0 0 600 160" width="100%" height="240" preserveAspectRatio="none" style={{ display: 'block' }}>
-          <defs>
-            <linearGradient id="paidSearchFade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <g stroke="rgba(0,0,0,0.04)" strokeWidth="1">
-            <line x1="0" y1="20" x2="600" y2="20" />
-            <line x1="0" y1="60" x2="600" y2="60" />
-            <line x1="0" y1="100" x2="600" y2="100" />
-            <line x1="0" y1="140" x2="600" y2="140" />
-          </g>
-          <g fontFamily="Sohne" fontSize="12" style={{ fill: 'var(--dark-60)' }}>
-            <text x="2" y="22">2.5%</text>
-            <text x="2" y="62">2.0%</text>
-            <text x="2" y="102">1.5%</text>
-            <text x="2" y="142">1.0%</text>
-          </g>
-          <path
-            d="M40 110 L100 105 L160 105 L220 100 L280 95 L340 92 L400 88 L460 85 L520 83 L580 82"
-            stroke="rgba(0,0,0,0.3)"
-            strokeWidth="1"
-            fill="none"
-            strokeDasharray="4 4"
-          />
-          <path
-            d="M40 130 L100 120 L160 120 L220 95 L280 85 L340 90 L400 92 L460 70 L520 65 L580 75 L580 150 L40 150 Z"
-            fill="url(#paidSearchFade)"
-          />
-          <path
-            d="M40 130 L100 120 L160 120 L220 95 L280 85 L340 90 L400 92 L460 70 L520 65 L580 75"
-            stroke="#6366f1"
-            strokeWidth="1"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx="580" cy="75" r="3.5" fill="#6366f1" />
-          <g fontFamily="Sohne" fontSize="12" style={{ fill: 'var(--dark-60)' }}>
-            <text x="34" y="158">Apr 24</text>
-            <text x="276" y="158">Apr 30</text>
-            <text x="540" y="158">May 7</text>
-          </g>
-        </svg>
+          {/* Axis labels render as real 12px HTML (not SVG text) — the chart
+              SVG uses preserveAspectRatio="none" to fill the width, which would
+              stretch any text baked into it. */}
+          <div style={{ position: 'relative' }}>
+            <svg viewBox="0 0 600 160" width="100%" height="240" preserveAspectRatio="none" style={{ display: 'block' }}>
+              <defs>
+                <linearGradient id="paidSearchFade" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <g stroke="rgba(0,0,0,0.04)" strokeWidth="1">
+                <line x1="0" y1="20" x2="600" y2="20" />
+                <line x1="0" y1="60" x2="600" y2="60" />
+                <line x1="0" y1="100" x2="600" y2="100" />
+                <line x1="0" y1="140" x2="600" y2="140" />
+              </g>
+              <path
+                d="M40 110 L100 105 L160 105 L220 100 L280 95 L340 92 L400 88 L460 85 L520 83 L580 82"
+                stroke="rgba(0,0,0,0.3)"
+                strokeWidth="1"
+                fill="none"
+                strokeDasharray="4 4"
+              />
+              <path
+                d="M40 130 L100 120 L160 120 L220 95 L280 85 L340 90 L400 92 L460 70 L520 65 L580 75 L580 150 L40 150 Z"
+                fill="url(#paidSearchFade)"
+              />
+              <path
+                d="M40 130 L100 120 L160 120 L220 95 L280 85 L340 90 L400 92 L460 70 L520 65 L580 75"
+                stroke="#6366f1"
+                strokeWidth="1"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="580" cy="75" r="3.5" fill="#6366f1" />
+            </svg>
+            {/* y-axis labels, centered on each gridline (rendered y = viewBox y × 240/160) */}
+            {[
+              { v: '2.5%', top: 30 },
+              { v: '2.0%', top: 90 },
+              { v: '1.5%', top: 150 },
+              { v: '1.0%', top: 210 },
+            ].map((l) => (
+              <span
+                key={l.v}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: l.top,
+                  transform: 'translateY(-50%)',
+                  fontSize: 12,
+                  letterSpacing: '0.24px',
+                  color: 'var(--dark-60)',
+                }}
+              >
+                {l.v}
+              </span>
+            ))}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: 6,
+              fontSize: 12,
+              letterSpacing: '0.24px',
+              color: 'var(--dark-60)',
+            }}
+          >
+            <span>Apr 24</span>
+            <span>Apr 30</span>
+            <span>May 7</span>
+          </div>
         </div>
       </div>
 
@@ -3178,8 +3555,14 @@ function PaidSearchRouteInner() {
   const { getState } = useDevState();
   const devState = getState('/h2/paid-search');
   const [view, setView] = useState<View>('campaigns');
+  const [openCampaignId, setOpenCampaignId] = useState<string | null>(null);
   const [anomaly, setAnomaly] = useState<AnomalyState>({ resolved: false, action: null });
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('campaigns');
+
+  const handleOpenCampaign = (id: string) => {
+    setOpenCampaignId(id);
+    setView('live');
+  };
 
   // Sync dev-state toggle → view. Cold = empty; steady = campaigns list.
   useEffect(() => {
@@ -3211,12 +3594,12 @@ function PaidSearchRouteInner() {
     });
   };
 
-  // The primary live campaign is the one drillable into the detail view.
-  // Title in the topbar reflects that campaign's name.
-  const liveCampaign = CAMPAIGNS.find((c) => c.primary) ?? CAMPAIGNS[0];
-  const isDetail = activeSubTab === 'campaigns' && view === 'live';
+  // Any campaign can be opened into the detail view; the topbar reflects
+  // whichever one is open.
+  const openCampaign = CAMPAIGNS.find((c) => c.id === openCampaignId) ?? null;
+  const isDetail = activeSubTab === 'campaigns' && view === 'live' && !!openCampaign;
 
-  const detailTitle = isDetail ? (
+  const detailTitle = isDetail && openCampaign ? (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <IconButton
         variant="ghost"
@@ -3227,9 +3610,9 @@ function PaidSearchRouteInner() {
       />
       <span aria-hidden style={{ width: 1, height: 16, background: 'var(--dark-15)' }} />
       <Heading level={1} style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: 'normal' }}>
-        {liveCampaign.name}
+        {openCampaign.name}
       </Heading>
-      <StatusPill tone="success" size="sm">Live</StatusPill>
+      <CampaignStatusPill status={openCampaign.status} />
     </div>
   ) : undefined;
 
@@ -3274,10 +3657,12 @@ function PaidSearchRouteInner() {
         <>
           {view === 'empty' && <EmptyState onStart={handleOpenWizard} />}
           {view === 'campaigns' && (
-            <CampaignsList anomaly={anomaly} onOpenLive={() => setView('live')} />
+            <CampaignsList anomaly={anomaly} onOpenCampaign={handleOpenCampaign} />
           )}
-          {view === 'live' && (
+          {view === 'live' && openCampaign && (
             <LiveCampaign
+              key={openCampaign.id}
+              campaign={openCampaign}
               anomaly={anomaly}
               onResolveAnomaly={handleResolveAnomaly}
             />
