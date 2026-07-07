@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useModals } from '@/components';
 import { DEV_STATE_PATHS, useDevState, type DevState } from './dev-state-context';
 import { useOnboarding } from './onboarding/onboarding-context';
-import { useApprovalAudience } from './approval-audience-context';
 import { CreativeReadyModal } from './CreativeReadyModal';
 import { AvatarAnnouncementModal } from './AvatarAnnouncementModal';
 import { CreativeReviewFlow } from './cold-flows/CreativeReviewFlow';
@@ -56,11 +55,13 @@ export function DevStatePanel() {
   const navigate = useNavigate();
   const { getState, setState } = useDevState();
   const { active: onboardingActive, open: openOnboarding } = useOnboarding();
-  const { audience, setAudience } = useApprovalAudience();
   const { openModal } = useModals();
-  // Owns the approve-creative takeover so it's reachable from any page via the
-  // panel's "Review" action (HomeColdView has its own copy for the real flow).
+  // Owns the approve-creative takeover so it's reachable from the panel's
+  // "Modal" action (HomeColdView has its own copy for the real flow).
   const [reviewOpen, setReviewOpen] = useState(false);
+  // Dev panel sits quietly in the sidebar by default; lift to full opacity on
+  // hover so it never competes with the real prototype chrome.
+  const [hovered, setHovered] = useState(false);
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -88,9 +89,6 @@ export function DevStatePanel() {
   // the global Onboarding toggle is always reachable.
   if (!pathname.startsWith('/h2')) return null;
   const hasPathState = DEV_STATE_PATHS.has(pathname);
-  // Approvals audience (DFY/DIY) is only meaningful on pages that branch on it.
-  // Reputation doesn't, so hide those toggles there to keep the panel focused.
-  const showAudience = pathname !== '/h2/reputation';
 
   const current = getState(pathname);
 
@@ -126,20 +124,21 @@ export function DevStatePanel() {
     }
   };
 
-  // Default: sit inside the sidebar's bottom area, just above the 2
-  // sticky bottom items (Invite Team Members + Help & Learn Blaze).
-  // ~88px clears those two NavItems + their container padding. Left 8
-  // tucks it inside the sidebar's left edge. Once the user drags, the
-  // saved x/y wins.
+  // Default: sit inside the sidebar's lower area, ~140px from the bottom so
+  // it clears both the sticky bottom items (Invite Team Members + Help &
+  // Learn Blaze) and the "What's New" promo panel above them. Left 8 tucks
+  // it inside the sidebar's left edge. Once the user drags, the saved x/y wins.
   const positionStyles = position
     ? { left: position.x, top: position.y }
-    : { left: 8, bottom: 88 };
+    : { left: 8, bottom: 140 };
 
   return (
     <>
     <div
       ref={panelRef}
       data-dev-panel
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         position: 'fixed',
         ...positionStyles,
@@ -153,11 +152,15 @@ export function DevStatePanel() {
         borderRadius: 6,
         padding: '3px 4px',
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.20)',
+        boxShadow: hovered ? '0 2px 10px rgba(0,0,0,0.20)' : 'none',
         userSelect: 'none',
         touchAction: 'none',
         rowGap: 4,
-        maxWidth: 340,
+        // Stay inside the 238px sidebar (8px inset each side) so the panel
+        // wraps within the rail instead of spilling into the content area.
+        maxWidth: 222,
+        opacity: hovered ? 1 : 0.5,
+        transition: 'opacity 120ms ease',
       }}
     >
       <div
@@ -210,24 +213,6 @@ export function DevStatePanel() {
           openOnboarding({ reset: true });
         }}
       />
-      {showAudience && (
-        <>
-          <Divider />
-          {/* Approvals audience: DFY (agency) vs DIY (self-serve customer). */}
-          <DevStateButton
-            label="steady"
-            text="DFY"
-            selected={audience === 'dfy'}
-            onClick={() => setAudience('dfy')}
-          />
-          <DevStateButton
-            label="steady"
-            text="DIY"
-            selected={audience === 'diy'}
-            onClick={() => setAudience('diy')}
-          />
-        </>
-      )}
       <Divider />
       {/* Jump straight to the creative-ready announcement / approve-creative
           flow without walking the whole onboarding → generating path. */}
@@ -235,11 +220,6 @@ export function DevStatePanel() {
         text="▸ Modal"
         title="Pop the 'creative is ready' announcement modal"
         onClick={() => openModal(CreativeReadyModal, { onReview: () => setReviewOpen(true) })}
-      />
-      <DevActionButton
-        text="▸ Review"
-        title="Open the approve-creative review flow"
-        onClick={() => setReviewOpen(true)}
       />
       <DevActionButton
         text="▸ Avatar"
