@@ -30,11 +30,14 @@ export function AssetCard({
   selectable,
   checked,
   onCheckedChange,
+  readOnly,
 }: {
   asset: GeneratedAsset;
   selectable?: boolean;
   checked?: boolean;
   onCheckedChange?: (next: boolean) => void;
+  /** Content-only: no per-piece approve/request controls or edit tools. */
+  readOnly?: boolean;
 }) {
   const [fb, setFb] = useState({ topic: '', caption: '', overlay: '' });
   const [panel, setPanel] = useState<'edit' | 'replace' | null>(null);
@@ -61,12 +64,14 @@ export function AssetCard({
             </span>
           )}
           {/* hover actions: edit design · replace · regenerate · delete */}
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2, display: 'flex', gap: 6, opacity: hover ? 1 : 0, transition: 'opacity 0.12s', pointerEvents: hover ? 'auto' : 'none' }}>
-            <MiniBtn title="Edit design" onClick={() => setPanel(panel === 'edit' ? null : 'edit')}><Edit1 size={14} /></MiniBtn>
-            <MiniBtn title="Replace" onClick={() => setPanel(panel === 'replace' ? null : 'replace')}><ImageArrows size={14} /></MiniBtn>
-            <MiniBtn title="Regenerate" onClick={() => setSeed((s) => s + 1)}><ArrowRefresh size={14} /></MiniBtn>
-            <MiniBtn title="Delete" onClick={() => setDeleted(true)}><Trash2 size={14} /></MiniBtn>
-          </div>
+          {!readOnly && (
+            <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2, display: 'flex', gap: 6, opacity: hover ? 1 : 0, transition: 'opacity 0.12s', pointerEvents: hover ? 'auto' : 'none' }}>
+              <MiniBtn title="Edit design" onClick={() => setPanel(panel === 'edit' ? null : 'edit')}><Edit1 size={14} /></MiniBtn>
+              <MiniBtn title="Replace" onClick={() => setPanel(panel === 'replace' ? null : 'replace')}><ImageArrows size={14} /></MiniBtn>
+              <MiniBtn title="Regenerate" onClick={() => setSeed((s) => s + 1)}><ArrowRefresh size={14} /></MiniBtn>
+              <MiniBtn title="Delete" onClick={() => setDeleted(true)}><Trash2 size={14} /></MiniBtn>
+            </div>
+          )}
           <Text variant="smallList" color={textOnly ? 'var(--dark-40)' : 'var(--light-100)'} style={{ position: 'relative', zIndex: 1, padding: '32px 16px 16px', textAlign: 'center', textShadow: textOnly ? 'none' : '0 1px 7px rgba(0,0,0,0.45)' }}>{textOnly ? asset.type : asset.overlay}</Text>
         </div>
         <div style={{ padding: 12 }}>
@@ -85,10 +90,12 @@ export function AssetCard({
           {/* caption underneath */}
           <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 2 }}>{asset.topic}</Text>
           <div style={{ margin: '0 0 8px' }}>
-            <HoverInput value={caption} onChange={setCaption} multiline placeholder="Caption…" style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, minHeight: 0 }} />
+            {readOnly
+              ? <Text variant="secondary" color="var(--dark-90)" style={{ display: 'block', lineHeight: 1.5 }}>{caption}</Text>
+              : <HoverInput value={caption} onChange={setCaption} multiline placeholder="Caption…" style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, minHeight: 0 }} />}
           </div>
           {/* approve / request changes */}
-          {decision === 'approved' ? (
+          {readOnly ? null : decision === 'approved' ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <StatusPill tone="success">Approved</StatusPill>
               <Button variant="ghost" size="sm" onPress={() => setDecision('none')}>Undo</Button>

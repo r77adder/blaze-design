@@ -33,7 +33,7 @@ import { OrganicSocialColdView } from './ColdViews';
  *    from ../CreatePostFlow.
  *    - Post → shared NewPostModal; created drafts map to calendar Posts via
  *      CT_TO_KIND and land on the visible week.
- *    - Campaign → navigates to /h2/campaigns (wizard pending campaigns deep port)
+ *    - Campaign → placeholder toast (kept in-workspace; no cross-prototype nav).
  *    - Add Strategy → placeholder toast.
  *  - Week nav: prev/next shifts the visible week (offset 0 = current week).
  *    Off-current-week shows empty cells (no posts).
@@ -562,8 +562,7 @@ function OrganicSocialRouteInner() {
       },
       onPickCampaign: () => {
         closeModal();
-        showToast({ message: 'Campaign wizard coming with campaigns deep port' });
-        navigate('/h2/campaigns');
+        showToast({ message: 'Campaign wizard coming soon' });
       },
       onPickStrategy: () => {
         closeModal();
@@ -574,7 +573,6 @@ function OrganicSocialRouteInner() {
 
   const topbarCenter = (
     <div style={{ display: 'inline-flex', gap: 6 }}>
-      <TabChip selected={false} onSelect={() => navigate('/h2/campaigns')}>Campaigns</TabChip>
       <TabChip selected={tab === 'calendar'} onSelect={() => setTab('calendar')}>Calendar</TabChip>
       <TabChip selected={tab === 'insights'} onSelect={() => setTab('insights')}>Insights</TabChip>
       <TabChip selected={tab === 'learnings'} onSelect={() => setTab('learnings')}>Learnings</TabChip>

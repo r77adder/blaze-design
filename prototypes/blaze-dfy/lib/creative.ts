@@ -20,6 +20,9 @@ export interface SampleItem extends GeneratedAsset {
   includeInReview: boolean;
   /** True when the AM uploaded their own asset instead of generating it. */
   custom?: boolean;
+  /** The client's per-piece verdict once they've reviewed (Reviewed state). */
+  reviewStatus?: 'approved' | 'changes';
+  reviewNote?: string;
 }
 
 /** One generation pass. Each "Generate" / "Regenerate all" appends a wave. */
@@ -129,6 +132,31 @@ export function customSample(type: AssetType = 'Still Image'): SampleItem {
 /** All samples across every wave the AM marked for the customer to review. */
 export const reviewItems = (waves: Wave[]): SampleItem[] =>
   waves.flatMap((w) => w.items).filter((it) => it.includeInReview);
+
+/** A finished, already-reviewed wave for the "Reviewed" demo state — every piece
+ *  is done + included, with a per-piece client verdict (a realistic mix of
+ *  approved and changes-requested). */
+export function reviewedWave(account: Account): Wave {
+  const wave = waveFromPlan(defaultPlan(account), account);
+  const verdicts: { status: 'approved' | 'changes'; note?: string }[] = [
+    { status: 'approved' },
+    { status: 'approved' },
+    { status: 'changes', note: 'Love the concept — warm up the tone and cut the caption in half.' },
+    { status: 'approved' },
+    { status: 'changes', note: 'Lead with the finished floor, not the install process.' },
+  ];
+  return {
+    ...wave,
+    label: 'First wave',
+    items: wave.items.map((it, i) => ({
+      ...it,
+      status: 'done' as const,
+      includeInReview: true,
+      reviewStatus: verdicts[i]?.status ?? 'approved',
+      reviewNote: verdicts[i]?.note,
+    })),
+  };
+}
 
 /* ─── Feedback summary: inferred taste + editable brand guidelines ────────── */
 

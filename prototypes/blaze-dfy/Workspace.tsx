@@ -6,12 +6,13 @@ import type { Account } from './lib/types';
 import type { Side } from './lib/router';
 import { WorkspaceShell, STEPS, useGo, type Go } from './nav';
 import { Home } from './Home';
-import { Strategy } from './Strategy';
+import { Strategy, GoalsOnboarding } from './Strategy';
 import { CreativeReview } from './CreativeReview';
 import { ClientPortal } from './ClientPortal';
 import { Settings, StrategyTab } from './Steady';
 import { ApprovalV2View, ApprovalsFilterControl } from './Approvals';
 import type { ApprovalTypeFilter, ApprovalStatusFilter } from './Approvals';
+import { Scorecard } from './Scorecard';
 import { useReview, type Phase } from './lib/review';
 import type { ComponentType } from 'react';
 // Faithfully-ported H2 feature pages (Awareness / Conversion). They live in
@@ -42,11 +43,13 @@ const H2_FEATURE_ROUTES: Record<string, ComponentType> = {
 };
 
 export function Workspace() {
-  const { accountId = '', side = 'am', section, sub } = useParams();
+  // The client experience lives in a separate prototype now — this workspace is
+  // always the AM side, so we ignore any `:side` URL segment.
+  const { accountId = '', section, sub } = useParams();
   const { pathname } = useLocation();
   const [account, setAccount] = useState<Account | null | undefined>(null);
   const go = useGo();
-  const { packet, strategyComplete } = useReview();
+  const { packet, goalsComplete } = useReview();
   const [apprFilter, setApprFilter] = useState<{ type: ApprovalTypeFilter; status: ApprovalStatusFilter }>({ type: 'all', status: 'all' });
   // AM→Client cover notes live here (not inside ApprovalV2View) so they survive
   // the AM↔Client toggle and show up on the client's side of the same workspace.
@@ -74,35 +77,41 @@ export function Workspace() {
   // Onboarding phases default to their intro; once shared for client review,
   // landing on the phase shows the done/review hub instead.
   const phaseDefault = (sec === 'strategy' || sec === 'creative')
-    ? (packet(sec as Phase) !== 'draft' ? 'done' : 'intro')
-    : sec === 'plan' ? 'scorecard' : sec === 'home' ? 'work' : sec === 'settings' ? 'general' : undefined;
+    ? (packet(sec as Phase) !== 'draft' ? 'done' : sec === 'strategy' ? 'context' : 'intro')
+    : sec === 'plan' ? 'scorecard'
+    : sec === 'scorecard' ? 'setup'
+    : sec === 'home' ? 'work'
+    : sec === 'settings' ? 'general'
+    : undefined;
   const effSub = steps ? (sub && steps.some((s) => s.key === sub) ? sub : phaseDefault) : undefined;
-  const s = side as Side;
+  const s: Side = 'am';
 
-  // Creative Review is locked until Strategy onboarding is finished.
-  const creativeUnlocked = account.phase >= 3 || strategyComplete;
+  // Creative Review is locked until the Goals & theme flow is finished
+  // (which itself comes after Strategy onboarding).
+  const creativeUnlocked = account.phase >= 3 || goalsComplete;
 
   let content;
-  if (sec === 'home') content = <Home account={account} clientView={s === 'client'} tab={effSub ?? 'work'} onTabChange={(t) => go(`/${account.id}/${s}/home/${t}`)} onOpenSection={(section) => go(`/${account.id}/${s}/${section}`)} />;
-  else if (sec === 'approvals') content = <ApprovalV2View clientView={s === 'client'} embedded initialReviewPostId={sub} typeFilter={apprFilter.type} statusFilter={apprFilter.status} campaignMessages={campaignMessages} onSendCampaignMessage={(id, message) => setCampaignMessages((m) => ({ ...m, [id]: message }))} />;
-  // Ported H2 Awareness / Conversion features — shared across AM & Client.
+  if (sec === 'home') content = <Home account={account} clientView={false} tab={effSub ?? 'work'} onTabChange={(t) => go(`/${account.id}/${s}/home/${t}`)} onOpenSection={(section) => go(`/${account.id}/${s}/${section}`)} />;
+  else if (sec === 'approvals') content = <ApprovalV2View clientView={false} embedded initialReviewPostId={sub} typeFilter={apprFilter.type} statusFilter={apprFilter.status} campaignMessages={campaignMessages} onSendCampaignMessage={(id, message) => setCampaignMessages((m) => ({ ...m, [id]: message }))} />;
+  // Ported H2 Awareness / Conversion features.
   else if (H2_FEATURE_ROUTES[sec]) { const Feature = H2_FEATURE_ROUTES[sec]; content = <Feature />; }
-  else if (s === 'client') content = <ClientPortal account={account} section={sec} clientView={s === 'client'} />;
-  // AM steady-state Brand Kit / Content Calendar reuse the shared portal views.
-  else if (sec === 'brand' || sec === 'calendar') content = <ClientPortal account={account} section={sec} clientView={s === 'client'} />;
+  // Steady-state Brand Kit / Content Calendar reuse the shared portal views.
+  else if (sec === 'brand' || sec === 'calendar') content = <ClientPortal account={account} section={sec} clientView={false} />;
   else if (sec === 'strategy') content = <Strategy account={account} sub={effSub!} go={go} />;
+  else if (sec === 'goals') content = <GoalsOnboarding account={account} go={go} />;
   else if (sec === 'creative') content = creativeUnlocked
     ? <CreativeReview account={account} sub={effSub!} go={go} />
     : <CreativeLocked account={account} go={go} />;
   else if (sec === 'plan') content = <StrategyTab account={account} sub={effSub!} />;
+  else if (sec === 'scorecard') content = <Scorecard account={account} sub={effSub!} go={go} />;
   else if (sec === 'settings') content = <Settings account={account} go={go} sub={effSub} />;
   else content = <SectionStub label={sec} />;
 
-  const topbarExtra = sec === 'approvals' && s === 'am'
+  const topbarExtra = sec === 'approvals'
     ? <ApprovalsFilterControl type={apprFilter.type} status={apprFilter.status} onChange={(n) => setApprFilter((f) => ({ ...f, ...n }))} />
     : undefined;
 
-  return <WorkspaceShell account={account} side={s} section={sec} sub={effSub} creativeLocked={s === 'am' && !creativeUnlocked} onReload={reload} topbarExtra={topbarExtra}>{content}</WorkspaceShell>;
+  return <WorkspaceShell account={account} side={s} section={sec} sub={effSub} creativeLocked={!creativeUnlocked} onReload={reload} topbarExtra={topbarExtra}>{content}</WorkspaceShell>;
 }
 
 function CreativeLocked({ account, go }: { account: Account; go: Go }) {

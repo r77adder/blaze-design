@@ -56,11 +56,12 @@ export function Create() {
   const go = useGo();
   const [step, setStep] = useState<Step>('details');
   const [scanning, setScanning] = useState(false);
-  const [name, setName] = useState('');
-  const [website, setWebsite] = useState('');
-  const [industry, setIndustry] = useState('');
-  const [location, setLocation] = useState('');
-  const [poc, setPoc] = useState({ name: '', email: '', phone: '', role: '' });
+  // Prefilled with a sample client so the prototype is quick to click through.
+  const [name, setName] = useState('Grain Design Flooring');
+  const [website, setWebsite] = useState('graindesignflooring.com');
+  const [industry, setIndustry] = useState('Hardwood & luxury vinyl flooring');
+  const [location, setLocation] = useState('Naperville, IL');
+  const [poc, setPoc] = useState({ name: 'Tyler Novak', email: 'tyler@graindesignflooring.com', phone: '(630) 555-0142', role: 'Owner' });
   const [amIdx, setAmIdx] = useState(0);
   const [accent, setAccent] = useState(ACCENT_SWATCHES[0]);
   const [billing, setBilling] = useState<BillingInfo>({ packages: [], term: 6, startDate: TODAY });

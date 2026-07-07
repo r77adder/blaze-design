@@ -1,14 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Text, useModals } from '@/components';
-import { TabChip, useToast } from '@/staging';
+import { TabChip, useToast, StatusPill } from '@/staging';
 import { PrototypeShell } from '../_shell';
 import type { SidebarSection } from '../_shell/Sidebar';
 import { getAccounts, handoffAccount } from './lib/api';
 import { HandoffModal } from './Handoff';
-import { ApprovalSettingsModal } from './Approvals';
+import { ApprovalSettingsModal, approvalsChangeRequests } from './Approvals';
 import { DevStatePanel } from './DevStatePanel';
 import { useDfyState } from './lib/dev-state';
+import { useReview, stepReviewCounts, type Phase } from './lib/review';
 import HomeIcon from '@/icons/20/Home';
 import ClipboardCheck from '@/icons/20/Approvals';
 import Compass from '@/icons/20/Globe';
@@ -25,6 +26,7 @@ import Target2 from '@/icons/20/Target2';
 import Templates from '@/icons/20/Templates';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
 import CalendarPost from '@/icons/20/CalendarPost';
+import Insights from '@/icons/20/BarChartSquare';
 import AudioSettings from '@/icons/20/AudioSettings';
 import type { Account } from './lib/types';
 import type { Side } from './lib/router';
@@ -48,9 +50,9 @@ const PhaseChromeContext = createContext<PhaseChrome | null>(null);
 export const usePhaseChrome = () => useContext(PhaseChromeContext);
 
 /** Lets a page inject chrome into the WorkspaceShell topbar — sub-tabs into the
- *  center, page actions (e.g. "Generate report") next to the AM/Client switch.
+ *  center, page actions (e.g. "Generate report") on the right.
  *  Used by the ported H2 pages' H2Layout shim. */
-interface WorkspaceChrome { setTopbarCenter: (n: ReactNode) => void; setTopbarRight: (n: ReactNode) => void }
+interface WorkspaceChrome { setTopbarCenter: (n: ReactNode) => void; setTopbarRight: (n: ReactNode) => void; setFullBleed: (b: boolean) => void }
 const WorkspaceChromeContext = createContext<WorkspaceChrome | null>(null);
 export const useWorkspaceChrome = () => useContext(WorkspaceChromeContext);
 
@@ -104,12 +106,8 @@ export const STEPS: Record<string, Step[]> = {
     { key: 'insights', label: 'Insights' },
   ],
   strategy: [
-    { key: 'intro', label: 'Intro', hidden: true },
     { key: 'context', label: 'Brand context' },
     { key: 'creative', label: 'Creative guidelines' },
-    { key: 'swipe', label: 'Swipe file' },
-    { key: 'audit', label: 'Competitive audit' },
-    { key: 'goals', label: 'Goals & theme' },
     { key: 'done', label: 'Done', hidden: true },
   ],
   creative: [
@@ -129,6 +127,11 @@ export const STEPS: Record<string, Step[]> = {
   settings: [
     { key: 'general', label: 'General' },
     { key: 'billing', label: 'Billing' },
+  ],
+  scorecard: [
+    { key: 'setup', label: 'Online presence' },
+    { key: 'competitors', label: 'Competitors' },
+    { key: 'view', label: 'Scorecard' },
   ],
 };
 
@@ -151,9 +154,6 @@ const CONVERSION_GROUP: NavGroup = { label: 'Conversion', items: [
   { label: 'AI Receptionist', icon: UserProfileGroup, section: 'sdr' },
   { label: 'Reputation', icon: Clapperboard, section: 'reputation' },
 ] };
-/** Ported feature sections render the same for AM & Client, so the AM/Client
- *  switch should stay on the current section instead of dropping to home. */
-const FEATURE_SECTIONS = [...AWARENESS_GROUP.items, ...CONVERSION_GROUP.items].map((i) => i.section);
 
 const AM_SECTIONS: NavGroup[] = [
   { items: [
@@ -164,25 +164,27 @@ const AM_SECTIONS: NavGroup[] = [
   CONVERSION_GROUP,
   { label: 'Settings', items: [
     { label: 'Brand Kit', icon: Palette, section: 'brand' },
+    { label: 'Scorecard', icon: Insights, section: 'scorecard' },
     { label: 'Strategy', icon: Lightning, section: 'plan' },
     { label: 'Account', icon: Settings, section: 'settings' },
     { label: 'Content Settings', icon: AudioSettings, section: 'content-settings' },
   ] },
 ];
-/** Client side mirrors the AM sidebar exactly. */
-const CLIENT_SECTIONS: NavGroup[] = AM_SECTIONS;
 
-/** Step tabs rendered into the top nav bar (PrototypeShell topbarCenter). */
-function StepTabs({ steps, active, onSelect, showIndex = true }: { steps: Step[]; active: string; onSelect: (k: string) => void; showIndex?: boolean }) {
+/** Step tabs rendered into the top nav bar (PrototypeShell topbarCenter).
+ *  `flags` marks steps whose client feedback needs review (a count pill). */
+function StepTabs({ steps, active, onSelect, showIndex = true, flags }: { steps: Step[]; active: string; onSelect: (k: string) => void; showIndex?: boolean; flags?: Record<string, number> }) {
   const visible = steps.filter((s) => !s.hidden);
   return (
     <div style={{ display: 'flex', gap: 4, overflowX: 'auto' }}>
       {visible.map((s, i) => {
         const on = s.key === active;
+        const flag = flags?.[s.key] ?? 0;
         return (
           <button key={s.key} onClick={() => onSelect(s.key)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: on ? 500 : 400, whiteSpace: 'nowrap', background: 'transparent', color: on ? 'var(--dark-90)' : 'var(--dark-60)' }}>
             {showIndex && <span style={{ width: 16, height: 16, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, background: on ? 'var(--dark-90)' : 'var(--dark-6)', color: on ? 'var(--light-100)' : 'var(--dark-60)' }}>{i + 1}</span>}
             {s.label}
+            {flag > 0 && <StatusPill tone="warning" size="sm">{flag}</StatusPill>}
           </button>
         );
       })}
@@ -191,7 +193,7 @@ function StepTabs({ steps, active, onSelect, showIndex = true }: { steps: Step[]
 }
 
 /** Common workspace chrome: PrototypeShell + DFY sidebar (react-router hrefs)
- *  + AM/Client switch + optional step tabs in the nav bar. */
+ *  + optional step tabs in the nav bar. */
 export function WorkspaceShell({
   account, side, section, sub, creativeLocked, onReload, topbarExtra, children,
 }: {
@@ -205,7 +207,8 @@ export function WorkspaceShell({
   // actions up here via the H2Layout shim).
   const [injectedCenter, setInjectedCenter] = useState<ReactNode>(null);
   const [injectedRight, setInjectedRight] = useState<ReactNode>(null);
-  const wsChrome = useMemo(() => ({ setTopbarCenter: setInjectedCenter, setTopbarRight: setInjectedRight }), []);
+  const [fullBleed, setFullBleed] = useState(false);
+  const wsChrome = useMemo(() => ({ setTopbarCenter: setInjectedCenter, setTopbarRight: setInjectedRight, setFullBleed }), []);
 
   const openHandoff = () => openModal(HandoffModal, {
     account,
@@ -217,10 +220,17 @@ export function WorkspaceShell({
     },
   });
   const { state: dfyState } = useDfyState();
-  const groups = side === 'am' ? AM_SECTIONS : CLIENT_SECTIONS;
+  const { packet, feedback } = useReview();
+  const groups = AM_SECTIONS;
   const allItems = groups.flatMap((g) => g.items);
   const active = allItems.find((n) => n.section === section)?.label ?? allItems[0].label;
   const steps = STEPS[section];
+
+  // In a stepped review phase, once the client returns feedback, flag each step
+  // tab with its count of changes + edits so the AM can review in place.
+  const stepFlags: Record<string, number> = (side === 'am' && (section === 'strategy' || section === 'creative') && packet(section as Phase) === 'submitted')
+    ? Object.fromEntries((steps ?? []).map((st) => { const c = stepReviewCounts(feedback(section as Phase), section as Phase, st.key); return [st.key, c.changes + c.edited]; }))
+    : {};
 
   // Flat sections (Home / Settings / steady-state Strategy) render their sub-tabs
   // as the standard TabChip strip — the same rounded-pill tab the rest of the app
@@ -230,7 +240,7 @@ export function WorkspaceShell({
     <div style={{ display: 'inline-flex', gap: 6 }}>
       {(steps ?? []).filter((st) => !st.hidden).map((st) => {
         const count = withCounts
-          ? (st.key === 'meetings' ? HOME_TAB_COUNTS.meetings : st.key === 'work' ? (side === 'client' ? HOME_TAB_COUNTS.clientWork : HOME_TAB_COUNTS.work) : 0)
+          ? (st.key === 'meetings' ? HOME_TAB_COUNTS.meetings : st.key === 'work' ? HOME_TAB_COUNTS.work : 0)
           : 0;
         return (
           <TabChip key={st.key} selected={sub === st.key} count={count > 0 ? count : undefined} onSelect={() => go(`/${account.id}/${side}/${section}/${st.key}`)}>{st.label}</TabChip>
@@ -241,10 +251,10 @@ export function WorkspaceShell({
 
   const topbarCenter = !sub ? undefined
     // Cold Home is a single setup checklist — no Workstream/Insights tabs.
-    : section === 'home' ? (dfyState === 'cold' && side === 'am' ? undefined : chipStrip(true))
+    : section === 'home' ? (dfyState !== 'steady' && side === 'am' ? undefined : chipStrip(true))
     : section === 'settings' || section === 'plan' ? chipStrip(false)
     : steps
-      ? <StepTabs steps={steps} active={sub} onSelect={(k) => go(`/${account.id}/${side}/${section}/${k}`)} />
+      ? <StepTabs steps={steps} active={sub} onSelect={(k) => go(`/${account.id}/${side}/${section}/${k}`)} flags={stepFlags} />
       : undefined;
 
   // Top "All accounts" link returns to the AM directory from anywhere; the rest
@@ -260,10 +270,24 @@ export function WorkspaceShell({
     }),
   }));
 
+  // In a steady account, surface the client's requested-changes count right
+  // next to the "Approvals" title (mirrors the red requested-change pill).
+  const requestedChanges = section === 'approvals' && dfyState === 'steady' ? approvalsChangeRequests().length : 0;
+  const titleNode = requestedChanges > 0 ? (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+      <span style={{ fontFamily: "'Sohne', sans-serif", fontWeight: 500, fontSize: 16, color: 'var(--dark-90)' }}>{active}</span>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 99, background: 'var(--red-90)', color: '#fff', fontSize: 10, fontWeight: 600, padding: '0 5px', lineHeight: 1 }}>{requestedChanges}</span>
+        <span style={{ fontSize: 13, color: 'var(--red-90)', fontWeight: 500 }}>{requestedChanges === 1 ? 'requested change' : 'requested changes'}</span>
+      </span>
+    </span>
+  ) : active;
+
   return (
    <WorkspaceChromeContext.Provider value={wsChrome}>
     <PrototypeShell
-      title={active}
+      title={titleNode}
+      fullBleed={fullBleed}
       workspaceName={account.name}
       onWorkspacePress={() => setMenuOpen((o) => !o)}
       sidebarSections={sidebarSections}
@@ -277,19 +301,9 @@ export function WorkspaceShell({
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           {topbarExtra}
           {injectedRight}
-          {section === 'approvals' && side === 'am' && (
+          {section === 'approvals' && (
             <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
           )}
-          <div style={{ display: 'inline-flex', gap: 4, padding: 3, background: 'var(--dark-3)', borderRadius: 8 }}>
-          {(['am', 'client'] as const).map((s) => {
-            const on = s === side;
-            // Stay on the current section when it exists for both sides (Approvals,
-            // Calendar, Brand Kit, Home) — otherwise fall back to the side's root.
-            const shared = ['home', 'approvals', 'calendar', 'brand', ...FEATURE_SECTIONS].includes(section);
-            const to = shared ? `/${account.id}/${s}/${section}${sub ? `/${sub}` : ''}` : `/${account.id}/${s}`;
-            return <button key={s} onClick={() => go(to)} style={{ border: on ? '1px solid var(--dark-8)' : '1px solid transparent', background: on ? 'var(--light-100)' : 'transparent', color: on ? 'var(--dark-90)' : 'var(--dark-60)', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer' }}>{s === 'am' ? 'AM' : 'Client'}</button>;
-          })}
-          </div>
         </div>
       }
     >

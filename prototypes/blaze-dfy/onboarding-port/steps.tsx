@@ -1,16 +1,17 @@
 import { useState, type ReactNode } from 'react';
 import { Heading, Text, Button } from '@/components';
-import { Card, Chip } from '@/staging';
+import { Card, Chip, Pill } from '@/staging';
 import ThumbUp from '@/icons/20/ThumbUp';
 import ThumbDown from '@/icons/20/ThumbDown';
 import Edit1 from '@/icons/20/Edit1';
-import { TextInput as Input, TextArea as Textarea, SectionHeading, AddLink, RemoveX } from '../ui';
+import { TextInput as Input, TextArea as Textarea, SectionHeading, AddLink, RemoveX, TokenInput } from '../ui';
 import {
   GOALS,
   DEFAULT_PLAN,
   MAJOR_EVENTS,
   PLAN_CHANNELS,
   SWIPE_FILE,
+  type Goals,
   type MajorEvent,
   type SwipeItem,
 } from './data';
@@ -205,17 +206,184 @@ function SwipePreview({ item }: { item: SwipeItem }) {
 
 function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, alignItems: 'start', marginBottom: 12 }}>
-      <Text variant="largeList" style={{ paddingTop: 10 }}>
-        {label}
-      </Text>
+    <div style={{ marginBottom: 16 }}>
+      <Text variant="largeList" style={{ display: 'block', marginBottom: 8 }}>{label}</Text>
       <div>{children}</div>
     </div>
   );
 }
 
+/** Read-only value display used when a Goals field is not being edited. */
+function ReadValue({ children }: { children: ReactNode }) {
+  return <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>{children || '—'}</Text>;
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmtMonth = (w: string) => { const [y, m] = (w || '').split('-'); return m ? `${MONTHS[+m - 1]} ${y}` : (w || '—'); };
+
+/** Section metadata shared by the pre-submission GoalsStep and the client
+ *  review, so both render the exact same headings in the same order. */
+export interface GoalsSectionMeta { id: string; title: string; note?: string; desc?: string }
+export const GOALS_SECTIONS: GoalsSectionMeta[] = [
+  { id: 'success', title: 'What does success look like?', note: 'Drafted from your goals and the audit.' },
+  { id: 'history', title: 'Marketing history', note: 'Summarized from your intake and current channels.' },
+  { id: 'events', title: 'Major events', desc: 'Dates worth planning campaigns around. Tag each as company or industry.' },
+  { id: 'plan', title: 'Channels to develop plans around', note: "Pre-selected from the audit's biggest gaps — paid-first." },
+];
+
+/** Goals section headline — H3 with a divider underneath (except Major events),
+ *  and an optional right slot for the review's verdict buttons. Shared by the
+ *  pre-submission GoalsStep and the client review so both stay identical. */
+export function GoalsSectionHead({ id, title, right }: { id: string; title: string; right?: ReactNode }) {
+  const divider = id !== 'events';
+  return (
+    <div style={{ marginBottom: divider ? 20 : 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <Heading level={3} style={{ margin: 0 }}>{title}</Heading>
+        {right}
+      </div>
+      {divider && <div style={{ marginTop: 12, borderTop: '1px solid var(--dark-8)' }} />}
+    </div>
+  );
+}
+
+/** Per-subsection edit controller — the review passes this so each field toggles
+ *  its own read/edit state. Absent (pre-submission) → always editable. */
+export interface EditControl { isEditing: (key: string) => boolean; toggle: (key: string) => void }
+interface EditableProps { ctrl?: EditControl; onEdit?: () => void }
+
+/** One subsection. Pre-submission (no ctrl): always-editable, label-above-field.
+ *  Review (ctrl): read-only with a per-subsection Edit toggle to reveal `edit`. */
+function SubField({ ctrl, fieldKey, label, read, edit }: { ctrl?: EditControl; fieldKey: string; label?: string; read: ReactNode; edit: ReactNode }) {
+  if (!ctrl) return label ? <FieldRow label={label}>{edit}</FieldRow> : <>{edit}</>;
+  const editing = ctrl.isEditing(fieldKey);
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: label ? 'space-between' : 'flex-end', alignItems: 'center', gap: 12, marginBottom: label ? 8 : 8 }}>
+        {label && <Text variant="largeList">{label}</Text>}
+        <Button size="xs" variant={editing ? 'primary' : 'secondary'} frontIcon={Edit1} onPress={() => ctrl.toggle(fieldKey)}>{editing ? 'Done' : 'Edit'}</Button>
+      </div>
+      {editing ? edit : read}
+    </div>
+  );
+}
+
+/** Each Goals section's fields, extracted so the pre-submission screen (always
+ *  editable) and the client review (read-only, per-subsection Edit) share one
+ *  rendering. */
+export function SuccessFields({ g, setG, ctrl, onEdit }: EditableProps & { g: Goals; setG: (v: Goals) => void }) {
+  return (
+    <>
+      {([['First 30 days', 'thirty'], ['By 60 days', 'sixty'], ['By 90 days', 'ninety']] as const).map(([label, key]) => (
+        <SubField key={key} ctrl={ctrl} fieldKey={key} label={label}
+          read={<ReadValue>{g[key]}</ReadValue>}
+          edit={<Textarea value={g[key]} onChange={(e) => { setG({ ...g, [key]: e.target.value }); onEdit?.(); }} style={{ minHeight: 68 }} />}
+        />
+      ))}
+    </>
+  );
+}
+
+export function HistoryFields({ g, setG, channels, setChannels, ctrl, onEdit }: EditableProps & { g: Goals; setG: (v: Goals) => void; channels: string[]; setChannels: (v: string[]) => void }) {
+  const rows: [string, keyof Goals][] = [["What's driving growth?", 'drivingGrowth'], ["What's worked?", 'worked'], ["What hasn't worked?", 'notWorked']];
+  return (
+    <>
+      <SubField ctrl={ctrl} fieldKey="channels" label="Channels they're on"
+        read={<TokenInput tokens={channels} setTokens={setChannels} placeholder="Add channel" readOnly />}
+        edit={<TokenInput tokens={channels} setTokens={(v) => { setChannels(v); onEdit?.(); }} placeholder="Add channel" />}
+      />
+      {rows.map(([label, key]) => (
+        <SubField key={key} ctrl={ctrl} fieldKey={key} label={label}
+          read={<ReadValue>{g[key] as string}</ReadValue>}
+          edit={<Textarea value={g[key] as string} onChange={(e) => { setG({ ...g, [key]: e.target.value } as Goals); onEdit?.(); }} style={{ minHeight: 60 }} />}
+        />
+      ))}
+    </>
+  );
+}
+
+export function EventsFields({ events, setEvents, ctrl, onEdit }: EditableProps & { events: MajorEvent[]; setEvents: (v: MajorEvent[]) => void }) {
+  const set = (v: MajorEvent[]) => { setEvents(v); onEdit?.(); };
+  const read = (
+    <div style={{ borderRadius: 10, border: '1px solid var(--dark-8)', overflow: 'hidden' }}>
+      {events.map((e, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderTop: i ? '1px solid var(--dark-4)' : 'none' }}>
+          <Text variant="secondary" color="var(--dark-90)" style={{ flex: 1 }}>{e.label}</Text>
+          <Text variant="metadata" color="var(--dark-60)">{fmtMonth(e.when)}</Text>
+          <Pill size="md">{e.tag}</Pill>
+        </div>
+      ))}
+    </div>
+  );
+  const edit = (
+    <>
+      <div style={{ borderRadius: 10, border: '1px solid var(--dark-8)', overflow: 'hidden' }}>
+        {events.map((e, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: i ? '1px solid var(--dark-4)' : 'none' }}>
+            <input
+              value={e.label}
+              onChange={(ev) => set(events.map((x, j) => (j === i ? { ...x, label: ev.target.value } : x)))}
+              placeholder="Event"
+              style={{ flex: 1, border: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 15, color: 'var(--dark-90)', outline: 'none' }}
+            />
+            <input
+              type="month"
+              value={e.when}
+              onChange={(ev) => set(events.map((x, j) => (j === i ? { ...x, when: ev.target.value } : x)))}
+              style={{ borderRadius: 6, border: '1px solid var(--dark-8)', padding: '5px 8px', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-90)' }}
+            />
+            <div style={{ display: 'flex', padding: 2, borderRadius: 6, background: 'var(--dark-3)' }}>
+              {(['Company', 'Industry'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => set(events.map((x, j) => (j === i ? { ...x, tag: t } : x)))}
+                  style={{
+                    padding: '3px 8px',
+                    borderRadius: 4,
+                    fontFamily: 'inherit',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    background: e.tag === t ? 'var(--light-100)' : 'transparent',
+                    color: e.tag === t ? 'var(--dark-90)' : 'var(--dark-60)',
+                    border: e.tag === t ? '1px solid var(--dark-8)' : '1px solid transparent',
+                  }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <RemoveX onClick={() => set(events.filter((_, j) => j !== i))} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', marginTop: 8 }}>
+        <AddLink label="Add event" onClick={() => set([...events, { label: '', when: '', tag: 'Company' }])} />
+      </div>
+    </>
+  );
+  return <SubField ctrl={ctrl} fieldKey="events" read={read} edit={edit} />;
+}
+
+export function PlanFields({ plan, setPlan, ctrl, onEdit }: EditableProps & { plan: string[]; setPlan: (v: string[]) => void }) {
+  const read = <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{plan.map((c) => <Pill key={c} size="xl">{c}</Pill>)}</div>;
+  const edit = (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {PLAN_CHANNELS.map((c) => {
+        const on = plan.includes(c);
+        return (
+          <Chip key={c} selected={on} onSelectionChange={(sel: boolean) => { setPlan(sel ? [...plan, c] : plan.filter((x) => x !== c)); onEdit?.(); }}>
+            {c}
+          </Chip>
+        );
+      })}
+    </div>
+  );
+  return <SubField ctrl={ctrl} fieldKey="plan" read={read} edit={edit} />;
+}
+
 export function GoalsStep() {
-  const [g, setG] = useState({ ...GOALS });
+  const [g, setG] = useState<Goals>({ ...GOALS });
   const [channels, setChannels] = useState<string[]>(GOALS.channels);
   const [plan, setPlan] = useState<string[]>(DEFAULT_PLAN);
   const [events, setEvents] = useState<MajorEvent[]>(MAJOR_EVENTS);
@@ -223,134 +391,21 @@ export function GoalsStep() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
       <div>
-        <SectionHeading title="What does success look like?" note="Drafted from your goals and the audit." />
-        {([['First 30 days', 'thirty'], ['By 60 days', 'sixty'], ['By 90 days', 'ninety']] as const).map(([label, key]) => (
-          <FieldRow key={key} label={label}>
-            <Textarea value={g[key]} onChange={(e) => setG({ ...g, [key]: e.target.value })} style={{ minHeight: 68 }} />
-          </FieldRow>
-        ))}
+        <GoalsSectionHead id={GOALS_SECTIONS[0].id} title={GOALS_SECTIONS[0].title} />
+        <SuccessFields g={g} setG={setG} />
       </div>
-
       <div>
-        <SectionHeading title="Marketing history" note="Summarized from your intake and current channels." />
-        <FieldRow label="Channels they're on">
-          <TokenInput tokens={channels} setTokens={setChannels} placeholder="Add channel" />
-        </FieldRow>
-        <FieldRow label="What's driving growth?">
-          <Textarea value={g.drivingGrowth} onChange={(e) => setG({ ...g, drivingGrowth: e.target.value })} style={{ minHeight: 60 }} />
-        </FieldRow>
-        <FieldRow label="What's worked?">
-          <Textarea value={g.worked} onChange={(e) => setG({ ...g, worked: e.target.value })} style={{ minHeight: 60 }} />
-        </FieldRow>
-        <FieldRow label="What hasn't worked?">
-          <Textarea value={g.notWorked} onChange={(e) => setG({ ...g, notWorked: e.target.value })} style={{ minHeight: 60 }} />
-        </FieldRow>
+        <GoalsSectionHead id={GOALS_SECTIONS[1].id} title={GOALS_SECTIONS[1].title} />
+        <HistoryFields g={g} setG={setG} channels={channels} setChannels={setChannels} />
       </div>
-
       <div>
-        <SectionHeading title="Major events" desc="Dates worth planning campaigns around. Tag each as company or industry." />
-        <div style={{ borderRadius: 10, border: '1px solid var(--dark-8)', overflow: 'hidden' }}>
-          {events.map((e, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: i ? '1px solid var(--dark-4)' : 'none' }}>
-              <input
-                value={e.label}
-                onChange={(ev) => setEvents(events.map((x, j) => (j === i ? { ...x, label: ev.target.value } : x)))}
-                placeholder="Event"
-                style={{ flex: 1, border: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 15, color: 'var(--dark-90)', outline: 'none' }}
-              />
-              <input
-                type="month"
-                value={e.when}
-                onChange={(ev) => setEvents(events.map((x, j) => (j === i ? { ...x, when: ev.target.value } : x)))}
-                style={{ borderRadius: 6, border: '1px solid var(--dark-8)', padding: '5px 8px', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-90)' }}
-              />
-              <div style={{ display: 'flex', padding: 2, borderRadius: 6, background: 'var(--dark-3)' }}>
-                {(['Company', 'Industry'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setEvents(events.map((x, j) => (j === i ? { ...x, tag: t } : x)))}
-                    style={{
-                      padding: '3px 8px',
-                      borderRadius: 4,
-                      fontFamily: 'inherit',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      background: e.tag === t ? 'var(--light-100)' : 'transparent',
-                      color: e.tag === t ? 'var(--dark-90)' : 'var(--dark-60)',
-                      border: e.tag === t ? '1px solid var(--dark-8)' : '1px solid transparent',
-                    }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              <RemoveX onClick={() => setEvents(events.filter((_, j) => j !== i))} />
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', marginTop: 8 }}>
-          <AddLink label="Add event" onClick={() => setEvents([...events, { label: '', when: '', tag: 'Company' }])} />
-        </div>
+        <GoalsSectionHead id={GOALS_SECTIONS[2].id} title={GOALS_SECTIONS[2].title} />
+        <EventsFields events={events} setEvents={setEvents} />
       </div>
-
       <div>
-        <SectionHeading title="Channels to develop plans around" note="Pre-selected from the audit's biggest gaps — paid-first." />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {PLAN_CHANNELS.map((c) => {
-            const on = plan.includes(c);
-            return (
-              <Chip key={c} selected={on} onSelectionChange={(sel: boolean) => setPlan(sel ? [...plan, c] : plan.filter((x) => x !== c))}>
-                {c}
-              </Chip>
-            );
-          })}
-        </div>
+        <GoalsSectionHead id={GOALS_SECTIONS[3].id} title={GOALS_SECTIONS[3].title} />
+        <PlanFields plan={plan} setPlan={setPlan} />
       </div>
-    </div>
-  );
-}
-
-function TokenInput({ tokens, setTokens, placeholder }: { tokens: string[]; setTokens: (t: string[]) => void; placeholder: string }) {
-  const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState('');
-  const add = () => {
-    const t = draft.trim();
-    if (t && !tokens.includes(t)) setTokens([...tokens, t]);
-    setDraft('');
-    setAdding(false);
-  };
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, paddingTop: 6 }}>
-      {tokens.map((t) => (
-        <Chip key={t} size="md" deletable onDelete={() => setTokens(tokens.filter((x) => x !== t))}>
-          {t}
-        </Chip>
-      ))}
-      {adding ? (
-        <div style={{ width: 180 }}>
-          <Input
-            autoFocus
-            inputSize="sm"
-            fullWidth
-            value={draft}
-            placeholder={placeholder}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={add}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') add();
-              if (e.key === 'Escape') {
-                setDraft('');
-                setAdding(false);
-              }
-            }}
-          />
-        </div>
-      ) : (
-        <Chip size="md" variant="add" onClick={() => setAdding(true)}>
-          {placeholder}
-        </Chip>
-      )}
     </div>
   );
 }

@@ -19,7 +19,7 @@ export interface H2LayoutProps {
   fullBleed?: boolean;
 }
 
-export function H2Layout({ children, title, topbarCenter, topbarRight }: H2LayoutProps) {
+export function H2Layout({ children, title, topbarCenter, topbarRight, fullBleed }: H2LayoutProps) {
   const chrome = useWorkspaceChrome();
   const titleNode = title != null && typeof title !== 'string' ? title : null;
   const center = titleNode || topbarCenter ? (
@@ -35,11 +35,13 @@ export function H2Layout({ children, title, topbarCenter, topbarRight }: H2Layou
   useEffect(() => {
     chrome?.setTopbarCenter(center);
     chrome?.setTopbarRight(topbarRight ?? null);
+    chrome?.setFullBleed(!!fullBleed);
   });
   // Clear when the page unmounts (e.g. navigating to another section).
   useEffect(() => () => {
     chrome?.setTopbarCenter(null);
     chrome?.setTopbarRight(null);
+    chrome?.setFullBleed(false);
   }, [chrome]);
 
   return children as ReactNode;

@@ -1,39 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Heading, Text, Button } from '@/components';
-import { Card, Chip, Select } from '@/staging';
-import Plus from '@/icons/20/Plus';
+import { Card, Select } from '@/staging';
 import ThumbUp from '@/icons/20/ThumbUp';
 import ThumbDown from '@/icons/20/ThumbDown';
-import type { Account, Goals, BrandColor, BrandFont, ScoreStatus, SwipeItem } from './lib/types';
+import ChevronDown from '@/icons/16/ChevronDown';
+import ChevronRight from '@/icons/16/ChevronRight';
+import type { Account, BrandColor, BrandFont, SwipeItem } from './lib/types';
 import * as S from './lib/strategy';
 import { updateAccountBrand } from './lib/api';
 import { PhaseScreen, type Go } from './nav';
 import { useReview } from './lib/review';
-import { AmReviewPanel } from './Review';
-import { Field, TextInput, TextArea, SectionHeading, AddLink, RemoveX, EditableMarkdown, FontFamilySelect, FieldCard, IntroPage, SuccessState, ScorecardHeader, GaugeRing, gradientFor, ColorSwatch } from './ui';
-import { SwipeFilePort, MarketingGoalsPort } from './onboarding-port';
-
-function statusColor(s: ScoreStatus) { return s === 'bad' ? 'var(--red-70)' : s === 'warn' ? 'var(--status-review)' : 'var(--status-approved)'; }
+import { AmReviewPanel, SectionFeedback, SubsectionFeedback } from './Review';
+import { Field, TextInput, TextArea, SectionHeading, AddLink, RemoveX, EditableMarkdown, FontFamilySelect, FieldCard, SuccessState, gradientFor, ColorSwatch } from './ui';
+import { MarketingGoalsPort } from './onboarding-port';
 
 export function Strategy({ account, sub, go }: { account: Account; sub: string; go: Go }) {
   const { setStrategyComplete } = useReview();
   useEffect(() => { if (sub === 'done') setStrategyComplete(true); }, [sub, setStrategyComplete]);
-  if (sub === 'intro') {
-    return (
-      <IntroPage
-        title="Build the strategy"
-        intro={`We've pre-filled everything from ${account.name}'s scan, uploads, and a competitive audit. Review and adjust each part, then choose the first campaign theme.`}
-        steps={[
-          { label: 'Brand context', desc: 'Business, customers, services, and founder story.' },
-          { label: 'Creative guidelines', desc: 'Taglines, tone, do’s & don’ts, and visual identity.' },
-          { label: 'Swipe file', desc: 'React to competitor work and add your own references.' },
-          { label: 'Competitive audit', desc: 'See where the easy wins are across four pillars.' },
-          { label: 'Goals & theme', desc: 'Set success metrics, channels, and the first campaign.' },
-        ]}
-        action={<Button size="lg" onPress={() => go(`/${account.id}/am/strategy/context`)}>Start strategy</Button>}
-      />
-    );
-  }
   if (sub === 'done') {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -41,39 +24,123 @@ export function Strategy({ account, sub, go }: { account: Account; sub: string; 
           title="Strategy locked in"
           body="Everything you reviewed is saved and now powers the workspace. Here's where each part lives."
           stored={[
-            { label: 'Brand context, guidelines & swipe file', where: 'Brand Kit' },
-            { label: 'Competitive audit', where: 'Scorecard' },
-            { label: 'Goals & channels', where: 'Blaze Plan' },
+            { label: 'Brand context & creative guidelines', where: 'Brand Kit' },
           ]}
-          action={<Button size="lg" onPress={() => go(`/${account.id}/am/creative`)}>Continue to Creative Review</Button>}
+          action={<Button size="lg" onPress={() => go(`/${account.id}/am/goals`)}>Continue to Goals & theme</Button>}
         />
-        <AmReviewPanel account={account} phase="strategy" go={go} />
+        <AmReviewPanel account={account} phase="strategy" go={go} stepped />
       </div>
     );
   }
   return (
-    <PhaseScreen account={account} side="am" section="strategy" sub={sub} go={go} nextSection="creative" nextLabel="Continue to Creative Review" maxWidth={920}>
+    <PhaseScreen account={account} side="am" section="strategy" sub={sub} go={go} nextSection="goals" nextLabel="Continue to Goals & theme" maxWidth={920}>
       {sub === 'context' && <BrandContext account={account} />}
       {sub === 'creative' && <Creative account={account} />}
-      {sub === 'swipe' && <SwipeFilePort />}
-      {sub === 'audit' && <Audit account={account} />}
-      {sub === 'goals' && <MarketingGoalsPort />}
     </PhaseScreen>
   );
 }
 
+/** Goals & theme — a standalone one-page flow that runs after Strategy and
+ *  before Creative Review, with its own client-review send. */
+export function GoalsOnboarding({ account, go }: { account: Account; go: Go }) {
+  const { setGoalsComplete } = useReview();
+  // Full-bleed sticky footer — mirrors the PhaseScreen frame used across the
+  // other onboarding pages: content scrolls, the footer bar spans the whole
+  // body width and stays pinned to the bottom.
+  return (
+    <div style={{ height: 'calc(100% + 48px)', margin: -24, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        <MarketingGoalsPort />
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px 32px' }}>
+          <AmReviewPanel account={account} phase="goals" go={go} />
+        </div>
+      </div>
+      <div style={{ flexShrink: 0, borderTop: '1px solid var(--dark-8)', background: 'var(--light-100)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <Button variant="secondary" size="lg" onPress={() => go(`/${account.id}/am/strategy`)}>Back to Strategy</Button>
+        <Button size="lg" onPress={() => { setGoalsComplete(true); go(`/${account.id}/am/creative`); }}>Continue to Creative Review</Button>
+      </div>
+    </div>
+  );
+}
+
+const BUSINESS_TYPES = ['Service', 'Product', 'SaaS', 'E-commerce', 'Local business', 'Agency', 'Nonprofit'];
+const CONTENT_STRATEGIES = ['Thought leadership', 'Educational', 'Promotional', 'Community building', 'Product-led'];
+// Optional deep-dive sections, collapsed by default — the AM expands the ones
+// worth filling in. "Capture all the sections" per the brief, design TBD.
+const ADDITIONAL_CONTEXT: { key: string; label: string }[] = [
+  { key: 'competitive', label: 'Competitive landscape' },
+  { key: 'visual', label: 'Visual identity' },
+  { key: 'vocab', label: 'Industry vocabulary & KPIs' },
+  { key: 'angles', label: 'Social content angles' },
+  { key: 'trends', label: 'Industry trends' },
+  { key: 'reviews', label: 'Customer reviews' },
+];
+
 function BrandContext({ account }: { account: Account }) {
   const md = S.brandContextMarkdown(account);
   const [v, setV] = useState({ overview: md.overview, segments: md.segments, services: md.services, bio: md.bio });
+  const [businessType, setBusinessType] = useState('Service');
+  const [contentStrategy, setContentStrategy] = useState('Thought leadership');
+  const [openContext, setOpenContext] = useState<string | null>(null);
+  const [extra, setExtra] = useState<Record<string, string>>({});
   const fields: [string, keyof typeof v][] = [['Business overview', 'overview'], ['Customer segments', 'segments'], ['Services / products', 'services'], ['Founder bio', 'bio']];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* section: page headline (moved here from the removed intro step) */}
+      <div style={{ marginBottom: 8 }}>
+        <Heading level={2} style={{ marginTop: 0, marginBottom: 8 }}>Build the strategy</Heading>
+        <Text variant="primary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.6 }}>
+          We've pre-filled everything from {account.name}'s scan and uploads. Review and adjust each part, then continue to the creative guidelines.
+        </Text>
+      </div>
+
+      {/* section: business type + content strategy */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Field label="Business type">
+          <Select value={businessType} onChange={setBusinessType} options={BUSINESS_TYPES.map((o) => ({ value: o, label: o }))} size="md" fullWidth />
+        </Field>
+        <Field label="Content strategy">
+          <Select value={contentStrategy} onChange={setContentStrategy} options={CONTENT_STRATEGIES.map((o) => ({ value: o, label: o }))} size="md" fullWidth />
+        </Field>
+      </div>
+
+      {/* section: core brand context */}
       {fields.map(([label, key]) => (
         <div key={key}>
           <Heading level={3} style={{ margin: '0 0 8px' }}>{label}</Heading>
           <TextArea value={v[key]} onChange={(e) => setV({ ...v, [key]: e.target.value })} style={{ minHeight: 110 }} />
+          <SubsectionFeedback account={account} phase="strategy" sectionId="context" subKey={key} />
         </div>
       ))}
+
+      {/* section: additional context — collapsible deep-dive areas */}
+      <div style={{ marginTop: 8 }}>
+        <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 10 }}>Additional context</Text>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {ADDITIONAL_CONTEXT.map((s) => {
+            const open = openContext === s.key;
+            return (
+              <div key={s.key} style={{ border: '1px solid var(--dark-8)', borderRadius: 8, overflow: 'hidden' }}>
+                <div
+                  onClick={() => setOpenContext(open ? null : s.key)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenContext(open ? null : s.key); } }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', cursor: 'pointer', background: 'var(--dark-2)' }}
+                >
+                  {open ? <ChevronDown size={18} color="var(--dark-60)" /> : <ChevronRight size={18} color="var(--dark-60)" />}
+                  <Heading level={5} style={{ margin: 0 }}>{s.label}</Heading>
+                </div>
+                {open && (
+                  <div style={{ padding: 14 }}>
+                    <TextArea value={extra[s.key] ?? ''} onChange={(e) => setExtra({ ...extra, [s.key]: e.target.value })} placeholder={`Notes on ${s.label.toLowerCase()}…`} style={{ minHeight: 90 }} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -91,6 +158,7 @@ function Creative({ account }: { account: Account }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
       <div>
         <SectionHeading title="Taglines" />
+        <SectionFeedback account={account} phase="strategy" sectionId="guidelines" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {taglines.map((t, i) => <div key={i} style={{ display: 'flex', gap: 8 }}><TextInput value={t} onChange={(e) => setTaglines(taglines.map((x, j) => j === i ? e.target.value : x))} /><RemoveX size="lg" onClick={() => setTaglines(taglines.filter((_, j) => j !== i))} /></div>)}
           <AddLink variant="tertiary" label="Add tagline" onClick={() => setTaglines([...taglines, ''])} />
@@ -106,6 +174,7 @@ function Creative({ account }: { account: Account }) {
       </div>
       <div>
         <SectionHeading title="Visual identity" desc="From the brand kit — click to edit colors and fonts." />
+        <SectionFeedback account={account} phase="strategy" sectionId="brand" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {colors.map((c, i) => (
@@ -262,138 +331,6 @@ function SwipeFileStep({ account }: { account: Account }) {
           </div>
         </Card>
       </div>
-    </div>
-  );
-}
-
-function Audit({ account }: { account: Account }) {
-  const data = S.scorecard(account);
-  return (
-    <div>
-      <ScorecardHeader data={data} accountName={account.name} />
-      <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 16 }}>Scanned from your website, social, Google Business Profile, and local competitors.</Text>
-      {data.areas.map((area) => (
-        <div key={area.number} style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <GaugeRing score={area.score} max={area.maxScore} status={area.status}><span style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-90)' }}>{area.score}</span></GaugeRing>
-            <div style={{ flex: 1 }}>
-              <Heading level={4} style={{ margin: 0 }}>{area.eyebrow}</Heading>
-              <Text variant="metadata" style={{ color: statusColor(area.status) }}>{area.score}/{area.maxScore}</Text>
-            </div>
-            {area.platforms.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {area.platforms.map((p) => <span key={p} style={{ padding: '4px 10px', borderRadius: 99, fontSize: 12, background: 'var(--dark-3)', color: 'var(--dark-80)', border: '1px solid var(--dark-4)' }}>{p}</span>)}
-              </div>
-            )}
-          </div>
-          <Card>
-            {area.checks.map((c, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 0', borderTop: i ? '1px solid var(--dark-4)' : 'none' }}>
-                <span style={{ color: statusColor(c.status), fontWeight: 700 }}>{c.status === 'good' ? '✓' : c.status === 'warn' ? '!' : '✕'}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><Text variant="largeList">{c.title}</Text><Text variant="metadata" color="var(--dark-40)">{c.pts}</Text></div>
-                  <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block' }}>{c.desc}</Text>
-                </div>
-              </div>
-            ))}
-          </Card>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-const PLAN_CHANNELS = ['Local SEO', 'Organic Social', 'Meta Ads', 'Paid Search', 'Reputation', 'UGC', 'Landing Pages', 'Email'];
-interface EventRow { label: string; when: string; tag: 'Company' | 'Industry' }
-
-function GoalsStep({ account }: { account: Account }) {
-  const init = S.goals(account);
-  const [g, setG] = useState<Goals>(init);
-  const [channels, setChannels] = useState<string[]>(init.channels);
-  const [plan, setPlan] = useState<string[]>(['Local SEO', 'Meta Ads', 'Reputation', 'Email']);
-  const [events, setEvents] = useState<EventRow[]>([
-    ...init.companyEvents.map((e) => ({ label: e.label, when: e.date.slice(0, 7), tag: 'Company' as const })),
-    ...init.industryEvents.map((e) => ({ label: e.label, when: e.date.slice(0, 7), tag: 'Industry' as const })),
-  ]);
-  const themes = S.campaignThemes(account);
-  const rec = themes.find((t) => t.recommended) ?? themes[0];
-  const [theme, setTheme] = useState({ title: rec.title, angle: rec.angle });
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
-      <div>
-        <SectionHeading title="What does success look like?" note="Drafted from your goals and the audit." />
-        {([['First 30 days', 'thirty'], ['By 60 days', 'sixty'], ['By 90 days', 'ninety']] as const).map(([label, key]) => (
-          <FieldRow key={key} label={label}><TextArea value={g[key]} onChange={(e) => setG({ ...g, [key]: e.target.value })} style={{ minHeight: 68 }} /></FieldRow>
-        ))}
-      </div>
-
-      <div>
-        <SectionHeading title="Marketing history" note="Summarized from your intake answers and current channels." />
-        <FieldRow label="Channels they're on"><TokenInput tokens={channels} setTokens={setChannels} placeholder="Add channel" /></FieldRow>
-        <FieldRow label="What's driving growth?"><TextArea value={g.drivingGrowth} onChange={(e) => setG({ ...g, drivingGrowth: e.target.value })} style={{ minHeight: 60 }} /></FieldRow>
-        <FieldRow label="What's worked historically?"><TextArea value={g.worked} onChange={(e) => setG({ ...g, worked: e.target.value })} style={{ minHeight: 60 }} /></FieldRow>
-        <FieldRow label="What hasn't worked?"><TextArea value={g.notWorked} onChange={(e) => setG({ ...g, notWorked: e.target.value })} style={{ minHeight: 60 }} /></FieldRow>
-      </div>
-
-      <div>
-        <SectionHeading title="Major events" desc="Dates worth planning campaigns around. Tag each as company or industry." />
-        <div style={{ borderRadius: 10, border: '1px solid var(--dark-8)', overflow: 'hidden' }}>
-          {events.map((e, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: i ? '1px solid var(--dark-4)' : 'none' }}>
-              <input value={e.label} onChange={(ev) => setEvents(events.map((x, j) => j === i ? { ...x, label: ev.target.value } : x))} placeholder="Event" style={{ flex: 1, border: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 15, color: 'var(--dark-90)', outline: 'none' }} />
-              <input type="month" value={e.when} onChange={(ev) => setEvents(events.map((x, j) => j === i ? { ...x, when: ev.target.value } : x))} style={{ borderRadius: 6, border: '1px solid var(--dark-8)', padding: '5px 8px', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-90)' }} />
-              <div style={{ display: 'flex', padding: 2, borderRadius: 6, background: 'var(--dark-3)' }}>
-                {(['Company', 'Industry'] as const).map((t) => <button key={t} onClick={() => setEvents(events.map((x, j) => j === i ? { ...x, tag: t } : x))} style={{ padding: '3px 8px', borderRadius: 4, fontFamily: 'inherit', fontSize: 12, fontWeight: 500, cursor: 'pointer', background: e.tag === t ? 'var(--light-100)' : 'transparent', color: e.tag === t ? 'var(--dark-90)' : 'var(--dark-60)', border: e.tag === t ? '1px solid var(--dark-8)' : '1px solid transparent' }}>{t}</button>)}
-              </div>
-              <RemoveX onClick={() => setEvents(events.filter((_, j) => j !== i))} />
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', marginTop: 8 }}><Button variant="secondary" frontIcon={Plus} onPress={() => setEvents([...events, { label: '', when: '', tag: 'Company' }])}>Add event</Button></div>
-      </div>
-
-      <div>
-        <SectionHeading title="Channels to develop plans around" note="Pre-selected from the audit's biggest gaps." />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {PLAN_CHANNELS.map((c) => { const on = plan.includes(c); return <Chip key={c} selected={on} onSelectionChange={(sel) => setPlan(sel ? [...plan, c] : plan.filter((x) => x !== c))}>{c}</Chip>; })}
-        </div>
-      </div>
-
-      <div>
-        <SectionHeading title="First campaign theme" desc="Suggested — edit it or pick another." />
-        <Card style={{ borderColor: 'var(--action-50)' }}>
-          <Field label="Theme title"><TextInput value={theme.title} onChange={(e) => setTheme({ ...theme, title: e.target.value })} /></Field>
-          <div style={{ marginTop: 12 }}><Field label="Angle"><TextArea value={theme.angle} onChange={(e) => setTheme({ ...theme, angle: e.target.value })} style={{ minHeight: 60 }} /></Field></div>
-        </Card>
-        <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Text variant="metadata" color="var(--dark-40)">Other suggestions:</Text>
-          {themes.filter((t) => t.title !== theme.title).map((t) => <button key={t.id} onClick={() => setTheme({ title: t.title, angle: t.angle })} style={{ padding: '6px 12px', borderRadius: 99, border: '1px solid var(--dark-8)', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: 'var(--dark-80)' }}>✦ {t.title}</button>)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, alignItems: 'start', marginBottom: 12 }}>
-      <Text variant="largeList" style={{ paddingTop: 10 }}>{label}</Text>
-      <div>{children}</div>
-    </div>
-  );
-}
-
-function TokenInput({ tokens, setTokens, placeholder }: { tokens: string[]; setTokens: (t: string[]) => void; placeholder: string }) {
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, paddingTop: 6 }}>
-      {tokens.map((t, i) => (
-        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 4px 4px 12px', borderRadius: 99, background: 'rgba(1,121,207,0.10)', border: '1px solid rgba(1,121,207,0.22)' }}>
-          <input value={t} onChange={(e) => setTokens(tokens.map((x, j) => j === i ? e.target.value : x))} style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, color: 'var(--status-posting)', width: `${Math.max(4, t.length + 1)}ch` }} />
-          <button onClick={() => setTokens(tokens.filter((_, j) => j !== i))} style={{ width: 20, height: 20, borderRadius: 99, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--status-posting)' }}>✕</button>
-        </span>
-      ))}
-      <button onClick={() => setTokens([...tokens, ''])} style={{ padding: '5px 12px', borderRadius: 99, border: '1px dashed var(--dark-12)', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: 'var(--dark-60)' }}>+ {placeholder}</button>
     </div>
   );
 }

@@ -22,16 +22,18 @@ import Comment from '@/icons/20/Comment';
 import type { Account, AssetType, BrandColor, BrandFont } from './lib/types';
 import * as S from './lib/strategy';
 import { updateAccountBrand } from './lib/api';
-import { SectionHeading, EditableMarkdown, TextInput, TextArea, FontFamilySelect, AddLink, RemoveX, gradientFor, ColorSwatch } from './ui';
-import { ClientReview } from './Review';
+import { SectionHeading, EditableMarkdown, TextInput, TextArea, FontFamilySelect, AddLink, RemoveX, TokenInput, gradientFor, ColorSwatch } from './ui';
 import { MeetingsView } from './Home';
+import { ScorecardClientView } from './Scorecard';
 
+// AM steady-state reuse only — the workspace routes Brand Kit / Content Calendar
+// here. The old client-portal sections (review-*, approvals, insights) are no
+// longer reachable now that the client lives in a separate prototype.
 export function ClientPortal({ account, section, clientView }: { account: Account; section: string; clientView: boolean }) {
-  if (section === 'review-strategy') return <ClientReview account={account} phase="strategy" />;
-  if (section === 'review-creative') return <ClientReview account={account} phase="creative" />;
   if (section === 'approvals') return <WeeklyContent account={account} />;
   if (section === 'calendar') return <ContentCalendar account={account} />;
   if (section === 'insights') return <Performance account={account} />;
+  if (section === 'scorecard') return <ScorecardClientView account={account} />;
   return <BrandKit account={account} clientView={clientView} />;
 }
 
@@ -271,20 +273,6 @@ function EditRows({ items, setItems, placeholder, addLabel }: { items: string[];
         </div>
       ))}
       <AddLink label={addLabel} onClick={() => setItems([...items, ''])} />
-    </div>
-  );
-}
-
-function TokenInput({ tokens, setTokens, placeholder }: { tokens: string[]; setTokens: (t: string[]) => void; placeholder: string }) {
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-      {tokens.map((t, i) => (
-        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 4px 5px 12px', borderRadius: 99, background: 'rgba(1,121,207,0.10)', border: '1px solid rgba(1,121,207,0.22)' }}>
-          <input value={t} onChange={(e) => setTokens(tokens.map((x, j) => j === i ? e.target.value : x))} style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 14, color: 'var(--status-posting)', width: `${Math.max(4, t.length + 1)}ch` }} />
-          <button onClick={() => setTokens(tokens.filter((_, j) => j !== i))} style={{ width: 20, height: 20, borderRadius: 99, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--status-posting)' }}>✕</button>
-        </span>
-      ))}
-      <button onClick={() => setTokens([...tokens, ''])} style={{ padding: '6px 12px', borderRadius: 99, border: '1px dashed var(--dark-12)', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, color: 'var(--dark-60)' }}>+ {placeholder}</button>
     </div>
   );
 }

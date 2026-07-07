@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { useDfyState } from './lib/dev-state';
+import { useReview } from './lib/review';
 
 /**
  * Floating designer-only control pinned to the workspace sidebar's bottom-left.
@@ -34,6 +35,7 @@ function clamp(value: number, min: number, max: number) {
 
 export function DevStatePanel() {
   const { state, setState } = useDfyState();
+  const { seedReviewed, clearReview } = useReview();
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -130,8 +132,9 @@ export function DevStatePanel() {
       >
         ⋮⋮
       </div>
-      <DevStateButton text="Cold" selected={state === 'cold'} onClick={() => setState('cold')} />
-      <DevStateButton text="Steady" selected={state === 'steady'} onClick={() => setState('steady')} />
+      <DevStateButton text="Cold" selected={state === 'cold'} onClick={() => { clearReview(); setState('cold'); }} />
+      <DevStateButton text="Reviewed" selected={state === 'reviewed'} onClick={() => { seedReviewed(); setState('reviewed'); }} />
+      <DevStateButton text="Steady" selected={state === 'steady'} onClick={() => { clearReview(); setState('steady'); }} />
     </div>
   );
 }

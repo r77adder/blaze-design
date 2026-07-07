@@ -1,28 +1,32 @@
 import { useEffect, useState } from 'react';
 import { Text, Button, Heading } from '@/components';
-import { Card, StatusPill, Chip } from '@/staging';
+import { Card, StatusPill, Chip, useToast } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import ThumbUp from '@/icons/20/ThumbUp';
 import ThumbDown from '@/icons/20/ThumbDown';
 import type { Account, AssetType, WeekTheme } from './lib/types';
 import * as S from './lib/strategy';
 import { PhaseScreen, type Go } from './nav';
-import { AmReviewPanel } from './Review';
+import { AmReviewPanel, SectionFeedback } from './Review';
 import { SectionHeading, TextArea, AddLink, RemoveX, HoverInput, IntroPage, SuccessState } from './ui';
 import { AssetCard } from './AssetCard';
 import { CreativePlan } from './CreativePlan';
 import { BrandGuidelinesEditor } from './CreativeFeedbackExtras';
-import { reviewItems, type Wave, type SampleItem } from './lib/creative';
+import { reviewItems, reviewedWave, type Wave, type SampleItem } from './lib/creative';
 import { useReview } from './lib/review';
 
 const ORDER: AssetType[] = ['Still Image', 'Video', 'Carousel', 'Story', 'Search Ad', 'Meta Ad', 'Blog Post', 'Email'];
 
 export function CreativeReview({ account, sub, go }: { account: Account; sub: string; go: Go }) {
   const theme = (S.campaignThemes(account).find((t) => t.recommended) ?? S.campaignThemes(account)[0]).title;
+  const { setCreativeComplete, packet } = useReview();
+  // In the Reviewed state the client has already reviewed a generated wave, so
+  // seed one — the Visual review shows the content and the Plan step shows the
+  // per-piece verdicts.
+  const reviewed = packet('creative') === 'submitted';
   // Generation waves live here so they persist across sub-steps — the items the
   // AM marks in the Plan step flow into the Visual review step.
-  const [waves, setWaves] = useState<Wave[]>([]);
-  const { setCreativeComplete } = useReview();
+  const [waves, setWaves] = useState<Wave[]>(() => (reviewed ? [reviewedWave(account)] : []));
   useEffect(() => { if (sub === 'done') setCreativeComplete(true); }, [sub, setCreativeComplete]);
 
   if (sub === 'intro') {
@@ -50,20 +54,56 @@ export function CreativeReview({ account, sub, go }: { account: Account; sub: st
             { label: 'Creative preferences from feedback', where: 'Brand Kit' },
             { label: 'Weekly schedule & campaign themes', where: 'Content Calendar' },
           ]}
-          action={<Button size="lg" onPress={() => go(`/${account.id}/client`)}>Open client portal</Button>}
         />
-        <AmReviewPanel account={account} phase="creative" go={go} />
+        <AmReviewPanel account={account} phase="creative" go={go} stepped />
       </div>
     );
   }
 
   return (
     <PhaseScreen account={account} side="am" section="creative" sub={sub} go={go} prevSection="strategy" nextLabel="Finish & open client portal" maxWidth={960}>
-      {sub === 'plan' && <CreativePlan account={account} waves={waves} setWaves={setWaves} />}
+      {sub === 'calendar' && <SectionFeedback account={account} phase="creative" sectionId="calendar" />}
+      {sub === 'plan' && (reviewed
+        ? <CreativeReviewResults account={account} items={reviewItems(waves)} />
+        : <CreativePlan account={account} waves={waves} setWaves={setWaves} />)}
       {sub === 'storyboard' && <Storyboard account={account} items={reviewItems(waves)} onGoToPlan={() => go(`/${account.id}/am/creative/plan`)} />}
       {sub === 'feedback' && <FeedbackSummary account={account} />}
       {sub === 'calendar' && <Calendar account={account} />}
     </PhaseScreen>
+  );
+}
+
+/** Reviewed state — the Plan step shows the client's per-piece verdict on the
+ *  generated wave, so the AM can regenerate the flagged pieces and re-send. */
+function CreativeReviewResults({ account, items }: { account: Account; items: SampleItem[] }) {
+  const { showToast } = useToast();
+  const approved = items.filter((i) => i.reviewStatus === 'approved').length;
+  const changes = items.filter((i) => i.reviewStatus === 'changes').length;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <SectionHeading
+        title="Client review"
+        desc={`${account.poc.name} reviewed each piece — ${approved} approved, ${changes} with changes. Regenerate the flagged ones, then send another round.`}
+      />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, alignItems: 'start' }}>
+        {items.map((it) => (
+          <div key={it.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <AssetCard asset={it} readOnly />
+            {it.reviewStatus === 'changes' ? (
+              <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--light-100)', border: '1px solid var(--dark-6)' }}>
+                <StatusPill tone="danger">Changes requested</StatusPill>
+                <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 6, lineHeight: 1.5 }}>{it.reviewNote}</Text>
+              </div>
+            ) : (
+              <div style={{ padding: '4px 2px' }}><StatusPill tone="success">Approved</StatusPill></div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+        <Button size="lg" onPress={() => showToast({ message: `Sent to ${account.poc.name} for another review.` })}>Send for another review</Button>
+      </div>
+    </div>
   );
 }
 
@@ -82,7 +122,7 @@ function Storyboard({ account, items, onGoToPlan }: { account: Account; items: S
           <section key={t}>
             <SectionHeading title={t} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, alignItems: 'start' }}>
-              {list.map((a) => <AssetCard key={a.id} asset={a} />)}
+              {list.map((a) => <AssetCard key={a.id} asset={a} readOnly />)}
             </div>
           </section>
         ))

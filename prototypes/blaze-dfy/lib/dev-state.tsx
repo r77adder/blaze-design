@@ -8,8 +8,13 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
  *
  * Defaults to `'steady'` so the workspace renders its full populated state
  * until the designer explicitly flips it cold.
+ *
+ * `'reviewed'` is a variant of cold onboarding where the client has already
+ * returned a mix of approved / changes-requested / edited feedback across all
+ * three reviews. It renders the same cold surfaces; the feedback itself is
+ * seeded via the review context (see DevStatePanel).
  */
-export type DfyState = 'cold' | 'steady';
+export type DfyState = 'cold' | 'steady' | 'reviewed';
 
 interface DfyStateContextValue {
   state: DfyState;

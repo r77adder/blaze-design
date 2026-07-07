@@ -5,6 +5,7 @@ import type { StackModalProps } from '@/components';
 import { Avatar, Callout, Card, Checkbox, Pill, Select, StatusPill, TabChip, Tabs, useToast } from '@/staging';
 import { TextInput, TextArea } from './ui';
 import { CampaignModal } from './CampaignModal';
+import { approvalsChangeRequests, approvalsApprovedGroups } from './Approvals';
 import Approvals from '@/icons/20/Approvals';
 import CalendarPost from '@/icons/20/CalendarPost';
 import Clock1 from '@/icons/20/Clock1';
@@ -379,14 +380,18 @@ interface ClientRequest {
   cta: { label: string; section: string };
 }
 
-const CLIENT_REQUESTS: ClientRequest[] = [
-  {
-    id: 'cr1', client: 'sarah', sourceLabel: 'Change request', icon: Approvals, time: '2h ago',
-    title: 'Sarah requested changes on the June carousel',
-    note: '“Can the lead slide open with the sage Lakeway exterior instead of the navy one? That’s the look we want for summer.”',
-    cta: { label: 'Open Carousel', section: 'approvals/4' },
-  },
-];
+// Derived from the shared client-review data in Approvals — the location is
+// the Approvals tab and the CTA deep-links straight to the post's preview.
+const CLIENT_REQUESTS: ClientRequest[] = approvalsChangeRequests().map((r) => ({
+  id: `cr-${r.postId}`,
+  client: 'sarah',
+  sourceLabel: 'Approvals',
+  icon: Approvals,
+  time: r.time,
+  title: `${r.author} requested changes on the ${r.typeLabel.toLowerCase()} in ${r.campaign}`,
+  note: r.comment,
+  cta: { label: r.type === 'carousel' ? 'Open Carousel' : 'Open Post', section: `approvals/${r.postId}` },
+}));
 
 // ─── CLIENT WORKSTREAM (Workstream tab, client side) ───────────────
 // What the client sees: led by the few things needing their approval
@@ -1324,8 +1329,8 @@ export function MeetingsView({ clientView }: { clientView: boolean }) {
 export function Home({ account, clientView, tab, onTabChange, onOpenSection }: { account: Account; clientView: boolean; tab: string; onTabChange: (t: string) => void; onOpenSection?: (section: string) => void }) {
   const { state } = useDfyState();
   // Cold state = the AM activation/onboarding checklist. Client cold falls
-  // through to the normal feed for now.
-  if (state === 'cold' && !clientView) return <HomeCold account={account} onOpenSection={onOpenSection} />;
+  // through to the normal feed for now. 'reviewed' is cold + seeded feedback.
+  if (state !== 'steady' && !clientView) return <HomeCold account={account} onOpenSection={onOpenSection} />;
   return <HomeSteady clientView={clientView} tab={tab} onTabChange={onTabChange} onOpenSection={onOpenSection} />;
 }
 
@@ -1845,7 +1850,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
               return (
                 <Card key={r.id} padding="none" style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <StatusPill tone="accent" size="sm">Client request</StatusPill>
+                    <StatusPill tone="danger" size="sm">Requested changes</StatusPill>
                     <Text variant="metadata" color="var(--dark-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                       <RIcon /> {r.sourceLabel}
                     </Text>
@@ -1856,7 +1861,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                   </div>
                   <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 10 }}>{r.title}</Text>
                   <div style={{ background: 'var(--dark-4)', borderRadius: 8, padding: '9px 12px' }}>
-                    <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5 }}>{r.note}</Text>
+                    <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5 }}>{`“${r.note}”`}</Text>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
                     <Button variant="secondary" size="sm" onPress={() => openSection(r.cta.section)}>{r.cta.label}</Button>
@@ -1864,6 +1869,38 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                 </Card>
               );
             })}
+
+            {/* Approved content — the client-approved posts, grouped by campaign */}
+            {workFilter === 'all' && personFilter === 'all' && approvalsApprovedGroups().map((g) => (
+              <Card key={`approved-${g.campaign}`} padding="none" style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <StatusPill tone="success" size="sm">Approved</StatusPill>
+                  <Text variant="metadata" color="var(--dark-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <Approvals /> Approvals
+                  </Text>
+                  <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <Avatar src={PEOPLE.sarah.img} fallback={PEOPLE.sarah.short.slice(0, 2)} size={16} />
+                    <Text variant="metadata" color="var(--dark-40)">2h ago</Text>
+                  </span>
+                </div>
+                <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 12 }}>
+                  {`${g.count} ${g.count === 1 ? 'post' : 'posts'} approved in ${g.campaign}`}
+                </Text>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                  {g.thumbs.map((src, i) => (
+                    <div key={i} style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 8, border: '1px solid var(--dark-8)', background: `center/cover no-repeat url('${src}')` }} />
+                  ))}
+                  {g.count > g.thumbs.length && (
+                    <div style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 8, background: 'var(--dark-4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text variant="metadata" color="var(--dark-60)">{`+${g.count - g.thumbs.length}`}</Text>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button variant="secondary" size="sm" onPress={() => openSection('approvals')}>View in Approvals</Button>
+                </div>
+              </Card>
+            ))}
 
             {/* Fathom meeting — one card; click it to review & act on the tasks in the modal */}
             {(workFilter === 'all' || workFilter === 'plans') && personFilter === 'all' && (() => {

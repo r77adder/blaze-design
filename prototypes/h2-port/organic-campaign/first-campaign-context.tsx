@@ -231,10 +231,9 @@ export function FirstCampaignProvider({ children }: { children: ReactNode }) {
     setState('/h2/organic-social', 'steady');
     setOpen(false);
     showToast({ message: 'Your first campaigns are publishing now' });
-    // Default the user to the Campaigns page rather than the Organic
-    // Social calendar — campaigns are the artifact they just created.
-    navigate('/h2/campaigns');
-  }, [setState, showToast, navigate]);
+    // Stay in the blaze-dfy workspace — the now-steady Organic Campaigns
+    // calendar shows the campaigns they just created.
+  }, [setState, showToast]);
 
   const value = useMemo<FirstCampaignContextValue>(
     () => ({ open, step, data, setData, start, close, next, back, goTo, finish }),

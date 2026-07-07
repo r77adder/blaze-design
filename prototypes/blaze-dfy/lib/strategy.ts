@@ -43,6 +43,7 @@ function servicesFor(a: Account): string[] {
     'myfitstrip': ['Group HIIT classes', 'Personal training', 'Nutrition coaching', 'Membership plans'],
     'magid-inc': ['Roof replacement', 'Kitchen & bath remodels', 'Storm damage repair', 'Additions'],
     'hollyfit': ['1:1 coaching', 'Small-group training', 'Online programs', 'Nutrition plans'],
+    'grain-design-flooring': ['Hardwood installation', 'Luxury vinyl plank', 'Refinishing & restaining', 'Commercial flooring'],
     'hawaii-hideaways': ['Vacation rental management', 'Guest concierge', 'Cleaning & turnover', 'Owner reporting'],
     'clean-supplements': ['Daily greens', 'Protein blends', 'Subscriptions', 'Bundles'],
   };

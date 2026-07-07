@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
 import { Text, Heading, Button, IconButton } from '@/components';
-import { Select, TextField } from '@/staging';
+import { Select, TextField, Pill, Chip } from '@/staging';
 import Plus from '@/icons/20/Plus';
 import Trash2 from '@/icons/20/Trash2';
+import Close from '@/icons/12/Close';
 import styles from './ui.module.scss';
 
 /** Native color picker restyled as a clean rounded color chip — no browser
@@ -81,7 +82,7 @@ export function SectionHeading({ title, note, desc, right }: { title: string; no
         {right}
       </div>
       {desc && <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 4 }}>{desc}</Text>}
-      {note && <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 2 }}>{note}</Text>}
+      {note && <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 4 }}>{note}</Text>}
     </div>
   );
 }
@@ -94,6 +95,99 @@ export function AddLink({ label, onClick, variant = 'secondary' }: { label: stri
 /** Remove-row action — secondary trash IconButton. Matches the Create flow. */
 export function RemoveX({ onClick, size = 'md', variant = 'secondary' }: { onClick: () => void; size?: 'sm' | 'md' | 'lg'; variant?: 'secondary' | 'tertiary' | 'ghost' }) {
   return <IconButton icon={Trash2} variant={variant} size={size} title="Remove" onPress={onClick} />;
+}
+
+/** Editable token list — each value is a static DS `Pill` with an inline remove
+ *  ×; adding opens an inline field and commits to a new pill. The pills are
+ *  display tokens (not pressable), the "add" affordance is the DS add Chip.
+ *  `readOnly` renders the pills with no remove × and no add affordance. */
+export function TokenInput({ tokens, setTokens, placeholder, readOnly }: { tokens: string[]; setTokens: (t: string[]) => void; placeholder: string; readOnly?: boolean }) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState('');
+  const add = () => {
+    const t = draft.trim();
+    if (t && !tokens.includes(t)) setTokens([...tokens, t]);
+    setDraft('');
+    setAdding(false);
+  };
+  const remove = (t: string) => setTokens(tokens.filter((x) => x !== t));
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+      {tokens.map((t) => (
+        <Pill key={t} size="xl">
+          {t}
+          {!readOnly && (
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label={`Remove ${t}`}
+              onClick={() => remove(t)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); remove(t); } }}
+              style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', marginLeft: 4, color: 'var(--dark-40)' }}
+            >
+              <Close size={14} />
+            </span>
+          )}
+        </Pill>
+      ))}
+      {readOnly ? null : adding ? (
+        <div style={{ width: 200 }}>
+          <TextInput
+            autoFocus
+            inputSize="md"
+            fullWidth
+            value={draft}
+            placeholder={placeholder}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={add}
+            onKeyDown={(e) => { if (e.key === 'Enter') add(); if (e.key === 'Escape') { setDraft(''); setAdding(false); } }}
+          />
+        </div>
+      ) : (
+        <Chip size="lg" variant="add" onClick={() => setAdding(true)}>{placeholder}</Chip>
+      )}
+    </div>
+  );
+}
+
+/** Lightweight hover tooltip — wraps a trigger and shows a dark bubble on hover.
+ *  For short explanatory text (e.g. a "?" help affordance). Wraps long copy. */
+export function Tooltip({ label, children, width = 300, placement = 'below' }: { label: ReactNode; children: ReactNode; width?: number; placement?: 'above' | 'below' }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <span
+          role="tooltip"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            ...(placement === 'below' ? { top: 'calc(100% + 8px)' } : { bottom: 'calc(100% + 8px)' }),
+            width,
+            maxWidth: '80vw',
+            background: 'var(--dark-90)',
+            color: 'var(--light-100)',
+            fontSize: 12,
+            fontWeight: 400,
+            lineHeight: 1.5,
+            padding: '8px 10px',
+            borderRadius: 6,
+            zIndex: 40,
+            pointerEvents: 'none',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.18)',
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </span>
+  );
 }
 
 /** Footer action row for phase screens. */
@@ -273,7 +367,7 @@ export function IntroPage({ title, intro, steps, action }: { title: string; intr
 }
 
 /** Success / "saved" screen shown at the end of an onboarding phase. */
-export function SuccessState({ title, body, stored, action }: { title: string; body: string; stored: { label: string; where: string }[]; action: ReactNode }) {
+export function SuccessState({ title, body, stored, action }: { title: string; body: string; stored: { label: string; where: string }[]; action?: ReactNode }) {
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center', padding: '32px 0' }}>
       <div style={{ width: 56, height: 56, margin: '0 auto 16px', borderRadius: 99, background: 'var(--positive-10)', color: 'var(--positive-60)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>✓</div>
