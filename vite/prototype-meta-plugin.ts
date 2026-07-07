@@ -65,8 +65,16 @@ function maxMtimeISO(dir: string): string {
 }
 
 export function prototypeMetaPlugin(): Plugin {
+  // The dev server can run with process.cwd() ≠ the served project (e.g. a git
+  // worktree served via the repo-root's vite binary). Scan Vite's resolved
+  // root so worktree prototypes and their meta.json are picked up, not the
+  // launching directory's.
+  let projectRoot = process.cwd();
   return {
     name: 'prototype-meta',
+    configResolved(config) {
+      projectRoot = config.root;
+    },
     resolveId(id) {
       if (id === MODULE_ID) return RESOLVED_ID;
     },
@@ -74,16 +82,16 @@ export function prototypeMetaPlugin(): Plugin {
       if (id !== RESOLVED_ID) return;
       const meta: Record<string, PrototypeMeta> = {};
       // Scan both the web (prototypes/) and iOS (ios/prototypes/) galleries.
-      for (const root of [path.resolve('prototypes'), path.resolve('ios/prototypes')]) {
-        if (!fs.existsSync(root)) continue;
+      for (const dirRoot of [path.resolve(projectRoot, 'prototypes'), path.resolve(projectRoot, 'ios/prototypes')]) {
+        if (!fs.existsSync(dirRoot)) continue;
         const slugs = fs
-          .readdirSync(root, { withFileTypes: true })
+          .readdirSync(dirRoot, { withFileTypes: true })
           .filter((e) => e.isDirectory() && !e.name.startsWith('_'))
           .map((e) => e.name);
         for (const slug of slugs) {
-          const dir = path.join(root, slug);
+          const dir = path.join(dirRoot, slug);
           const lastModified =
-            lastGitCommitISO(dir, process.cwd()) ?? maxMtimeISO(dir);
+            lastGitCommitISO(dir, projectRoot) ?? maxMtimeISO(dir);
           const { title, description, archived } = readMetaJson(dir);
           meta[slug] = { lastModified, title, description, archived };
         }
