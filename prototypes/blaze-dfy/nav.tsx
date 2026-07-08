@@ -118,11 +118,6 @@ export const STEPS: Record<string, Step[]> = {
     { key: 'calendar', label: 'Campaign calendar' },
     { key: 'done', label: 'Done', hidden: true },
   ],
-  // Steady-state Strategy tab — Scorecard / Blaze Plan as top nav tabs.
-  plan: [
-    { key: 'scorecard', label: 'Scorecard' },
-    { key: 'blaze-plan', label: 'Blaze Plan' },
-  ],
   // Settings tabs — customer details vs the billing record. No step numbers.
   settings: [
     { key: 'general', label: 'General' },
@@ -252,7 +247,7 @@ export function WorkspaceShell({
   const topbarCenter = !sub ? undefined
     // Cold Home is a single setup checklist — no Workstream/Insights tabs.
     : section === 'home' ? (dfyState !== 'steady' && side === 'am' ? undefined : chipStrip(true))
-    : section === 'settings' || section === 'plan' ? chipStrip(false)
+    : section === 'settings' ? chipStrip(false)
     : steps
       ? <StepTabs steps={steps} active={sub} onSelect={(k) => go(`/${account.id}/${side}/${section}/${k}`)} flags={stepFlags} />
       : undefined;

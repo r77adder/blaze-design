@@ -78,7 +78,6 @@ export function Workspace() {
   // landing on the phase shows the done/review hub instead.
   const phaseDefault = (sec === 'strategy' || sec === 'creative')
     ? (packet(sec as Phase) !== 'draft' ? 'done' : sec === 'strategy' ? 'context' : 'intro')
-    : sec === 'plan' ? 'scorecard'
     : sec === 'scorecard' ? 'setup'
     : sec === 'home' ? 'work'
     : sec === 'settings' ? 'general'
@@ -102,7 +101,7 @@ export function Workspace() {
   else if (sec === 'creative') content = creativeUnlocked
     ? <CreativeReview account={account} sub={effSub!} go={go} />
     : <CreativeLocked account={account} go={go} />;
-  else if (sec === 'plan') content = <StrategyTab account={account} sub={effSub!} />;
+  else if (sec === 'plan') content = <StrategyTab account={account} />;
   else if (sec === 'scorecard') content = <Scorecard account={account} sub={effSub!} go={go} />;
   else if (sec === 'settings') content = <Settings account={account} go={go} sub={effSub} />;
   else content = <SectionStub label={sec} />;

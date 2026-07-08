@@ -1,14 +1,13 @@
-import { type ComponentType } from 'react';
+import { type ComponentType, useLayoutEffect, useRef } from 'react';
 import { Heading, Text } from '@/components';
 import Calendar1 from '@/icons/20/Calendar1';
 import Star from '@/icons/20/Star';
-import UserProfileCircle from '@/icons/20/UserProfileCircle';
 import Cursor04 from '@/icons/20/Cursor04';
 import Google from '@/icons/20/Google';
 import Globe from '@/icons/20/Globe';
 import Marker03 from '@/icons/20/Marker03';
-import Templates from '@/icons/20/Templates';
 import Website from '@/icons/20/Website';
+import SupportBubble from '@/icons/20/SupportBubble';
 import { ClientShell } from './shell';
 
 /**
@@ -36,24 +35,7 @@ interface ChannelGroup {
 
 const GROUPS: ChannelGroup[] = [
   {
-    title: 'Organic',
-    channels: [
-      {
-        name: 'Organic Campaigns',
-        icon: Calendar1,
-        cadence: '9 posts / week · IG + Facebook',
-        plan: 'Before/after install Reels and neighborhood-named posts to grow reach and keep your crew top of mind.',
-      },
-      {
-        name: 'UGC Content',
-        icon: UserProfileCircle,
-        cadence: 'Real-home photo features',
-        plan: 'Real customer floors and crew spotlights turned into authentic posts to lift trust and engagement.',
-      },
-    ],
-  },
-  {
-    title: 'Paid',
+    title: 'Get found',
     channels: [
       {
         name: 'Paid Social',
@@ -67,50 +49,51 @@ const GROUPS: ChannelGroup[] = [
         cadence: 'Always-on · $2.4k / mo',
         plan: 'Google Search ads on high-intent terms like "hardwood flooring near me" pointed at the estimate page.',
       },
-    ],
-  },
-  {
-    title: 'Search & Local',
-    channels: [
-      {
-        name: 'SEO / AEO',
-        icon: Globe,
-        cadence: '2 pages / month',
-        plan: 'Pricing and material-comparison content (hardwood vs LVP vs tile) built to rank and get cited in AI answers.',
-      },
       {
         name: 'Local SEO',
         icon: Marker03,
         cadence: 'Weekly GBP posts + photos',
         plan: 'Google Business posts and geotagged job photos to climb the local map pack for Austin flooring searches.',
       },
+      {
+        name: 'SEO / AEO',
+        icon: Globe,
+        cadence: '2 pages / month',
+        plan: 'Pricing and material-comparison content (hardwood vs LVP vs tile) built to rank and get cited in AI answers.',
+      },
     ],
   },
   {
-    title: 'Conversion',
+    title: 'Build trust',
     channels: [
-      {
-        name: 'Landing Pages',
-        icon: Templates,
-        cadence: 'Estimate page live',
-        plan: 'A dedicated estimate landing page converting 2.3× the homepage — the destination for all paid traffic.',
-      },
       {
         name: 'Website',
         icon: Website,
-        cadence: 'Maintenance only',
-        plan: 'Ongoing mobile speed fixes to cut the ~30% load-time bounce on phones browsing your flooring galleries.',
+        cadence: 'Estimate page live · ongoing upkeep',
+        plan: 'A dedicated estimate landing page converting 2.3× the homepage, plus ongoing mobile speed fixes for phones.',
       },
-    ],
-  },
-  {
-    title: 'Reputation',
-    channels: [
+      {
+        name: 'Organic Campaigns',
+        icon: Calendar1,
+        cadence: '9 posts / week · IG + Facebook',
+        plan: 'Before/after install Reels and neighborhood-named posts to grow reach and keep your crew top of mind.',
+      },
       {
         name: 'Reputation',
         icon: Star,
         cadence: 'Continuous · 4.7★ avg',
         plan: 'Post-install review asks plus on-brand replies within hours to keep review velocity and rating high.',
+      },
+    ],
+  },
+  {
+    title: 'Convert & catch',
+    channels: [
+      {
+        name: 'AI Receptionist',
+        icon: SupportBubble,
+        cadence: '24/7 · calls, texts & chats',
+        plan: 'An AI receptionist answering every call, text, and chat in seconds — qualifying and booking leads around the clock.',
       },
     ],
   },
@@ -120,16 +103,9 @@ export function Strategy({ sub }: { sub?: string }) {
   void sub;
   return (
     <ClientShell section="strategy">
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '8px 4px 60px' }}>
-        {/* section: header */}
-        <div style={{ padding: '24px 0 8px' }}>
-          <Heading level={2} style={{ lineHeight: 1.2, letterSpacing: '-0.4px', marginBottom: 0 }}>
-            Your strategy at a glance
-          </Heading>
-        </div>
-
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: '24px 4px 60px' }}>
         {/* section: channel groups */}
-        <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           {GROUPS.map((group) => (
             <ChannelGroupSection key={group.title} group={group} />
           ))}
@@ -150,8 +126,8 @@ export function Strategy({ sub }: { sub?: string }) {
 function ChannelGroupSection({ group }: { group: ChannelGroup }) {
   return (
     <section>
-      <div style={{ borderBottom: '1px solid var(--dark-8)', paddingBottom: 10, marginBottom: 8 }}>
-        <Heading level={4}>{group.title}</Heading>
+      <div style={{ borderBottom: '1px solid var(--dark-4)', paddingBottom: 10, marginBottom: 8 }}>
+        <Heading level={3}>{group.title}</Heading>
       </div>
       <div>
         {group.channels.map((channel, i) => (
@@ -164,24 +140,39 @@ function ChannelGroupSection({ group }: { group: ChannelGroup }) {
 
 function ChannelRow({ channel, showTopBorder }: { channel: Channel; showTopBorder: boolean }) {
   const Icon = channel.icon;
+  // Keep the icon tile a square whose side matches the row's content height.
+  // Flexbox won't transfer a stretched cross-size to the main axis via aspect-ratio,
+  // so mirror the rendered height onto the width with a ResizeObserver.
+  const boxRef = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const sync = () => {
+      el.style.width = `${el.offsetHeight}px`;
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
     <div
       style={{
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'stretch',
         gap: 16,
         padding: '16px 0',
-        borderTop: showTopBorder ? '1px solid var(--dark-8)' : 'none',
+        borderTop: showTopBorder ? '1px solid var(--dark-4)' : 'none',
       }}
     >
       <span
+        ref={boxRef}
         aria-hidden
         style={{
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: 36,
-          height: 36,
+          alignSelf: 'stretch',
           flexShrink: 0,
           borderRadius: 8,
           background: 'var(--dark-4)',
@@ -191,16 +182,21 @@ function ChannelRow({ channel, showTopBorder }: { channel: Channel; showTopBorde
         <Icon size={20} color="var(--dark-90)" />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <Text variant="smallList" style={{ display: 'block', color: 'var(--dark-90)' }}>
-          {channel.name}
-        </Text>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+          <Heading level={5} style={{ margin: 0, color: 'var(--dark-90)' }}>
+            {channel.name}
+          </Heading>
+          <Text
+            variant="secondary"
+            style={{ marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap', color: 'var(--dark-90)' }}
+          >
+            {channel.cadence}
+          </Text>
+        </div>
         <Text variant="secondary" style={{ display: 'block', lineHeight: 1.5, color: 'var(--dark-60)', marginTop: 4 }}>
           {channel.plan}
         </Text>
       </div>
-      <Text variant="metadata" style={{ flexShrink: 0, textAlign: 'right', color: 'var(--dark-60)', lineHeight: 1.5 }}>
-        {channel.cadence}
-      </Text>
     </div>
   );
 }
