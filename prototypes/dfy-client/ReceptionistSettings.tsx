@@ -3,6 +3,7 @@ import { Button, Heading, IconButton, Modal, Text, useModals, type StackModalPro
 import { StatusPill, TabChip, useToast } from '@/staging';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import Check from '@/icons/16/Check';
+import Edit3 from '@/icons/20/Edit3';
 import { ClientShell } from './shell';
 import { ComplianceSection } from '../h2/pages/SdrCompliance';
 import {
@@ -75,7 +76,6 @@ export function ReceptionistSettings({ onBack }: { onBack: () => void }) {
   return (
     <ClientShell section="leads" title={title} topbarCenter={topbarCenter}>
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 28px 80px' }}>
-        {active !== 'compliance' && <ReadOnlyBanner />}
         {active === 'triggers' && <TriggersTab {...shared} />}
         {active === 'agent' && <AgentTab {...shared} />}
         {active === 'outcomes' && <OutcomesTab {...shared} />}
@@ -89,23 +89,6 @@ export function ReceptionistSettings({ onBack }: { onBack: () => void }) {
 // ── Shared read-only building blocks ───────────────────────────────────────
 
 type TabProps = { requests: Record<string, string>; requestChange: (key: string, label: string) => void };
-
-function ReadOnlyBanner() {
-  return (
-    <div
-      style={{
-        display: 'flex', gap: 10, alignItems: 'flex-start', padding: '12px 16px', marginBottom: 28,
-        border: '1px solid var(--dark-8)', borderRadius: 10, background: 'var(--dark-2)',
-      }}
-    >
-      <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.5 }}>
-        This is how your Blaze team has set up your AI Receptionist. It&rsquo;s view-only — use
-        <Text style={{ color: 'var(--dark-90)', fontWeight: 500 }}> Request change</Text> on any section and your team will update it for you.
-        Compliance is yours to complete.
-      </Text>
-    </div>
-  );
-}
 
 /** A read-only settings section. `requestKey`/`requestLabel` opt it into the
  *  "Request change" affordance; omit them for plain read-only sections. */
@@ -140,6 +123,7 @@ function Section({
             <Button
               variant={requested !== undefined ? 'ghost' : 'secondary'}
               size="md"
+              frontIcon={Edit3}
               onPress={() => requestChange(requestKey, requestLabel)}
             >
               {requested !== undefined ? 'Edit request' : 'Request change'}
@@ -364,7 +348,14 @@ function OutcomesTab({ requests, requestChange }: TabProps) {
         ))}
       </Section>
 
-      <Section title="Bookings" description="How booked appointments are confirmed and delivered.">
+      <Section
+        title="Bookings"
+        description="How booked appointments are confirmed and delivered."
+        requestKey="bookings"
+        requestLabel="Bookings"
+        requests={requests}
+        requestChange={requestChange}
+      >
         <Row label="Booking calendar" top>Grain Design Flooring — In-home measures</Row>
         <Row label="Confirmation">SMS + email confirmation sent to the caller on booking.</Row>
         <Row label="Notification email">bookings@graindesignflooring.com</Row>
@@ -390,7 +381,14 @@ const RECIPIENTS: { name: string; email: string; phone: string }[] = [
 function NotificationsTab({ requests, requestChange }: TabProps) {
   return (
     <>
-      <Section title="Notify me when…" description="The events that trigger a notification.">
+      <Section
+        title="Notify me when…"
+        description="The events that trigger a notification."
+        requestKey="notify"
+        requestLabel="Notify me when…"
+        requests={requests}
+        requestChange={requestChange}
+      >
         {NOTIFY_EVENTS.map((n, i) => (
           <div key={n.event} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 18px', borderTop: i === 0 ? 'none' : '1px solid var(--dark-8)' }}>
             <Text style={{ color: 'var(--dark-90)' }}>{n.event}</Text>
@@ -418,12 +416,26 @@ function NotificationsTab({ requests, requestChange }: TabProps) {
         ))}
       </Section>
 
-      <Section title="Quiet hours" description="When non-urgent notifications are held.">
+      <Section
+        title="Quiet hours"
+        description="When non-urgent notifications are held."
+        requestKey="quiet-hours"
+        requestLabel="Quiet hours"
+        requests={requests}
+        requestChange={requestChange}
+      >
         <Row label="Quiet hours" top><OnOff on onLabel="Enabled" /></Row>
         <Row label="Window">9:00 PM – 7:00 AM</Row>
       </Section>
 
-      <Section title="Daily digest" description="A once-a-day summary of receptionist activity.">
+      <Section
+        title="Daily digest"
+        description="A once-a-day summary of receptionist activity."
+        requestKey="daily-digest"
+        requestLabel="Daily digest"
+        requests={requests}
+        requestChange={requestChange}
+      >
         <Row label="Daily digest" top><OnOff on onLabel="Enabled" /></Row>
         <Row label="Send time">8:00 AM</Row>
       </Section>
