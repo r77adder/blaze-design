@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ComponentType } from 'react';
 import { createPortal } from 'react-dom';
 import { Heading, Text, Button, IconButton, Modal, useModals, type StackModalProps } from '@/components';
-import { StatusPill, Pill, Avatar, Checkbox } from '@/staging';
+import { StatusPill, Pill, Avatar, Checkbox, Select } from '@/staging';
 import Voice from '@/icons/20/Voice';
 import MessageText2 from '@/icons/20/MessageText2';
 import MessageChat01 from '@/icons/20/MessageChat01';
@@ -538,6 +538,19 @@ function seedIndex(seed: string, mod: number): number {
 const leadZip = (lead: Lead) => SAMPLE_ZIPS[seedIndex(lead.id, SAMPLE_ZIPS.length)];
 const leadService = (lead: Lead) => FLOORING_SERVICES[seedIndex(`${lead.id}·svc`, FLOORING_SERVICES.length)];
 
+/** This lead's answer to a configured qualification question — shared by the
+ *  lead detail rail and the CSV export columns/filters. */
+function qualificationAnswer(lead: Lead, id: string): string | undefined {
+  switch (id) {
+    case 'q-name': return lead.prospect.name;
+    case 'q-phone': return localPhone(lead.prospect.phone);
+    case 'q-zip': return leadZip(lead);
+    case 'q-budget': return lead.scorecard.budget;
+    case 'q-service': return leadService(lead);
+    default: return undefined;
+  }
+}
+
 function InfoRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
@@ -637,16 +650,9 @@ function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lea
             {/* qualification criteria — one row per configured question */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Heading level={5} style={{ margin: 0 }}>Qualification criteria</Heading>
-              {DEFAULT_QUALIFICATION_QUESTIONS.map((q) => {
-                const answer =
-                  q.id === 'q-name' ? lead.prospect.name
-                  : q.id === 'q-phone' ? localPhone(lead.prospect.phone)
-                  : q.id === 'q-zip' ? leadZip(lead)
-                  : q.id === 'q-budget' ? sk.budget
-                  : q.id === 'q-service' ? leadService(lead)
-                  : undefined;
-                return <InfoRow key={q.id} label={q.label} value={answer} />;
-              })}
+              {DEFAULT_QUALIFICATION_QUESTIONS.map((q) => (
+                <InfoRow key={q.id} label={q.label} value={qualificationAnswer(lead, q.id)} />
+              ))}
             </div>
           </aside>
         </div>
@@ -660,28 +666,39 @@ function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lea
 // (each becomes a CSV column), preview the shape via the "?" hover, then
 // download. Clients unsure what to pull can ping their Blaze strategist.
 
-type ExportFieldKey = 'name' | 'phone' | 'email' | 'company' | 'reason' | 'method' | 'status' | 'activity';
-
 interface ExportField {
-  key: ExportFieldKey;
+  key: string;
   /** Doubles as the checkbox label and the CSV column header. */
   label: string;
   /** Short example shown beside the label for the less self-evident fields. */
   hint?: string;
   value: (lead: Lead) => string;
   defaultOn: boolean;
+  group: 'details' | 'qualification';
 }
 
-const EXPORT_FIELDS: ExportField[] = [
-  { key: 'name', label: 'Name', value: (l) => l.prospect.name, defaultOn: true },
-  { key: 'phone', label: 'Phone', value: (l) => l.prospect.phone, defaultOn: true },
-  { key: 'email', label: 'Email', value: (l) => l.prospect.email, defaultOn: true },
-  { key: 'company', label: 'Company / location', value: (l) => l.location ?? l.prospect.company, defaultOn: true },
-  { key: 'reason', label: 'Call reason', value: (l) => requestType(l), defaultOn: true },
-  { key: 'method', label: 'Method', hint: 'Call, SMS, Chat', value: (l) => METHOD_LABELS[l.method], defaultOn: false },
-  { key: 'status', label: 'Status', hint: 'AI handling, Booked', value: (l) => STATUS_STYLES[l.status].label, defaultOn: false },
-  { key: 'activity', label: 'Last activity', hint: '14m ago, 2d ago', value: (l) => formatRelative(l.last_activity_at), defaultOn: false },
+// Name and phone intentionally live only under Qualification criteria (Full
+// name / Phone number) so the two column groups never duplicate each other.
+const DETAIL_FIELDS: ExportField[] = [
+  { key: 'email', label: 'Email', value: (l) => l.prospect.email, defaultOn: true, group: 'details' },
+  { key: 'company', label: 'Company / location', value: (l) => l.location ?? l.prospect.company, defaultOn: true, group: 'details' },
+  { key: 'reason', label: 'Call reason', value: (l) => requestType(l), defaultOn: true, group: 'details' },
+  { key: 'method', label: 'Method', hint: 'Call, SMS, Chat', value: (l) => METHOD_LABELS[l.method], defaultOn: false, group: 'details' },
+  { key: 'status', label: 'Status', hint: 'AI handling, Booked', value: (l) => STATUS_STYLES[l.status].label, defaultOn: false, group: 'details' },
+  { key: 'activity', label: 'Last activity', hint: '14m ago, 2d ago', value: (l) => formatRelative(l.last_activity_at), defaultOn: false, group: 'details' },
 ];
+
+// Each configured qualification question is also an exportable column. Full
+// name and Phone number default on (they replace the old Lead-details columns).
+const QUALIFICATION_FIELDS: ExportField[] = DEFAULT_QUALIFICATION_QUESTIONS.map((q) => ({
+  key: `qual-${q.id}`,
+  label: q.label,
+  value: (l) => qualificationAnswer(l, q.id) ?? '',
+  defaultOn: q.id === 'q-name' || q.id === 'q-phone',
+  group: 'qualification',
+}));
+
+const EXPORT_FIELDS: ExportField[] = [...DETAIL_FIELDS, ...QUALIFICATION_FIELDS];
 
 /** Quote a CSV cell only when it contains a comma, quote, or newline. */
 function csvCell(v: string): string {
@@ -752,22 +769,62 @@ function CsvPreview({ fields, leads, anchor }: { fields: ExportField[]; leads: L
   );
 }
 
+function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <div>
+      <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 6 }}>{label}</Text>
+      <Select value={value} onChange={onChange} options={options} size="md" fullWidth aria-label={label} />
+    </div>
+  );
+}
+
 function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] }) {
-  const [selected, setSelected] = useState<Set<ExportFieldKey>>(
+  const [selected, setSelected] = useState<Set<string>>(
     () => new Set(EXPORT_FIELDS.filter((f) => f.defaultOn).map((f) => f.key)),
   );
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [methodFilter, setMethodFilter] = useState('all');
+  const [serviceFilter, setServiceFilter] = useState('all');
+  const [zipFilter, setZipFilter] = useState('all');
   const [previewOpen, setPreviewOpen] = useState(false);
   const helpRef = useRef<HTMLButtonElement>(null);
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const activeFields = EXPORT_FIELDS.filter((f) => selected.has(f.key));
 
-  const toggle = (key: ExportFieldKey) =>
+  const filteredLeads = useMemo(
+    () => leads.filter((l) =>
+      (statusFilter === 'all' || l.status === statusFilter) &&
+      (methodFilter === 'all' || l.method === methodFilter) &&
+      (serviceFilter === 'all' || leadService(l) === serviceFilter) &&
+      (zipFilter === 'all' || leadZip(l) === zipFilter),
+    ),
+    [leads, statusFilter, methodFilter, serviceFilter, zipFilter],
+  );
+  const isFiltered = filteredLeads.length !== leads.length;
+
+  const toggle = (key: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
+
+  const statusOptions = [{ value: 'all', label: 'All statuses' }, ...STATUS_FUNNEL_ORDER.map((s) => ({ value: s, label: STATUS_STYLES[s].label }))];
+  const methodOptions = [{ value: 'all', label: 'All methods' }, { value: 'call', label: 'Call' }, { value: 'sms', label: 'SMS' }, { value: 'other', label: 'Chat' }];
+  const serviceOptions = [{ value: 'all', label: 'Any service' }, ...FLOORING_SERVICES.map((s) => ({ value: s, label: s }))];
+  const zipOptions = [{ value: 'all', label: 'All zip codes' }, ...SAMPLE_ZIPS.map((z) => ({ value: z, label: z }))];
+  const detailFields = EXPORT_FIELDS.filter((f) => f.group === 'details');
+  const qualFields = EXPORT_FIELDS.filter((f) => f.group === 'qualification');
+
+  const renderCheckbox = (f: ExportField) => (
+    <Checkbox key={f.key} style={{ gap: 12 }} checked={selected.has(f.key)} onChange={() => toggle(f.key)}>
+      <Text variant="primary" style={{ color: 'var(--dark-90)' }}>
+        {f.label}
+        {f.hint && <span style={{ color: 'var(--dark-60)', marginLeft: 5 }}>({f.hint})</span>}
+      </Text>
+    </Checkbox>
+  );
 
   return (
     <Modal.Root size="md" aria-labelledby="export-leads-title">
@@ -797,24 +854,40 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
       />
       <Modal.Content>
         {previewOpen && anchor && createPortal(
-          <CsvPreview fields={activeFields} leads={leads.slice(0, 4)} anchor={anchor} />,
+          <CsvPreview fields={activeFields} leads={filteredLeads.slice(0, 4)} anchor={anchor} />,
           document.body,
         )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* options */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
-            {EXPORT_FIELDS.map((f) => (
-              <Checkbox key={f.key} style={{ gap: 12 }} checked={selected.has(f.key)} onChange={() => toggle(f.key)}>
-                <Text variant="primary" style={{ color: 'var(--dark-90)' }}>
-                  {f.label}
-                  {f.hint && <span style={{ color: 'var(--dark-60)', marginLeft: 5 }}>({f.hint})</span>}
-                </Text>
-              </Checkbox>
-            ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* columns — lead details */}
+          <div>
+            <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 10 }}>Lead details</Text>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
+              {detailFields.map(renderCheckbox)}
+            </div>
+          </div>
+
+          {/* columns — qualification criteria */}
+          <div>
+            <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 10 }}>Qualification criteria</Text>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
+              {qualFields.map(renderCheckbox)}
+            </div>
+          </div>
+
+          {/* filter which leads to include */}
+          <div style={{ borderTop: '1px solid var(--dark-8)', paddingTop: 20 }}>
+            <Heading level={5} style={{ margin: '0 0 2px' }}>Filter leads</Heading>
+            <Text variant="secondary" style={{ color: 'var(--dark-60)', display: 'block', marginBottom: 14 }}>Optional — export only the leads that match.</Text>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+              <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+              <FilterSelect label="Method" value={methodFilter} onChange={setMethodFilter} options={methodOptions} />
+              <FilterSelect label="Primary service" value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} />
+              <FilterSelect label="Zip code" value={zipFilter} onChange={setZipFilter} options={zipOptions} />
+            </div>
           </div>
 
           {/* not sure? contact your strategist — kept subtle */}
-          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--dark-5)', borderRadius: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--dark-5)', borderRadius: 10 }}>
             <Avatar fallback={STRATEGIST.initials} size={28} style={{ background: 'var(--purple)', flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500, lineHeight: 1.3 }}>Not sure what to include?</Text>
@@ -829,12 +902,14 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
           <Modal.FooterButton variant="subtle" onPress={close}>Cancel</Modal.FooterButton>
         </Modal.FooterContent>
         <Modal.FooterContent slot="right">
-          <Text variant="secondary" style={{ color: 'var(--dark-60)', marginRight: 12 }}>{leads.length} leads</Text>
+          <Text variant="secondary" style={{ color: 'var(--dark-60)', marginRight: 12 }}>
+            {isFiltered ? `${filteredLeads.length} of ${leads.length} leads` : `${leads.length} leads`}
+          </Text>
           <Modal.FooterButton
             variant="primary"
             frontIcon={Download}
-            isDisabled={activeFields.length === 0}
-            onPress={() => { downloadLeadsCsv(activeFields, leads); close(); }}
+            isDisabled={activeFields.length === 0 || filteredLeads.length === 0}
+            onPress={() => { downloadLeadsCsv(activeFields, filteredLeads); close(); }}
           >
             Export CSV
           </Modal.FooterButton>

@@ -58,7 +58,7 @@ export function ReceptionistSettings({ onBack }: { onBack: () => void }) {
 
   const title = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back to Leads" onPress={onBack} />
+      <IconButton variant="secondary" size="sm" icon={ArrowLeft} aria-label="Back to Leads" onPress={onBack} />
       <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>AI Receptionist settings</Text>
     </div>
   );
