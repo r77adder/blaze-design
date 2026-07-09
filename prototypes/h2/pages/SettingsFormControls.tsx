@@ -136,7 +136,7 @@ export function NumberField({ label, value, onChange, min, max }: { label: strin
   );
 }
 
-export function RadioCard({ selected, onClick, title, description }: { selected: boolean; onClick: () => void; title: string; description?: string }) {
+export function RadioCard({ selected, onClick, title, description, titleLevel }: { selected: boolean; onClick: () => void; title: string; description?: string; titleLevel?: 1 | 2 | 3 | 4 | 5 }) {
   const Icon = selected ? CheckboxChecked : CheckboxLight;
   return (
     <button
@@ -152,7 +152,9 @@ export function RadioCard({ selected, onClick, title, description }: { selected:
     >
       <Icon size={20} />
       <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
+        {titleLevel
+          ? <Heading level={titleLevel} style={{ margin: 0 }}>{title}</Heading>
+          : <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>}
         {description && <span style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>}
       </span>
     </button>

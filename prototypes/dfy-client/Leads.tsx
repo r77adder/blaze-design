@@ -9,11 +9,14 @@ import ChevronDown from '@/icons/20/ChevronDown';
 import ChevronUp from '@/icons/20/ChevronUp';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
 import Download from '@/icons/20/Download';
+import Settings from '@/icons/20/Settings';
 import Help from '@/icons/16/Help';
 import Send1 from '@/icons/20/Send1';
 import Check from '@/icons/16/Check';
 import ChevronRight from '@/icons/16/ChevronRight';
 import ArrowLeft from '@/icons/20/ArrowLeft';
+import Copy from '@/icons/20/Copy';
+import { DEFAULT_QUALIFICATION_QUESTIONS } from '../h2/qualification-criteria-data';
 import {
   LEADS,
   type Lead,
@@ -34,6 +37,7 @@ import { STRATEGIST } from './HomeColdShared';
 import { ClientShell } from './shell';
 import { ColdState } from './ColdState';
 import { useClientState } from './dev-state';
+import { ReceptionistSettings } from './ReceptionistSettings';
 
 /**
  * Leads — the AI Receptionist's lead inbox, surfaced as a first-party client
@@ -48,6 +52,13 @@ export function Leads() {
   const { state } = useClientState();
   const leads = LEADS;
   const { openModal } = useModals();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Full-page AI Receptionist settings, scoped to the Leads tab — opens from the
+  // topbar button and returns here on back (no route change).
+  if (settingsOpen) {
+    return <ReceptionistSettings onBack={() => setSettingsOpen(false)} />;
+  }
 
   // Cold — pre-go-live: the AI Receptionist isn't capturing leads yet, so the
   // inbox is empty. Show an explanatory empty state describing what will land
@@ -73,9 +84,14 @@ export function Leads() {
     <ClientShell
       section="leads"
       topbarRight={
-        <Button variant="secondary" size="sm" frontIcon={Download} onPress={() => openModal(ExportLeadsModal, { leads })}>
-          Export
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => setSettingsOpen(true)}>
+            Settings
+          </Button>
+          <Button variant="secondary" size="sm" frontIcon={Download} onPress={() => openModal(ExportLeadsModal, { leads })}>
+            Export
+          </Button>
+        </div>
       }
     >
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
@@ -353,7 +369,7 @@ function TimelineRow({ dot, isLast, children }: { dot: string; isLast?: boolean;
         <span style={{ width: 7, height: 7, borderRadius: 99, background: dot, marginTop: 6, flexShrink: 0 }} />
         {!isLast && <span style={{ flex: 1, width: 1, background: 'var(--dark-8)', marginTop: 3 }} />}
       </div>
-      <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 22 }}>{children}</div>
+      <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 34 }}>{children}</div>
     </div>
   );
 }
@@ -370,10 +386,9 @@ function NodeHeader({ title, meta, when }: { title: string; meta?: string; when:
 
 function PageLink({ label, onPress }: { label: string; onPress: () => void }) {
   return (
-    <button type="button" onClick={onPress} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
-      <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{label}</Text>
-      <ChevronRight size={16} color="var(--dark-60)" />
-    </button>
+    <div style={{ marginTop: 10 }}>
+      <Button variant="secondary" size="sm" onPress={onPress}>{label}</Button>
+    </div>
   );
 }
 
@@ -419,7 +434,7 @@ function TimelineNode({ item, isLast, onOpenPage }: { item: TimelineItem; isLast
     return (
       <TimelineRow dot={DOT.call} isLast={isLast}>
         <NodeHeader title={item.title} meta={item.duration} when={item.when} />
-        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.5 }}>{item.summary}</Text>
+        <Text variant="secondary" style={{ display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--dark-90)', lineHeight: 1.5 }}>{item.summary}</Text>
         {item.turns.length > 0 && (
           <PageLink label="See full transcript" onPress={() => onOpenPage({ kind: 'transcript', title: 'Call transcript', turns: item.turns })} />
         )}
@@ -430,7 +445,7 @@ function TimelineNode({ item, isLast, onOpenPage }: { item: TimelineItem; isLast
     return (
       <TimelineRow dot={DOT.text} isLast={isLast}>
         <NodeHeader title={`${item.mediumLabel} conversation`} meta={`${item.messages.length} message${item.messages.length === 1 ? '' : 's'}`} when={item.when} />
-        {item.summary && <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.5 }}>{item.summary}</Text>}
+        {item.summary && <Text variant="secondary" style={{ display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--dark-90)', lineHeight: 1.5 }}>{item.summary}</Text>}
         <PageLink label="See messages" onPress={() => onOpenPage({ kind: 'messages', title: `${item.mediumLabel} conversation`, messages: item.messages })} />
       </TimelineRow>
     );
@@ -442,6 +457,29 @@ function TimelineNode({ item, isLast, onOpenPage }: { item: TimelineItem; isLast
         <Text variant="metadata" color="var(--dark-40)" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>{formatRelative(item.when)}</Text>
       </div>
     </TimelineRow>
+  );
+}
+
+/** Secondary button that copies the drafted message to the clipboard and
+ *  briefly confirms with a check + "Copied to clipboard" (green, fades back). */
+function CopyMessageButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(text);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+  return (
+    <Button
+      variant="secondary"
+      size="md"
+      frontIcon={copied ? Check : Copy}
+      onPress={copy}
+      color={copied ? 'var(--status-approved)' : undefined}
+      style={{ transition: 'color 160ms ease' }}
+    >
+      {copied ? 'Copied to clipboard' : 'Copy message'}
+    </Button>
   );
 }
 
@@ -457,12 +495,12 @@ function NextActionStep({ lead }: { lead: Lead }) {
     <TimelineRow dot="var(--brand)" isLast>
       {na ? (
         <div>
-          <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)', marginBottom: 6 }}>Recommended next step</Text>
+          <Heading level={5} style={{ margin: '0 0 6px' }}>Recommended next step</Heading>
           <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.4 }}>{na.summary}</Text>
           <div style={{ marginTop: 10, padding: '12px 14px', background: 'var(--dark-2)', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
             <Text variant="secondary" style={{ color: 'var(--dark-80)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{na.payload}</Text>
           </div>
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
             {done ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <Check size={16} color="var(--status-approved)" />
@@ -471,11 +509,12 @@ function NextActionStep({ lead }: { lead: Lead }) {
             ) : (
               <Button variant="primary" size="md" frontIcon={ActionIcon} onPress={() => setDone(true)}>{verb}</Button>
             )}
+            <CopyMessageButton text={na.payload} />
           </div>
         </div>
       ) : lead.scheduled_at ? (
         <div>
-          <Text variant="secondary" style={{ display: 'block', fontWeight: 500, color: 'var(--dark-90)' }}>Visit booked</Text>
+          <Heading level={5} style={{ margin: 0 }}>Visit booked</Heading>
           <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginTop: 2 }}>{lead.scheduled_at}{lead.location ? ` · ${lead.location}` : ''}</Text>
         </div>
       ) : (
@@ -484,6 +523,20 @@ function NextActionStep({ lead }: { lead: Lead }) {
     </TimelineRow>
   );
 }
+
+// Sample answers that actually match the qualification-criteria labels. The
+// underlying H2 lead data is painting-themed and has no zips, so we derive a
+// stable, on-label value per lead: a real Austin service-area zip and a
+// flooring service (Grain Design Flooring's actual offerings).
+const SAMPLE_ZIPS = ['78701', '78702', '78703', '78704', '78705', '78610', '78613', '78620', '78641', '78660', '78664', '78681'];
+const FLOORING_SERVICES = ['Hardwood floor', 'Laminate floor', 'Vinyl floor', 'Carpet'];
+function seedIndex(seed: string, mod: number): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h % mod;
+}
+const leadZip = (lead: Lead) => SAMPLE_ZIPS[seedIndex(lead.id, SAMPLE_ZIPS.length)];
+const leadService = (lead: Lead) => FLOORING_SERVICES[seedIndex(`${lead.id}·svc`, FLOORING_SERVICES.length)];
 
 function InfoRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
@@ -528,68 +581,73 @@ function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lea
   return (
     <Modal.Root size="md" aria-labelledby="lead-detail-title">
       <Modal.Header
-        title={lead.prospect.name}
-        id="lead-detail-title"
         onClose={close}
-        actions={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <IconButton variant="tertiary" size="sm" icon={ChevronUp} aria-label="Previous lead" isDisabled={idx === 0} onPress={() => go(-1)} />
-            <Text variant="metadata" color="var(--dark-60)" style={{ whiteSpace: 'nowrap' }}>{idx + 1} / {leads.length}</Text>
-            <IconButton variant="tertiary" size="sm" icon={ChevronDown} aria-label="Next lead" isDisabled={idx === leads.length - 1} onPress={() => go(1)} />
-          </div>
-        }
         subHeader={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <StatusPill tone={st.tone} size="sm">{st.label}</StatusPill>
-            <Text variant="secondary" color="var(--dark-60)">{SOURCE_LABELS[lead.channel]}</Text>
           </div>
         }
-      />
+      >
+        {/* name (left) + lead pager floating centered in the header, no container */}
+        <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+          <Heading level={2} id="lead-detail-title" style={{ margin: 0 }}>{lead.prospect.name}</Heading>
+          <span style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <IconButton variant="secondary" size="sm" icon={ChevronUp} aria-label="Previous lead" isDisabled={idx === 0} onPress={() => go(-1)} />
+            <Text variant="metadata" color="var(--dark-60)" style={{ whiteSpace: 'nowrap' }}>{idx + 1} / {leads.length}</Text>
+            <IconButton variant="secondary" size="sm" icon={ChevronDown} aria-label="Next lead" isDisabled={idx === leads.length - 1} onPress={() => go(1)} />
+          </span>
+        </div>
+      </Modal.Header>
       <Modal.Content withoutFooter>
         <div style={{ display: 'flex', gap: 28, alignItems: 'stretch' }}>
           {/* main — timeline of touchpoints, ending on the proposed next step */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            {timeline.map((item, i) => (
+            {timeline.filter((item) => item.kind !== 'system').map((item, i) => (
               <TimelineNode key={i} item={item} onOpenPage={setPage} />
             ))}
             <NextActionStep key={lead.id} lead={lead} />
           </div>
 
           {/* right rail — contact + qualification, phone first */}
-          <aside style={{ width: 244, flexShrink: 0, borderLeft: '1px solid var(--dark-8)', paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 4 }}>Phone</Text>
-              <a href={`tel:${lead.prospect.phone.replace(/[^\d+]/g, '')}`} style={{ textDecoration: 'none' }}>
-                <Text style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-90)' }}>{lead.prospect.phone}</Text>
-              </a>
-            </div>
-            <InfoRow label="Location" value={leadLocation(lead)} />
-            <InfoRow label="Email" value={lead.prospect.email} />
-            <InfoRow label="Company / household" value={lead.prospect.company} />
-
-            <div style={{ height: 1, background: 'var(--dark-8)' }} />
-
-            <InfoRow label="Need" value={sk.need} />
-            <InfoRow label="Budget" value={sk.budget} />
-            <InfoRow label="Timeline" value={sk.timeline} />
-            <InfoRow label="Decision-maker" value={sk.decisionMaker} />
-            {Object.entries(sk.custom ?? {}).map(([k, v]) => (
-              <InfoRow key={k} label={k} value={v} />
-            ))}
-
-            {lead.factors.length > 0 && (
-              <>
-                <div style={{ height: 1, background: 'var(--dark-8)' }} />
+          <aside style={{ width: 244, flexShrink: 0, borderLeft: '1px solid var(--dark-8)', paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 32 }}>
+            {/* contact — the client's primary handle on this lead, elevated */}
+            <div style={{ padding: 16, background: 'var(--dark-2)', border: '1px solid var(--dark-8)', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 2 }}>Phone</Text>
+                <a href={`tel:${lead.prospect.phone.replace(/[^\d+]/g, '')}`} style={{ textDecoration: 'none' }}>
+                  <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{lead.prospect.phone}</Text>
+                </a>
+              </div>
+              {lead.prospect.email && (
                 <div>
-                  <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 8 }}>Qualification factors</Text>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {lead.factors.map((f) => (
-                      <Pill key={f} size="md">{f}</Pill>
-                    ))}
-                  </div>
+                  <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 2 }}>Email</Text>
+                  <a href={`mailto:${lead.prospect.email}`} style={{ textDecoration: 'underline', textDecorationColor: 'var(--dark-15)', textUnderlineOffset: 2 }}>
+                    <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', wordBreak: 'break-word' }}>{lead.prospect.email}</Text>
+                  </a>
                 </div>
-              </>
-            )}
+              )}
+              {leadLocation(lead) && (
+                <div>
+                  <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 2 }}>Location</Text>
+                  <Text variant="secondary" style={{ color: 'var(--dark-90)' }}>{leadLocation(lead)}</Text>
+                </div>
+              )}
+            </div>
+
+            {/* qualification criteria — one row per configured question */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Heading level={5} style={{ margin: 0 }}>Qualification criteria</Heading>
+              {DEFAULT_QUALIFICATION_QUESTIONS.map((q) => {
+                const answer =
+                  q.id === 'q-name' ? lead.prospect.name
+                  : q.id === 'q-phone' ? localPhone(lead.prospect.phone)
+                  : q.id === 'q-zip' ? leadZip(lead)
+                  : q.id === 'q-budget' ? sk.budget
+                  : q.id === 'q-service' ? leadService(lead)
+                  : undefined;
+                return <InfoRow key={q.id} label={q.label} value={answer} />;
+              })}
+            </div>
           </aside>
         </div>
       </Modal.Content>

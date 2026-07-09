@@ -335,7 +335,7 @@ function QuestionEditModalRoute({
       <Modal.Content>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <FieldLabel>Question</FieldLabel>
+            <Heading level={4} style={{ marginBottom: 8 }}>Question</Heading>
             <input
               {...inputFocusProps}
               type="text"
@@ -349,7 +349,7 @@ function QuestionEditModalRoute({
           </div>
 
           <div>
-            <FieldLabel>Response type</FieldLabel>
+            <Heading level={4} style={{ marginBottom: 8 }}>Response type</Heading>
             <SegmentedControl
               value={question.type}
               onChange={(v) => handleTypeChange(v as QuestionType)}
@@ -360,18 +360,19 @@ function QuestionEditModalRoute({
 
           {question.type === 'freeform' ? (
             <div>
-              <FieldLabel>Expected format</FieldLabel>
+              <Heading level={4} style={{ marginBottom: 8 }}>Expected format</Heading>
               <Select
                 value={question.responseFormat}
                 onChange={(v) => handleFormatChange(v as ResponseFormat)}
                 options={RESPONSE_FORMATS.map((f) => ({ value: f.id, label: f.label }))}
                 aria-label="Expected format"
-                fullWidth
+                size="lg"
+                style={{ width: '33.333%' }}
               />
             </div>
           ) : (
             <div>
-              <FieldLabel>Options</FieldLabel>
+              <Heading level={4} style={{ marginBottom: 8 }}>Options</Heading>
               <OptionsEditor
                 options={question.options}
                 onChange={(options) => update((q) => ({
@@ -384,7 +385,7 @@ function QuestionEditModalRoute({
           )}
 
           <div>
-            <FieldLabel>Qualifies when</FieldLabel>
+            <Heading level={4} style={{ marginBottom: 8 }}>Qualifies when</Heading>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {modes.map((m) => (
                 <RadioCard
@@ -393,6 +394,7 @@ function QuestionEditModalRoute({
                   onClick={() => updateRule((r) => ({ ...r, mode: m.id }))}
                   title={m.title}
                   description={m.description}
+                  titleLevel={5}
                 />
               ))}
             </div>
@@ -460,7 +462,7 @@ function QuestionEditModalRoute({
       <Modal.Footer>
         {!isNew && (
           <Modal.FooterContent slot="left">
-            <Modal.FooterButton variant="tertiary" frontIcon={Trash2} onPress={handleDelete}>
+            <Modal.FooterButton variant="tertiary" size="md" frontIcon={Trash2} onPress={handleDelete}>
               Delete question
             </Modal.FooterButton>
           </Modal.FooterContent>
@@ -492,17 +494,17 @@ function OptionsEditor({ options, onChange }: { options: string[]; onChange: (ne
           ))}
         </div>
       )}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          {...inputFocusProps}
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
-          placeholder="e.g. Hardwood floor"
-          aria-label="New option"
-          style={{ ...textInputStyle, maxWidth: 240 }}
-        />
+      <input
+        {...inputFocusProps}
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+        placeholder="e.g. Hardwood floor"
+        aria-label="New option"
+        style={{ ...textInputStyle, maxWidth: 240 }}
+      />
+      <div style={{ marginTop: 12 }}>
         <Button variant="secondary" size="sm" frontIcon={Plus} onPress={add} isDisabled={!draft.trim()}>
           Add option
         </Button>
