@@ -225,15 +225,25 @@ export const STATUS_META: Record<PostStatus, {
 export function StatusTabContent({ status, count, selected = false }: { status: PostStatus; count?: number; selected?: boolean }) {
   const m = STATUS_META[status];
   // The icon shows only on the active tab, coloured for contrast against the
-  // solid status fill (onColor = black or white). Idle tabs are label-only.
-  // The counter is neutral grey until its tab is selected, then inverts onto
-  // the fill (fill-coloured number on an onColor chip).
+  // solid status fill (onColor = black or white). Rather than mount/unmount
+  // (which pops), it collapses width + opacity when idle so it slides and fades
+  // in on select and neighbouring tabs shift smoothly. The fill/label colours
+  // animate via TabChip's own CSS transition. The counter is neutral grey until
+  // its tab is selected, then inverts onto the fill.
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap' }}>
-      {selected && <m.Icon size={16} color={m.onColor} />}
+    <span style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', flexShrink: 0, overflow: 'hidden',
+        width: selected ? 16 : 0,
+        marginRight: selected ? 7 : 0,
+        opacity: selected ? 1 : 0,
+        transition: 'width 160ms ease, margin-right 160ms ease, opacity 160ms ease',
+      }}>
+        <m.Icon size={16} color={m.onColor} />
+      </span>
       {m.label}
       {count !== undefined && count > 0 && (
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 99, background: selected ? m.onColor : 'var(--dark-8)', color: selected ? m.color : 'var(--dark-60)', fontSize: 10, fontWeight: 600, padding: '0 4px', lineHeight: 1 }}>{count}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, marginLeft: 7, borderRadius: 99, background: selected ? m.onColor : 'var(--dark-8)', color: selected ? m.color : 'var(--dark-60)', fontSize: 10, fontWeight: 600, padding: '0 4px', lineHeight: 1, transition: 'background-color 160ms ease, color 160ms ease' }}>{count}</span>
       )}
     </span>
   );
