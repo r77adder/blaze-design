@@ -12,6 +12,7 @@ import ChevronDown from '@/icons/16/ChevronDown';
 import Heart from '@/icons/24/Heart';
 import Comment from '@/icons/20/Comment';
 import Send from '@/icons/16/Send';
+import ArrowUp from '@/icons/20/ArrowUp';
 import Edit1 from '@/icons/20/Edit1';
 import Check2 from '@/icons/20/Check2';
 import Templates from '@/icons/20/Templates';
@@ -180,6 +181,7 @@ export function PostPreviewModal({
   useEffect(() => {
     const id = items[idx].id;
     setSideTab(requested.has(id) || updatedSet.has(id) ? 'feedback' : 'edit');
+    setEditingBubble(false);
     /* eslint-disable-next-line */
   }, [idx]);
 
@@ -198,6 +200,11 @@ export function PostPreviewModal({
     setRequested((r) => { const next = new Set(r); next.delete(item.id); return next; });
     onApprove(item.id);
   };
+  // Revise an already-sent request in place (from the pane or the chat bubble).
+  const updateNote = (text: string) => {
+    setNotes((n) => ({ ...n, [item.id]: text }));
+    onRequestChanges(item.id, text);
+  };
   // Feedback tab, follow-up comments the client adds after the first request.
   const [feedbackReply, setFeedbackReply] = useState('');
   const [thread, setThread] = useState<Record<number, string[]>>({});
@@ -205,6 +212,16 @@ export function PostPreviewModal({
     if (!feedbackReply.trim()) return;
     setThread((t) => ({ ...t, [item.id]: [...(t[item.id] ?? []), feedbackReply.trim()] }));
     setFeedbackReply('');
+  };
+  // Inline edit of the client's own request bubble in the Feedback chat.
+  const [editingBubble, setEditingBubble] = useState(false);
+  const [bubbleDraft, setBubbleDraft] = useState('');
+  const openBubbleEdit = () => { setBubbleDraft(itemNote); setEditingBubble(true); };
+  const saveBubble = () => {
+    const text = bubbleDraft.trim();
+    if (!text) return;
+    updateNote(text);
+    setEditingBubble(false);
   };
 
   return (
@@ -243,13 +260,14 @@ export function PostPreviewModal({
                     <>
                       <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>Your requested changes</Text>
                       <Text variant="secondary" style={{ color: 'var(--dark-90)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{itemNote}</Text>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button variant="secondary" size="sm" onPress={() => setDialog('none')}>Close</Button>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <Button variant="subtle" size="sm" onPress={() => setDialog('none')}>Close</Button>
+                        <Button variant="secondary" size="sm" frontIcon={Edit1} onPress={openEdit}>Edit</Button>
                       </div>
                     </>
                   ) : (
                     <>
-                      <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>What would you like changed?</Text>
+                      <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>{itemRequested ? 'Edit your requested changes' : 'What would you like changed?'}</Text>
                       <textarea
                         autoFocus
                         value={draft}
@@ -257,9 +275,9 @@ export function PostPreviewModal({
                         placeholder="e.g. Swap the hero photo for the white-oak install, and soften the headline."
                         style={{ width: '100%', minHeight: 90, borderRadius: 10, border: '1px solid var(--dark-8)', padding: '10px 12px', fontFamily: "'Sohne', sans-serif", fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
                       />
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                        <Button variant="subtle" size="sm" onPress={() => setDialog('none')}>Cancel</Button>
-                        <Button variant="primary" size="sm" isDisabled={!draft.trim()} onPress={sendRequest}>Send request</Button>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <Button variant="subtle" size="sm" onPress={() => setDialog(itemRequested ? 'view' : 'none')}>Cancel</Button>
+                        <Button variant="primary" size="sm" isDisabled={!draft.trim()} onPress={sendRequest}>{itemRequested ? 'Save changes' : 'Send request'}</Button>
                       </div>
                     </>
                   )}
@@ -384,12 +402,7 @@ export function PostPreviewModal({
             {/* Tab bar, the standard TabChip pills. */}
             <div style={{ display: 'flex', gap: 6, padding: '16px 20px', position: 'sticky', top: 0, background: 'var(--light-100)', zIndex: 2 }}>
               <TabChip selected={sideTab === 'edit'} onSelect={() => setSideTab('edit')}>Edit</TabChip>
-              <TabChip selected={sideTab === 'feedback'} onSelect={() => setSideTab('feedback')}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  Feedback
-                  {hasConversation && <span style={{ width: 6, height: 6, borderRadius: 99, background: itemRequested ? 'var(--red-90)' : 'var(--status-posting)' }} />}
-                </span>
-              </TabChip>
+              <TabChip selected={sideTab === 'feedback'} onSelect={() => setSideTab('feedback')}>Feedback</TabChip>
             </div>
 
             {sideTab === 'feedback' ? (
@@ -397,12 +410,37 @@ export function PostPreviewModal({
                 {hasConversation ? (
                   <>
                     <span style={LABEL}>Your requested changes</span>
-                    {/* Client's request (sent bubble) */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <div style={{ maxWidth: '88%', background: 'var(--dark-90)', borderRadius: '12px 12px 4px 12px', padding: '8px 12px' }}>
-                        <Text variant="secondary" style={{ display: 'block', color: 'var(--light-100)', lineHeight: 1.5 }}>{itemNote || 'Please make some changes to this.'}</Text>
+                    {/* Client's request (sent bubble) — editable while the team hasn't revised it yet */}
+                    {editingBubble ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+                        <textarea
+                          autoFocus
+                          value={bubbleDraft}
+                          onChange={(e) => setBubbleDraft(e.target.value)}
+                          style={{ width: '100%', minHeight: 76, borderRadius: 10, border: '1px solid var(--dark-8)', padding: '8px 10px', fontFamily: "'Sohne', sans-serif", fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                        />
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <Button variant="subtle" size="sm" onPress={() => setEditingBubble(false)}>Cancel</Button>
+                          <Button variant="primary" size="sm" isDisabled={!bubbleDraft.trim()} onPress={saveBubble}>Save</Button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                        <div style={{ maxWidth: '88%', background: 'var(--dark-90)', borderRadius: '12px 12px 4px 12px', padding: '8px 12px' }}>
+                          <Text variant="secondary" style={{ display: 'block', color: 'var(--light-100)', lineHeight: 1.5 }}>{itemNote || 'Please make some changes to this.'}</Text>
+                        </div>
+                        {itemRequested && (
+                          <button
+                            type="button"
+                            onClick={openBubbleEdit}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, color: 'var(--dark-60)' }}
+                          >
+                            <Edit1 size={14} color="var(--dark-60)" />
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    )}
                     {itemUpdated ? (
                       /* Team's revision, they addressed it and re-sent (received bubble) */
                       <div style={{ minWidth: 0 }}>
@@ -428,7 +466,7 @@ export function PostPreviewModal({
                       </div>
                     ))}
                     {/* Follow-up composer */}
-                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginTop: 4 }}>
                       <textarea
                         value={feedbackReply}
                         onChange={(e) => setFeedbackReply(e.target.value)}
@@ -437,7 +475,7 @@ export function PostPreviewModal({
                         rows={1}
                         style={{ flex: 1, resize: 'none', borderRadius: 10, border: '1px solid var(--dark-8)', padding: '8px 10px', fontFamily: "'Sohne', sans-serif", fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.4, outline: 'none', boxSizing: 'border-box' }}
                       />
-                      <IconButton variant="primary" size="sm" icon={Send} aria-label="Send comment" isDisabled={!feedbackReply.trim()} onPress={sendFollowUp} />
+                      <IconButton variant="primary" size="sm" icon={ArrowUp} aria-label="Send comment" isDisabled={!feedbackReply.trim()} onPress={sendFollowUp} />
                     </div>
                   </>
                 ) : (

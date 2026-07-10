@@ -1033,40 +1033,8 @@ function ResubmitModal({ close, onConfirm, onReviewFirst }: {
   );
 }
 
-// Resubmit-from-preview: leave a note for the client and move the post to
-// Updated. The note is posted into the feedback chat as the AM's response.
-function PreviewResubmitModal({ close, onConfirm }: { close: () => void; onConfirm: (note: string) => void }) {
-  const [note, setNote] = useState('');
-  return (
-    <Modal.Root size="sm" onClose={close}>
-      <Modal.Header onClose={close}>
-        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Resubmit to client</span>
-      </Modal.Header>
-      <Modal.Content>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.6 }}>
-            Let the client know what you changed. Your note is added to the conversation and the post moves to <strong style={{ color: dark90, fontWeight: 500 }}>Updated</strong> for another review.
-          </p>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            autoFocus
-            placeholder="e.g. Pulled the install-fee offer up into the headline and bumped the size. Take another look!"
-            style={{ width: '100%', minHeight: 96, resize: 'vertical', border: `1px solid ${dark15}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5, outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
-      </Modal.Content>
-      <Modal.Footer>
-        <Modal.FooterContent slot="left">
-          <Modal.FooterButton variant="secondary" onPress={close}>Cancel</Modal.FooterButton>
-        </Modal.FooterContent>
-        <Modal.FooterContent slot="right">
-          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(note.trim()); close(); }}>Resubmit</Modal.FooterButton>
-        </Modal.FooterContent>
-      </Modal.Footer>
-    </Modal.Root>
-  );
-}
+// (Resubmit-from-preview now uses an inline dropdown pane in PostPreview, mirroring
+//  the client's Request-changes composer — see `openResubmit` / `confirmResubmit`.)
 
 function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (reasons: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1150,10 +1118,44 @@ type Glyph = ComponentType<IconProps>;
 const PREVIEW_CLIENT = 'Grain Design Flooring';
 // Drafted replies for the reputation (review-response) posts.
 const REPLY_DRAFT: Record<number, string> = {
-  40: 'Thank you so much, Maria, we’re thrilled you love the white oak! We’d like to come back and take care of that squeak near the landing at no charge. Someone from our team will reach out to schedule a quick visit. 🙌',
+  40: 'Thank you so much, Maria, we’re thrilled you love the white oak! Enjoy the new floors, and please reach out anytime if there’s anything we can help with.',
   41: 'Thanks, Devon! It was a pleasure working with you, the herringbone entry turned out beautifully. Enjoy the new floors, and we’re here if you ever need anything.',
   42: 'Thanks for the honest feedback, Karen. You’re right that scheduling should have been tighter, we’ve since changed how we confirm start dates. We’d love to make it right; a team member will follow up shortly.',
 };
+
+// Per-version content the AM "sends back" on resubmit. Index 0 is the first
+// revision (V2), and each addresses that post's client change request so the
+// version tracker shows a real before/after. Copy follows house style (no em
+// dashes). Posts without an entry simply keep their original content.
+const REVISIONS: Record<number, Array<Partial<{ caption: string; headline: string; img: string; reply: string }>>> = {
+  // Carousel: lead with the pale Scandi oak slide instead of the walnut.
+  3: [{
+    img: IMG.hardwood,
+    caption: 'Starting with the one everyone asks about, our pale Scandi white oak. Soft, bright, and unreal in Austin afternoon light. Swipe for the full set of five tones we’re specifying most this season. Which would you pick? 🎨',
+  }],
+  // Paid social: pull the install-fee offer up into the lead and make it bolder.
+  10: [{
+    caption: 'Install fee waived on any LVP project over 600 sq ft, book by Jun 30. Waterproof luxury vinyl plank that looks like real oak and stands up to kids, dogs, and Texas summers. Claim your free in-home design consult today. 🏡',
+  }],
+  // Review reply: offer Maria a free comeback visit to fix the squeak.
+  40: [{
+    reply: 'Thank you so much, Maria, we’re thrilled you love the white oak! We’d like to come back and fix that squeak by the landing at no charge, our treat. Someone from our team will reach out today to find a time that works for you. 🙌',
+  }],
+  // Seeded "Updated" review: a warmer second-pass reply.
+  41: [{
+    reply: 'Thanks, Devon! It was a genuine pleasure working with you, and that herringbone entry turned out beautifully. Tag us if you ever share a photo, we’d love to see how it looks once you’re settled in. Enjoy the new floors!',
+  }],
+};
+
+// Resolve the content shown for a given version index. V1 (index 0) is the
+// original; later indices layer the authored revision on top (clamped to the
+// last available revision so re-resubmits keep showing the revised copy).
+function versionContent(it: PreviewPost, vIdx: number): { caption: string; headline?: string; img?: string; reply?: string } {
+  const base = { caption: it.caption, headline: it.headline, img: it.img, reply: REPLY_DRAFT[it.id] };
+  const revs = REVISIONS[it.id];
+  if (vIdx <= 0 || !revs || revs.length === 0) return base;
+  return { ...base, ...revs[Math.min(vIdx - 1, revs.length - 1)] };
+}
 const PREVIEW_PLATFORMS: { glyph: Glyph; label: string }[] = [
   { glyph: InstagramBrand as Glyph, label: 'Instagram' },
   { glyph: FacebookBrand as Glyph, label: 'Facebook' },
@@ -1274,17 +1276,44 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
   const [statusMenu, setStatusMenu] = useState(false);
   const curStatus = localStatus[item.id] ?? item.status;
   const changeStatus = (s: PostStatus) => { setLocalStatus((m) => ({ ...m, [item.id]: s })); onSetStatus?.(item.id, s); setStatusMenu(false); };
-  const { openModal } = useModals();
   // AM responses added to the feedback chat (incl. the resubmit note).
   const [responses, setResponses] = useState<Record<number, string[]>>({});
   const addResponse = (id: number, text: string) => setResponses((m) => ({ ...m, [id]: [...(m[id] ?? []), text] }));
-  const resubmit = () => openModal(PreviewResubmitModal, {
-    onConfirm: (note: string) => {
-      changeStatus('updated');
-      if (note) addResponse(item.id, note);
-      setSideTab('feedback');
-    },
-  });
+
+  // Light version control: every resubmit to the client mints a new version.
+  // Posts already in "Updated" land on the board at V2; everything else at V1.
+  const seedVersions = (it: PreviewPost) => (it.status === 'updated' ? 2 : 1);
+  const [versionCount, setVersionCount] = useState<Record<number, number>>({});
+  const [versionIdx, setVersionIdx] = useState<Record<number, number>>({});
+  const verCount = versionCount[item.id] ?? seedVersions(item);
+  const verIdx = versionIdx[item.id] ?? verCount - 1; // view the latest by default
+  const view = versionContent(item, verIdx); // content for the version on screen
+  const goVersion = (n: number) => setVersionIdx((m) => ({ ...m, [item.id]: Math.max(0, Math.min(verCount - 1, n)) }));
+
+  // Resubmit-to-client: a dropdown pane anchored to the button (the same pattern
+  // as the client's Request-changes composer) rather than a modal.
+  const [resubmitOpen, setResubmitOpen] = useState(false);
+  const [resubmitNote, setResubmitNote] = useState('');
+  const resubmitAnchor = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!resubmitOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (resubmitAnchor.current && !resubmitAnchor.current.contains(e.target as Node)) setResubmitOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [resubmitOpen]);
+  const openResubmit = () => { setResubmitNote(''); setResubmitOpen(true); };
+  const confirmResubmit = () => {
+    const note = resubmitNote.trim();
+    changeStatus('updated');
+    if (note) addResponse(item.id, note);
+    const next = verCount + 1;
+    setVersionCount((m) => ({ ...m, [item.id]: next }));
+    setVersionIdx((m) => ({ ...m, [item.id]: next - 1 }));
+    setSideTab('feedback');
+    setResubmitOpen(false);
+  };
 
   // "Posting to" starts as a read-only pill summary; the edit button swaps in
   // the per-platform row list so you can toggle a connected account on/off for
@@ -1303,7 +1332,7 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
   // Default to Feedback whenever the current post has a client change request.
   const hasFeedback = (it: PreviewPost) => it.feedback?.status === 'changes' && !!it.feedback.comment;
   const [sideTab, setSideTab] = useState<'edit' | 'feedback'>(hasFeedback(item) ? 'feedback' : 'edit');
-  useEffect(() => { setSideTab(hasFeedback(items[idx]) ? 'feedback' : 'edit'); /* eslint-disable-next-line */ }, [idx]);
+  useEffect(() => { setSideTab(hasFeedback(items[idx]) ? 'feedback' : 'edit'); setResubmitOpen(false); /* eslint-disable-next-line */ }, [idx]);
   return (
     <Modal.Root size="fullscreen" height="100vh" onClose={close} onPressOutside={close} aria-label="Post preview">
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%', background: white }}>
@@ -1345,11 +1374,29 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
             </span>
             <IconButton variant="ghost" size="sm" icon={MoreDots} aria-label="More" />
           </div>
-          {/* center, Previous / Next only (client-only actions omitted) */}
-          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* center, Previous / Next + Resubmit (client-only actions omitted) */}
+          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 40, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Button variant="tertiary" size="md" frontIcon={ChevronLeftLg} isDisabled={idx === 0} onPress={() => go(idx - 1)}>Previous</Button>
             {curStatus === 'changes' && (
-              <Button variant="secondary" size="md" onPress={resubmit}>Resubmit to client</Button>
+              <span ref={resubmitAnchor} style={{ position: 'relative', display: 'inline-flex' }}>
+                <Button variant="secondary" size="md" onPress={() => (resubmitOpen ? setResubmitOpen(false) : openResubmit())}>Resubmit to client</Button>
+                {resubmitOpen && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', width: 340, background: white, border: `1px solid ${dark8}`, borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.16)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
+                    <Text variant="secondary" style={{ color: dark60 }}>Let the client know what you changed</Text>
+                    <textarea
+                      autoFocus
+                      value={resubmitNote}
+                      onChange={(e) => setResubmitNote(e.target.value)}
+                      placeholder="e.g. Pulled the install-fee offer into the headline and swapped the hero photo. Take another look!"
+                      style={{ width: '100%', minHeight: 90, borderRadius: 10, border: `1px solid ${dark8}`, padding: '10px 12px', fontFamily: F, fontSize: 14, color: dark90, lineHeight: 1.5, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                      <Button variant="subtle" size="sm" onPress={() => setResubmitOpen(false)}>Cancel</Button>
+                      <Button variant="primary" size="sm" onPress={confirmResubmit}>Resubmit</Button>
+                    </div>
+                  </div>
+                )}
+              </span>
             )}
             <Button variant="tertiary" size="md" endIcon={ChevronRight} isDisabled={idx === items.length - 1} onPress={() => go(idx + 1)}>Next</Button>
           </div>
@@ -1374,6 +1421,15 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
               </div>
             )}
 
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            {/* Version tracker, shown once a post has been resubmitted at least once */}
+            {verCount > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, background: white, border: `1px solid ${dark8}`, borderRadius: 99, padding: '2px 4px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <IconButton variant="ghost" size="sm" icon={ChevronLeftLg} aria-label="Previous version" isDisabled={verIdx === 0} onPress={() => goVersion(verIdx - 1)} />
+                <Text variant="secondary" style={{ color: dark90, fontWeight: 500, minWidth: 26, textAlign: 'center' }}>V{verIdx + 1}</Text>
+                <IconButton variant="ghost" size="sm" icon={ChevronRight} aria-label="Next version" isDisabled={verIdx === verCount - 1} onPress={() => goVersion(verIdx + 1)} />
+              </div>
+            )}
             {item.type === 'paid-search' ? (
               /* ── Paid Search, Google sponsored result, no phone chrome ── */
               <div style={{ width: 480, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, boxShadow: '0 4px 16px rgba(0,0,0,0.06)', padding: '26px 28px' }}>
@@ -1385,8 +1441,8 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
                     <Text variant="metadata" style={{ color: dark60 }}>Ad · graindesignflooring.com</Text>
                   </div>
                 </div>
-                <h3 style={{ margin: '4px 0 6px', fontSize: 20, fontWeight: 400, color: '#1a0dab', fontFamily: F, lineHeight: 1.3 }}>{item.headline ?? item.caption}</h3>
-                <p style={{ margin: 0, fontSize: 15, color: dark60, fontFamily: F, lineHeight: 1.55 }}>{item.caption}</p>
+                <h3 style={{ margin: '4px 0 6px', fontSize: 20, fontWeight: 400, color: '#1a0dab', fontFamily: F, lineHeight: 1.3 }}>{view.headline ?? view.caption}</h3>
+                <p style={{ margin: 0, fontSize: 15, color: dark60, fontFamily: F, lineHeight: 1.55 }}>{view.caption}</p>
               </div>
             ) : item.type === 'review' ? (
               /* ── Reputation, the review + the drafted reply ── */
@@ -1406,7 +1462,7 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
                     <Text style={{ color: dark90, fontWeight: 500 }}>{PREVIEW_CLIENT}</Text>
                     <Text variant="metadata" style={{ color: dark40 }}>· Owner</Text>
                   </div>
-                  <Text variant="secondary" style={{ display: 'block', color: dark80, lineHeight: 1.55 }}>{REPLY_DRAFT[item.id] ?? item.caption}</Text>
+                  <Text variant="secondary" style={{ display: 'block', color: dark80, lineHeight: 1.55 }}>{view.reply ?? view.caption}</Text>
                 </div>
               </div>
             ) : (
@@ -1416,8 +1472,8 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
                   <Avatar fallback="G" size={28} style={{ background: 'var(--brand)' }} />
                   <Text style={{ fontWeight: 500, color: dark90 }}>{PREVIEW_CLIENT}</Text>
                 </div>
-                {item.img
-                  ? <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${item.img}'), ${dark4}` }} />
+                {view.img
+                  ? <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${view.img}'), ${dark4}` }} />
                   : <div style={{ aspectRatio: '4 / 5', background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Text variant="secondary" style={{ color: dark40 }}>{TYPE_LABEL[item.type]}</Text></div>}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 14px 4px', color: dark90 }}>
                   <Heart size={24} color={dark90} />
@@ -1425,23 +1481,19 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
                   <Send size={16} color={dark90} />
                 </div>
                 <div style={{ padding: '6px 14px 16px' }}>
-                  <Text variant="secondary" style={{ display: 'block', color: dark90, lineHeight: 1.5 }}><span style={{ fontWeight: 500 }}>{PREVIEW_CLIENT}</span> {item.caption}</Text>
+                  <Text variant="secondary" style={{ display: 'block', color: dark90, lineHeight: 1.5 }}><span style={{ fontWeight: 500 }}>{PREVIEW_CLIENT}</span> {view.caption}</Text>
                   <Text variant="secondary" style={{ display: 'block', color: dark40, marginTop: 2 }}>see more</Text>
                 </div>
               </div>
             )}
+            </div>
           </div>
           {/* sidebar */}
           <aside style={{ width: 312, flexShrink: 0, borderLeft: `1px solid ${dark8}`, background: 'var(--background-light)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {/* Tab bar, Edit / Feedback, as the standard TabChip pills. */}
             <div style={{ display: 'flex', gap: 6, padding: '16px 20px', position: 'sticky', top: 0, background: 'var(--background-light)', zIndex: 2 }}>
               <TabChip selected={sideTab === 'edit'} onSelect={() => setSideTab('edit')}>Edit</TabChip>
-              <TabChip selected={sideTab === 'feedback'} onSelect={() => setSideTab('feedback')}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  Feedback
-                  {hasFeedback(item) && <span style={{ width: 6, height: 6, borderRadius: 99, background: red }} />}
-                </span>
-              </TabChip>
+              <TabChip selected={sideTab === 'feedback'} onSelect={() => setSideTab('feedback')}>Feedback</TabChip>
             </div>
 
             {sideTab === 'feedback' ? (
