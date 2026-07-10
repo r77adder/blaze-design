@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type ComponentType } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeShell, H2_SECTIONS } from '../_shell';
 import { Button, IconButton, Text, Modal, ModalStack, useModals, type StackModalProps } from '@/components';
-import { Toast, StatusPill as DSStatusPill, Checkbox, Avatar, TextField, Pill, Toggle as DSToggle } from '@/staging';
+import { Toast, StatusPill as DSStatusPill, Checkbox, Avatar, TextField, Pill, Toggle as DSToggle, TabChip } from '@/staging';
 import type { IconProps } from '@/icons/Types';
 import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, Settings } from '@/icons/20';
 import { Maximise01 } from '@/icons/20/Maximise01';
@@ -28,18 +28,24 @@ import TwitterBrand from '@/icons/20/TwitterBrand';
 import Paperclip from '@/icons/24/Paperclip';
 import ArrowUp from '@/icons/20/ArrowUp';
 import { useDfyState } from './lib/dev-state';
+import { useWorkspaceChrome } from './workspace-chrome';
 
 // ── Image assets (Figma + Unsplash fallbacks) ─────────────────────────────────
 const IMG_AVATAR = 'https://www.figma.com/api/mcp/asset/04425bfb-30dc-45d9-9537-cd0d3ca4cfbb';
-// Unsplash
-const U1 = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&auto=format&fit=crop'; // restaurant table
-const U2 = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop'; // food plate
-const U3 = 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&auto=format&fit=crop'; // healthy vegetables
-const U4 = 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&auto=format&fit=crop'; // cooking
-const U5 = 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&auto=format&fit=crop'; // healthy bowl
-const U6 = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop'; // laptop/business
-const U7 = 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop'; // business portrait
-const U8 = 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=600&auto=format&fit=crop'; // food spread
+// Flooring imagery (Unsplash, hardwood / interiors / showroom). Shared theme
+// with the dfy-client portal so the AM and client sides tell one story.
+const IMG = {
+  hardwood:   'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop', // wide-plank room
+  install:    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop', // install in progress
+  livingRoom: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&auto=format&fit=crop', // living room
+  crew:       'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&auto=format&fit=crop',    // crew at work
+  detail:     'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=800&auto=format&fit=crop', // grain detail
+  showroom:   'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&auto=format&fit=crop', // showroom
+  tile:       'https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=800&auto=format&fit=crop', // tile
+  kitchen:    'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&auto=format&fit=crop',    // kitchen floor
+  stairs:     'https://images.unsplash.com/photo-1448630360428-65456885c650?w=800&auto=format&fit=crop', // stairs
+  swatch:     'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=800&auto=format&fit=crop', // swatches
+};
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const F = "'Sohne', sans-serif";
@@ -58,16 +64,26 @@ const white   = '#ffffff';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Status = 'pending' | 'approved' | 'rejected';
-type ContentType = 'still' | 'carousel' | 'story' | 'short' | 'feed-video' | 'email' | 'blog';
+export type ContentType = 'still' | 'carousel' | 'story' | 'short' | 'feed-video' | 'email' | 'blog' | 'gbp' | 'paid-social' | 'paid-search' | 'review';
 
-interface Post {
+// Content-type groups drive the Approvals sections. "Paid Ads" is a parent
+// group with two channels (social / search); the rest are single-section groups.
+export type Section = 'paid-social' | 'paid-search' | 'organic' | 'seo' | 'reputation';
+
+export interface Post {
   id: number;
   type: ContentType;
+  section: Section;
   date: string;          // display label
   dateSort: string;      // ISO string for sorting
   caption: string;
   img?: string;
   slides?: number;
+  sent?: boolean;        // has this been sent to the client yet?
+  headline?: string;     // paid-search: ad headline line
+  rating?: number;       // review: star rating (1–5)
+  reviewer?: string;     // review: who left it
+  source?: string;       // review: Google / Yelp / Facebook
 }
 
 interface Campaign {
@@ -80,68 +96,109 @@ interface Campaign {
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
+// Grain Design Flooring (Austin, TX), the same client the portal + preview use.
+// Each post is tagged with its content-type `section` and whether it has been
+// `sent` to the client yet. `sent` posts carry a client verdict (see CLIENT_REVIEW).
 const CAMPAIGNS: Campaign[] = [
   {
     id: 0,
-    name: 'Eat Well Feel Better',
-    dateRange: 'Sept 28 – Oct 18',
+    name: 'Fall Hardwood Showcase',
+    dateRange: 'Jun 8 – Jun 28',
     badge: 'Campaigns',
-    endDate: '2026-10-18', // future — active
+    endDate: '2026-06-28', // future, active
     posts: [
-      { id:0, type:'still',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:00', img:U1, caption:'Get ready to take a trip down memory lane with our latest design. Experience the finest dining in the heart of the city — where every plate tells a story and every bite is crafted with love. Reserve your table now and treat yourself to something extraordinary. 🍽️ #FineD' },
-      { id:1, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:01', img:U2, caption:'Get access to exclusive loyalty discounts and savings this fall! Limited time offer for our valued members — earn points on every purchase, unlock early access to seasonal menus, and enjoy complimentary desserts on your birthday. Join the family today and taste the difference. 🍂' },
-      { id:2, type:'feed-video', date:'Sep 25  10:00am', dateSort:'2025-09-25T10:02', img:U3, caption:'Behind the scenes of our latest farm-to-table experience. Watch how we source the freshest ingredients straight from local growers who share our passion for quality. From the field to your fork in under 24 hours — this is food with a story worth telling. 🌿 #FarmToTable' },
-      { id:3, type:'story',      date:'Sep 25  10:00am', dateSort:'2025-09-25T10:03', img:U4, caption:'Limited time offer — shop now and save 25% on all meal prep kits this weekend only! Stock your fridge with chef-curated recipes designed to save you time without sacrificing flavor. Healthy eating has never been this easy or this delicious. Use code PREP25 at checkout. 🥗' },
-      { id:4, type:'carousel',   date:'Sep 25  10:00am', dateSort:'2025-09-25T10:04', img:U5, slides:5, caption:'Spring is here — swipe through our top 5 seasonal picks for a healthier you! From vibrant grain bowls to refreshing smoothie blends, our nutrition team has curated the best of the season. Tap each slide to see the full recipe and order your ingredients directly from our app. 🌸' },
-      { id:5, type:'still',      date:'Sep 26  10:00am', dateSort:'2025-09-26T10:00', img:U6, caption:'Wellness tips for the modern professional. Eat better, live better, feel better every day. We know how busy life gets, which is why we\'ve designed meal plans that fit around your schedule — not the other way around. Fuel your ambitions with food that actually works as hard as you do. 💪' },
-      { id:6, type:'carousel',   date:'Sep 27  11:00am', dateSort:'2025-09-27T11:00', img:U7, slides:4, caption:'Our top picks for the season — curated by our nutrition experts for optimal health and maximum flavor. Swipe to explore four standout dishes that hit every macro target while keeping your taste buds guessing. Perfect for meal-preppers and food lovers alike. Tag a friend who needs to see this! 🏆' },
-      { id:7, type:'email',      date:'Sep 28  8:00am',  dateSort:'2025-09-28T08:00', img:U8, caption:'Snag 20% off — limited time sale this weekend only! Don\'t miss our biggest discount of the year across the entire menu. Whether you\'re stocking up on staples or trying something new, now\'s the time to go big. Shop before midnight Sunday and use code SAVE20 to claim your discount. ⏰' },
+      { id:0, type:'still',      section:'organic', sent:true,  date:'Jun 10  10:00am', dateSort:'2026-06-10T10:00', img:IMG.hardwood, caption:'Floor of the week 🪵 This Tarrytown living room went from tired carpet to wide-plank white oak with a matte hardwax finish. Quarter-sawn for that tight, even grain, and yes, it is pet-friendly. Eight days, start to finish. #GrainDesignFlooring #AustinHardwood' },
+      { id:1, type:'short',      section:'organic', sent:true,  date:'Jun 12  9:00am',  dateSort:'2026-06-12T09:00', img:IMG.install, caption:'Watch 1,400 sq ft of European white oak go in over two days in Westlake. Rack, glue, set, repeat, every board hand-selected so the grain flows room to room. The satisfying part starts at 0:18. 🎬' },
+      { id:2, type:'story',      section:'organic', sent:false, date:'Jun 15  8:00am',  dateSort:'2026-06-15T08:00', img:IMG.detail, caption:'Behind the finish ✨ Our crew sands to 120 grit, then again by hand at the edges before a single coat goes down. This is the part nobody sees, and the reason your floors still look right in ten years.' },
+      { id:3, type:'carousel',   section:'organic', sent:true,  date:'Jun 17  11:00am', dateSort:'2026-06-17T11:00', img:IMG.swatch, slides:5, caption:'Five hardwood tones we are specifying most this season, from pale Scandi white oak to a deep walnut-stained ash. Each one reacts differently to Austin afternoon light, so we sample on-site before you commit. Which would you pick? 🎨' },
+      { id:4, type:'feed-video', section:'organic', sent:false, date:'Jun 19  2:00pm',  dateSort:'2026-06-19T14:00', img:IMG.crew, caption:'Time-lapse: a full living-room refinish from dust to glow in 45 seconds. Three coats, one very patient crew, and a floor the owners almost did not recognize.' },
+      { id:5, type:'gbp',        section:'organic', sent:false, date:'Jun 20  9:00am',  dateSort:'2026-06-20T09:00', img:IMG.showroom, caption:'New in the South Lamar showroom: three wide-plank white oak collections and a matte herringbone tile. Walk the samples under real light, open Sat 10–4.' },
     ],
   },
   {
     id: 1,
-    name: 'SEO Relevance Blogs',
-    dateRange: 'Sept 28 – Oct 18',
-    badge: 'SEO',
-    endDate: '2026-10-18', // future — active
+    name: 'LVP Fall Promo, Meta',
+    dateRange: 'Jun 9 – Jun 30',
+    badge: 'Campaigns',
+    endDate: '2026-06-30',
     posts: [
-      { id:100, type:'blog', date:'Sep 25  10:00am', dateSort:'2025-09-25T10:00', img:U6, caption:'Unleashing Business Potential with AI: Transformative Tools for Your Company' },
-      { id:101, type:'blog', date:'Sep 26  10:00am', dateSort:'2025-09-26T10:00', img:U7, caption:'Unleashing Business Potential with AI: Transformative Tools for Your Company' },
-      { id:102, type:'blog', date:'Sep 27  10:00am', dateSort:'2025-09-27T10:00', img:U2, caption:'Unleashing Business Potential with AI: Transformative Tools for Your Company' },
+      { id:10, type:'paid-social', section:'paid-social', sent:true,  date:'Jun 11  9:00am', dateSort:'2026-06-11T09:00', img:IMG.livingRoom, caption:'Waterproof luxury vinyl plank that looks like real oak, and stands up to kids, dogs, and Texas summers. Book your free in-home design consult before Jun 30 and we will waive the install fee on any LVP project over 600 sq ft. 🏡' },
+      { id:11, type:'paid-social', section:'paid-social', sent:false, date:'Jun 14  10:00am', dateSort:'2026-06-14T10:00', img:IMG.kitchen, caption:'Refinish, do not replace. We brought this 1990s kitchen floor back to life with a full sand-and-recoat in a custom warm-walnut tone, half the cost of new hardwood, done in three days. Limited fall slots left. 🛠️' },
     ],
   },
-  // ── Past campaigns (end date has passed) ──────────────────────────────────
   {
     id: 2,
-    name: 'Spring Sale 2025',
-    dateRange: 'Mar 15 – Apr 5',
+    name: 'Fall Refinishing, Google',
+    dateRange: 'Jun 9 – Jun 30',
     badge: 'Campaigns',
-    endDate: '2025-04-05', // past
+    endDate: '2026-06-30',
     posts: [
-      { id:200, type:'still',    date:'Mar 15  10:00am', dateSort:'2025-03-15T10:00', img:U1, caption:'Spring into savings — our biggest sale of the season starts now.' },
-      { id:201, type:'carousel', date:'Mar 18  9:00am',  dateSort:'2025-03-18T09:00', img:U3, slides:4, caption:'4 reasons to shop our spring collection this weekend.' },
-      { id:202, type:'email',    date:'Mar 22  8:00am',  dateSort:'2025-03-22T08:00', img:U8, caption:'Don\'t miss out — spring deals end Sunday!' },
+      { id:20, type:'paid-search', section:'paid-search', sent:true,  date:'Jun 11  8:00am', dateSort:'2026-06-11T08:00', headline:'Hardwood Floor Refinishing Austin | Free Estimate in 24 Hrs', caption:'Dust-free sanding, custom stains, and a 10-year finish warranty. Trusted by 400+ Austin homeowners. Book your free in-home estimate today.' },
+      { id:21, type:'paid-search', section:'paid-search', sent:false, date:'Jun 14  8:00am', dateSort:'2026-06-14T08:00', headline:'Luxury Vinyl Plank Installation | Waterproof, Pet-Proof Floors', caption:'Realistic wood look, built for Texas homes. Free design consult + no install fee over 600 sq ft this fall. Serving greater Austin.' },
     ],
   },
   {
     id: 3,
-    name: 'Valentine\'s Day Push',
-    dateRange: 'Feb 1 – Feb 14',
-    badge: 'Campaigns',
-    endDate: '2025-02-14', // past
+    name: 'SEO Relevance Blogs',
+    dateRange: 'Jun 8 – Jun 28',
+    badge: 'SEO',
+    endDate: '2026-06-28',
     posts: [
-      { id:300, type:'still',      date:'Feb 1  10:00am', dateSort:'2025-02-01T10:00', img:U4, caption:'Show your love with our Valentine\'s Day gift guide.' },
-      { id:301, type:'story',      date:'Feb 7  9:00am',  dateSort:'2025-02-07T09:00', img:U5, caption:'Share the love — limited edition Valentine\'s specials.' },
-      { id:302, type:'feed-video', date:'Feb 12  2:00pm', dateSort:'2025-02-12T14:00', img:U2, caption:'Behind the scenes of our Valentine\'s Day photoshoot.' },
-      { id:303, type:'email',      date:'Feb 13  8:00am', dateSort:'2025-02-13T08:00', img:U7, caption:'Last chance — Valentine\'s deals expire at midnight!' },
+      { id:30, type:'blog', section:'seo', sent:true,  date:'Jun 11  10:00am', dateSort:'2026-06-11T10:00', img:IMG.tile, caption:'Hardwood vs. LVP vs. Tile: Which Flooring Actually Holds Up in an Austin Home?' },
+      { id:31, type:'blog', section:'seo', sent:true,  date:'Jun 13  10:00am', dateSort:'2026-06-13T10:00', img:IMG.stairs, caption:'Should You Refinish or Replace Your Hardwood Floors?' },
+      { id:32, type:'blog', section:'seo', sent:false, date:'Jun 16  10:00am', dateSort:'2026-06-16T10:00', img:IMG.livingRoom, caption:'Engineered vs. Solid Hardwood: A Design-Led Guide for Humid Climates' },
+    ],
+  },
+  {
+    id: 4,
+    name: 'Reputation Management',
+    dateRange: 'Ongoing',
+    badge: 'Reputation',
+    endDate: '2026-06-30',
+    posts: [
+      { id:40, type:'review', section:'reputation', sent:true,  date:'Jun 10  1:00pm', dateSort:'2026-06-10T13:00', rating:5, reviewer:'Maria H.', source:'Google', caption:'We love our new white-oak floors, the crew was tidy and finished early. Only hiccup was a squeak near the stair landing that showed up a week later.' },
+      { id:41, type:'review', section:'reputation', sent:true,  date:'Jun 10  3:00pm', dateSort:'2026-06-10T15:00', rating:5, reviewer:'Devon P.', source:'Google', caption:'Best contractor experience we have had in Austin. Clear quote, no surprises, and the herringbone entry is stunning.' },
+      { id:42, type:'review', section:'reputation', sent:false, date:'Jun 11  11:00am', dateSort:'2026-06-11T11:00', rating:3, reviewer:'Karen L.', source:'Yelp', caption:'Floors look great but scheduling took two calls to pin down. Wish the start date had been firmer up front.' },
     ],
   },
 ];
 
-const TYPE_LABEL: Record<ContentType, string> = {
+export const TYPE_LABEL: Record<ContentType, string> = {
   still: 'Still Image', carousel: 'Carousel', story: 'Story',
-  short: 'Short', 'feed-video': 'Feed Video', email: 'Email', blog: 'Blog',
+  short: 'Reel', 'feed-video': 'Video Post', email: 'Email', blog: 'Article',
+  gbp: 'Google Business', 'paid-social': 'Paid Social', 'paid-search': 'Paid Search',
+  review: 'Review Response',
 };
+
+// ── Content-type sections ──────────────────────────────────────────────────────
+const SECTION_LABEL: Record<Section, string> = {
+  'paid-social': 'Paid Social',
+  'paid-search': 'Paid Search',
+  organic: 'Organic',
+  seo: 'SEO / AEO articles',
+  reputation: 'Reputation',
+};
+// Render order: Paid Ads (a parent wrapping the two paid channels), then the
+// single-section groups.
+const SECTION_GROUPS: { label: string; sections: Section[] }[] = [
+  { label: 'Paid Ads', sections: ['paid-social', 'paid-search'] },
+  { label: 'Organic', sections: ['organic'] },
+  { label: 'SEO / AEO articles', sections: ['seo'] },
+  { label: 'Reputation', sections: ['reputation'] },
+];
+
+// ── Pipeline status ─────────────────────────────────────────────────────────
+// The AM subtabs are a status filter. Every post sits in exactly one status.
+type PostStatus = 'draft' | 'in-review' | 'changes' | 'updated' | 'approved';
+const STATUS_TABS: { key: PostStatus; label: string }[] = [
+  { key: 'draft',     label: 'Draft' },
+  { key: 'in-review', label: 'In review' },
+  { key: 'changes',   label: 'Requested changes' },
+  { key: 'updated',   label: 'Updated' },
+  { key: 'approved',  label: 'Approved' },
+];
+// Demo override so the Updated subtab has content (only applied in steady).
+const STATUS_SEED: Record<number, PostStatus> = { 41: 'updated' };
 
 // ── Client review (shared source of truth) ─────────────────────────────────────
 // The client's verdicts on the active campaign's posts. One place drives three
@@ -149,17 +206,21 @@ const TYPE_LABEL: Record<ContentType, string> = {
 // client), the in-preview chat thread, and the connected Home feed items.
 export interface ClientReview {
   status: 'approved' | 'changes';
-  comment?: string;   // present for change requests — shown as a chat bubble
+  comment?: string;   // present for change requests, shown as a chat bubble
   author: string;
   initials: string;
   time: string;
 }
+// Keyed by post id. Only `sent` posts appear here; a sent post with no entry is
+// still awaiting the client (pending). Tyler is the Grain Design Flooring owner.
 export const CLIENT_REVIEW: Record<number, ClientReview> = {
-  0: { status: 'approved', author: 'Sarah', initials: 'SJ', time: '3h ago' },
-  1: { status: 'changes',  author: 'Sarah', initials: 'SJ', time: '2h ago', comment: 'The offer text gets a little lost against the plating shot — can we bump up the size and add more contrast?' },
-  2: { status: 'approved', author: 'Sarah', initials: 'SJ', time: '3h ago' },
-  4: { status: 'changes',  author: 'Sarah', initials: 'SJ', time: '2h ago', comment: 'Can the lead slide open with the sage Lakeway exterior instead of the navy one? That’s the look we want for summer.' },
-  5: { status: 'approved', author: 'Sarah', initials: 'SJ', time: '4h ago' },
+  0:  { status: 'approved', author: 'Tyler', initials: 'TN', time: '3h ago' },
+  3:  { status: 'changes',  author: 'Tyler', initials: 'TN', time: '2h ago', comment: 'Can we lead with the pale Scandi oak slide instead of the walnut? That is the look we are pushing for summer.' },
+  10: { status: 'changes',  author: 'Tyler', initials: 'TN', time: '2h ago', comment: 'The install-fee offer gets lost at the bottom, can we pull it into the headline and make it bolder?' },
+  20: { status: 'approved', author: 'Tyler', initials: 'TN', time: '4h ago' },
+  30: { status: 'approved', author: 'Tyler', initials: 'TN', time: '5h ago' },
+  40: { status: 'changes',  author: 'Tyler', initials: 'TN', time: '1h ago', comment: 'Love the tone, but can the reply offer Maria a free comeback visit to fix the squeak? Want her to feel taken care of.' },
+  41: { status: 'approved', author: 'Tyler', initials: 'TN', time: '4h ago' },
 };
 
 // ── Home-feed projections of the client review ─────────────────────────────────
@@ -287,8 +348,8 @@ function StatusPill({ status, dontPostReasons, isPast, resubmitNote, requestedCh
   );
 }
 
-// ── Type icons — exact SVG paths uploaded by designer ────────────────────────
-function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
+// ── Type icons, exact SVG paths uploaded by designer ────────────────────────
+export function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
   switch (type) {
     case 'still': return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -325,11 +386,184 @@ function TypeIcon({ type, size = 14 }: { type: ContentType; size?: number }) {
         <path d="M8.40033 7.20001H15.6003M8.40033 10.8H15.6003M8.40033 14.4H12.0003M6.60004 2.40001H17.4003C18.7258 2.40001 19.8003 3.47455 19.8003 4.80005L19.8 19.2001C19.8 20.5255 18.7254 21.6 17.4 21.6L6.59994 21.6C5.27446 21.5999 4.19994 20.5254 4.19995 19.1999L4.20004 4.8C4.20005 3.47452 5.27457 2.40001 6.60004 2.40001Z" stroke="#20A14F" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     );
+    case 'gbp': return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M12 21c4-3.5 6-6.9 6-10a6 6 0 10-12 0c0 3.1 2 6.5 6 10z" stroke="#0179CF" strokeWidth="1.4" strokeLinejoin="round"/>
+        <circle cx="12" cy="11" r="2.2" stroke="#0179CF" strokeWidth="1.4"/>
+      </svg>
+    );
+    case 'paid-social': return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M5 4l14 6-6 2-2 6-6-14z" stroke="#0179CF" strokeWidth="1.4" strokeLinejoin="round"/>
+      </svg>
+    );
+    case 'paid-search': return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <circle cx="10.5" cy="10.5" r="6.5" stroke="#0179CF" strokeWidth="1.4"/>
+        <path d="M20 20l-4.5-4.5" stroke="#0179CF" strokeWidth="1.4" strokeLinecap="round"/>
+      </svg>
+    );
+    case 'review': return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z" stroke="#EDB62C" strokeWidth="1.4" strokeLinejoin="round"/>
+      </svg>
+    );
     default: return null;
   }
 }
 
-// ── Content card — 245×378px, dark-2 bg, Figma spec ─────────────────────────
+// ── Star rating (reputation cards). Named RatingStars so it doesn't shadow the
+//    imported `Stars` sparkle icon used by the preview's Regenerate action. ─────
+function RatingStars({ rating, size = 12 }: { rating: number; size?: number }) {
+  return (
+    <span style={{ display:'inline-flex', gap:1 }}>
+      {[0,1,2,3,4].map(i => (
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill={i < rating ? '#EDB62C' : 'none'}>
+          <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z" stroke="#EDB62C" strokeWidth="1.4" strokeLinejoin="round"/>
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+// Editorial serif for blog / email headlines (Georgia stand-in, matching the
+// H2 approvals cards). Body/labels stay Söhne.
+const SERIF = "Georgia, 'Times New Roman', serif";
+const CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)';
+export const CARD_W = 340;
+// Every card is the same fixed height; the thumbnail scales to fit inside.
+export const CARD_H = 500;
+// Content area caps at exactly three cards wide.
+export const PAGE_W = CARD_W * 3 + 18 * 2;
+
+// ── Shared card body, fills a fixed-height card. The thumbnail sits in a
+//    centered stage under the header and scales to fit (contain) without
+//    stretching; taller media (reels/stories) shrinks to the same card height.
+//    Used by both ContentCard and InternalCard. ──────────────────────────────
+export function CardBody({ post }: { post: Post }) {
+  const isPortrait = post.type === 'story' || post.type === 'short' || post.type === 'feed-video';
+  const isLandscape = post.type === 'still' || post.type === 'carousel' || post.type === 'paid-social' || post.type === 'gbp';
+
+  // Blog / article, editorial: image, serif title, meta, excerpt.
+  if (post.type === 'blog') return (
+    <div style={{ flex:1, minHeight:0, padding:'10px 10px 12px', display:'flex' }}>
+      <div style={{ flex:1, minHeight:0, display:'flex', flexDirection:'column', background:white, borderRadius:8, boxShadow:CARD_SHADOW, overflow:'hidden' }}>
+        <div style={{ flex:1, minHeight:0, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', background:'#c8c0b4' }}>
+          {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+        </div>
+        <div style={{ flexShrink:0, padding:'12px 14px 14px', display:'flex', flexDirection:'column', gap:6 }}>
+          <p style={{ margin:0, fontSize:17, fontWeight:400, color:dark90, fontFamily:SERIF, lineHeight:1.28, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>{post.caption}</p>
+          <p style={{ margin:0, fontSize:11, color:dark40, fontFamily:F }}>Draft · 1,100 words</p>
+          <p style={{ margin:0, fontSize:12.5, color:dark60, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
+            A design-led breakdown of how each option handles heat, humidity, pets, and resale in an Austin home.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Paid Search, Google text-ad mock, no image; centered vertically.
+  if (post.type === 'paid-search') return (
+    <div style={{ flex:1, minHeight:0, padding:'10px 10px 12px', display:'flex', alignItems:'center' }}>
+      <div style={{ width:'100%', background:white, borderRadius:8, boxShadow:CARD_SHADOW, padding:'16px 16px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
+          <span style={{ fontSize:11, fontWeight:600, color:dark90, fontFamily:F, border:`1px solid ${dark15}`, borderRadius:4, padding:'0 4px', lineHeight:'15px' }}>Ad</span>
+          <span style={{ fontSize:11, color:dark60, fontFamily:F }}>graindesignflooring.com</span>
+        </div>
+        <p style={{ margin:0, fontSize:16, fontWeight:400, color:'#1a0dab', fontFamily:F, lineHeight:1.3 }}>
+          {post.headline ?? post.caption}
+        </p>
+        <p style={{ margin:'8px 0 0', fontSize:12.5, color:dark60, fontFamily:F, lineHeight:1.55 }}>
+          {post.caption}
+        </p>
+      </div>
+    </div>
+  );
+
+  // Reputation, the review + a drafted-reply hint, no image; centered vertically.
+  if (post.type === 'review') return (
+    <div style={{ flex:1, minHeight:0, padding:'10px 10px 12px', display:'flex', alignItems:'center' }}>
+      <div style={{ width:'100%', background:white, borderRadius:8, boxShadow:CARD_SHADOW, padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <RatingStars rating={post.rating ?? 5} />
+          <span style={{ fontSize:12, color:dark90, fontFamily:F, fontWeight:500 }}>{post.reviewer}</span>
+          <span style={{ fontSize:11, color:dark40, fontFamily:F, marginLeft:'auto' }}>{post.source}</span>
+        </div>
+        <p style={{ margin:0, fontSize:12.5, color:dark80, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:5, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
+          {post.caption}
+        </p>
+        <div style={{ paddingTop:8, borderTop:`1px solid ${dark8}`, display:'flex', alignItems:'center', gap:6 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 17l-4-4 4-4M5 13h9a5 5 0 005-5V6" stroke={dark40} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span style={{ fontSize:11, color:dark60, fontFamily:F }}>AI reply drafted</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Portrait, story / reel / video: a true 9:16 frame sized to the stage
+  // height and centered; the image fills the frame so it reads like a real
+  // vertical post (not a letterboxed landscape crop).
+  if (isPortrait) return (
+    <div style={{ flex:1, minHeight:0, padding:'10px 10px 12px', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+      <div style={{ height:'100%', aspectRatio:'9 / 16', maxWidth:'100%', position:'relative', borderRadius:8, overflow:'hidden', background:'#1a1a1a' }}>
+        {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+        {(post.type === 'feed-video' || post.type === 'short') && (
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Landscape (still / carousel / paid-social / gbp), caption + image stage.
+  if (isLandscape) return (
+    <div style={{ flex:1, minHeight:0, padding:'10px 10px 12px', display:'flex' }}>
+      <div style={{ flex:1, minHeight:0, display:'flex', flexDirection:'column', background:white, borderRadius:8, boxShadow:CARD_SHADOW, overflow:'hidden' }}>
+        <div style={{ flexShrink:0, padding:'10px 12px 8px' }}>
+          <p style={{ margin:0, fontSize:12.5, color:dark80, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
+            {post.caption}
+          </p>
+        </div>
+        <div style={{ flex:1, minHeight:0, position:'relative', background:'#c8c0b4', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+          {post.type === 'carousel' && post.slides && (
+            <div style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'2px 6px', display:'inline-flex', alignItems:'center', gap:3 }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="white" strokeWidth="1.6"/><path d="M2 7v10M22 7v10" stroke="white" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <span style={{ fontSize:10, color:'white', fontFamily:F, lineHeight:1 }}>{post.slides}</span>
+            </div>
+          )}
+          {post.type === 'paid-social' && (
+            <div style={{ position:'absolute', top:8, left:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'3px 7px', display:'inline-flex', alignItems:'center' }}>
+              <span style={{ fontSize:10, color:'white', fontFamily:F, lineHeight:1 }}>Sponsored</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Email / other, editorial: serif headline, image stage, body excerpt.
+  return (
+    <div style={{ flex:1, minHeight:0, padding:'10px 10px 12px', display:'flex' }}>
+      <div style={{ flex:1, minHeight:0, display:'flex', flexDirection:'column', background:white, borderRadius:8, boxShadow:CARD_SHADOW, overflow:'hidden' }}>
+        <div style={{ flexShrink:0, padding:'14px 14px 10px' }}>
+          <p style={{ margin:0, fontSize:17, fontWeight:400, color:dark90, fontFamily:SERIF, lineHeight:1.28, textAlign:'center', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>{post.caption.split('.')[0]}</p>
+        </div>
+        <div style={{ flex:1, minHeight:0, overflow:'hidden', background:'#c8c0b4' }}>
+          {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+        </div>
+        <div style={{ flexShrink:0, padding:'10px 14px 14px' }}>
+          <p style={{ margin:0, fontSize:12.5, color:dark60, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>{post.caption}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Content card, 245×378px, dark-2 bg, Figma spec ─────────────────────────
 function ContentCard({
   post, status, dontPostReasons, resubmitNote, isPast, onApprove, onRemoveApproval, onReview,
 }: {
@@ -339,21 +573,13 @@ function ContentCard({
   const [hovered, setHovered] = useState(false);
   const isApproved = status === 'approved';
   const isDraft    = status === 'rejected';
-  const isBlog     = post.type === 'blog';
 
-  // Header height: pt-12 + icon(14) + pb-2 = ~34px
-  // Caption area: ~58px (2 lines × 18px + 10px top + 8px bottom)
-  const CARD_H   = 378;
   const HEADER_H = 36;
-  // Portrait types fill the card with just the image (no caption section)
-  const isPortrait = post.type === 'story' || post.type === 'short' || post.type === 'feed-video';
-  // Landscape types (still/carousel): grouped caption+image with shadow
-  const isLandscape = post.type === 'still' || post.type === 'carousel';
 
   return (
     <div
       style={{
-        position: 'relative', width: 245, height: CARD_H, flexShrink: 0,
+        position: 'relative', width: CARD_W, height: CARD_H, flexShrink: 0,
         background: dark2, border: `1px solid ${dark4}`,
         borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
         display: 'flex', flexDirection: 'column',
@@ -366,99 +592,14 @@ function ContentCard({
       {/* ── Header: icon + type + date ── */}
       <div style={{ height: HEADER_H, display:'flex', alignItems:'center', gap:4, padding:'12px 12px 2px', flexShrink:0 }}>
         <TypeIcon type={post.type} size={14} />
-        <span style={{ fontSize:12, color:dark60, fontFamily:F, flex:1, letterSpacing:'0.24px' }}>{TYPE_LABEL[post.type]}</span>
-        <span style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', whiteSpace:'nowrap' }}>{post.date}</span>
+        <span style={{ fontSize:14, color:dark80, fontFamily:F, flex:1, letterSpacing:'0.14px' }}>{TYPE_LABEL[post.type]}</span>
+        <span style={{ fontSize:12.5, color:dark40, fontFamily:F, letterSpacing:'0.12px', whiteSpace:'nowrap' }}>{post.date}</span>
       </div>
 
-      {isBlog ? (
-        /* ── Blog layout — white inner card with shadow ── */
-        <div style={{ flex:1, padding:'0 10px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{
-            flex:1, display:'flex', flexDirection:'column', overflow:'hidden',
-            background: white, borderRadius:8,
-            boxShadow:'0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)',
-          }}>
-            {/* Image — top, edge-to-edge within inner card */}
-            <div style={{ height: 126, flexShrink:0, background:'#c8c0b4', overflow:'hidden', borderRadius:'8px 8px 0 0' }}>
-              {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            </div>
-            {/* Text content */}
-            <div style={{ flex:1, padding:'10px 12px 10px', overflow:'hidden', display:'flex', flexDirection:'column', gap:5 }}>
-              <p style={{ margin:0, fontSize:16, fontWeight:400, color:dark90, fontFamily:F, lineHeight:1.3,
-                display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
-                {post.caption}
-              </p>
-              <p style={{ margin:0, fontSize:11, color:dark40, fontFamily:F }}>July 8, 2025</p>
-              <p style={{ margin:0, fontSize:12, color:dark60, fontFamily:F, lineHeight:1.55, letterSpacing:'0.24px',
-                display:'-webkit-box', WebkitLineClamp:6, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
-                In recent years, remote work has become increasingly popular, and with the advancements in artificial intelligence (AI), it has the potential to become even more efficient. AI technologies have the ability to streamline processes, enhance communication, and improve productivity, ultimately transforming.
-              </p>
-            </div>
-          </div>
-        </div>
+      <CardBody post={post} />
 
-      ) : isPortrait ? (
-        /* ── Portrait 9:16 — full-bleed image edge-to-edge below header ── */
-        <div style={{ flex:1, position:'relative', background:'#1a1a1a', overflow:'hidden' }}>
-          {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-          {post.type === 'feed-video' && (
-            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
-              </div>
-            </div>
-          )}
-        </div>
-
-      ) : isLandscape ? (
-        /* ── Landscape layout (still / carousel) — caption + image grouped with shadow ── */
-        <div style={{ flex:1, padding:'0 10px 10px', display:'flex', flexDirection:'column' }}>
-          <div style={{
-            flex:1, display:'flex', flexDirection:'column', overflow:'hidden',
-            background: white, borderRadius:8,
-            boxShadow:'0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)',
-          }}>
-            {/* Caption inside the white group */}
-            <div style={{ padding:'10px 12px 8px', flexShrink:0 }}>
-              <p style={{
-                margin:0, fontSize:12, color:dark80, fontFamily:F, lineHeight:1.55, letterSpacing:'0.24px',
-                display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden',
-              }}>
-                {post.caption}
-                {post.caption.length > 55 && <span style={{ color:dark40 }}> ...mo...</span>}
-              </p>
-            </div>
-            {/* Image fills remaining space in the group */}
-            <div style={{ flex:1, position:'relative', background:'#c8c0b4', overflow:'hidden' }}>
-              {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-              {/* Carousel slide badge */}
-              {post.type === 'carousel' && post.slides && (
-                <div style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'2px 6px', display:'flex', alignItems:'center', gap:3 }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="white" strokeWidth="1.6"/><path d="M2 7v10M22 7v10" stroke="white" strokeWidth="1.6" strokeLinecap="round"/></svg>
-                  <span style={{ fontSize:10, color:'white', fontFamily:F }}>{post.slides}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-      ) : (
-        /* ── Email / other — simple caption + image ── */
-        <>
-          <div style={{ padding:'0 12px 8px', flexShrink:0 }}>
-            <p style={{ margin:0, fontSize:12, color:dark80, fontFamily:F, lineHeight:1.55,
-              display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
-              {post.caption}
-            </p>
-          </div>
-          <div style={{ flex:1, position:'relative', background:'#c8c0b4', overflow:'hidden' }}>
-            {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-          </div>
-        </>
-      )}
-
-      {/* ── Status pill — always anchored bottom-left 10px ── */}
-      <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
+      {/* ── Status pill footer ── */}
+      <div style={{ padding:'0 12px 12px', marginTop:'auto' }}>
         <StatusPill status={status} dontPostReasons={dontPostReasons} resubmitNote={resubmitNote} isPast={isPast} />
       </div>
 
@@ -511,7 +652,7 @@ function CampaignSection({
   justCompleted?: boolean;
   defaultCollapsed?: boolean;
   isPast?: boolean;
-  /** Cover note the AM sent with the campaign — shown under the name. */
+  /** Cover note the AM sent with the campaign, shown under the name. */
   message?: string;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
@@ -557,7 +698,7 @@ function CampaignSection({
           </button>
           <span style={{ fontSize:18, fontWeight:400, color:dark80, fontFamily:F, letterSpacing:'-0.36px' }}>{campaign.name}</span>
           <span style={{ fontSize:14, color:dark60, fontFamily:F, letterSpacing:'0.14px' }}>{campaign.dateRange}</span>
-          {/* Badge — icon matches the sidebar nav icon for the badge type */}
+          {/* Badge, icon matches the sidebar nav icon for the badge type */}
           <span style={{
             display:'inline-flex', alignItems:'center', gap:4,
             background:dark2, borderRadius:4,
@@ -595,7 +736,7 @@ function CampaignSection({
                 )}
               </div>
 
-              {/* Vertical divider + Approve All — only for active campaigns */}
+              {/* Vertical divider + Approve All, only for active campaigns */}
               {pendingCount > 0 && <div style={{ width:1, height:16, background:dark8 }} />}
               {pendingCount > 0 && (
                 <button
@@ -637,8 +778,8 @@ function CampaignSection({
             : 'none',
         }}>
           {isPast ? (
-            /* Past campaigns — flat grid with Posted/Don't Post/Failed pills */
-            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+            /* Past campaigns, flat grid with Posted/Don't Post/Failed pills */
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18, alignItems:'flex-start' }}>
               {campaign.posts.map(post => (
                 <ContentCard
                   key={post.id} post={post}
@@ -656,7 +797,7 @@ function CampaignSection({
             <>
               {/* Pending grid */}
               {pending.length > 0 && (
-                <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:18, alignItems:'flex-start' }}>
                   {pending.map(post => (
                     <ContentCard
                       key={post.id} post={post}
@@ -675,7 +816,7 @@ function CampaignSection({
                 const allDone = pending.length === 0;
                 if (allDone) {
                   return (
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:18, alignItems:'flex-start' }}>
                       {approved.map(post => (
                         <ContentCard
                           key={post.id} post={post} status={statuses[post.id]}
@@ -710,7 +851,7 @@ function CampaignSection({
                       <div style={{ flex:1, height:1, background:dark8 }} />
                     </div>
                     {!approvedSectionCollapsed && (
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:18, alignItems:'flex-start' }}>
                         {approved.map(post => (
                           <ContentCard
                             key={post.id} post={post} status={statuses[post.id]}
@@ -841,6 +982,41 @@ function ResubmitModal({ close, onConfirm, onReviewFirst }: {
   );
 }
 
+// Resubmit-from-preview: leave a note for the client and move the post to
+// Updated. The note is posted into the feedback chat as the AM's response.
+function PreviewResubmitModal({ close, onConfirm }: { close: () => void; onConfirm: (note: string) => void }) {
+  const [note, setNote] = useState('');
+  return (
+    <Modal.Root size="sm" onClose={close}>
+      <Modal.Header onClose={close}>
+        <span style={{ fontSize: 17, fontWeight: 500, color: dark90, fontFamily: F }}>Resubmit to client</span>
+      </Modal.Header>
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ margin: 0, fontSize: 14, color: dark60, fontFamily: F, lineHeight: 1.6 }}>
+            Let the client know what you changed. Your note is added to the conversation and the post moves to <strong style={{ color: dark90, fontWeight: 500 }}>Updated</strong> for another review.
+          </p>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            autoFocus
+            placeholder="e.g. Pulled the install-fee offer up into the headline and bumped the size. Take another look!"
+            style={{ width: '100%', minHeight: 96, resize: 'vertical', border: `1px solid ${dark15}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: dark90, fontFamily: F, lineHeight: 1.5, outline: 'none', boxSizing: 'border-box' }}
+          />
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="secondary" onPress={close}>Cancel</Modal.FooterButton>
+        </Modal.FooterContent>
+        <Modal.FooterContent slot="right">
+          <Modal.FooterButton variant="primary" onPress={() => { onConfirm(note.trim()); close(); }}>Resubmit</Modal.FooterButton>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
 function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (reasons: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [otherText, setOtherText] = useState('');
@@ -916,11 +1092,17 @@ function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (re
 
 
 // ── Post preview (full-screen) ────────────────────────────────────────────────
-// Ported 1:1 from the dfy-client PostPreviewModal chrome — sidebar, "view as"
-// rail, phone preview and header — minus the client-only Request changes /
+// Ported 1:1 from the dfy-client PostPreviewModal chrome, sidebar, "view as"
+// rail, phone preview and header, minus the client-only Request changes /
 // Approve header actions (this is the AM side, so it's Previous / Next only).
 type Glyph = ComponentType<IconProps>;
 const PREVIEW_CLIENT = 'Grain Design Flooring';
+// Drafted replies for the reputation (review-response) posts.
+const REPLY_DRAFT: Record<number, string> = {
+  40: 'Thank you so much, Maria, we’re thrilled you love the white oak! We’d like to come back and take care of that squeak near the landing at no charge. Someone from our team will reach out to schedule a quick visit. 🙌',
+  41: 'Thanks, Devon! It was a pleasure working with you, the herringbone entry turned out beautifully. Enjoy the new floors, and we’re here if you ever need anything.',
+  42: 'Thanks for the honest feedback, Karen. You’re right that scheduling should have been tighter, we’ve since changed how we confirm start dates. We’d love to make it right; a team member will follow up shortly.',
+};
 const PREVIEW_PLATFORMS: { glyph: Glyph; label: string }[] = [
   { glyph: InstagramBrand as Glyph, label: 'Instagram' },
   { glyph: FacebookBrand as Glyph, label: 'Facebook' },
@@ -942,30 +1124,29 @@ function PreviewSidebarAction({ icon: Icon, title, sub }: { icon: Glyph; title: 
   );
 }
 
-interface PreviewPost { id: number; type: ContentType; caption: string; img?: string; campaign: string; date: string; feedback?: ClientReview; status: Status; internalStatus: InternalStatus; isPast: boolean; requestedChange: boolean; approvedByClient: boolean }
+interface PreviewPost { id: number; type: ContentType; caption: string; img?: string; campaign: string; date: string; feedback?: ClientReview; status: PostStatus; headline?: string; rating?: number; reviewer?: string; source?: string }
 
-// Client-request thread shown in the preview sidebar — the client's change
+// Client-request thread shown in the preview sidebar, the client's change
 // request as a received bubble + a reply composer, all from BDS pieces.
-function PreviewClientThread({ feedback }: { feedback: ClientReview }) {
+function PreviewClientThread({ feedback, responses, onSend }: { feedback: ClientReview; responses: string[]; onSend: (text: string) => void }) {
   const [reply, setReply] = useState('');
-  const [sent, setSent] = useState<string[]>([]);
-  const send = () => { if (reply.trim()) { setSent(s => [...s, reply.trim()]); setReply(''); } };
+  const send = () => { if (reply.trim()) { onSend(reply.trim()); setReply(''); } };
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <span style={PREVIEW_LABEL}>Client request</span>
-      {/* Received bubble (from the client) */}
-      <div style={{ minWidth: 0 }}>
-        <div style={{ background: white, border: `1px solid ${dark8}`, borderRadius: 12, padding: '8px 12px' }}>
-          <Text variant="secondary" style={{ display: 'block', color: dark90, lineHeight: 1.5 }}>{feedback.comment}</Text>
-        </div>
-        <Text variant="metadata" style={{ display: 'block', color: dark40, marginTop: 4 }}>{feedback.author} · {feedback.time}</Text>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Requested-change pill sits with the message, not just in the topbar. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <StatusPill status="rejected" requestedChange />
+        <span style={{ fontSize: 13, color: dark40, fontFamily: F }}>{feedback.author} · {feedback.time}</span>
       </div>
-      {/* Sent replies (from the AM) */}
-      {sent.map((s, i) => (
-        <div key={i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      {/* The client's message, larger, no icon. */}
+      <p style={{ margin: 0, fontSize: 16, color: dark90, fontFamily: F, lineHeight: 1.55 }}>{feedback.comment}</p>
+      {/* AM responses (incl. the resubmit note) */}
+      {responses.map((s, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
           <div style={{ maxWidth: '85%', background: dark90, borderRadius: '12px 12px 4px 12px', padding: '8px 12px' }}>
             <Text variant="secondary" style={{ display: 'block', color: white, lineHeight: 1.5 }}>{s}</Text>
           </div>
+          <Text variant="metadata" style={{ color: dark40 }}>You · just now</Text>
         </div>
       ))}
       {/* Reply composer */}
@@ -982,7 +1163,7 @@ function PreviewClientThread({ feedback }: { feedback: ClientReview }) {
   );
 }
 
-// Left "Ask Blaze" panel — same pattern as the h2 ApprovalsV2 preview, rebuilt
+// Left "Ask Blaze" panel, same pattern as the h2 ApprovalsV2 preview, rebuilt
 // from BDS pieces (TextField + IconButton) instead of raw <input>/<button>.
 const PREVIEW_IMPROVEMENTS = [
   { emoji: '🖼️', label: 'Change photo content', detail: '“add people into the background to fill the scene”' },
@@ -1012,7 +1193,7 @@ function PreviewChatPanel() {
         ))}
       </ol>
       <Text variant="secondary" style={{ display: 'block', color: dark80, margin: '20px 0 12px' }}>What would you like to do?</Text>
-      {/* Composer — BDS TextField + IconButtons, no raw controls */}
+      {/* Composer, BDS TextField + IconButtons, no raw controls */}
       <div style={{ position: 'sticky', bottom: 0, background: 'var(--background-light)', paddingBottom: 20 }}>
         <div style={{ border: `1px solid ${dark8}`, borderRadius: 16, background: white, padding: 6 }}>
           <TextField
@@ -1032,10 +1213,27 @@ function PreviewChatPanel() {
   );
 }
 
-function PostPreview({ items, initialIndex, close }: StackModalProps & { items: PreviewPost[]; initialIndex: number }) {
+function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProps & { items: PreviewPost[]; initialIndex: number; onSetStatus?: (id: number, s: PostStatus) => void }) {
   const [idx, setIdx] = useState(Math.max(0, initialIndex));
   const item = items[idx];
   const go = (n: number) => setIdx(Math.max(0, Math.min(items.length - 1, n)));
+  // The AM can change any post's status from here; track locally so the pill
+  // updates live, and propagate to the page via onSetStatus.
+  const [localStatus, setLocalStatus] = useState<Record<number, PostStatus>>({});
+  const [statusMenu, setStatusMenu] = useState(false);
+  const curStatus = localStatus[item.id] ?? item.status;
+  const changeStatus = (s: PostStatus) => { setLocalStatus((m) => ({ ...m, [item.id]: s })); onSetStatus?.(item.id, s); setStatusMenu(false); };
+  const { openModal } = useModals();
+  // AM responses added to the feedback chat (incl. the resubmit note).
+  const [responses, setResponses] = useState<Record<number, string[]>>({});
+  const addResponse = (id: number, text: string) => setResponses((m) => ({ ...m, [id]: [...(m[id] ?? []), text] }));
+  const resubmit = () => openModal(PreviewResubmitModal, {
+    onConfirm: (note: string) => {
+      changeStatus('updated');
+      if (note) addResponse(item.id, note);
+      setSideTab('feedback');
+    },
+  });
 
   // "Posting to" starts as a read-only pill summary; the edit button swaps in
   // the per-platform row list so you can toggle a connected account on/off for
@@ -1049,6 +1247,12 @@ function PostPreview({ items, initialIndex, close }: StackModalProps & { items: 
     setPlatforms((ps) => ps.map((p) => (p.label === label ? { ...p, selected: next } : p)));
   const connectPlatform = (label: string) =>
     setPlatforms((ps) => ps.map((p) => (p.label === label ? { ...p, connected: true, selected: true } : p)));
+
+  // Sidebar tabs: Edit (post controls) vs Feedback (client comment thread).
+  // Default to Feedback whenever the current post has a client change request.
+  const hasFeedback = (it: PreviewPost) => it.feedback?.status === 'changes' && !!it.feedback.comment;
+  const [sideTab, setSideTab] = useState<'edit' | 'feedback'>(hasFeedback(item) ? 'feedback' : 'edit');
+  useEffect(() => { setSideTab(hasFeedback(items[idx]) ? 'feedback' : 'edit'); /* eslint-disable-next-line */ }, [idx]);
   return (
     <Modal.Root size="fullscreen" height="100vh" onClose={close} onPressOutside={close} aria-label="Post preview">
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%', background: white }}>
@@ -1058,19 +1262,44 @@ function PostPreview({ items, initialIndex, close }: StackModalProps & { items: 
             <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back" onPress={close} />
             <TypeIcon type={item.type} size={20} />
             <Text variant="secondary" style={{ color: dark90, whiteSpace: 'nowrap' }}>{TYPE_LABEL[item.type]}</Text>
-            {/* Pill mirrors the card in Approvals */}
-            {item.isPast
-              ? <StatusPill status={item.status} isPast />
-              : item.requestedChange
-                ? <StatusPill status="rejected" requestedChange />
-                : item.approvedByClient
-                  ? <StatusPill status="approved" />
-                  : <InternalStatusPill status={item.internalStatus} />}
+            {/* Status selector, the AM can move a post to any status. */}
+            <span style={{ position: 'relative' }}>
+              <button
+                onClick={() => setStatusMenu((o) => !o)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontFamily: F }}
+              >
+                <PostStatusPill status={curStatus} />
+                <ChevronDown size={14} color={dark40} />
+              </button>
+              {statusMenu && (
+                <>
+                  <div onClick={() => setStatusMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 59 }} />
+                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: 220, background: white, borderRadius: 12, border: `1px solid ${dark8}`, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', zIndex: 60, padding: 6 }}>
+                    <p style={{ margin: '4px 8px 6px', fontSize: 12, color: dark40, fontFamily: F }}>Set status</p>
+                    {STATUS_TABS.map((t) => (
+                      <button
+                        key={t.key}
+                        onClick={() => changeStatus(t.key)}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'left', background: t.key === curStatus ? dark4 : 'transparent', fontFamily: F }}
+                        onMouseEnter={(e) => { if (t.key !== curStatus) e.currentTarget.style.background = dark2; }}
+                        onMouseLeave={(e) => { if (t.key !== curStatus) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <PostStatusPill status={t.key} />
+                        {t.key === curStatus && <span style={{ marginLeft: 'auto', display: 'inline-flex', color: dark90 }}><Check2 size={16} /></span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </span>
             <IconButton variant="ghost" size="sm" icon={MoreDots} aria-label="More" />
           </div>
-          {/* center — Previous / Next only (client-only actions omitted) */}
+          {/* center, Previous / Next only (client-only actions omitted) */}
           <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <Button variant="tertiary" size="md" frontIcon={ChevronLeftLg} isDisabled={idx === 0} onPress={() => go(idx - 1)}>Previous</Button>
+            {curStatus === 'changes' && (
+              <Button variant="secondary" size="md" onPress={resubmit}>Resubmit to client</Button>
+            )}
             <Button variant="tertiary" size="md" endIcon={ChevronRight} isDisabled={idx === items.length - 1} onPress={() => go(idx + 1)}>Next</Button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0, justifyContent: 'flex-end' }}>
@@ -1079,100 +1308,165 @@ function PostPreview({ items, initialIndex, close }: StackModalProps & { items: 
         </div>
         {/* body */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          {/* left — Ask Blaze chat panel */}
+          {/* left, Ask Blaze chat panel */}
           <PreviewChatPanel />
           <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, padding: '40px 24px', background: 'var(--default-bg)' }}>
-            {/* view-as rail */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-              <Text variant="metadata" style={{ color: dark60, marginBottom: 2 }}>View as</Text>
-              {PREVIEW_PLATFORMS.map(({ glyph: G, label }, i) => (
-                <span key={label} aria-label={label} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: i === 0 ? `1px solid ${dark15}` : '1px solid transparent', background: i === 0 ? white : 'transparent', boxShadow: i === 0 ? '0 1px 2px rgba(0,0,0,0.06)' : 'none' }}>
-                  <G size={14} />
-                </span>
-              ))}
-            </div>
-            {/* phone preview */}
-            <div style={{ width: 360, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
-                <Avatar fallback="G" size={28} style={{ background: 'var(--brand)' }} />
-                <Text style={{ fontWeight: 500, color: dark90 }}>{PREVIEW_CLIENT}</Text>
+            {/* view-as rail, only meaningful for social/organic posts */}
+            {item.type !== 'paid-search' && item.type !== 'review' && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                <Text variant="metadata" style={{ color: dark60, marginBottom: 2 }}>View as</Text>
+                {PREVIEW_PLATFORMS.map(({ glyph: G, label }, i) => (
+                  <span key={label} aria-label={label} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: i === 0 ? `1px solid ${dark15}` : '1px solid transparent', background: i === 0 ? white : 'transparent', boxShadow: i === 0 ? '0 1px 2px rgba(0,0,0,0.06)' : 'none' }}>
+                    <G size={14} />
+                  </span>
+                ))}
               </div>
-              {item.img
-                ? <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${item.img}'), ${dark4}` }} />
-                : <div style={{ aspectRatio: '4 / 5', background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Text variant="secondary" style={{ color: dark40 }}>{TYPE_LABEL[item.type]}</Text></div>}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 14px 4px', color: dark90 }}>
-                <Heart size={24} color={dark90} />
-                <Comment size={20} color={dark90} />
-                <Send size={16} color={dark90} />
+            )}
+
+            {item.type === 'paid-search' ? (
+              /* ── Paid Search, Google sponsored result, no phone chrome ── */
+              <div style={{ width: 480, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, boxShadow: '0 4px 16px rgba(0,0,0,0.06)', padding: '26px 28px' }}>
+                <Text variant="metadata" style={{ display: 'block', color: dark40, marginBottom: 16 }}>Google Search, sponsored result</Text>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <Avatar fallback="G" size={26} style={{ background: 'var(--brand)' }} />
+                  <div style={{ lineHeight: 1.25 }}>
+                    <Text style={{ display: 'block', color: dark90, fontWeight: 500 }}>{PREVIEW_CLIENT}</Text>
+                    <Text variant="metadata" style={{ color: dark60 }}>Ad · graindesignflooring.com</Text>
+                  </div>
+                </div>
+                <h3 style={{ margin: '4px 0 6px', fontSize: 20, fontWeight: 400, color: '#1a0dab', fontFamily: F, lineHeight: 1.3 }}>{item.headline ?? item.caption}</h3>
+                <p style={{ margin: 0, fontSize: 15, color: dark60, fontFamily: F, lineHeight: 1.55 }}>{item.caption}</p>
               </div>
-              <div style={{ padding: '6px 14px 16px' }}>
-                <Text variant="secondary" style={{ display: 'block', color: dark90, lineHeight: 1.5 }}><span style={{ fontWeight: 500 }}>{PREVIEW_CLIENT}</span> {item.caption}</Text>
-                <Text variant="secondary" style={{ display: 'block', color: dark40, marginTop: 2 }}>see more</Text>
+            ) : item.type === 'review' ? (
+              /* ── Reputation, the review + the drafted reply ── */
+              <div style={{ width: 480, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, boxShadow: '0 4px 16px rgba(0,0,0,0.06)', padding: '22px 24px' }}>
+                <Text variant="metadata" style={{ display: 'block', color: dark40, marginBottom: 16 }}>{item.source ?? 'Google'} review, your reply</Text>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                  <Avatar fallback={(item.reviewer ?? 'A').slice(0, 1)} size={36} />
+                  <div style={{ minWidth: 0 }}>
+                    <Text style={{ display: 'block', color: dark90, fontWeight: 500 }}>{item.reviewer}</Text>
+                    <span style={{ display: 'inline-flex', margin: '3px 0 6px' }}><RatingStars rating={item.rating ?? 5} size={15} /></span>
+                    <Text variant="secondary" style={{ display: 'block', color: dark80, lineHeight: 1.55 }}>{item.caption}</Text>
+                  </div>
+                </div>
+                <div style={{ marginLeft: 20, paddingLeft: 16, borderLeft: `2px solid ${dark8}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <Avatar fallback="G" size={24} style={{ background: 'var(--brand)' }} />
+                    <Text style={{ color: dark90, fontWeight: 500 }}>{PREVIEW_CLIENT}</Text>
+                    <Text variant="metadata" style={{ color: dark40 }}>· Owner</Text>
+                  </div>
+                  <Text variant="secondary" style={{ display: 'block', color: dark80, lineHeight: 1.55 }}>{REPLY_DRAFT[item.id] ?? item.caption}</Text>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* ── Social / organic post ── */
+              <div style={{ width: 440, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
+                  <Avatar fallback="G" size={28} style={{ background: 'var(--brand)' }} />
+                  <Text style={{ fontWeight: 500, color: dark90 }}>{PREVIEW_CLIENT}</Text>
+                </div>
+                {item.img
+                  ? <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${item.img}'), ${dark4}` }} />
+                  : <div style={{ aspectRatio: '4 / 5', background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Text variant="secondary" style={{ color: dark40 }}>{TYPE_LABEL[item.type]}</Text></div>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 14px 4px', color: dark90 }}>
+                  <Heart size={24} color={dark90} />
+                  <Comment size={20} color={dark90} />
+                  <Send size={16} color={dark90} />
+                </div>
+                <div style={{ padding: '6px 14px 16px' }}>
+                  <Text variant="secondary" style={{ display: 'block', color: dark90, lineHeight: 1.5 }}><span style={{ fontWeight: 500 }}>{PREVIEW_CLIENT}</span> {item.caption}</Text>
+                  <Text variant="secondary" style={{ display: 'block', color: dark40, marginTop: 2 }}>see more</Text>
+                </div>
+              </div>
+            )}
           </div>
           {/* sidebar */}
-          <aside style={{ width: 312, flexShrink: 0, borderLeft: `1px solid ${dark8}`, background: 'var(--background-light)', overflowY: 'auto', padding: '24px 24px 60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
-            {item.feedback?.status === 'changes' && item.feedback.comment && (
-              <PreviewClientThread feedback={item.feedback} />
-            )}
-            <div>
-              <span style={PREVIEW_LABEL}>Posting on</span>
-              <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: F }}>
-                <Text variant="primary" style={{ color: dark90 }}>{item.date}</Text>
-                <ChevronDown size={16} color={dark60} />
-              </button>
-            </div>
-            <div onMouseEnter={() => setPostingHover(true)} onMouseLeave={() => setPostingHover(false)}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ ...PREVIEW_LABEL, marginBottom: 0 }}>Posting to</span>
-                <span style={{ opacity: editingPosting || postingHover ? 1 : 0, transition: 'opacity 120ms ease' }}>
-                  {editingPosting ? (
-                    <Button variant="secondary" size="sm" onPress={() => setEditingPosting(false)}>Save</Button>
-                  ) : (
-                    <IconButton variant="ghost" size="sm" icon={Edit1} aria-label="Edit posting accounts" onPress={() => setEditingPosting(true)} />
-                  )}
+          <aside style={{ width: 312, flexShrink: 0, borderLeft: `1px solid ${dark8}`, background: 'var(--background-light)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {/* Tab bar, Edit / Feedback, as the standard TabChip pills. */}
+            <div style={{ display: 'flex', gap: 6, padding: '16px 20px', position: 'sticky', top: 0, background: 'var(--background-light)', zIndex: 2 }}>
+              <TabChip selected={sideTab === 'edit'} onSelect={() => setSideTab('edit')}>Edit</TabChip>
+              <TabChip selected={sideTab === 'feedback'} onSelect={() => setSideTab('feedback')}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  Feedback
+                  {hasFeedback(item) && <span style={{ width: 6, height: 6, borderRadius: 99, background: red }} />}
                 </span>
+              </TabChip>
+            </div>
+
+            {sideTab === 'feedback' ? (
+              <div style={{ padding: '24px 24px 60px' }}>
+                {hasFeedback(item) ? (
+                  <PreviewClientThread feedback={item.feedback!} responses={responses[item.id] ?? []} onSend={(t) => addResponse(item.id, t)} />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '40px 12px', textAlign: 'center' }}>
+                    <Comment size={20} color={dark40} />
+                    <Text variant="secondary" style={{ color: dark60, lineHeight: 1.5 }}>
+                      {curStatus === 'approved' ? 'The client approved this, no changes requested.' : curStatus === 'draft' ? 'Not sent to the client yet.' : 'With the client. No feedback yet.'}
+                    </Text>
+                  </div>
+                )}
               </div>
-              {editingPosting ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {platforms.map(({ glyph: G, label, connected, selected }) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <G size={20} />
-                      <Text style={{ flex: 1, color: dark90 }}>{label}</Text>
-                      {connected ? (
-                        <DSToggle checked={selected} onChange={(next) => setPlatformSelected(label, next)} />
+            ) : (
+              <div style={{ padding: '24px 24px 60px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+                <div>
+                  <span style={PREVIEW_LABEL}>Posting on</span>
+                  <button type="button" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: F }}>
+                    <Text variant="primary" style={{ color: dark90 }}>{item.date}</Text>
+                    <ChevronDown size={16} color={dark60} />
+                  </button>
+                </div>
+                <div onMouseEnter={() => setPostingHover(true)} onMouseLeave={() => setPostingHover(false)}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <span style={{ ...PREVIEW_LABEL, marginBottom: 0 }}>Posting to</span>
+                    <span style={{ opacity: editingPosting || postingHover ? 1 : 0, transition: 'opacity 120ms ease' }}>
+                      {editingPosting ? (
+                        <Button variant="secondary" size="sm" onPress={() => setEditingPosting(false)}>Save</Button>
                       ) : (
-                        <Button variant="secondary" size="sm" endIcon={ChevronRight} onPress={() => connectPlatform(label)}>Connect</Button>
+                        <IconButton variant="ghost" size="sm" icon={Edit1} aria-label="Edit posting accounts" onPress={() => setEditingPosting(true)} />
                       )}
+                    </span>
+                  </div>
+                  {editingPosting ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {platforms.map(({ glyph: G, label, connected, selected }) => (
+                        <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <G size={20} />
+                          <Text style={{ flex: 1, color: dark90 }}>{label}</Text>
+                          {connected ? (
+                            <DSToggle checked={selected} onChange={(next) => setPlatformSelected(label, next)} />
+                          ) : (
+                            <Button variant="secondary" size="sm" endIcon={ChevronRight} onPress={() => connectPlatform(label)}>Connect</Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {platforms.filter((p) => p.connected && p.selected).map(({ glyph: G, label }) => (
+                        <Pill key={label} size="md">
+                          <G size={14} />
+                          <span style={{ marginLeft: 5 }}>{label}</span>
+                        </Pill>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {platforms.filter((p) => p.connected && p.selected).map(({ glyph: G, label }) => (
-                    <Pill key={label} size="md">
-                      <G size={14} />
-                      <span style={{ marginLeft: 5 }}>{label}</span>
-                    </Pill>
-                  ))}
+                <div>
+                  <span style={PREVIEW_LABEL}>Campaign</span>
+                  <Text variant="primary" style={{ display: 'block', color: dark90, lineHeight: 1.35 }}>{item.campaign}</Text>
                 </div>
-              )}
-            </div>
-            <div>
-              <span style={PREVIEW_LABEL}>Campaign</span>
-              <Text variant="primary" style={{ display: 'block', color: dark90, lineHeight: 1.35 }}>{item.campaign}</Text>
-            </div>
-            <div>
-              <span style={PREVIEW_LABEL}>Quick Edits</span>
-              <PreviewSidebarAction icon={Edit1 as Glyph} title="Adjust Caption" />
-              <PreviewSidebarAction icon={Templates as Glyph} title="Edit Design" />
-            </div>
-            <div>
-              <span style={PREVIEW_LABEL}>Redesign</span>
-              <PreviewSidebarAction icon={Stars as Glyph} title="Regenerate Design" sub="Blaze will generate new design" />
-              <PreviewSidebarAction icon={Images as Glyph} title="Replace with Media" sub="Swap design with your own" />
-            </div>
+                <div>
+                  <span style={PREVIEW_LABEL}>Quick Edits</span>
+                  <PreviewSidebarAction icon={Edit1 as Glyph} title="Adjust Caption" />
+                  <PreviewSidebarAction icon={Templates as Glyph} title="Edit Design" />
+                </div>
+                <div>
+                  <span style={PREVIEW_LABEL}>Redesign</span>
+                  <PreviewSidebarAction icon={Stars as Glyph} title="Regenerate Design" sub="Blaze will generate new design" />
+                  <PreviewSidebarAction icon={Images as Glyph} title="Replace with Media" sub="Swap design with your own" />
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       </div>
@@ -1207,7 +1501,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 // ── Approval Settings modal ───────────────────────────────────────────────────
 const CONTENT_TYPES = [
   { key: 'campaigns',  label: 'Organic Campaigns',           desc: 'Scheduled social posts across all connected platforms.',   defaultOn: false },
-  { key: 'seo-local',  label: 'Local SEO — Google Business', desc: 'Posts and updates to your Google Business Profile.',       defaultOn: true  },
+  { key: 'seo-local',  label: 'Local SEO, Google Business', desc: 'Posts and updates to your Google Business Profile.',       defaultOn: true  },
   { key: 'seo-blogs',  label: 'SEO / AEO Blogs',             desc: 'Long-form content published to your website or blog.',     defaultOn: false },
   { key: 'reputation', label: 'Reputation',                  desc: 'Review responses and reputation management content.',      defaultOn: true  },
   { key: 'paid-ads',   label: 'Paid Ads',                    desc: 'Search and display ad copy before going to ad networks.',  defaultOn: true  },
@@ -1289,7 +1583,7 @@ export function ApprovalSettingsModal({ close }: { close: () => void }) {
             <Toggle on={approvalsOn} onChange={handleMasterToggle} />
           </div>
 
-          {/* Per-type list — only when approvals is on */}
+          {/* Per-type list, only when approvals is on */}
           {approvalsOn && (
             <>
               <div style={{ height: 1, background: dark8, margin: '0 0 16px' }} />
@@ -1327,7 +1621,7 @@ export function ApprovalSettingsModal({ close }: { close: () => void }) {
           <span style={{ fontSize: 12, color: dark60, fontFamily: F }}>
             {approvalsOn
               ? `${clientRequiredCount} of ${CONTENT_TYPES.length} content types require client approval`
-              : 'Approvals disabled — all content publishes automatically'}
+              : 'Approvals disabled, all content publishes automatically'}
           </span>
         </Modal.FooterContent>
         <Modal.FooterContent slot="right">
@@ -1428,22 +1722,60 @@ function InternalStatusPill({ status }: { status: InternalStatus }) {
   );
 }
 
+// Sent-but-not-yet-decided: the client has it, awaiting their verdict.
+function SentPendingPill() {
+  return (
+    <span style={{
+      display:'inline-flex', alignItems:'center', padding:'2px 6px', borderRadius:4,
+      backgroundColor: white,
+      backgroundImage: 'linear-gradient(rgba(255,174,0,0.28), rgba(255,174,0,0.28))',
+      border: '1px solid rgba(255,174,0,0.45)',
+      fontSize:11, fontWeight:400, color:'#7a4800', fontFamily:F,
+      letterSpacing:'0.22px', whiteSpace:'nowrap',
+    }}>In client review</span>
+  );
+}
+
+// ── Unified pipeline-status pill (one per PostStatus) ──────────────────────────
+const STATUS_PILL: Record<PostStatus, { overlay: string; border: string; color: string; label: string }> = {
+  draft:       { overlay: 'rgba(0,0,0,0.05)',     border: dark15,                 color: dark60,        label: 'Draft' },
+  'in-review': { overlay: 'rgba(255,174,0,0.28)', border: 'rgba(255,174,0,0.45)', color: '#7a4800',     label: 'In review' },
+  changes:     { overlay: 'rgba(188,1,11,0.08)',  border: 'rgba(188,1,11,0.2)',   color: 'var(--red-90)', label: 'Requested change' },
+  approved:    { overlay: 'rgba(32,161,79,0.1)',  border: 'rgba(32,161,79,0.25)', color: green,         label: 'Approved' },
+  updated:     { overlay: 'rgba(106,0,255,0.08)', border: 'rgba(106,0,255,0.2)',  color: '#6a00ff',     label: 'Updated' },
+};
+function PostStatusPill({ status }: { status: PostStatus }) {
+  const cfg = STATUS_PILL[status];
+  return (
+    <span style={{
+      display:'inline-flex', alignItems:'center', padding:'2px 6px', borderRadius:4,
+      backgroundColor: white,
+      backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
+      border: `1px solid ${cfg.border}`,
+      fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
+      letterSpacing:'0.22px', whiteSpace:'nowrap',
+    }}>{cfg.label}</span>
+  );
+}
+
 // ── Internal content card ─────────────────────────────────────────────────────
 function InternalCard({
-  post, internalStatus, onMarkReady, onUndo, onReview, isPast,
-  requestedChange, approvedByClient, dontPostReasons, onResubmit, pastClientStatus,
+  post, status, selected = false, showCheckbox = false, onToggleSelect, clientComment, onReview, onResubmit,
 }: {
-  post: Post; internalStatus: InternalStatus; isPast?: boolean;
-  onMarkReady: () => void; onUndo: () => void; onReview: () => void;
-  requestedChange?: boolean;
-  approvedByClient?: boolean;
-  dontPostReasons?: string[];
+  post: Post;
+  status: PostStatus;
+  selected?: boolean;
+  /** Draft subtab shows a select-to-send checkbox on the far left. */
+  showCheckbox?: boolean;
+  onToggleSelect?: (next: boolean) => void;
+  /** Client's change-request text, shown under the card on the Requested changes tab. */
+  clientComment?: string;
+  onReview: () => void;
   onResubmit?: (note: string) => void;
-  pastClientStatus?: Status;
 }) {
   const [hovered, setHovered] = useState(false);
   const { openModal } = useModals();
-  const isReady = internalStatus === 'readyForClient';
+  const hasComment = !!clientComment;
 
   const handleResubmit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1452,134 +1784,53 @@ function InternalCard({
       onReviewFirst: () => onReview(),
     });
   };
-  const isBlog  = post.type === 'blog';
-  const isPortrait = post.type === 'story' || post.type === 'short' || post.type === 'feed-video';
-  const isLandscape = post.type === 'still' || post.type === 'carousel';
 
-  const CARD_H   = 378;
-  const HEADER_H = 36;
+  const HEADER_H = 40;
 
   return (
     <div
       style={{
-        position:'relative', width:245, height:CARD_H, flexShrink:0,
-        // Requested-change designs get a subtle red wash so it's clear at a
-        // glance which aren't approved yet.
-        background: requestedChange ? 'rgba(188,1,11,0.04)' : dark2,
-        border: `1px solid ${requestedChange ? 'rgba(188,1,11,0.2)' : dark4}`,
-        borderRadius:10,
-        overflow:'hidden', cursor:'pointer',
-        opacity: 1, transition:'opacity 0.2s',
+        position:'relative', width:CARD_W, height:CARD_H, flexShrink:0,
+        background: dark2, border: `1px solid ${dark4}`,
+        borderRadius:10, overflow:'hidden', cursor:'pointer',
         display:'flex', flexDirection:'column',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={(e) => { if (!(e.target as HTMLElement).closest('button, a, input, label')) onReview(); }}
     >
-      {/* Header */}
-      <div style={{ height:HEADER_H, display:'flex', alignItems:'center', gap:6, padding:'12px 12px 2px', flexShrink:0 }}>
-        <TypeIcon type={post.type} size={14} />
-        <span style={{ fontSize:12, color:dark60, fontFamily:F, flex:1, letterSpacing:'0.24px' }}>{TYPE_LABEL[post.type]}</span>
-        <span style={{ fontSize:11, color:dark40, fontFamily:F, letterSpacing:'0.22px', whiteSpace:'nowrap' }}>{post.date}</span>
-        {!isPast && !requestedChange && !approvedByClient && (
-          <span onClick={(e) => e.stopPropagation()} title={isReady ? 'Will be sent to the client' : 'Excluded from the client send'} style={{ position:'relative', zIndex:6, display:'inline-flex', alignItems:'center' }}>
-            <Checkbox checked={isReady} onChange={(next) => (next ? onMarkReady() : onUndo())} />
+      {/* Header, select checkbox on the far left, then type + date */}
+      <div style={{ height:HEADER_H, display:'flex', alignItems:'center', gap:8, padding:'12px 14px 2px', flexShrink:0 }}>
+        {showCheckbox && (
+          <span onClick={(e) => e.stopPropagation()} title={selected ? 'Selected to send' : 'Select to send'} style={{ position:'relative', zIndex:6, display:'inline-flex', alignItems:'center' }}>
+            <Checkbox checked={selected} onChange={(next) => onToggleSelect?.(next)} />
           </span>
         )}
+        <TypeIcon type={post.type} size={16} />
+        <span style={{ fontSize:14, color:dark80, fontFamily:F, flex:1, letterSpacing:'0.14px' }}>{TYPE_LABEL[post.type]}</span>
+        <span style={{ fontSize:12.5, color:dark40, fontFamily:F, letterSpacing:'0.12px', whiteSpace:'nowrap' }}>{post.date}</span>
       </div>
 
-      {isBlog ? (
-        <div style={{ flex:1, padding:'0 10px 32px', display:'flex', flexDirection:'column' }}>
-          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:white, borderRadius:8, boxShadow:'0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ height:126, flexShrink:0, background:'#c8c0b4', overflow:'hidden', borderRadius:'8px 8px 0 0' }}>
-              {post.img && <img src={post.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-            </div>
-            <div style={{ flex:1, padding:'10px 12px 10px', overflow:'hidden', display:'flex', flexDirection:'column', gap:5 }}>
-              <p style={{ margin:0, fontSize:16, fontWeight:400, color:dark90, fontFamily:F, lineHeight:1.3, display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>{post.caption}</p>
-              <p style={{ margin:0, fontSize:11, color:dark40, fontFamily:F }}>July 8, 2025</p>
-              <p style={{ margin:0, fontSize:12, color:dark60, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:6, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>In recent years, remote work has become increasingly popular, and with the advancements in artificial intelligence (AI), it has the potential to become even more efficient.</p>
-            </div>
-          </div>
+      <CardBody post={post} />
+
+      {/* Client change-request message, dark text, normal card background. */}
+      {hasComment && (
+        <div style={{ padding:'0 14px 14px', marginTop:'auto' }}>
+          <p style={{ margin:0, fontSize:14, color:dark90, fontFamily:F, lineHeight:1.5, display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>“{clientComment}”</p>
         </div>
-      ) : isPortrait ? (
-        /* ── Portrait 9:16 — full-bleed image edge-to-edge below header ── */
-        <div style={{ flex:1, position:'relative', background:'#1a1a1a', overflow:'hidden' }}>
-          {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-          {post.type === 'feed-video' && (
-            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <div style={{ width:44, height:44, borderRadius:99, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <svg width="14" height="16" viewBox="0 0 16 18" fill="white"><path d="M2 2L14 9L2 16V2Z"/></svg>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : isLandscape ? (
-        <div style={{ flex:1, padding:'0 10px 10px', display:'flex', flexDirection:'column' }}>
-          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:white, borderRadius:8, boxShadow:'0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ padding:'10px 12px 8px', flexShrink:0 }}>
-              <p style={{ margin:0, fontSize:12, color:dark80, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>
-                {post.caption}{post.caption.length > 55 && <span style={{ color:dark40 }}> ...mo...</span>}
-              </p>
-            </div>
-            <div style={{ flex:1, position:'relative', background:'#c8c0b4', overflow:'hidden' }}>
-              {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-              {post.type === 'carousel' && post.slides && (
-                <div style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'2px 6px', display:'flex', alignItems:'center', gap:3 }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="white" strokeWidth="1.6"/><path d="M2 7v10M22 7v10" stroke="white" strokeWidth="1.6" strokeLinecap="round"/></svg>
-                  <span style={{ fontSize:10, color:'white', fontFamily:F }}>{post.slides}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div style={{ padding:'0 12px 8px', flexShrink:0 }}>
-            <p style={{ margin:0, fontSize:12, color:dark80, fontFamily:F, lineHeight:1.55, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as const, overflow:'hidden' }}>{post.caption}</p>
-          </div>
-          <div style={{ flex:1, position:'relative', background:'#c8c0b4', overflow:'hidden' }}>
-            {post.img && <img src={post.img} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
-          </div>
-        </>
       )}
-
-      {/* Status pill */}
-      <div style={{ position:'absolute', bottom:10, left:12, zIndex:5 }}>
-        {isPast && pastClientStatus !== undefined
-          ? <StatusPill status={pastClientStatus} dontPostReasons={dontPostReasons} isPast />
-          : requestedChange
-            ? <StatusPill status="rejected" requestedChange dontPostReasons={dontPostReasons} />
-            : approvedByClient
-              ? <StatusPill status="approved" />
-              : <InternalStatusPill status={internalStatus} />}
-      </div>
 
       {/* Hover overlay */}
       <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)', opacity:hovered?1:0, transition:'opacity 0.18s', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, pointerEvents:hovered?'all':'none' }}>
         <div style={{ transform:hovered?'scale(1) translateY(0)':'scale(0.9) translateY(4px)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-          {isPast ? (
-            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              View
-            </Button>
-          ) : requestedChange ? (
-            <>
-              <Button variant="green" size="sm" frontIcon={Check2} onClick={handleResubmit}>
-                Resubmit to Client
-              </Button>
-              <Button variant="secondary" size="sm" frontIcon={EyeOpen}
-                onClick={(e) => { e.stopPropagation(); onReview(); }}>
-                Review
-              </Button>
-            </>
-          ) : approvedByClient ? (
-            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              Review
-            </Button>
-          ) : (
-            <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
-              Review
+          {status === 'changes' && (
+            <Button variant="green" size="sm" frontIcon={Check2} onClick={handleResubmit}>
+              Resubmit to Client
             </Button>
           )}
+          <Button variant="secondary" size="sm" frontIcon={EyeOpen} onClick={(e) => { e.stopPropagation(); onReview(); }}>
+            Review
+          </Button>
         </div>
       </div>
     </div>
@@ -1651,7 +1902,7 @@ function InternalCampaignSection({
                   {posts.length} posts
                 </span>
 
-                {/* Client feedback counters — requested changes surfaced here */}
+                {/* Client feedback counters, requested changes surfaced here */}
                 {hasClientFeedback && (
                   <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                     {clientRejectedCount > 0 && (
@@ -1692,9 +1943,9 @@ function InternalCampaignSection({
       {!collapsed && (
         <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
 
-          {/* Past campaigns — flat grid with Posted/Don't Post/Failed */}
+          {/* Past campaigns, flat grid with Posted/Don't Post/Failed */}
           {isPastCamp ? (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:18, alignItems:'flex-start' }}>
               {posts.map(post => (
                 <InternalCard
                   key={post.id} post={post}
@@ -1709,8 +1960,8 @@ function InternalCampaignSection({
               ))}
             </div>
           ) : (
-          /* One flat list — the client's verdicts live on each card's own pill. */
-          <div style={{ display:'flex', flexWrap:'wrap', gap:18 }}>
+          /* One flat list, the client's verdicts live on each card's own pill. */
+          <div style={{ display:'flex', flexWrap:'wrap', gap:18, alignItems:'flex-start' }}>
             {posts.map(post => (
               <InternalCard
                 key={post.id} post={post}
@@ -1801,12 +2052,12 @@ function FilterRow<K extends string>({ opt, selected, onSelect }: { opt: FacetOp
   );
 }
 
-/** Send-to-client modal — a pre-generated cover note the AM can adjust inline. */
+/** Send-to-client modal, a pre-generated cover note the AM can adjust inline. */
 /** Pre-generated AM cover note shown to the client above a campaign. Used both
  *  as the SendToClientModal default and as the client-side fallback so the note
  *  is always present in the demo (a live send overrides it). */
 function defaultCampaignMessage(campaignName: string, count: number, dateRange: string) {
-  return `Hi there,\n\nThe ${campaignName} content is ready for your review — ${count} ${count === 1 ? 'piece' : 'pieces'} for ${dateRange}. Approve anything that's good to go, or leave a note on whatever you'd like changed.\n\nThanks!`;
+  return `Hi there,\n\nThe ${campaignName} content is ready for your review, ${count} ${count === 1 ? 'piece' : 'pieces'} for ${dateRange}. Approve anything that's good to go, or leave a note on whatever you'd like changed.\n\nThanks!`;
 }
 
 function SendToClientModal({ close, campaignName, count, dateRange, onSend }: { close: () => void; campaignName: string; count: number; dateRange: string; onSend: (message: string) => void }) {
@@ -1835,7 +2086,36 @@ function SendToClientModal({ close, campaignName, count, dateRange, onSend }: { 
   );
 }
 
-/** AM-side Filter dropdown — content type + status, anchored under the button. */
+/** Send-for-review modal, the AM adds a note the client will see with the batch. */
+function SendReviewModal({ close, count, onSend }: { close: () => void; count: number; onSend: (note: string) => void }) {
+  const [note, setNote] = useState(`Hi there,\n\n${count} ${count === 1 ? 'piece is' : 'pieces are'} ready for your review. Approve anything that's good to go, or leave a note on whatever you'd like changed.\n\nThanks!`);
+  return (
+    <Modal.Root size="md" onClose={close}>
+      <Modal.Header title={`Send ${count} ${count === 1 ? 'piece' : 'pieces'} to client`} onClose={close} />
+      <Modal.Content>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>Leave a note, the client sees it at the top of this review batch.</span>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            autoFocus
+            style={{ width: '100%', boxSizing: 'border-box', minHeight: 156, resize: 'vertical', border: `1px solid ${dark8}`, borderRadius: 8, padding: '10px 12px', fontFamily: F, fontSize: 14, color: dark90, lineHeight: 1.6, outline: 'none', background: white }}
+          />
+        </div>
+      </Modal.Content>
+      <Modal.Footer>
+        <Modal.FooterContent slot="right">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Modal.FooterButton variant="secondary" onPress={close}>Cancel</Modal.FooterButton>
+            <Modal.FooterButton variant="primary" onPress={() => { onSend(note.trim()); close(); }}>Send to client</Modal.FooterButton>
+          </div>
+        </Modal.FooterContent>
+      </Modal.Footer>
+    </Modal.Root>
+  );
+}
+
+/** AM-side Filter dropdown, content type + status, anchored under the button. */
 export function ApprovalsFilterControl({ type, status, onChange }: { type: ApprovalTypeFilter; status: ApprovalStatusFilter; onChange: (next: { type?: ApprovalTypeFilter; status?: ApprovalStatusFilter }) => void }) {
   const [open, setOpen] = useState(false);
   const facets = approvalFacets();
@@ -1858,6 +2138,62 @@ export function ApprovalsFilterControl({ type, status, onChange }: { type: Appro
   );
 }
 
+// ── Subtab switcher, Not sent (drafts) vs Sent to client ──────────────────────
+// ── Content-type section, one collapsible block of cards. Paid Social and
+//    Paid Search collapse into a single "Paid Ads" section (no over-dividing). ──
+function ContentTypeSection({ label, posts, renderCard }: {
+  label: string; posts: Post[]; renderCard: (p: Post) => React.ReactNode;
+}) {
+  const [open, setOpen] = useState(true);
+  if (posts.length === 0) return null;
+  const sample = posts[0];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ display:'flex', alignItems:'center', gap:10, width:'100%', background:'transparent', border:'none', cursor:'pointer', padding:0, textAlign:'left' }}
+      >
+        <TypeIcon type={sample.type} size={20} />
+        <span style={{ fontSize:20, fontWeight:400, color:dark90, fontFamily:F, letterSpacing:'-0.4px' }}>{label}</span>
+        <span style={{ fontSize:14, color:dark40, fontFamily:F }}>{posts.length}</span>
+        {/* Chevron on the right */}
+        <span style={{ marginLeft:'auto', display:'inline-flex', transform: open ? 'none' : 'rotate(-90deg)', transition:'transform 0.15s' }}>
+          <ChevronDown size={18} color={dark40} />
+        </span>
+      </button>
+      {open && (
+        <div style={{ display:'flex', flexWrap:'wrap', gap:18, alignItems:'flex-start' }}>
+          {posts.map(renderCard)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Ordered content-type sections: Paid Ads (social + search combined), Organic,
+// SEO/AEO, Reputation, separated by a divider line.
+export function ContentTypeSections({ posts, renderCard }: {
+  posts: Post[]; renderCard: (p: Post) => React.ReactNode;
+}) {
+  const groups = SECTION_GROUPS
+    .map(g => ({ label: g.label, posts: posts.filter(p => g.sections.includes(p.section)) }))
+    .filter(g => g.posts.length > 0);
+
+  if (groups.length === 0) {
+    return <div style={{ padding:'48px 0', textAlign:'center', color:dark40, fontFamily:F, fontSize:14 }}>Nothing here yet.</div>;
+  }
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column' }}>
+      {groups.map((g, i) => (
+        <div key={g.label} style={{ borderTop: i > 0 ? `1px solid ${dark8}` : undefined, paddingTop: i > 0 ? 32 : 0, marginTop: i > 0 ? 32 : 0 }}>
+          <ContentTypeSection label={g.label} posts={g.posts} renderCard={renderCard} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * The Approvals view, decoupled from any shell. `clientView` is a controlled
  * prop so it can be driven either by the standalone prototype's own toggle or
@@ -1872,68 +2208,61 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
   const { state } = useDfyState();
   const clientReviewed = state === 'steady';
 
-  // Seeds are reusable so flipping the dev-state toggle re-derives them live
-  // (steady = client verdicts; cold/reviewed = pre-send, all awaiting).
-  const seedInternal = (): Record<number, InternalStatus> => {
-    const initial: Record<number, InternalStatus> = {};
-    CAMPAIGNS.forEach(c => {
-      const isPast = c.endDate < today;
-      c.posts.forEach((p, i) => {
-        initial[p.id] = isPast ? (i % 2 === 0 ? 'readyForClient' : 'internalReview') : 'readyForClient';
-      });
-    });
-    return initial;
-  };
-  const seedStatuses = (withClientReview: boolean): Record<number, Status> => {
-    const initial: Record<number, Status> = {};
-    CAMPAIGNS.forEach(c => {
-      const isPast = c.endDate < today;
-      c.posts.forEach((p, i) => {
-        if (isPast) { initial[p.id] = i % 2 === 0 ? 'approved' : 'rejected'; return; }
-        const review = withClientReview ? CLIENT_REVIEW[p.id] : undefined;
-        initial[p.id] = review ? (review.status === 'approved' ? 'approved' : 'rejected') : 'pending';
-      });
-    });
+  // Pipeline status is the single source of truth; the subtabs filter on it.
+  const seedStatus = (steady: boolean): Record<number, PostStatus> => {
+    const initial: Record<number, PostStatus> = {};
+    CAMPAIGNS.forEach(c => c.posts.forEach(p => {
+      if (!p.sent) { initial[p.id] = 'draft'; return; }
+      const review = steady ? CLIENT_REVIEW[p.id] : undefined;
+      initial[p.id] = review ? (review.status === 'approved' ? 'approved' : 'changes') : 'in-review';
+    }));
+    // Demo overrides so Sent / In review / Updated each have content.
+    if (steady) Object.entries(STATUS_SEED).forEach(([id, s]) => { initial[Number(id)] = s; });
     return initial;
   };
 
-  const [internalStatuses, setInternalStatuses] = useState<Record<number, InternalStatus>>(seedInternal);
-  const [statuses, setStatuses] = useState<Record<number, Status>>(() => seedStatuses(clientReviewed));
-  // Re-seed when the dev-state toggle flips — a demo reset, so it clobbers any
-  // in-session AM edits (acceptable for the toggle).
+  const [postStatus, setPostStatus] = useState<Record<number, PostStatus>>(() => seedStatus(clientReviewed));
+  const [selected, setSelected] = useState<Set<number>>(() => new Set());
+  const [subtab, setSubtab] = useState<PostStatus>('changes');
+  // Re-seed when the dev-state toggle flips, a demo reset.
   useEffect(() => {
-    setInternalStatuses(seedInternal());
-    setStatuses(seedStatuses(state === 'steady'));
+    setPostStatus(seedStatus(state === 'steady'));
+    setSelected(new Set());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  const [showFeedbackToast, setShowFeedbackToast] = useState(false);
-  const triggerFeedbackToast = () => {
-    setShowFeedbackToast(true);
-    setTimeout(() => setShowFeedbackToast(false), 3500);
+  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+  const triggerFeedbackToast = (msg = 'Feedback submitted. Agent is notified for revision.') => {
+    setFeedbackToast(msg);
+    setTimeout(() => setFeedbackToast(null), 3500);
   };
   const [completingCampaignId, setCompletingCampaignId] = useState<number | null>(null);
-  const [dontPostReasons, setDontPostReasons] = useState<Record<number, string[]>>({});
+  const [dontPostReasons] = useState<Record<number, string[]>>({});
   const [resubmitNotes, setResubmitNotes] = useState<Record<number, string>>({});
 
   const { openModal } = useModals();
 
-  // Open the full-screen post preview seeded with every post, so Previous/Next
-  // walks the whole queue. Campaign name is resolved per post for the sidebar.
+  const setStatus = (id: number, s: PostStatus) => setPostStatus(prev => ({ ...prev, [id]: s }));
+
+  // Legacy verdict map derived from postStatus, feeds the standalone
+  // "view as client" tab (CampaignSection) and its pills.
+  const statuses: Record<number, Status> = {};
+  CAMPAIGNS.forEach(c => c.posts.forEach(p => {
+    const s = postStatus[p.id];
+    statuses[p.id] = s === 'approved' ? 'approved' : s === 'changes' ? 'rejected' : 'pending';
+  }));
+
+  // Open the full-screen preview seeded with every post so Prev/Next walks the
+  // whole queue. The AM can set any post's status from inside (onSetStatus).
   const openPreview = (postId: number) => {
-    const items: PreviewPost[] = CAMPAIGNS.flatMap(c => {
-      const isPast = c.endDate < today;
-      return c.posts.map(p => {
-        const status = statuses[p.id];
-        const internalStatus = internalStatuses[p.id];
-        // Mirror the card's pill exactly (same isReturned/isApproved rules).
-        const requestedChange  = !isPast && status === 'rejected' && internalStatus === 'readyForClient';
-        const approvedByClient = !isPast && status === 'approved' && internalStatus === 'readyForClient';
-        return { id: p.id, type: p.type, caption: p.caption, img: p.img, campaign: c.name, date: p.date, status, internalStatus, isPast, requestedChange, approvedByClient, feedback: clientReviewed ? CLIENT_REVIEW[p.id] : undefined };
-      });
-    });
+    const items: PreviewPost[] = CAMPAIGNS.flatMap(c => c.posts.map(p => ({
+      id: p.id, type: p.type, caption: p.caption, img: p.img, campaign: c.name, date: p.date,
+      headline: p.headline, rating: p.rating, reviewer: p.reviewer, source: p.source,
+      status: postStatus[p.id],
+      feedback: clientReviewed && postStatus[p.id] === 'changes' ? CLIENT_REVIEW[p.id] : undefined,
+    })));
     const initialIndex = Math.max(0, items.findIndex(i => i.id === postId));
-    openModal(PostPreview, { items, initialIndex });
+    openModal(PostPreview, { items, initialIndex, onSetStatus: setStatus });
   };
 
   const triggerCelebration = (campaignId: number) => {
@@ -1947,68 +2276,36 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
     setTimeout(() => setCompletingCampaignId(null), 800);
   };
 
-  const approve = (id: number, campaignId: number) => {
-    setStatuses(prev => {
-      const next = { ...prev, [id]: 'approved' as Status };
-      const campaign = CAMPAIGNS.find(c => c.id === campaignId)!;
-      if (campaign.posts.every(p => next[p.id] === 'approved')) triggerCelebration(campaignId);
-      return next;
-    });
-  };
+  // Client-view tab handlers (standalone "view as client").
+  const approve = (id: number) => setStatus(id, 'approved');
+  const removeApproval = (id: number) => setStatus(id, 'in-review');
+  const approveAll = (campaign: Campaign) => { campaign.posts.forEach(p => setStatus(p.id, 'approved')); triggerCelebration(campaign.id); };
 
-  const removeApproval = (id: number) => {
-    setStatuses(prev => ({ ...prev, [id]: 'pending' }));
-  };
-
-  const rejectPost = (id: number) => {
-    setStatuses(prev => ({ ...prev, [id]: 'rejected' }));
-  };
-
+  // AM revised a returned post and re-submits it → moves to the Updated tab.
   const resubmitPost = (id: number, note: string) => {
-    setStatuses(prev => ({ ...prev, [id]: 'pending' }));
-    setDontPostReasons(prev => { const n = { ...prev }; delete n[id]; return n; });
+    setStatus(id, 'updated');
     if (note) setResubmitNotes(prev => ({ ...prev, [id]: note }));
-    else setResubmitNotes(prev => { const n = { ...prev }; delete n[id]; return n; });
+    triggerFeedbackToast('Resubmitted to the client for another review.');
   };
 
-  // Internal handlers
-  const markReadyForClient = (id: number) => {
-    setInternalStatuses(prev => ({ ...prev, [id]: 'readyForClient' }));
-  };
-  const undoReady = (id: number) => {
-    setInternalStatuses(prev => ({ ...prev, [id]: 'internalReview' }));
-  };
-  // Cover note the AM sends with each campaign; the client sees it under the name.
-  // Hoisted to the shell when embedded so it survives the AM↔Client toggle;
-  // falls back to local state for the standalone view.
+  // Draft selection + send-for-review, with an optional note the client sees.
+  const toggleSelect = (id: number, next: boolean) =>
+    setSelected(prev => { const n = new Set(prev); next ? n.add(id) : n.delete(id); return n; });
   const [localMessages, setLocalMessages] = useState<Record<number, string>>({});
   const campaignMessages = campaignMessagesProp ?? localMessages;
-  const saveCampaignMessage = (campaignId: number, message: string) =>
-    onSendCampaignMessage ? onSendCampaignMessage(campaignId, message) : setLocalMessages(prev => ({ ...prev, [campaignId]: message }));
-  const sendToClient = (campaign: Campaign) => {
-    const count = campaign.posts.filter(p => internalStatuses[p.id] === 'readyForClient').length;
-    openModal(SendToClientModal, {
-      campaignName: campaign.name,
-      count,
-      dateRange: campaign.dateRange,
-      onSend: (message: string) => saveCampaignMessage(campaign.id, message),
+  const sendForReview = (ids: number[]) => {
+    if (!ids.length) return;
+    openModal(SendReviewModal, {
+      count: ids.length,
+      onSend: (note: string) => {
+        ids.forEach(id => setStatus(id, 'in-review'));
+        if (note) onSendCampaignMessage ? onSendCampaignMessage(0, note) : setLocalMessages(prev => ({ ...prev, 0: note }));
+        setSelected(new Set());
+        setSubtab('in-review');
+        triggerFeedbackToast(note ? 'Sent to client with your note.' : 'Sent to client for review.');
+      },
     });
   };
-
-  const approveAll = (campaign: Campaign) => {
-    setStatuses(prev => {
-      const next = { ...prev };
-      campaign.posts.forEach(p => { next[p.id] = 'approved'; });
-      triggerCelebration(campaign.id);
-      return next;
-    });
-  };
-
-  // Returned by client count for header badge
-  const returnedCount = CAMPAIGNS.filter(c => c.endDate >= today)
-    .flatMap(c => c.posts)
-    .filter(p => statuses[p.id] === 'rejected' && internalStatuses[p.id] === 'readyForClient')
-    .length;
 
   // Deep-link: open a specific post's review page on mount (e.g. a workstream
   // "Open carousel" CTA routes straight to the post in question).
@@ -2018,88 +2315,82 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
     if (post) openPreview(post.id);
   }, [initialReviewPostId]);
 
-  // Live filter (AM topbar dropdown) — type by campaign badge, status by the
-  // current per-post bucket.
-  const matchesFilter = (p: Post, c: Campaign) => {
-    const typeOk = typeFilter === 'all'
-      || (typeFilter === 'campaigns' && c.badge === 'Campaigns')
-      || (typeFilter === 'seo' && c.badge === 'SEO');
-    const statusOk = statusFilter === 'all'
-      || statusBucketFor(internalStatuses[p.id], statuses[p.id], c.endDate < today) === statusFilter;
-    return typeOk && statusOk;
-  };
+  // ── Status subtabs in the topbar (embedded) ─────────────────────────────────
+  // The six statuses act as a filter; only Requested changes carries a badge.
+  const chrome = useWorkspaceChrome();
+  const allPosts = CAMPAIGNS.flatMap(c => c.posts);
+  const countFor = (s: PostStatus) => allPosts.filter(p => postStatus[p.id] === s).length;
+
+  const subtabTabs = tab === 'internal' ? (
+    <div style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap' }}>
+      {STATUS_TABS.map(t => (
+        <TabChip key={t.key} selected={subtab === t.key} onSelect={() => setSubtab(t.key)}>
+          {t.key === 'changes' && countFor('changes') > 0 ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+              {t.label}
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 99, background: red, color: white, fontSize: 10, fontWeight: 600, padding: '0 4px', lineHeight: 1 }}>{countFor('changes')}</span>
+            </span>
+          ) : t.label}
+        </TabChip>
+      ))}
+    </div>
+  ) : null;
+  // Draft tab always offers a send action: selected posts, or all drafts.
+  const draftIds = allPosts.filter(p => postStatus[p.id] === 'draft').map(p => p.id);
+  const sendIds = selected.size > 0 ? [...selected] : draftIds;
+  const sendAction = tab === 'internal' && subtab === 'draft' && draftIds.length > 0
+    ? <Button variant="primary" size="sm" onPress={() => sendForReview(sendIds)}>{selected.size > 0 ? `Send ${selected.size} to client` : 'Send all to client'}</Button>
+    : null;
+
+  // Push the subtabs + action up into the WorkspaceShell topbar (embedded only).
+  useEffect(() => {
+    if (!embedded) return;
+    chrome?.setTopbarCenter(subtabTabs);
+    chrome?.setTopbarRight(sendAction);
+  });
+  useEffect(() => () => { chrome?.setTopbarCenter(null); chrome?.setTopbarRight(null); }, [chrome]);
 
   return (
     <>
-      {/* The requested-changes count now lives next to the "Approvals" title in
-          the shell topbar (see WorkspaceShell), so no banner here. */}
-
-      {/* Client view banner — standalone only (embedding shell has its own switch) */}
+      {/* Client view banner, standalone only (embedding shell has its own switch) */}
       {clientView && !embedded && (
         <div style={{ display:'flex', alignItems:'center', gap:10, background:dark90, color:white, borderRadius:10, padding:'10px 14px', marginBottom:16, fontFamily:F }}>
           <EyeOpen size={16} color={white} />
           <span style={{ fontSize:13, flex:1 }}>
-            Viewing as <strong style={{ fontWeight:600 }}>Client</strong> — only content marked ready for client is visible.
+            Viewing as <strong style={{ fontWeight:600 }}>Client</strong>, only content marked ready for client is visible.
           </span>
         </div>
       )}
 
       {tab === 'internal' ? (
-        /* ── Internal Review tab ── */
+        /* ── AM tab, one status filter at a time, grouped by content type ── */
         (() => {
-          const SectionHeader = ({ label, count }: { label: string; count: number }) => (
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <span style={{ fontSize:13, fontWeight:500, color:dark40, fontFamily:F, letterSpacing:'0.26px', whiteSpace:'nowrap' }}>
-                {label} <span style={{ fontWeight:400 }}>({count})</span>
-              </span>
-              <div style={{ flex:1, height:1, background:dark8 }} />
-            </div>
-          );
-
-          const isAllReady = (c: Campaign) => c.posts.every(p => internalStatuses[p.id] === 'readyForClient');
-          // Apply the Filter: keep only matching posts, then drop empty campaigns.
-          const filtered = CAMPAIGNS
-            .map(c => ({ ...c, posts: c.posts.filter(p => matchesFilter(p, c)) }))
-            .filter(c => c.posts.length > 0);
-          const activeCampaigns = filtered.filter(c => c.endDate >= today);
-          const pastCampaigns   = filtered.filter(c => c.endDate < today);
-
-          const renderIC = (c: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => (
-            <InternalCampaignSection
-              key={c.id}
-              campaign={c}
-              internalStatuses={internalStatuses}
-              statuses={statuses}
-              dontPostReasons={dontPostReasons}
-              resubmitNotes={resubmitNotes}
-              today={today}
-              isPast={opts?.isPast}
-              defaultCollapsed={opts?.defaultCollapsed}
-              onMarkReady={markReadyForClient}
-              onUndo={undoReady}
-              onSendToClient={() => sendToClient(c)}
-              onReview={(post) => openPreview(post.id)}
-              onResubmit={resubmitPost}
+          const isDraft = subtab === 'draft';
+          const renderCard = (post: Post) => (
+            <InternalCard
+              key={post.id}
+              post={post}
+              status={postStatus[post.id]}
+              showCheckbox={isDraft}
+              selected={selected.has(post.id)}
+              onToggleSelect={(next) => toggleSelect(post.id, next)}
+              clientComment={postStatus[post.id] === 'changes' ? CLIENT_REVIEW[post.id]?.comment : undefined}
+              onReview={() => openPreview(post.id)}
+              onResubmit={(note) => resubmitPost(post.id, note)}
             />
           );
 
-          if (filtered.length === 0) {
-            return (
-              <div style={{ padding: '56px 0', textAlign: 'center', color: dark40, fontFamily: F, fontSize: 14 }}>
-                No content matches this filter.
-              </div>
-            );
-          }
+          const inTab = allPosts
+            .filter(p => postStatus[p.id] === subtab)
+            .sort((a, b) => a.dateSort.localeCompare(b.dateSort));
 
           return (
-            <div style={{ display:'flex', flexDirection:'column', gap:40 }}>
-              {activeCampaigns.map(c => renderIC(c))}
-              {pastCampaigns.length > 0 && (
-                <>
-                  <SectionHeader label="Past campaigns" count={pastCampaigns.length} />
-                  {pastCampaigns.map(c => renderIC(c, { defaultCollapsed: true, isPast: true }))}
-                </>
-              )}
+            <div style={{ display:'flex', flexDirection:'column', gap:24, maxWidth: PAGE_W, width:'100%', margin:'0 auto' }}>
+              {/* Standalone (no shell topbar): render the subtabs + action inline. */}
+              {!embedded && <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>{subtabTabs}{sendAction}</div>}
+              {inTab.length > 0
+                ? <ContentTypeSections posts={inTab} renderCard={renderCard} />
+                : <div style={{ padding:'56px 0', textAlign:'center', color:dark40, fontFamily:F, fontSize:14 }}>Nothing in {STATUS_TABS.find(t => t.key === subtab)?.label.toLowerCase()}.</div>}
             </div>
           );
         })()
@@ -2116,8 +2407,8 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
         const past     = CAMPAIGNS.filter(isPast);
 
         const renderCampaign = (campaign: Campaign, opts?: { defaultCollapsed?: boolean; isPast?: boolean }) => {
-          // Only expose posts the internal team has marked Ready for Client
-          const visiblePosts = campaign.posts.filter(p => internalStatuses[p.id] === 'readyForClient');
+          // Only expose posts that have been sent to the client (not drafts).
+          const visiblePosts = campaign.posts.filter(p => postStatus[p.id] !== 'draft');
           if (visiblePosts.length === 0) return null;
           const clientCampaign = { ...campaign, posts: visiblePosts };
           // The AM's cover note: a live send (campaignMessages) wins; otherwise
@@ -2132,7 +2423,7 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
               statuses={statuses}
               dontPostReasons={dontPostReasons}
               resubmitNotes={resubmitNotes}
-              onApprove={(id) => approve(id, campaign.id)}
+              onApprove={(id) => approve(id)}
               onRemoveApproval={removeApproval}
               onReview={(id) => openPreview(id)}
               onApproveAll={() => approveAll(clientCampaign)}
@@ -2153,9 +2444,9 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
           </div>
         );
 
-        // Nothing to approve = no active campaign has any readyForClient+pending post
+        // Nothing to approve = no active campaign has a post still awaiting the client.
         const hasAnythingToApprove = active.some(c =>
-          c.posts.some(p => internalStatuses[p.id] === 'readyForClient' && statuses[p.id] === 'pending')
+          c.posts.some(p => (['in-review', 'updated'] as PostStatus[]).includes(postStatus[p.id]))
         );
 
         return (
@@ -2203,10 +2494,10 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
       )}
 
       {/* Feedback submitted toast */}
-      {showFeedbackToast && createPortal(
+      {feedbackToast && createPortal(
         <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
-          <Toast variant="success" onDismiss={() => setShowFeedbackToast(false)}>
-            Feedback submitted. Agent is notified for revision.
+          <Toast variant="success" onDismiss={() => setFeedbackToast(null)}>
+            {feedbackToast}
           </Toast>
         </div>,
         document.body
@@ -2215,7 +2506,7 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
   );
 }
 
-/** Standalone prototype chrome — its own shell + a local View-as-client toggle
+/** Standalone prototype chrome, its own shell + a local View-as-client toggle
  *  that drives the shared <ApprovalV2View>. */
 function ApprovalV2Inner() {
   const [clientView, setClientView] = useState(false);

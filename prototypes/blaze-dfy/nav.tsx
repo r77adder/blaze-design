@@ -6,6 +6,7 @@ import { PrototypeShell } from '../_shell';
 import type { SidebarSection } from '../_shell/Sidebar';
 import { getAccounts, handoffAccount } from './lib/api';
 import { HandoffModal } from './Handoff';
+import { WorkspaceChromeContext } from './workspace-chrome';
 import { ApprovalSettingsModal, approvalsChangeRequests } from './Approvals';
 import { DevStatePanel } from './DevStatePanel';
 import { useDfyState } from './lib/dev-state';
@@ -51,10 +52,10 @@ export const usePhaseChrome = () => useContext(PhaseChromeContext);
 
 /** Lets a page inject chrome into the WorkspaceShell topbar — sub-tabs into the
  *  center, page actions (e.g. "Generate report") on the right.
- *  Used by the ported H2 pages' H2Layout shim. */
-interface WorkspaceChrome { setTopbarCenter: (n: ReactNode) => void; setTopbarRight: (n: ReactNode) => void; setFullBleed: (b: boolean) => void }
-const WorkspaceChromeContext = createContext<WorkspaceChrome | null>(null);
-export const useWorkspaceChrome = () => useContext(WorkspaceChromeContext);
+ *  The context lives in its own module (workspace-chrome.tsx) so feature pages
+ *  can use the hook without importing back into nav (avoids an import cycle).
+ *  Re-exported here for existing `./nav` importers (H2Layout, Scorecard). */
+export { useWorkspaceChrome } from './workspace-chrome';
 
 export function PhaseScreen({ account, side, section, sub, go, prevSection, nextSection, nextHref, nextLabel, maxWidth = 920, children }: {
   account: Account; side: Side; section: string; sub: string; go: Go; prevSection?: string; nextSection?: string; nextHref?: string; nextLabel: string; maxWidth?: number; children: ReactNode;
@@ -265,18 +266,9 @@ export function WorkspaceShell({
     }),
   }));
 
-  // In a steady account, surface the client's requested-changes count right
-  // next to the "Approvals" title (mirrors the red requested-change pill).
-  const requestedChanges = section === 'approvals' && dfyState === 'steady' ? approvalsChangeRequests().length : 0;
-  const titleNode = requestedChanges > 0 ? (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
-      <span style={{ fontFamily: "'Sohne', sans-serif", fontWeight: 500, fontSize: 16, color: 'var(--dark-90)' }}>{active}</span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 99, background: 'var(--red-90)', color: '#fff', fontSize: 10, fontWeight: 600, padding: '0 5px', lineHeight: 1 }}>{requestedChanges}</span>
-        <span style={{ fontSize: 13, color: 'var(--red-90)', fontWeight: 500 }}>{requestedChanges === 1 ? 'requested change' : 'requested changes'}</span>
-      </span>
-    </span>
-  ) : active;
+  // The approvals subtabs now carry the requested-change count (in the topbar
+  // tab strip), so the title stays a plain section name.
+  const titleNode = active;
 
   return (
    <WorkspaceChromeContext.Provider value={wsChrome}>

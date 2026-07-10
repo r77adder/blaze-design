@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useClientState, type ClientState } from './dev-state';
+import { ChangesPanel, CHANGES_COUNT } from '../blaze-dfy/ChangesPanel';
 
 /**
  * Designer-only control pinned to the bottom-left of the client portal. Flips
@@ -38,8 +40,31 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+// Each logical group is its own inline-flex unit so it never splits mid-group:
+// the outer panel wraps cleanly *between* groups instead of orphaning a button.
+const GROUP_STYLE: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 2,
+  flexShrink: 0,
+};
+
 export function DevStatePanel() {
   const { state, setState } = useClientState();
+  const navigate = useNavigate();
+  // Show the AM/Client switch on the approvals and home surfaces, and jump to
+  // the matching surface on the other side.
+  const rest = useLocation().pathname.replace(/^\/dfy-client/, '').replace(/^\//, '').replace(/\/$/, '');
+  const surface = rest.startsWith('approvals') ? 'approvals'
+    : (rest === '' || rest === 'home') ? 'home'
+    : null;
+  const amHref = surface === 'approvals'
+    ? '/blaze-dfy/grain-design-flooring/am/approvals'
+    : '/blaze-dfy/grain-design-flooring/am/home';
+  // Sit quietly at half opacity by default; lift to full on hover so the panel
+  // never competes with the real portal chrome.
+  const [hovered, setHovered] = useState(false);
+  const [changesOpen, setChangesOpen] = useState(false);
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -90,54 +115,118 @@ export function DevStatePanel() {
   const positionStyles = position ? { left: position.x, top: position.y } : { left: 12, bottom: 64 };
 
   return (
+    <>
     <div
       ref={panelRef}
       data-dev-panel
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         position: 'fixed',
         ...positionStyles,
         zIndex: 60,
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        gap: 3,
         background: 'var(--dark-90)',
         border: '1px dashed var(--brand)',
         borderRadius: 6,
-        padding: '3px 4px',
+        padding: 4,
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.20)',
+        boxShadow: hovered ? '0 2px 10px rgba(0,0,0,0.20)' : 'none',
         userSelect: 'none',
         touchAction: 'none',
+        // Stay inside the 238px sidebar (8px inset each side) so the panel
+        // wraps within the rail instead of spilling into the content area.
+        maxWidth: 222,
+        opacity: hovered ? 1 : 0.5,
+        transition: 'opacity 120ms ease',
       }}
     >
-      <div
-        data-dev-drag-handle
-        title="Drag to move"
-        onPointerDown={onHandlePointerDown}
-        onPointerMove={onHandlePointerMove}
-        onPointerUp={onHandlePointerUp}
-        onPointerCancel={onHandlePointerUp}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 10,
-          height: 18,
-          cursor: 'grab',
-          color: 'var(--light-60)',
-          fontSize: 10,
-          lineHeight: 1,
-          letterSpacing: '-1px',
-          flexShrink: 0,
-        }}
-        aria-label="Drag dev panel"
-      >
-        ⋮⋮
+      {/* Changes sits on top, on the surfaces it references (approvals + home). */}
+      {surface && (
+        <>
+          <button
+            type="button"
+            data-dev-changes-button
+            onClick={() => setChangesOpen(true)}
+            style={{
+              appearance: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 10.5, lineHeight: 1, padding: '4px 6px', borderRadius: 3, background: 'transparent',
+              color: 'var(--light-60)', fontWeight: 400, letterSpacing: '0.02em',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, width: '100%',
+            }}
+          >
+            Changes
+            <span style={{ background: 'rgba(255,255,255,0.14)', color: 'var(--light-60)', borderRadius: 99, padding: '1px 5px', fontSize: 9.5, fontWeight: 600 }}>{CHANGES_COUNT}</span>
+          </button>
+          <span aria-hidden style={{ height: 1, background: 'var(--light-60)', opacity: 0.22, margin: '0 2px' }} />
+        </>
+      )}
+
+      {/* Controls row — drag handle + state group + side switch. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, rowGap: 4, flexWrap: 'wrap' }}>
+        <div
+          data-dev-drag-handle
+          title="Drag to move"
+          onPointerDown={onHandlePointerDown}
+          onPointerMove={onHandlePointerMove}
+          onPointerUp={onHandlePointerUp}
+          onPointerCancel={onHandlePointerUp}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 10,
+            height: 18,
+            cursor: 'grab',
+            color: 'var(--light-60)',
+            fontSize: 10,
+            lineHeight: 1,
+            letterSpacing: '-1px',
+            flexShrink: 0,
+          }}
+          aria-label="Drag dev panel"
+        >
+          ⋮⋮
+        </div>
+        {/* Group 1 — portal state. Stays together on its own row. */}
+        <div style={GROUP_STYLE}>
+          {OPTIONS.map((o) => (
+            <DevStateButton key={o.value} text={o.label} selected={state === o.value} onClick={() => setState(o.value)} />
+          ))}
+        </div>
+        {/* Group 2 — AM/Client side switch (approvals + home). Wraps to its own row. */}
+        {surface && (
+          <div style={GROUP_STYLE}>
+            <SideButton text="AM" onClick={() => navigate(amHref)} />
+            <SideButton text="Client" current onClick={() => {}} />
+          </div>
+        )}
       </div>
-      {OPTIONS.map((o) => (
-        <DevStateButton key={o.value} text={o.label} selected={state === o.value} onClick={() => setState(o.value)} />
-      ))}
     </div>
+    <ChangesPanel open={changesOpen} onClose={() => setChangesOpen(false)} prepare={() => setState('steady')} />
+    </>
+  );
+}
+
+function SideButton({ text, current, onClick }: { text: string; current?: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={current ? 'Current view' : `Open ${text} approvals`}
+      style={{
+        appearance: 'none', border: 'none', cursor: current ? 'default' : 'pointer',
+        fontFamily: 'inherit', fontSize: 10.5, lineHeight: 1, padding: '3px 6px', borderRadius: 3,
+        background: current ? 'rgba(255,255,255,0.16)' : 'transparent',
+        color: current ? 'var(--light-100)' : 'var(--light-60)',
+        fontWeight: current ? 600 : 400, letterSpacing: '0.02em', whiteSpace: 'nowrap', flexShrink: 0,
+      }}
+    >
+      {text}
+    </button>
   );
 }
 
@@ -155,7 +244,7 @@ function DevStateButton({ text, selected, onClick }: { text: string; selected: b
         fontFamily: 'inherit',
         fontSize: 10.5,
         lineHeight: 1,
-        padding: '3px 6px',
+        padding: '3px 4px',
         borderRadius: 3,
         background: selected ? 'var(--brand)' : 'transparent',
         color: selected ? 'var(--dark-90)' : 'var(--light-60)',

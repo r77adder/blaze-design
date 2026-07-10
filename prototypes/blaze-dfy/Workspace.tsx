@@ -10,8 +10,7 @@ import { Strategy, GoalsOnboarding } from './Strategy';
 import { CreativeReview } from './CreativeReview';
 import { ClientPortal } from './ClientPortal';
 import { Settings, StrategyTab } from './Steady';
-import { ApprovalV2View, ApprovalsFilterControl } from './Approvals';
-import type { ApprovalTypeFilter, ApprovalStatusFilter } from './Approvals';
+import { ApprovalV2View } from './Approvals';
 import { Scorecard } from './Scorecard';
 import { useReview, type Phase } from './lib/review';
 import type { ComponentType } from 'react';
@@ -50,7 +49,6 @@ export function Workspace() {
   const [account, setAccount] = useState<Account | null | undefined>(null);
   const go = useGo();
   const { packet, goalsComplete } = useReview();
-  const [apprFilter, setApprFilter] = useState<{ type: ApprovalTypeFilter; status: ApprovalStatusFilter }>({ type: 'all', status: 'all' });
   // AM→Client cover notes live here (not inside ApprovalV2View) so they survive
   // the AM↔Client toggle and show up on the client's side of the same workspace.
   const [campaignMessages, setCampaignMessages] = useState<Record<number, string>>({});
@@ -91,7 +89,7 @@ export function Workspace() {
 
   let content;
   if (sec === 'home') content = <Home account={account} clientView={false} tab={effSub ?? 'work'} onTabChange={(t) => go(`/${account.id}/${s}/home/${t}`)} onOpenSection={(section) => go(`/${account.id}/${s}/${section}`)} />;
-  else if (sec === 'approvals') content = <ApprovalV2View clientView={false} embedded initialReviewPostId={sub} typeFilter={apprFilter.type} statusFilter={apprFilter.status} campaignMessages={campaignMessages} onSendCampaignMessage={(id, message) => setCampaignMessages((m) => ({ ...m, [id]: message }))} />;
+  else if (sec === 'approvals') content = <ApprovalV2View clientView={false} embedded initialReviewPostId={sub} campaignMessages={campaignMessages} onSendCampaignMessage={(id, message) => setCampaignMessages((m) => ({ ...m, [id]: message }))} />;
   // Ported H2 Awareness / Conversion features.
   else if (H2_FEATURE_ROUTES[sec]) { const Feature = H2_FEATURE_ROUTES[sec]; content = <Feature />; }
   // Steady-state Brand Kit / Content Calendar reuse the shared portal views.
@@ -106,9 +104,9 @@ export function Workspace() {
   else if (sec === 'settings') content = <Settings account={account} go={go} sub={effSub} />;
   else content = <SectionStub label={sec} />;
 
-  const topbarExtra = sec === 'approvals'
-    ? <ApprovalsFilterControl type={apprFilter.type} status={apprFilter.status} onChange={(n) => setApprFilter((f) => ({ ...f, ...n }))} />
-    : undefined;
+  // Approvals now navigates via in-view subtabs + content-type sections, so the
+  // old type/status Filter dropdown is retired from the topbar.
+  const topbarExtra = undefined;
 
   return <WorkspaceShell account={account} side={s} section={sec} sub={effSub} creativeLocked={!creativeUnlocked} onReload={reload} topbarExtra={topbarExtra}>{content}</WorkspaceShell>;
 }
