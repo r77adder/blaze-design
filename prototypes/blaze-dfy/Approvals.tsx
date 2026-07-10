@@ -1334,12 +1334,12 @@ function PreviewClientThread({ feedback, responses, onSend }: { feedback: Client
       {/* Reply composer */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <TextField
-          fullWidth size="sm" value={reply}
+          fullWidth size="md" value={reply}
           onChange={setReply}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); send(); } }}
           placeholder="Reply to the client…"
         />
-        <IconButton variant="primary" size="sm" icon={ArrowUp} aria-label="Send reply" isDisabled={!reply.trim()} onPress={send} />
+        <IconButton variant="primary" size="md" icon={ArrowUp} aria-label="Send reply" isDisabled={!reply.trim()} onPress={send} />
       </div>
     </div>
   );
@@ -1484,7 +1484,6 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
                 <>
                   <div onClick={() => setStatusMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 59 }} />
                   <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, width: 220, background: white, borderRadius: 12, border: `1px solid ${dark8}`, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', zIndex: 60, padding: 6 }}>
-                    <p style={{ margin: '4px 8px 6px', fontSize: 12, color: dark40, fontFamily: F }}>Set status</p>
                     {STATUS_TABS.map((t) => (
                       <button
                         key={t.key}
@@ -1977,16 +1976,20 @@ function SentPendingPill() {
 // ── Unified pipeline-status pill (one per PostStatus) ──────────────────────────
 // BDS Pill tinted to the shared STATUS_META colour, with the matching glyph, so
 // the on-card / preview status reads as the same system as the subtab strip.
+// Draft (grey) and In review (yellow) are too light to read as text on the pale
+// tint, so they get a darkened same-hue override; the rest use the status colour.
+const STATUS_TEXT: Partial<Record<PostStatus, string>> = {
+  draft:       '#4b5261', // darker slate
+  'in-review': '#7a4800', // dark amber (matches the "In client review" pill)
+};
 function PostStatusPill({ status }: { status: PostStatus }) {
   const m = STATUS_META[status];
   return (
     <Pill size="md" style={{
       background: `color-mix(in srgb, ${m.color} 8%, var(--light-100))`,
       border: `1px solid color-mix(in srgb, ${m.color} 40%, transparent)`,
-      color: dark80,
-      gap: 5,
+      color: STATUS_TEXT[status] ?? m.color,
     }}>
-      <m.Icon size={14} color={m.color} />
       {m.label}
     </Pill>
   );
