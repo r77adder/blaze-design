@@ -528,9 +528,14 @@ function AdAction({ label, path }: { label: string; path: string }) {
   );
 }
 
-export function MetaAdPreview({ post, scale = 1 }: { post: AdContent; scale?: number }) {
+export function MetaAdPreview({ post, scale = 1, expandable = false }: { post: AdContent; scale?: number; expandable?: boolean }) {
   const headline = post.headline ?? 'Free in-home flooring consult';
   const cta = post.cta ?? 'Learn more';
+  // In the preview the primary text can expand to the full ad copy; on the
+  // card it stays clamped (keeps the fixed-size thumbnail intact).
+  const [expanded, setExpanded] = useState(false);
+  const showToggle = expandable && (post.caption?.length ?? 0) > 100;
+  const clampText = !(expandable && expanded);
   return (
     <div style={{ width: AD_W * scale, height: AD_H * scale, flexShrink: 0 }}>
       <div style={{ width: AD_W, height: AD_H, transform: `scale(${scale})`, transformOrigin: 'top left', background: white, borderRadius: 12, border: `1px solid ${dark8}`, boxShadow: CARD_SHADOW, overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: F }}>
@@ -546,9 +551,14 @@ export function MetaAdPreview({ post, scale = 1 }: { post: AdContent; scale?: nu
           </div>
           <span style={{ marginLeft: 'auto', color: dark40, fontSize: 18, letterSpacing: '1.5px', flexShrink: 0 }}>···</span>
         </div>
-        {/* primary text */}
+        {/* primary text, expandable in the preview so the full ad copy reads */}
         <div style={{ flexShrink: 0, padding: '0 14px 10px' }}>
-          <p style={{ margin: 0, fontSize: 14, color: dark90, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{post.caption}</p>
+          <p style={{ margin: 0, fontSize: 14, color: dark90, lineHeight: 1.5, ...(clampText ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' } : null) }}>{post.caption}</p>
+          {showToggle && (
+            <button type="button" onClick={() => setExpanded((e) => !e)} style={{ appearance: 'none', border: 'none', background: 'none', padding: 0, marginTop: 3, cursor: 'pointer', color: dark60, fontFamily: F, fontSize: 14, fontWeight: 500 }}>
+              {expanded ? 'See less' : 'See more'}
+            </button>
+          )}
         </div>
         {/* creative */}
         <div style={{ flex: 1, minHeight: 0, background: '#c8c0b4', overflow: 'hidden' }}>
@@ -578,10 +588,9 @@ export function MetaAdPreview({ post, scale = 1 }: { post: AdContent; scale?: nu
 export function AdDestination({ dest, cta }: { dest?: string; cta?: string }) {
   const url = dest ?? AD_DOMAIN;
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, maxWidth: '100%', padding: '8px 12px', borderRadius: 8, background: 'var(--dark-2)', border: `1px solid ${dark8}`, fontFamily: F }}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={dark40} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
-      <span style={{ fontSize: 12.5, color: dark60, whiteSpace: 'nowrap' }}>{cta ?? 'Button'} opens</span>
-      <span style={{ fontSize: 12.5, color: dark90, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: '100%', fontFamily: F }}>
+      <span style={{ fontSize: 16, color: dark60, whiteSpace: 'nowrap' }}>{cta ?? 'Button'} opens</span>
+      <span style={{ fontSize: 16, color: dark90, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
     </div>
   );
 }
@@ -1560,8 +1569,8 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
             )}
             {item.type === 'paid-social' ? (
               /* ── Paid Social, a real Meta feed ad, full-size + CTA destination ── */
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, flexShrink: 0 }}>
-                <MetaAdPreview post={item} scale={1} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, flexShrink: 0 }}>
+                <MetaAdPreview post={item} scale={1} expandable />
                 <AdDestination dest={item.dest} cta={item.cta} />
               </div>
             ) : item.type === 'paid-search' ? (

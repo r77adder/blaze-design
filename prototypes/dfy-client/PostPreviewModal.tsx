@@ -136,6 +136,8 @@ export function PostPreviewModal({
   );
   const [draft, setDraft] = useState('');
   const [dialog, setDialog] = useState<'none' | 'edit' | 'view'>('none');
+  // Inline "request changes" composer opened straight from the Feedback tab.
+  const [composing, setComposing] = useState(false);
   const anchorRef = useRef<HTMLSpanElement>(null);
   // Pieces the team revised and re-sent; they read as "Updated" until the
   // client approves or asks for more changes.
@@ -185,6 +187,7 @@ export function PostPreviewModal({
     const id = items[idx].id;
     setSideTab(requested.has(id) || updatedSet.has(id) ? 'feedback' : 'edit');
     setEditingBubble(false);
+    setComposing(false);
     /* eslint-disable-next-line */
   }, [idx]);
 
@@ -196,6 +199,7 @@ export function PostPreviewModal({
     setApproved((a) => { const next = new Set(a); next.delete(item.id); return next; });
     onRequestChanges(item.id, draft);
     setDialog('none');
+    setComposing(false);
     setSideTab('feedback');
   };
   const approveItem = () => {
@@ -327,8 +331,8 @@ export function PostPreviewModal({
             )}
 
             {item.type === 'Paid' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, flexShrink: 0 }}>
-                <MetaAdPreview post={item} scale={1} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, flexShrink: 0 }}>
+                <MetaAdPreview post={item} scale={1} expandable />
                 <AdDestination dest={item.dest} cta={item.cta} />
               </div>
             ) : (
@@ -489,12 +493,36 @@ export function PostPreviewModal({
                       <IconButton variant="primary" size="sm" icon={ArrowUp} aria-label="Send comment" isDisabled={!feedbackReply.trim()} onPress={sendFollowUp} />
                     </div>
                   </>
-                ) : (
+                ) : itemApproved ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '40px 12px', textAlign: 'center' }}>
                     <Comment size={20} color="var(--dark-40)" />
                     <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.5 }}>
-                      {itemApproved ? 'You approved this, it’s scheduled to publish. No changes requested.' : 'No feedback yet. Use “Request changes” to tell your team what to tweak.'}
+                      You approved this, it’s scheduled to publish. No changes requested.
                     </Text>
+                  </div>
+                ) : composing ? (
+                  /* Inline request-changes composer, opened straight from this tab. */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <span style={LABEL}>What would you like changed?</span>
+                    <textarea
+                      autoFocus
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      placeholder="e.g. Swap the hero photo for the white-oak install, and soften the headline."
+                      style={{ width: '100%', minHeight: 96, borderRadius: 10, border: '1px solid var(--dark-8)', padding: '10px 12px', fontFamily: "'Sohne', sans-serif", fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                      <Button variant="subtle" size="sm" onPress={() => { setComposing(false); setDraft(''); }}>Cancel</Button>
+                      <Button variant="primary" size="sm" isDisabled={!draft.trim()} onPress={sendRequest}>Send request</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '40px 12px', textAlign: 'center' }}>
+                    <Comment size={20} color="var(--dark-40)" />
+                    <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.5 }}>
+                      No feedback yet. Request changes to tell your team what to tweak.
+                    </Text>
+                    <Button variant="secondary" size="sm" frontIcon={Edit1} onPress={() => { setDraft(''); setComposing(true); }}>Request changes</Button>
                   </div>
                 )}
               </div>
