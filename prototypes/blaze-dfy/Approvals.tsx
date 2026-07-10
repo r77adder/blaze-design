@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ComponentType } from 'react';
+import { useState, useRef, useEffect, type ComponentType, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeShell, H2_SECTIONS } from '../_shell';
 import { Button, IconButton, Text, Modal, ModalStack, useModals, type StackModalProps } from '@/components';
@@ -17,6 +17,7 @@ import Templates from '@/icons/20/Templates';
 import Stars from '@/icons/20/Stars';
 import Images from '@/icons/20/Images';
 import UserProfileAdd from '@/icons/20/UserProfileAdd';
+import Refresh01 from '@/icons/20/Refresh01';
 import Google from '@/icons/20/Google';
 import ChevronLeftLg from '@/icons/24/ChevronLeft';
 import Heart from '@/icons/24/Heart';
@@ -197,6 +198,56 @@ const STATUS_TABS: { key: PostStatus; label: string }[] = [
   { key: 'updated',   label: 'Updated' },
   { key: 'approved',  label: 'Approved' },
 ];
+// Single source of truth for the status colour + glyph, shared by the subtab
+// strip and the pipeline pill so both read as one system. `onColor` is the text
+// colour used when the status colour is the background (counter badges).
+export const STATUS_META: Record<PostStatus, {
+  label: string; color: string; onColor: string; Icon: ComponentType<IconProps>;
+}> = {
+  draft:       { label: 'Draft',             color: 'var(--status-draft)',    onColor: white, Icon: Edit1 },
+  'in-review': { label: 'In review',         color: 'var(--status-review)',   onColor: dark90, Icon: EyeOpen },
+  changes:     { label: 'Requested changes', color: 'var(--status-failed)',   onColor: white, Icon: Comment },
+  updated:     { label: 'Updated',           color: 'var(--status-posting)',  onColor: white, Icon: Refresh01 },
+  approved:    { label: 'Approved',          color: 'var(--status-approved)', onColor: white, Icon: Check2 },
+};
+
+// Subtab strip content: colourful status glyph + label, with an optional counter
+// badge tinted to the status colour. Shared shape across the AM and client sides.
+export function StatusTabContent({ status, count, selected = false }: { status: PostStatus; count?: number; selected?: boolean }) {
+  const m = STATUS_META[status];
+  // The icon shows only on the active tab, coloured for contrast against the
+  // solid status fill (onColor = black or white). Idle tabs are label-only.
+  // The counter is neutral grey until its tab is selected, then inverts onto
+  // the fill (fill-coloured number on an onColor chip).
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap' }}>
+      {selected && <m.Icon size={16} color={m.onColor} />}
+      {m.label}
+      {count !== undefined && count > 0 && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 99, background: selected ? m.onColor : 'var(--dark-8)', color: selected ? m.color : 'var(--dark-60)', fontSize: 10, fontWeight: 600, padding: '0 4px', lineHeight: 1 }}>{count}</span>
+      )}
+    </span>
+  );
+}
+
+// Inline style for a selected subtab: a solid status-colour fill (no border),
+// with label text set to the contrast colour (onColor). Returns undefined for
+// idle tabs, letting TabChip's default styling apply.
+export function statusTabStyle(status: PostStatus, selected: boolean): CSSProperties | undefined {
+  if (!selected) return undefined;
+  const m = STATUS_META[status];
+  return {
+    background: m.color,
+    borderColor: 'transparent',
+    color: m.onColor,
+  };
+}
+
+// A chevron rendered between subtabs to signal the statuses are a continuous
+// pipeline. Shared visual across both approval surfaces.
+export function StatusTabChevron() {
+  return <ChevronRight size={13} color={dark15} style={{ flexShrink: 0, alignSelf: 'center' }} />;
+}
 // Demo override so the Updated subtab has content (only applied in steady).
 const STATUS_SEED: Record<number, PostStatus> = { 41: 'updated' };
 
@@ -1737,24 +1788,20 @@ function SentPendingPill() {
 }
 
 // ── Unified pipeline-status pill (one per PostStatus) ──────────────────────────
-const STATUS_PILL: Record<PostStatus, { overlay: string; border: string; color: string; label: string }> = {
-  draft:       { overlay: 'rgba(0,0,0,0.05)',     border: dark15,                 color: dark60,        label: 'Draft' },
-  'in-review': { overlay: 'rgba(255,174,0,0.28)', border: 'rgba(255,174,0,0.45)', color: '#7a4800',     label: 'In review' },
-  changes:     { overlay: 'rgba(188,1,11,0.08)',  border: 'rgba(188,1,11,0.2)',   color: 'var(--red-90)', label: 'Requested change' },
-  approved:    { overlay: 'rgba(32,161,79,0.1)',  border: 'rgba(32,161,79,0.25)', color: green,         label: 'Approved' },
-  updated:     { overlay: 'rgba(106,0,255,0.08)', border: 'rgba(106,0,255,0.2)',  color: '#6a00ff',     label: 'Updated' },
-};
+// BDS Pill tinted to the shared STATUS_META colour, with the matching glyph, so
+// the on-card / preview status reads as the same system as the subtab strip.
 function PostStatusPill({ status }: { status: PostStatus }) {
-  const cfg = STATUS_PILL[status];
+  const m = STATUS_META[status];
   return (
-    <span style={{
-      display:'inline-flex', alignItems:'center', padding:'2px 6px', borderRadius:4,
-      backgroundColor: white,
-      backgroundImage: `linear-gradient(${cfg.overlay}, ${cfg.overlay})`,
-      border: `1px solid ${cfg.border}`,
-      fontSize:11, fontWeight:400, color:cfg.color, fontFamily:F,
-      letterSpacing:'0.22px', whiteSpace:'nowrap',
-    }}>{cfg.label}</span>
+    <Pill size="md" style={{
+      background: `color-mix(in srgb, ${m.color} 8%, var(--light-100))`,
+      border: `1px solid color-mix(in srgb, ${m.color} 40%, transparent)`,
+      color: dark80,
+      gap: 5,
+    }}>
+      <m.Icon size={14} color={m.color} />
+      {m.label}
+    </Pill>
   );
 }
 
@@ -2322,16 +2369,15 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
   const countFor = (s: PostStatus) => allPosts.filter(p => postStatus[p.id] === s).length;
 
   const subtabTabs = tab === 'internal' ? (
-    <div style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap' }}>
-      {STATUS_TABS.map(t => (
-        <TabChip key={t.key} selected={subtab === t.key} onSelect={() => setSubtab(t.key)}>
-          {t.key === 'changes' && countFor('changes') > 0 ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              {t.label}
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 99, background: red, color: white, fontSize: 10, fontWeight: 600, padding: '0 4px', lineHeight: 1 }}>{countFor('changes')}</span>
-            </span>
-          ) : t.label}
-        </TabChip>
+    <div style={{ display: 'inline-flex', gap: 2, flexWrap: 'nowrap', alignItems: 'center' }}>
+      {STATUS_TABS.map((t, i) => (
+        <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+          {i > 0 && <StatusTabChevron />}
+          <TabChip selected={subtab === t.key} onSelect={() => setSubtab(t.key)} style={statusTabStyle(t.key, subtab === t.key)}>
+            {/* AM keeps only the requested-changes counter. */}
+            <StatusTabContent status={t.key} selected={subtab === t.key} count={t.key === 'changes' ? countFor('changes') : undefined} />
+          </TabChip>
+        </span>
       ))}
     </div>
   ) : null;

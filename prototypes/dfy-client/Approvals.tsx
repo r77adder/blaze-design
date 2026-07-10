@@ -18,7 +18,7 @@ import ApprovalsIcon from '@/icons/20/Approvals';
 import EyeOpen from '@/icons/20/EyeOpen';
 import StillImageIcon from '../h2/StillImageIcon';
 // Shared with the AM side so both use exactly the same cards + page layout.
-import { CardBody, TypeIcon, TYPE_LABEL as AM_TYPE_LABEL, CARD_W, CARD_H, PAGE_W, ContentTypeSections, type Post as AmPost } from '../blaze-dfy/Approvals';
+import { CardBody, TypeIcon, TYPE_LABEL as AM_TYPE_LABEL, CARD_W, CARD_H, PAGE_W, ContentTypeSections, StatusTabContent, StatusTabChevron, statusTabStyle, type Post as AmPost } from '../blaze-dfy/Approvals';
 import { ClientShell } from './shell';
 import { PostPreviewModal } from './PostPreviewModal';
 import { ColdState } from './ColdState';
@@ -824,7 +824,6 @@ export function Approvals({ sub: _sub }: { sub?: string }) {
 
   const countByStatus = (st: Status) => CURRENT.filter((i) => (statuses[i.id] ?? 'pending') === st).length;
   const totalPending = countByStatus('pending');
-  const totalChanges = countByStatus('rejected');
 
   const approve = (id: number) => {
     setStatuses((prev) => ({ ...prev, [id]: 'approved' }));
@@ -847,16 +846,20 @@ export function Approvals({ sub: _sub }: { sub?: string }) {
   // Status subtabs (mirror the AM side). Only the current batch is filterable;
   // a selected previous batch is read-only history, so no subtabs there.
   const subtabs = selectedBatch ? undefined : (
-    <div style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap' }}>
-      {CLIENT_TABS.map((t) => (
-        <TabChip key={t.key} selected={subtab === t.key} onSelect={() => setSubtab(t.key)}>
-          {t.key === 'changes' && totalChanges > 0 ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              {t.label}
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 99, background: red, color: white, fontSize: 10, fontWeight: 600, padding: '0 4px', lineHeight: 1 }}>{totalChanges}</span>
-            </span>
-          ) : t.label}
-        </TabChip>
+    <div style={{ display: 'inline-flex', gap: 2, flexWrap: 'nowrap', alignItems: 'center' }}>
+      {CLIENT_TABS.map((t, i) => (
+        <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+          {i > 0 && <StatusTabChevron />}
+          <TabChip selected={subtab === t.key} onSelect={() => setSubtab(t.key)} style={statusTabStyle(t.key, subtab === t.key)}>
+            {/* Client counters live on the two states that need their attention
+               (In review, Updated); Requested changes is already settled. */}
+            <StatusTabContent
+              status={t.key}
+              selected={subtab === t.key}
+              count={t.key === 'in-review' ? totalPending : t.key === 'updated' ? countByStatus('updated') : undefined}
+            />
+          </TabChip>
+        </span>
       ))}
     </div>
   );
