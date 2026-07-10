@@ -116,7 +116,9 @@ interface Item {
   channelIcon: 'organic' | 'paid' | 'seo' | 'reputation';
   slides?: number;
   batch?: 'current' | 'previous';  // previous batches live behind a header toggle
-  headline?: string;               // PaidSearch: Google ad headline
+  headline?: string;               // PaidSearch / Paid: ad / link-card headline
+  cta?: string;                    // Paid: Meta ad call-to-action label
+  dest?: string;                   // Paid: where the Meta ad CTA leads
   rating?: number;                 // Reputation: star rating
   reviewer?: string;               // Reputation: who left the review
   source?: string;                 // Reputation: Google / Yelp
@@ -197,20 +199,42 @@ const ITEMS: Item[] = [
     date: 'Oct 9 · 9:00 AM',
     channelIcon: 'paid',
     img: IMG.livingRoom,
+    headline: 'Free in-home consult, no install fee',
+    cta: 'Book now',
+    dest: 'graindesignflooring.com/lvp',
     caption:
       'Waterproof luxury vinyl plank that looks like real oak, and stands up to kids, dogs, and Texas summers. Book your free in-home design consult before Oct 31 and we’ll waive the install fee on any LVP project over 600 sq ft. 🏡',
   },
+  // Six paid socials awaiting the client's first look (In review).
   {
-    id: 6,
-    type: 'Paid',
-    section: 'paid-social',
-    batch: 'current',
-    campaign: 'LVP Fall Promo, Meta',
-    date: 'Oct 14 · 10:00 AM',
-    channelIcon: 'paid',
-    img: IMG.kitchen,
-    caption:
-      'Refinish, don’t replace. We brought this 1990s kitchen floor back to life with a full sand-and-recoat in a custom warm-walnut tone, half the cost of new hardwood, done in three days. Limited fall slots left in the Austin area. 🛠️',
+    id: 50, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Hardwood, Meta', date: 'Oct 12 · 9:00 AM', img: IMG.hardwood,
+    headline: 'Wide-plank white oak, installed', cta: 'Book now', dest: 'graindesignflooring.com/white-oak',
+    caption: 'Wide-plank white oak that warms up any Austin home. Book a free in-home consult and see samples under your own light. 🪵',
+  },
+  {
+    id: 51, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Hardwood, Meta', date: 'Oct 12 · 1:00 PM', img: IMG.stairs,
+    headline: 'Stairs done right, in white oak', cta: 'Get a quote', dest: 'graindesignflooring.com/stairs',
+    caption: 'Stair treads are the hardest part of any install. We template, cut, and set a full flight of white oak so it flows with your floors.',
+  },
+  {
+    id: 52, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Showroom, Meta', date: 'Oct 13 · 9:00 AM', img: IMG.showroom,
+    headline: 'Visit the South Lamar showroom', cta: 'Learn more', dest: 'graindesignflooring.com/showroom',
+    caption: 'Walk three wide-plank white oak collections and a matte herringbone tile under real light. Open Saturdays 10 to 4. ☀️',
+  },
+  {
+    id: 53, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Refinishing, Meta', date: 'Oct 13 · 2:00 PM', img: IMG.detail,
+    headline: 'Dust-free floor refinishing', cta: 'Book now', dest: 'graindesignflooring.com/dust-free',
+    caption: 'Refinish, don’t replace. Our sealed sanding system keeps your home livable while we bring tired floors back to life in three days.',
+  },
+  {
+    id: 54, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Showroom, Meta', date: 'Oct 14 · 9:00 AM', img: IMG.tile,
+    headline: 'Matte herringbone tile', cta: 'See the gallery', dest: 'graindesignflooring.com/tile',
+    caption: 'Herringbone tile that reads warm, not cold. Perfect for entryways and mudrooms that take a beating. Design consults open this fall.',
+  },
+  {
+    id: 55, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Hardwood, Meta', date: 'Oct 14 · 1:00 PM', img: IMG.swatch,
+    headline: 'Find your perfect tone', cta: 'Book a consult', dest: 'graindesignflooring.com/consult',
+    caption: 'From pale Scandi oak to deep walnut-stained ash, we sample on-site so you commit with confidence. Free design consult this fall. 🎨',
   },
   {
     id: 10,
@@ -434,7 +458,7 @@ const TYPE_TO_AM: Record<ContentType, AmPost['type']> = {
 const toPost = (i: Item): AmPost => ({
   id: i.id, type: TYPE_TO_AM[i.type], section: i.section, date: i.date, dateSort: i.date,
   caption: i.caption, img: i.img, slides: i.slides,
-  headline: i.headline, rating: i.rating, reviewer: i.reviewer, source: i.source,
+  headline: i.headline, cta: i.cta, dest: i.dest, rating: i.rating, reviewer: i.reviewer, source: i.source,
 });
 
 // Client content card, identical shell + CardBody to the AM side. Approve /
@@ -934,7 +958,7 @@ export function Approvals({ sub: _sub }: { sub?: string }) {
 
   return (
     <ClientShell section="approvals" title={title} topbarCenter={subtabs} topbarRight={topbarRight}>
-      <div style={{ maxWidth: PAGE_W, margin: '0 auto', padding: '20px 4px 60px' }}>
+      <div style={{ maxWidth: PAGE_W, margin: '0 auto', padding: '20px 0 60px' }}>
 
         {/* The team's note. On the In review tab it also carries the pending
             count + the primary Approve-all action, on the right under the message. */}

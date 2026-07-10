@@ -81,7 +81,9 @@ export interface Post {
   img?: string;
   slides?: number;
   sent?: boolean;        // has this been sent to the client yet?
-  headline?: string;     // paid-search: ad headline line
+  headline?: string;     // paid-search + paid-social: link-card headline line
+  cta?: string;          // paid-social: link-card call-to-action button label
+  dest?: string;         // paid-social: where the CTA button leads
   rating?: number;       // review: star rating (1–5)
   reviewer?: string;     // review: who left it
   source?: string;       // review: Google / Yelp / Facebook
@@ -123,8 +125,15 @@ const CAMPAIGNS: Campaign[] = [
     badge: 'Campaigns',
     endDate: '2026-06-30',
     posts: [
-      { id:10, type:'paid-social', section:'paid-social', sent:true,  date:'Jun 11  9:00am', dateSort:'2026-06-11T09:00', img:IMG.livingRoom, caption:'Waterproof luxury vinyl plank that looks like real oak, and stands up to kids, dogs, and Texas summers. Book your free in-home design consult before Jun 30 and we will waive the install fee on any LVP project over 600 sq ft. 🏡' },
-      { id:11, type:'paid-social', section:'paid-social', sent:false, date:'Jun 14  10:00am', dateSort:'2026-06-14T10:00', img:IMG.kitchen, caption:'Refinish, do not replace. We brought this 1990s kitchen floor back to life with a full sand-and-recoat in a custom warm-walnut tone, half the cost of new hardwood, done in three days. Limited fall slots left. 🛠️' },
+      { id:10, type:'paid-social', section:'paid-social', sent:true,  date:'Jun 11  9:00am', dateSort:'2026-06-11T09:00', img:IMG.livingRoom, headline:'Free in-home consult, no install fee', cta:'Book now', dest:'graindesignflooring.com/lvp', caption:'Waterproof luxury vinyl plank that looks like real oak, and stands up to kids, dogs, and Texas summers. Book your free in-home design consult before Jun 30 and we will waive the install fee on any LVP project over 600 sq ft. 🏡' },
+      { id:11, type:'paid-social', section:'paid-social', sent:false, date:'Jun 14  10:00am', dateSort:'2026-06-14T10:00', img:IMG.kitchen, headline:'Refinish, do not replace', cta:'Get a quote', dest:'graindesignflooring.com/refinishing', caption:'Refinish, do not replace. We brought this 1990s kitchen floor back to life with a full sand-and-recoat in a custom warm-walnut tone, half the cost of new hardwood, done in three days. Limited fall slots left. 🛠️' },
+      // Six paid socials awaiting the client's first look (default to In review).
+      { id:50, type:'paid-social', section:'paid-social', sent:true, date:'Jun 12  9:00am',  dateSort:'2026-06-12T09:00', img:IMG.hardwood,  headline:'Wide-plank white oak, installed', cta:'Book now',       dest:'graindesignflooring.com/white-oak',   caption:'Wide-plank white oak that warms up any Austin home. Book a free in-home consult and see samples under your own light. 🪵' },
+      { id:51, type:'paid-social', section:'paid-social', sent:true, date:'Jun 12  1:00pm',  dateSort:'2026-06-12T13:00', img:IMG.stairs,    headline:'Stairs done right, in white oak', cta:'Get a quote',    dest:'graindesignflooring.com/stairs',      caption:'Stair treads are the hardest part of any install. We template, cut, and set a full flight of white oak so it flows with your floors.' },
+      { id:52, type:'paid-social', section:'paid-social', sent:true, date:'Jun 13  9:00am',  dateSort:'2026-06-13T09:00', img:IMG.showroom,  headline:'Visit the South Lamar showroom', cta:'Learn more',      dest:'graindesignflooring.com/showroom',    caption:'Walk three wide-plank white oak collections and a matte herringbone tile under real light. Open Saturdays 10 to 4. ☀️' },
+      { id:53, type:'paid-social', section:'paid-social', sent:true, date:'Jun 13  2:00pm',  dateSort:'2026-06-13T14:00', img:IMG.detail,    headline:'Dust-free floor refinishing',   cta:'Book now',       dest:'graindesignflooring.com/dust-free',   caption:'Refinish, do not replace. Our sealed sanding system keeps your home livable while we bring tired floors back to life in three days.' },
+      { id:54, type:'paid-social', section:'paid-social', sent:true, date:'Jun 14  9:00am',  dateSort:'2026-06-14T09:00', img:IMG.tile,      headline:'Matte herringbone tile',        cta:'See the gallery', dest:'graindesignflooring.com/tile',        caption:'Herringbone tile that reads warm, not cold. Perfect for entryways and mudrooms that take a beating. Design consults open this fall.' },
+      { id:55, type:'paid-social', section:'paid-social', sent:true, date:'Jun 14  1:00pm',  dateSort:'2026-06-14T13:00', img:IMG.swatch,    headline:'Find your perfect tone',         cta:'Book a consult', dest:'graindesignflooring.com/consult',     caption:'From pale Scandi oak to deep walnut-stained ash, we sample on-site so you commit with confidence. Free design consult this fall. 🎨' },
     ],
   },
   {
@@ -487,13 +496,128 @@ export const CARD_H = 500;
 // Content area caps at exactly three cards wide.
 export const PAGE_W = CARD_W * 3 + 18 * 2;
 
+// ── Meta (Facebook) feed ad preview ──────────────────────────────────────────
+// A real Meta ad: brand header + Sponsored, primary text, the creative, a link
+// card (domain / headline / CTA), and the Like·Comment·Share bar. Rendered at a
+// fixed intrinsic size (AD_W×AD_H) and sized with `scale` so the exact same
+// design appears scaled-down on the card and full-size in the preview.
+export const AD_W = 380;
+export const AD_H = 560;
+const AD_DOMAIN = 'graindesignflooring.com';
+const AD_BRAND = 'Grain Design Flooring';
+
+// Structural shape so both Post and the preview item types can feed it.
+type AdContent = { caption: string; img?: string; headline?: string; cta?: string; dest?: string };
+
+function AdAction({ label, path }: { label: string; path: string }) {
+  return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 0', color: dark60, fontSize: 13, fontWeight: 500, fontFamily: F }}>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={dark60} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={path} /></svg>
+      {label}
+    </div>
+  );
+}
+
+export function MetaAdPreview({ post, scale = 1 }: { post: AdContent; scale?: number }) {
+  const headline = post.headline ?? 'Free in-home flooring consult';
+  const cta = post.cta ?? 'Learn more';
+  return (
+    <div style={{ width: AD_W * scale, height: AD_H * scale, flexShrink: 0 }}>
+      <div style={{ width: AD_W, height: AD_H, transform: `scale(${scale})`, transformOrigin: 'top left', background: white, borderRadius: 12, border: `1px solid ${dark8}`, boxShadow: CARD_SHADOW, overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: F }}>
+        {/* header */}
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
+          <span style={{ width: 40, height: 40, borderRadius: 99, flexShrink: 0, background: 'var(--brand)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 600, color: dark90 }}>G</span>
+          <div style={{ minWidth: 0, lineHeight: 1.3 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: dark90, whiteSpace: 'nowrap' }}>{AD_BRAND}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: dark60 }}>
+              Sponsored
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={dark60} strokeWidth="1.5"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18" /></svg>
+            </div>
+          </div>
+          <span style={{ marginLeft: 'auto', color: dark40, fontSize: 18, letterSpacing: '1.5px', flexShrink: 0 }}>···</span>
+        </div>
+        {/* primary text */}
+        <div style={{ flexShrink: 0, padding: '0 14px 10px' }}>
+          <p style={{ margin: 0, fontSize: 14, color: dark90, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{post.caption}</p>
+        </div>
+        {/* creative */}
+        <div style={{ flex: 1, minHeight: 0, background: '#c8c0b4', overflow: 'hidden' }}>
+          {post.img && <img src={post.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+        </div>
+        {/* link card */}
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', background: 'var(--dark-2)', borderTop: `1px solid ${dark8}` }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: dark40, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{AD_DOMAIN}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: dark90, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{headline}</div>
+          </div>
+          <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 500, color: dark90, background: dark8, borderRadius: 7, padding: '9px 14px', whiteSpace: 'nowrap' }}>{cta}</span>
+        </div>
+        {/* actions */}
+        <div style={{ flexShrink: 0, display: 'flex', borderTop: `1px solid ${dark8}` }}>
+          <AdAction label="Like" path="M7 10v11M2 12v8a1 1 0 001 1h3V10H3a1 1 0 00-1 1zM7 10l4.5-7a2 2 0 013.5 1.3V8h4a2 2 0 012 2.3l-1.3 8A2 2 0 0117.7 20H7" />
+          <AdAction label="Comment" path="M21 11.5a8.5 8.5 0 01-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1121 11.5z" />
+          <AdAction label="Share" path="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The little destination line shown under the ad in the preview, so the AM and
+// client can confirm where the CTA button actually sends people.
+export function AdDestination({ dest, cta }: { dest?: string; cta?: string }) {
+  const url = dest ?? AD_DOMAIN;
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, maxWidth: '100%', padding: '8px 12px', borderRadius: 8, background: 'var(--dark-2)', border: `1px solid ${dark8}`, fontFamily: F }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={dark40} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
+      <span style={{ fontSize: 12.5, color: dark60, whiteSpace: 'nowrap' }}>{cta ?? 'Button'} opens</span>
+      <span style={{ fontSize: 12.5, color: dark90, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
+    </div>
+  );
+}
+
+// Measures the available box and scales the Meta ad to fit it (contain), so the
+// same ad renders correctly whether the card also shows a requested-change note
+// or not, keeping the ad's true proportions at any size.
+function FitMetaAd({ post }: { post: AdContent }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.5);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width && height) setScale(Math.min(width / AD_W, height / AD_H));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{ flex: 1, minHeight: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <MetaAdPreview post={post} scale={scale} />
+    </div>
+  );
+}
+
 // ── Shared card body, fills a fixed-height card. The thumbnail sits in a
 //    centered stage under the header and scales to fit (contain) without
 //    stretching; taller media (reels/stories) shrinks to the same card height.
 //    Used by both ContentCard and InternalCard. ──────────────────────────────
 export function CardBody({ post }: { post: Post }) {
   const isPortrait = post.type === 'story' || post.type === 'short' || post.type === 'feed-video';
-  const isLandscape = post.type === 'still' || post.type === 'carousel' || post.type === 'paid-social' || post.type === 'gbp';
+  const isLandscape = post.type === 'still' || post.type === 'carousel' || post.type === 'gbp';
+
+  // Paid Social, a real Meta feed ad, scaled proportionally to fit whatever
+  // height the card leaves (with or without a requested-change note below).
+  if (post.type === 'paid-social') {
+    return (
+      <div style={{ flex:1, minHeight:0, padding:'10px 12px 12px', display:'flex' }}>
+        <FitMetaAd post={post} />
+      </div>
+    );
+  }
 
   // Blog / article, editorial: image, serif title, meta, excerpt.
   if (post.type === 'blog') return (
@@ -584,11 +708,6 @@ export function CardBody({ post }: { post: Post }) {
             <div style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'2px 6px', display:'inline-flex', alignItems:'center', gap:3 }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="white" strokeWidth="1.6"/><path d="M2 7v10M22 7v10" stroke="white" strokeWidth="1.6" strokeLinecap="round"/></svg>
               <span style={{ fontSize:10, color:'white', fontFamily:F, lineHeight:1 }}>{post.slides}</span>
-            </div>
-          )}
-          {post.type === 'paid-social' && (
-            <div style={{ position:'absolute', top:8, left:8, background:'rgba(0,0,0,0.55)', borderRadius:4, padding:'3px 7px', display:'inline-flex', alignItems:'center' }}>
-              <span style={{ fontSize:10, color:'white', fontFamily:F, lineHeight:1 }}>Sponsored</span>
             </div>
           )}
         </div>
@@ -1177,7 +1296,7 @@ function PreviewSidebarAction({ icon: Icon, title, sub }: { icon: Glyph; title: 
   );
 }
 
-interface PreviewPost { id: number; type: ContentType; caption: string; img?: string; campaign: string; date: string; feedback?: ClientReview; status: PostStatus; headline?: string; rating?: number; reviewer?: string; source?: string }
+interface PreviewPost { id: number; type: ContentType; caption: string; img?: string; campaign: string; date: string; feedback?: ClientReview; status: PostStatus; headline?: string; cta?: string; dest?: string; rating?: number; reviewer?: string; source?: string }
 
 // Client-request thread shown in the preview sidebar, the client's change
 // request as a received bubble + a reply composer, all from BDS pieces.
@@ -1410,7 +1529,7 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
           <PreviewChatPanel />
           <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, padding: '40px 24px', background: 'var(--default-bg)' }}>
             {/* view-as rail, only meaningful for social/organic posts */}
-            {item.type !== 'paid-search' && item.type !== 'review' && (
+            {item.type !== 'paid-search' && item.type !== 'review' && item.type !== 'paid-social' && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                 <Text variant="metadata" style={{ color: dark60, marginBottom: 2 }}>View as</Text>
                 {PREVIEW_PLATFORMS.map(({ glyph: G, label }, i) => (
@@ -1430,7 +1549,13 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
                 <IconButton variant="ghost" size="sm" icon={ChevronRight} aria-label="Next version" isDisabled={verIdx === verCount - 1} onPress={() => goVersion(verIdx + 1)} />
               </div>
             )}
-            {item.type === 'paid-search' ? (
+            {item.type === 'paid-social' ? (
+              /* ── Paid Social, a real Meta feed ad, full-size + CTA destination ── */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                <MetaAdPreview post={item} scale={1} />
+                <AdDestination dest={item.dest} cta={item.cta} />
+              </div>
+            ) : item.type === 'paid-search' ? (
               /* ── Paid Search, Google sponsored result, no phone chrome ── */
               <div style={{ width: 480, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, boxShadow: '0 4px 16px rgba(0,0,0,0.06)', padding: '26px 28px' }}>
                 <Text variant="metadata" style={{ display: 'block', color: dark40, marginBottom: 16 }}>Google Search, sponsored result</Text>
@@ -2356,7 +2481,7 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
   const openPreview = (postId: number) => {
     const items: PreviewPost[] = CAMPAIGNS.flatMap(c => c.posts.map(p => ({
       id: p.id, type: p.type, caption: p.caption, img: p.img, campaign: c.name, date: p.date,
-      headline: p.headline, rating: p.rating, reviewer: p.reviewer, source: p.source,
+      headline: p.headline, cta: p.cta, dest: p.dest, rating: p.rating, reviewer: p.reviewer, source: p.source,
       status: postStatus[p.id],
       feedback: clientReviewed && postStatus[p.id] === 'changes' ? CLIENT_REVIEW[p.id] : undefined,
     })));

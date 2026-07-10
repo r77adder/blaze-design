@@ -24,6 +24,7 @@ import LinkedInBrand from '@/icons/32/LinkedInBrand';
 import TwitterBrand from '@/icons/20/TwitterBrand';
 import Google from '@/icons/20/Google';
 import { StoryPreview, ReelPreview, BlogPreview } from './SocialPreviewFrames';
+import { MetaAdPreview, AdDestination } from '../blaze-dfy/Approvals';
 import { BASE } from './shell';
 
 /**
@@ -46,7 +47,9 @@ interface PreviewItem {
   campaign: string;
   date: string;
   channelIcon?: 'organic' | 'paid' | 'seo' | 'reputation';
-  headline?: string;   // PaidSearch
+  headline?: string;   // PaidSearch / Paid
+  cta?: string;        // Paid: Meta ad CTA label
+  dest?: string;       // Paid: where the Meta ad CTA leads
   rating?: number;     // Reputation
   reviewer?: string;   // Reputation
   source?: string;     // Reputation
@@ -301,7 +304,8 @@ export function PostPreviewModal({
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           {/* center region: "view as" rail + phone preview */}
           <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, padding: '40px 24px', background: 'var(--default-bg)' }}>
-            {/* view-as rail */}
+            {/* view-as rail, hidden for the Meta ad (it is a fixed Facebook ad) */}
+            {item.type !== 'Paid' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
               <Text variant="metadata" style={{ color: 'var(--dark-60)', marginBottom: 2 }}>View as</Text>
               {PLATFORMS.map(({ glyph: G, label }, i) => (
@@ -320,8 +324,14 @@ export function PostPreviewModal({
                 </span>
               ))}
             </div>
+            )}
 
-            {/* phone post preview */}
+            {item.type === 'Paid' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                <MetaAdPreview post={item} scale={1} />
+                <AdDestination dest={item.dest} cta={item.cta} />
+              </div>
+            ) : (
             <div style={{ width: item.type === 'Blog' || isTextCard ? 480 : 360, flexShrink: 0, border: '1px solid var(--dark-8)', borderRadius: 16, background: 'var(--light-100)', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
               {item.type === 'PaidSearch' ? (
                 <div style={{ padding: '24px 26px' }}>
@@ -395,6 +405,7 @@ export function PostPreviewModal({
                 </>
               )}
             </div>
+            )}
           </div>
 
           {/* ── Sidebar, Edit / Feedback tabs ─────────────────────── */}
