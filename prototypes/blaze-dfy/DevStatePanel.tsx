@@ -48,13 +48,16 @@ export function DevStatePanel() {
   const { state, setState } = useDfyState();
   const { seedReviewed, clearReview } = useReview();
   const navigate = useNavigate();
-  // Show the AM/Client switch on the approvals and home surfaces, and jump to
-  // the matching surface on the other side.
+  // Show the AM/Client switch on the approvals, AI Receptionist, and home
+  // surfaces, and jump to the matching surface on the other side.
   const pathname = useLocation().pathname;
   const surface = pathname.includes('/approvals') ? 'approvals'
+    : pathname.includes('/sdr') ? 'sdr'
     : (pathname.includes('/home') || /\/am\/?$/.test(pathname)) ? 'home'
     : null;
-  const clientHref = surface === 'approvals' ? '/dfy-client/approvals' : '/dfy-client';
+  const clientHref = surface === 'approvals' ? '/dfy-client/approvals'
+    : surface === 'sdr' ? '/dfy-client/leads'
+    : '/dfy-client';
   // Sit quietly at half opacity by default; lift to full on hover so the panel
   // never competes with the real workspace chrome.
   const [hovered, setHovered] = useState(false);
@@ -139,8 +142,9 @@ export function DevStatePanel() {
         transition: 'opacity 120ms ease',
       }}
     >
-      {/* Changes sits on top, on the surfaces it references (approvals + home). */}
-      {surface && (
+      {/* Changes sits on top, on the surfaces it references (approvals + home).
+          The AI Receptionist surface gets the side switch but not Changes. */}
+      {(surface === 'approvals' || surface === 'home') && (
         <>
           <button
             type="button"
@@ -211,7 +215,7 @@ function SideButton({ text, current, onClick }: { text: string; current?: boolea
     <button
       type="button"
       onClick={onClick}
-      title={current ? 'Current view' : `Open ${text} approvals`}
+      title={current ? 'Current view' : `Open ${text} view`}
       style={{
         appearance: 'none', border: 'none', cursor: current ? 'default' : 'pointer',
         fontFamily: 'inherit', fontSize: 10.5, lineHeight: 1, padding: '3px 6px', borderRadius: 3,

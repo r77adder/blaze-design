@@ -11,6 +11,7 @@ import Search from '@/icons/20/Search';
 import Voice from '@/icons/20/Voice';
 import MessageText2 from '@/icons/20/MessageText2';
 import MessageChat01 from '@/icons/20/MessageChat01';
+import Settings from '@/icons/20/Settings';
 import { H2Layout } from '../H2Layout';
 import { GenerateReportButton } from '../GenerateReportButton';
 import { useDevState } from '../dev-state-context';
@@ -765,14 +766,21 @@ function SdrInner() {
       <TabChip selected={tab === 'dashboard'} onSelect={() => setTab('dashboard')}>Dashboard</TabChip>
       <TabChip selected={tab === 'leads'} onSelect={() => setTab('leads')}>Leads</TabChip>
       <TabChip selected={tab === 'bookings'} onSelect={() => setTab('bookings')}>Bookings</TabChip>
-      <TabChip selected={tab === 'settings'} onSelect={() => setTab('settings')}>Settings</TabChip>
     </div>
+  );
+
+  // Settings is no longer a sub-tab — it opens as a separate full page from this
+  // topbar button (mirrors the client-side Leads → Receptionist settings flow).
+  const settingsButton = (
+    <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => setTab('settings')}>
+      Settings
+    </Button>
   );
 
   // ─── Dashboard tab ─────────────────────────────────────────────────
   if (tab === 'dashboard' && !activeLead) {
     return (
-      <H2Layout topbarCenter={isCold ? undefined : tabStrip} topbarRight={isCold ? undefined : <GenerateReportButton />}>
+      <H2Layout topbarCenter={isCold ? undefined : tabStrip} topbarRight={isCold ? undefined : <>{settingsButton}<GenerateReportButton /></>}>
         <SdrDashboard leads={leads} isCold={isCold} onViewLeads={() => setTab('leads')} onOpenLead={setActiveLeadId} />
       </H2Layout>
     );
@@ -781,7 +789,7 @@ function SdrInner() {
   // ─── Bookings tab ──────────────────────────────────────────────────
   if (tab === 'bookings' && !activeLead) {
     return (
-      <H2Layout topbarCenter={tabStrip} topbarRight={<GenerateReportButton />}>
+      <H2Layout topbarCenter={tabStrip} topbarRight={<>{settingsButton}<GenerateReportButton /></>}>
         <BookingsTab
           leads={leads}
           contactLeadCounts={contactLeadCounts}
@@ -792,11 +800,12 @@ function SdrInner() {
     );
   }
 
-  // ─── Settings tab ──────────────────────────────────────────────────
-  // SdrSettingsBody renders its own H2Layout so the "Add agent" action can
-  // live in the topbar next to the profile avatar.
+  // ─── Settings (separate full page) ─────────────────────────────────
+  // Opened from the topbar Settings button (not a sub-tab). SdrSettingsBody
+  // renders its own H2Layout with a back button in the topbar title and the
+  // "Add agent" action on the right.
   if (tab === 'settings' && !activeLead) {
-    return <SdrSettingsBody tabStrip={tabStrip} />;
+    return <SdrSettingsBody onBack={() => setTab('dashboard')} />;
   }
 
   // ─── Cold view ─────────────────────────────────────────────────────
@@ -965,6 +974,7 @@ function SdrInner() {
       topbarRight={
         <>
           {filtersButton}
+          {settingsButton}
           <GenerateReportButton />
         </>
       }

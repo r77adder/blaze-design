@@ -17,9 +17,14 @@ export interface H2LayoutProps {
   topbarRight?: ReactNode;
   topbarCenter?: ReactNode;
   fullBleed?: boolean;
+  /** Replace the topbar's left section name with this node (e.g. a back +
+   *  page-title cluster on a settings/detail page). Unlike `title`, which
+   *  renders in the center beside the section name, this swaps the section
+   *  name itself. */
+  titleOverride?: ReactNode;
 }
 
-export function H2Layout({ children, title, topbarCenter, topbarRight, fullBleed }: H2LayoutProps) {
+export function H2Layout({ children, title, topbarCenter, topbarRight, fullBleed, titleOverride }: H2LayoutProps) {
   const chrome = useWorkspaceChrome();
   const titleNode = title != null && typeof title !== 'string' ? title : null;
   const center = titleNode || topbarCenter ? (
@@ -36,12 +41,14 @@ export function H2Layout({ children, title, topbarCenter, topbarRight, fullBleed
     chrome?.setTopbarCenter(center);
     chrome?.setTopbarRight(topbarRight ?? null);
     chrome?.setFullBleed(!!fullBleed);
+    chrome?.setTitle(titleOverride ?? null);
   });
   // Clear when the page unmounts (e.g. navigating to another section).
   useEffect(() => () => {
     chrome?.setTopbarCenter(null);
     chrome?.setTopbarRight(null);
     chrome?.setFullBleed(false);
+    chrome?.setTitle(null);
   }, [chrome]);
 
   return children as ReactNode;

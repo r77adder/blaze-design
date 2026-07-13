@@ -1,6 +1,6 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { Button, Heading, IconButton, Modal, Text, useModals, type StackModalProps } from '@/components';
-import { Avatar, Chip, Pill, Select, StatusPill, TextField as DSTextField, useToast } from '@/staging';
+import { Avatar, Chip, Pill, Select, StatusPill, TabChip, TextField as DSTextField, useToast } from '@/staging';
 import Close from '@/icons/20/Close';
 import Lock3 from '@/icons/20/Lock3';
 import ChevronDown from '@/icons/20/ChevronDown';
@@ -11,6 +11,7 @@ import CheckboxChecked from '@/icons/20/CheckboxChecked';
 import ArrowRight from '@/icons/20/ArrowRight';
 import Play3 from '@/icons/20/Play3';
 import Trash2 from '@/icons/20/Trash2';
+import ArrowLeft from '@/icons/20/ArrowLeft';
 import { ChannelGlyph } from '../SdrDetail';
 import { H2Layout } from '../H2Layout';
 import { ComplianceSection } from './SdrCompliance';
@@ -169,7 +170,7 @@ const CERTAPRO_SDR_SETTINGS: SdrSettings = {
 
 // ── Root component ─────────────────────────────────────────────────────────
 
-export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
+export function SdrSettingsBody({ onBack }: { onBack?: () => void }) {
   const [agents, setAgents] = useState<AgentConfig[]>(DEFAULT_AGENTS);
   const [activeAgentId, setActiveAgentId] = useState<string>('agent-riley');
   const [settings, setSettings] = useState<SdrSettings>(CERTAPRO_SDR_SETTINGS);
@@ -199,9 +200,39 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
     { id: 'compliance',    label: 'Compliance',    sub: 'A2P / 10DLC registration' },
   ];
 
+  // Replaces the "AI Receptionist" section name on the left with a back +
+  // "Settings" cluster (mirrors the client-side Receptionist settings page).
+  const titleCluster = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <IconButton
+        variant="ghost"
+        size="sm"
+        icon={ArrowLeft}
+        aria-label="Back to AI Receptionist"
+        onPress={() => onBack?.()}
+      />
+      <Heading level={1} style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: 'normal' }}>
+        Settings
+      </Heading>
+    </div>
+  );
+
+  // Settings sub-sections ride the topbar center as the standard TabChip strip,
+  // matching the sub-tabs on every other page.
+  const subTabStrip = (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {tabs.map((t) => (
+        <TabChip key={t.id} selected={subTab === t.id} onSelect={() => setSubTab(t.id)}>
+          {t.label}
+        </TabChip>
+      ))}
+    </div>
+  );
+
   return (
     <H2Layout
-      topbarCenter={tabStrip}
+      titleOverride={titleCluster}
+      topbarCenter={subTabStrip}
       topbarRight={
         <Button variant="secondary" size="sm" frontIcon={Plus} onPress={addAgent}>
           Add agent
@@ -228,12 +259,9 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
           onChange={setActiveAgentId}
         />
 
-        {/* section: tabbed settings panel */}
-        <FolderTabPanel
-          tabs={tabs}
-          value={subTab}
-          onChange={(v) => setSubTab(v as SettingsSubTab)}
-        >
+        {/* section: settings content — sub-tabs now live in the topbar center,
+            so the body renders just the active section's content. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
           {subTab === 'triggers' && (
             <TriggersSection agent={activeAgent} onChange={updateAgent} />
           )}
@@ -255,7 +283,7 @@ export function SdrSettingsBody({ tabStrip }: { tabStrip?: React.ReactNode }) {
             <NotificationsSection onConfigureEscalations={() => setSubTab('outcomes')} />
           )}
           {subTab === 'compliance' && <ComplianceSection />}
-        </FolderTabPanel>
+        </div>
       </div>
 
       {/* Chat side pane */}
@@ -340,45 +368,6 @@ function AgentSelector({
             </button>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-// ── Folder tab panel ──────────────────────────────────────────────────────
-
-function FolderTabPanel({
-  tabs,
-  value,
-  onChange,
-  children,
-}: {
-  tabs: { id: string; label: string; sub: string }[];
-  value: string;
-  onChange: (v: string) => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      {/* Tab strip — selectable chips (grey fill; white + border when selected) */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {tabs.map((t) => (
-          <Chip key={t.id} size="md" selected={t.id === value} onSelectionChange={() => onChange(t.id)}>
-            {t.label}
-          </Chip>
-        ))}
-      </div>
-
-      {/* Content */}
-      <div
-        style={{
-          padding: '28px 0 0',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 56,
-        }}
-      >
-        {children}
       </div>
     </div>
   );

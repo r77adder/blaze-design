@@ -203,8 +203,9 @@ export function WorkspaceShell({
   // actions up here via the H2Layout shim).
   const [injectedCenter, setInjectedCenter] = useState<ReactNode>(null);
   const [injectedRight, setInjectedRight] = useState<ReactNode>(null);
+  const [injectedTitle, setInjectedTitle] = useState<ReactNode>(null);
   const [fullBleed, setFullBleed] = useState(false);
-  const wsChrome = useMemo(() => ({ setTopbarCenter: setInjectedCenter, setTopbarRight: setInjectedRight, setFullBleed }), []);
+  const wsChrome = useMemo(() => ({ setTopbarCenter: setInjectedCenter, setTopbarRight: setInjectedRight, setFullBleed, setTitle: setInjectedTitle }), []);
 
   const openHandoff = () => openModal(HandoffModal, {
     account,
@@ -267,8 +268,10 @@ export function WorkspaceShell({
   }));
 
   // The approvals subtabs now carry the requested-change count (in the topbar
-  // tab strip), so the title stays a plain section name.
-  const titleNode = active;
+  // tab strip), so the title stays a plain section name — unless a page injects
+  // its own title node (e.g. the AI Receptionist settings page swaps in a
+  // back + "Settings" cluster).
+  const titleNode = injectedTitle ?? active;
 
   return (
    <WorkspaceChromeContext.Provider value={wsChrome}>
