@@ -1,9 +1,9 @@
 /**
- * Flooring-flavored client feed for Grain Design Flooring (Austin, TX) — premium
+ * Flooring-flavored client feed for Grain Design Flooring (Austin, TX): premium
  * hardwood, luxury vinyl plank (LVP), and tile: installation, refinishing, and
  * design consultations.
  *
- * Each sign-off (action) item carries `approvals: ApprovalContent[]` — a typed
+ * Each sign-off (action) item carries `approvals: ApprovalContent[]`, a typed
  * preview per piece. Single notifications hold a one-element array; BATCH
  * notifications ("5 posts ready", "3 content pieces", "5 AI avatar videos",
  * "15 posts") hold N believable pieces the carousel modal pages through. The
@@ -48,9 +48,9 @@ export const FEED_ITEMS: ApprovalItem[] = [
         reviewerName: 'Maria H.',
         rating: 5,
         reviewText:
-          'Grain Design transformed our Westlake living room with gorgeous white-oak floors — the crew was meticulous and finished on time. Only note: there’s a small squeak near the stair landing. Still, we’d hire them again in a heartbeat.',
+          'Grain Design transformed our Westlake living room with gorgeous white-oak floors. The crew was meticulous and finished on time. Only note: there’s a small squeak near the stair landing. Still, we’d hire them again in a heartbeat.',
         draftedReply:
-          'Thank you so much, Maria — we’re thrilled you love the white oak! That squeak by the landing is an easy fix; we’d love to send Daniel back for a quick comeback visit this week at no charge. We’ll reach out to schedule. Enjoy the new floors!',
+          'Thank you so much, Maria. We’re thrilled you love the white oak! That squeak by the landing is an easy fix; we’d love to send Daniel back for a quick comeback visit this week at no charge. We’ll reach out to schedule. Enjoy the new floors!',
       },
     ],
   },
@@ -74,24 +74,24 @@ export const FEED_ITEMS: ApprovalItem[] = [
         readTime: '7 min read',
         blogTitle: 'Hardwood Refinishing in Austin: When to Refinish vs. Replace (2026 Guide)',
         excerpt:
-          'Austin’s heat and humidity are hard on hardwood. This guide walks through the five signs your floors can be refinished instead of replaced — board thickness, cupping, gaps, finish wear, and subfloor condition — and what each path actually costs.',
+          'Austin’s heat and humidity are hard on hardwood. This guide walks through the five signs your floors can be refinished instead of replaced (board thickness, cupping, gaps, finish wear, and subfloor condition) and what each path actually costs.',
         body: [
           {
             paragraphs: [
-              'Refinishing sands the existing boards back to bare wood and lays down a fresh finish; replacing tears them out and starts over. In most Austin homes we walk into, refinishing is the right call — but not always. Here are the five things we check before we quote either one.',
+              'Refinishing sands the existing boards back to bare wood and lays down a fresh finish; replacing tears them out and starts over. In most Austin homes we walk into, refinishing is the right call. But not always. Here are the five things we check before we quote either one.',
             ],
           },
           {
             heading: 'Start with board thickness',
             paragraphs: [
-              'Solid hardwood can usually be sanded six to eight times over its life. The number that matters is the wear layer — the wood above the tongue-and-groove. If you have at least 1/8" left, you have room for at least one more refinish. We pull a floor vent or a threshold board to measure rather than guessing.',
+              'Solid hardwood can usually be sanded six to eight times over its life. The number that matters is the wear layer, the wood above the tongue-and-groove. If you have at least 1/8" left, you have room for at least one more refinish. We pull a floor vent or a threshold board to measure rather than guessing.',
               'Engineered floors are different: the veneer on top can be as thin as 0.6mm or as thick as 4mm. A thin veneer can be screened and recoated but never fully sanded, so thickness decides the whole conversation.',
             ],
           },
           {
             heading: 'Read the cupping and crowning',
             paragraphs: [
-              'Cupping — edges higher than the center of the board — almost always means moisture came from below. In Austin that is usually a slab without a proper vapor barrier or a slow plumbing leak. Sanding a cupped floor before it has dried and flattened just locks the problem in, so we measure moisture content first and fix the source before any sander touches it.',
+              'Cupping (edges higher than the center of the board) almost always means moisture came from below. In Austin that is usually a slab without a proper vapor barrier or a slow plumbing leak. Sanding a cupped floor before it has dried and flattened just locks the problem in, so we measure moisture content first and fix the source before any sander touches it.',
             ],
           },
           {
@@ -103,7 +103,7 @@ export const FEED_ITEMS: ApprovalItem[] = [
           {
             heading: 'Surface wear vs. structural damage',
             paragraphs: [
-              'Scratches, gray traffic lanes, pet stains sitting in the finish, and overall dullness are surface problems — exactly what refinishing erases. Deep black stains that have soaked through into the wood, charring, or water damage that has delaminated the boards are structural, and a sander cannot reach them. A simple rule: if the damage is in the finish, refinish; if it is in the wood, plan to replace those boards.',
+              'Scratches, gray traffic lanes, pet stains sitting in the finish, and overall dullness are surface problems, exactly what refinishing erases. Deep black stains that have soaked through into the wood, charring, or water damage that has delaminated the boards are structural, and a sander cannot reach them. A simple rule: if the damage is in the finish, refinish; if it is in the wood, plan to replace those boards.',
             ],
           },
           {
@@ -115,7 +115,7 @@ export const FEED_ITEMS: ApprovalItem[] = [
           {
             heading: 'When replacement is the smarter spend',
             paragraphs: [
-              'Replace when the wear layer is gone, when moisture has cupped or delaminated the boards beyond drying, or when you are changing species, plank width, or layout. Refinish in nearly every other case — it keeps the original wood, costs a fraction as much, and in most Austin homes that original oak is well worth saving.',
+              'Replace when the wear layer is gone, when moisture has cupped or delaminated the boards beyond drying, or when you are changing species, plank width, or layout. Refinish in nearly every other case. It keeps the original wood, costs a fraction as much, and in most Austin homes that original oak is well worth saving.',
               'Not sure which camp your floors fall into? Send us a few photos and the approximate age of the floor and we will tell you honestly which way we would go.',
             ],
           },
@@ -137,26 +137,26 @@ export const FEED_ITEMS: ApprovalItem[] = [
           {
             heading: 'What actually differs',
             paragraphs: [
-              'Solid hardwood is a single piece of wood, usually 3/4" thick, that can be sanded and refinished many times. Engineered hardwood is a genuine wood veneer bonded to a plywood or HDF core. That layered core is dimensionally stable — it expands and contracts far less than solid wood when the air gets humid.',
+              'Solid hardwood is a single piece of wood, usually 3/4" thick, that can be sanded and refinished many times. Engineered hardwood is a genuine wood veneer bonded to a plywood or HDF core. That layered core is dimensionally stable, it expands and contracts far less than solid wood when the air gets humid.',
             ],
           },
           {
             heading: 'In Austin, humidity decides',
             paragraphs: [
-              'Our summers swing from bone-dry AC interiors to 90% outdoor humidity, and that movement is hard on solid wood — especially over a concrete slab, which most homes built after the 1970s sit on. Solid hardwood should not be nailed or glued directly to a slab without a plywood subfloor and a serious moisture barrier. Engineered can go straight down over slab with the right underlayment, which is why we install so much of it on first floors here.',
+              'Our summers swing from bone-dry AC interiors to 90% outdoor humidity, and that movement is hard on solid wood, especially over a concrete slab, which most homes built after the 1970s sit on. Solid hardwood should not be nailed or glued directly to a slab without a plywood subfloor and a serious moisture barrier. Engineered can go straight down over slab with the right underlayment, which is why we install so much of it on first floors here.',
               'Upstairs, over a wood subfloor, solid hardwood is right at home and we install it happily.',
             ],
           },
           {
             heading: 'Refinishing and lifespan',
             paragraphs: [
-              'This is solid hardwood’s trump card. A 3/4" solid floor can be refinished six to eight times — effectively a lifetime floor you can hand to the next owner. Engineered can be refinished too, but only as many times as its veneer allows: a 4mm wear layer might give you two or three sandings, while a thin 0.6mm veneer can only be recoated, not sanded back.',
+              'This is solid hardwood’s trump card. A 3/4" solid floor can be refinished six to eight times, effectively a lifetime floor you can hand to the next owner. Engineered can be refinished too, but only as many times as its veneer allows: a 4mm wear layer might give you two or three sandings, while a thin 0.6mm veneer can only be recoated, not sanded back.',
             ],
           },
           {
             heading: 'Resale value',
             paragraphs: [
-              'Buyers in Austin read "hardwood" on a listing and both products qualify. Appraisers rarely distinguish between quality solid and quality engineered when the surface is genuine wood. What moves value is condition, species, and plank width — not the core underneath.',
+              'Buyers in Austin read "hardwood" on a listing and both products qualify. Appraisers rarely distinguish between quality solid and quality engineered when the surface is genuine wood. What moves value is condition, species, and plank width, not the core underneath.',
             ],
           },
           {
@@ -168,7 +168,7 @@ export const FEED_ITEMS: ApprovalItem[] = [
           {
             heading: 'Our take',
             paragraphs: [
-              'For most Austin homes built on slab, a quality engineered floor with a thick wear layer gives you the look, the stability, and enough refinishing life to last. Reserve solid hardwood for raised subfloors, where its one real advantage — near-endless refinishing — actually pays off.',
+              'For most Austin homes built on slab, a quality engineered floor with a thick wear layer gives you the look, the stability, and enough refinishing life to last. Reserve solid hardwood for raised subfloors, where its one real advantage (near-endless refinishing) actually pays off.',
             ],
           },
         ],
@@ -183,19 +183,19 @@ export const FEED_ITEMS: ApprovalItem[] = [
         body: [
           {
             paragraphs: [
-              'Luxury vinyl plank has come a long way, and the honest truth is that for some Austin households it is the smarter floor — while for others nothing replaces real wood. Here is the unvarnished comparison we give clients, with no thumb on the scale.',
+              'Luxury vinyl plank has come a long way, and the honest truth is that for some Austin households it is the smarter floor, while for others nothing replaces real wood. Here is the unvarnished comparison we give clients, with no thumb on the scale.',
             ],
           },
           {
             heading: 'Upfront cost per square foot',
             paragraphs: [
-              'Quality LVP installs for roughly $4 to $7 per square foot in 2026. Solid or engineered hardwood typically runs $9 to $14 installed. On a 1,200-square-foot first floor, that is often a $6,000 to $9,000 gap — real money that matters if you are flipping, renting, or stretching a remodel budget.',
+              'Quality LVP installs for roughly $4 to $7 per square foot in 2026. Solid or engineered hardwood typically runs $9 to $14 installed. On a 1,200-square-foot first floor, that is often a $6,000 to $9,000 gap, real money that matters if you are flipping, renting, or stretching a remodel budget.',
             ],
           },
           {
             heading: 'Living with it day to day',
             paragraphs: [
-              'This is where LVP wins outright. It is fully waterproof, scratch- and dent-resistant, and shrugs off dogs, kids, spilled wine, and the occasional dishwasher leak. Hardwood scratches, dents, and stains, and standing water will damage it. If your house runs hard — big dogs, small kids, heavy traffic — LVP takes the abuse without complaint.',
+              'This is where LVP wins outright. It is fully waterproof, scratch- and dent-resistant, and shrugs off dogs, kids, spilled wine, and the occasional dishwasher leak. Hardwood scratches, dents, and stains, and standing water will damage it. If your house runs hard (big dogs, small kids, heavy traffic) LVP takes the abuse without complaint.',
             ],
           },
           {
@@ -207,13 +207,13 @@ export const FEED_ITEMS: ApprovalItem[] = [
           {
             heading: 'Resale and long-term value',
             paragraphs: [
-              'Hardwood adds documented resale value and buyers actively seek it in Austin’s mid-to-upper market. LVP reads as a practical, neutral surface — it rarely hurts a sale, but it rarely commands a premium either. Hardwood can also be refinished for decades; when LVP wears through or a plank is gouged, the fix is replacement, not refinishing.',
+              'Hardwood adds documented resale value and buyers actively seek it in Austin’s mid-to-upper market. LVP reads as a practical, neutral surface. It rarely hurts a sale, but it rarely commands a premium either. Hardwood can also be refinished for decades; when LVP wears through or a plank is gouged, the fix is replacement, not refinishing.',
             ],
           },
           {
             heading: 'Our honest recommendation',
             paragraphs: [
-              'Choose LVP for rentals, mudrooms, laundry rooms, busy family floors, and anywhere water is a real risk. Choose hardwood for the rooms you want to feel timeless — entryways, living and dining rooms, the primary suite — and for homes where resale value is part of the math. Plenty of the Austin homes we finish use both: hardwood where it shows and matters, LVP where life happens hardest.',
+              'Choose LVP for rentals, mudrooms, laundry rooms, busy family floors, and anywhere water is a real risk. Choose hardwood for the rooms you want to feel timeless (entryways, living and dining rooms, the primary suite) and for homes where resale value is part of the math. Plenty of the Austin homes we finish use both: hardwood where it shows and matters, LVP where life happens hardest.',
             ],
           },
         ],
@@ -235,15 +235,15 @@ export const FEED_ITEMS: ApprovalItem[] = [
     secondary: 'Approve all',
     approvals: [
       { type: 'video', poster: IMG.install, duration: '0:34', vertical: true,
-        caption: 'Daniel walks you through a Tarrytown white-oak install reveal — rack, glue, set, and the big finish. AI avatar voice-over, brand-safety checked.' },
+        caption: 'Daniel walks you through a Tarrytown white-oak install reveal: rack, glue, set, and the big finish. AI avatar voice-over, brand-safety checked.' },
       { type: 'video', poster: IMG.detail, duration: '0:22', vertical: true,
         caption: 'The part nobody sees: hand-sanding the edges to 120 grit before a single coat goes down. This is why your floors still look right in ten years.' },
       { type: 'video', poster: IMG.hardwood, duration: '0:41', vertical: true,
-        caption: 'Before & after — tired carpet to wide-plank white oak in a Westlake living room. Eight days, start to finish. Marci shows the reveal.' },
+        caption: 'Before & after: tired carpet to wide-plank white oak in a Westlake living room. Eight days, start to finish. Marci shows the reveal.' },
       { type: 'video', poster: IMG.stairs, duration: '0:28', vertical: true,
         caption: 'Stair treads are the hardest part of any install. Watch Daniel template, cut, and set a full flight of white oak in real time.' },
       { type: 'video', poster: IMG.kitchen, duration: '0:31', vertical: true,
-        caption: 'Refinish, don’t replace. A 1990s kitchen floor brought back to life with a warm-walnut recoat — half the cost of new hardwood. (Tone flag: check the opening line.)' },
+        caption: 'Refinish, don’t replace. A 1990s kitchen floor brought back to life with a warm-walnut recoat, half the cost of new hardwood. (Tone flag: check the opening line.)' },
     ],
   },
 
@@ -267,23 +267,23 @@ export const FEED_ITEMS: ApprovalItem[] = [
         preheader: 'A few answers to the questions homeowners ask us most.',
         hero: IMG.livingRoom,
         body:
-          'Hi there — it was great meeting you at the showroom. Your white-oak estimate is ready whenever you are, and we’ve locked in fall pricing for the next two weeks.\n\nWant to see the samples under your own light? We’ll bring them to you.',
+          'Hi there. It was great meeting you at the showroom. Your white-oak estimate is ready whenever you are, and we’ve locked in fall pricing for the next two weeks.\n\nWant to see the samples under your own light? We’ll bring them to you.',
         cta: 'View my estimate',
       },
       {
         type: 'email',
         from: 'Grain Design Flooring',
-        subject: 'We missed you at the showroom — let’s come to you',
+        subject: 'We missed you at the showroom, let’s come to you',
         preheader: 'Bring the samples, the measurements, and the design eye to your door.',
         hero: IMG.showroom,
         body:
-          'No problem if you couldn’t make it in — most of our clients book an in-home visit instead. We’ll bring the white-oak and LVP samples, measure on the spot, and leave you a fixed quote the same day.\n\nWhat morning works this week?',
+          'No problem if you couldn’t make it in. Most of our clients book an in-home visit instead. We’ll bring the white-oak and LVP samples, measure on the spot, and leave you a fixed quote the same day.\n\nWhat morning works this week?',
         cta: 'Book my in-home visit',
       },
       {
         type: 'email',
         from: 'Grain Design Flooring',
-        subject: 'Thanks for the measure — here’s what happens next',
+        subject: 'Thanks for the measure: here’s what happens next',
         preheader: 'Your detailed quote lands in your inbox within 24 hours.',
         hero: IMG.detail,
         body:
@@ -293,33 +293,33 @@ export const FEED_ITEMS: ApprovalItem[] = [
     ],
   },
 
-  // ── Campaigns — organic posts (batch of 15) ───────────────────────────────
+  // ── Campaigns: organic posts (batch of 15) ───────────────────────────────
   {
     id: 'cmp-1',
     source: 'campaigns',
     sourceLabel: 'Campaigns',
     href: 'campaigns.html',
     kind: 'action',
-    title: 'Refinishing-season campaign — 15 posts ready',
+    title: 'Refinishing-season campaign · 15 posts ready',
     body: 'A three-week organic push around refinishing hardwood before the Texas summer humidity. You sign off on the copy; the agent set the cadence.',
     time: '5h ago',
     primary: 'Review 15 posts',
     secondary: null,
     approvals: [
       { type: 'organic', channel: 'Instagram', image: IMG.hardwood,
-        caption: 'Beat the summer humidity 🌡️ Now’s the window to refinish your hardwood before Austin’s wet heat sets in. This Tarrytown white oak got a full sand-and-recoat in a matte hardwax finish — three days, dust-free. Booking refinishing slots through June. #GrainDesignFlooring #AustinHardwood' },
+        caption: 'Beat the summer humidity 🌡️ Now’s the window to refinish your hardwood before Austin’s wet heat sets in. This Tarrytown white oak got a full sand-and-recoat in a matte hardwax finish, three days, dust-free. Booking refinishing slots through June. #GrainDesignFlooring #AustinHardwood' },
       { type: 'organic', channel: 'Facebook', image: IMG.detail,
-        caption: 'Cupping, gaps, a dull finish? Those are signs your floors can likely be refinished instead of replaced — at about half the cost. Send us a photo and we’ll tell you which path makes sense.' },
+        caption: 'Cupping, gaps, a dull finish? Those are signs your floors can likely be refinished instead of replaced, at about half the cost. Send us a photo and we’ll tell you which path makes sense.' },
       { type: 'organic', channel: 'Instagram', image: IMG.kitchen,
         caption: 'Refinish, don’t replace ♻️ We brought this 1990s kitchen floor back with a custom warm-walnut recoat. Three days, no demo, no dumpster. Swipe for the before.' },
       { type: 'organic', channel: 'Instagram', image: IMG.stairs,
         caption: 'Stairs steal the show every time. A matching white-oak recoat on the treads ties the whole entry together. Booking June refinishing now.' },
       { type: 'organic', channel: 'Facebook', image: IMG.livingRoom,
-        caption: 'Dust-free refinishing isn’t a buzzword — it’s a sealed sanding system that keeps your home livable while we work. Here’s what day two looks like.' },
+        caption: 'Dust-free refinishing isn’t a buzzword. It’s a sealed sanding system that keeps your home livable while we work. Here’s what day two looks like.' },
     ],
   },
 
-  // ── Organic — story (batch of 5) ──────────────────────────────────────────
+  // ── Organic: story (batch of 5) ──────────────────────────────────────────
   {
     id: 'os-2',
     source: 'organic',
@@ -339,9 +339,9 @@ export const FEED_ITEMS: ApprovalItem[] = [
       { type: 'story', image: IMG.showroom,
         caption: 'New in the showroom: three wide-plank white-oak collections. Walk the samples this Saturday on South Lamar.' },
       { type: 'story', image: IMG.swatch,
-        caption: 'Which tone? Pale Scandi oak or deep walnut-stained ash — we sample on-site under your light.' },
+        caption: 'Which tone? Pale Scandi oak or deep walnut-stained ash. We sample on-site under your light.' },
       { type: 'story', image: IMG.tile,
-        caption: 'Matte herringbone tile, in person and gorgeous. Book a 30-min design consult — link in bio.' },
+        caption: 'Matte herringbone tile, in person and gorgeous. Book a 30-min design consult, link in bio.' },
     ],
   },
 
@@ -353,7 +353,7 @@ export const FEED_ITEMS: ApprovalItem[] = [
     href: 'map-ranking.html',
     kind: 'insight',
     title: 'You moved up to #2 for “flooring near me” this week',
-    body: 'Up 2 spots. Austin Floor Co. is still adding reviews fast — a steady flow of new Westlake reviews would put #1 in reach by month-end.',
+    body: 'Up 2 spots. Austin Floor Co. is still adding reviews fast. A steady flow of new Westlake reviews would put #1 in reach by month-end.',
     time: 'Yesterday',
     insight: { stat: '#2', statLabel: 'Local map rank', trend: 'up', to: '/insights/local', linkLabel: 'See in Insights' },
   },
@@ -365,13 +365,13 @@ export const FEED_ITEMS: ApprovalItem[] = [
     sourceLabel: 'Landing Pages',
     href: 'landing-pages.html',
     kind: 'insight',
-    title: 'Your LVP landing page is converting at 5.2% — above benchmark',
+    title: 'Your LVP landing page is converting at 5.2%, above benchmark',
     body: 'The “Luxury vinyl plank Austin” page has been live three days and is already beating the 3.1% industry benchmark. Worth scaling traffic to it.',
     time: 'Yesterday',
     insight: { stat: '5.2%', statLabel: 'Conversion rate', trend: 'up', to: '/insights/website', linkLabel: 'See in Insights' },
   },
 
-  // ── Paid social — creative fatigue (single) ───────────────────────────────
+  // ── Paid social: creative fatigue (single) ───────────────────────────────
   {
     id: 'pso-cf-1',
     source: 'paid-social',
@@ -386,7 +386,7 @@ export const FEED_ITEMS: ApprovalItem[] = [
     proposedSolution: {
       reason: 'CTR dropped 32% over 7 days while spend held steady; CPM up 18%. Frequency hit 4.6 and Meta is widening delivery to weaker neighborhood placements.',
       competitorResearch:
-        'Two direct competitors switched to satisfying sand-and-finish time-lapse reels in the past 14 days — Austin Floor Co. and Lone Star Hardwood are seeing 2.4–3.2x ROAS lifts on the new format.',
+        'Two direct competitors switched to satisfying sand-and-finish time-lapse reels in the past 14 days: Austin Floor Co. and Lone Star Hardwood are seeing 2.4–3.2x ROAS lifts on the new format.',
       bullets: [
         'Switch from carousel to a 15s vertical sand-to-finish reel',
         'Move the "dust-free refinishing" claim from the caption to the first frame',
@@ -399,14 +399,14 @@ export const FEED_ITEMS: ApprovalItem[] = [
         channel: 'Instagram',
         image: IMG.kitchen,
         primaryText:
-          'Refinish, don’t replace. We brought this 1990s kitchen floor back to life with a custom warm-walnut recoat — half the cost of new hardwood, done in three days.',
-        headline: 'Free in-home flooring consult — book before Oct 31',
+          'Refinish, don’t replace. We brought this 1990s kitchen floor back to life with a custom warm-walnut recoat, half the cost of new hardwood, done in three days.',
+        headline: 'Free in-home flooring consult, book before Oct 31',
         cta: 'Book now',
       },
     ],
   },
 
-  // ── Paid search — creative fatigue (single) ───────────────────────────────
+  // ── Paid search: creative fatigue (single) ───────────────────────────────
   {
     id: 'ps-cf-1',
     source: 'paid-search',
@@ -420,13 +420,13 @@ export const FEED_ITEMS: ApprovalItem[] = [
     secondary: 'Snooze 7 days',
     proposedSolution: {
       reason:
-        'CTR is down 28% over 7 days while impressions held steady. Headline 1 has run unchanged for 21 days — asset rotation is exhausted.',
+        'CTR is down 28% over 7 days while impressions held steady. Headline 1 has run unchanged for 21 days. Asset rotation is exhausted.',
       competitorResearch:
         'Two competitors rotated to question-led headlines this week ("Refinishing or replacing your floors?" pattern) and lifted CTR ~30%. Lone Star Hardwood added a free in-home estimate callout extension.',
       bullets: [
         'Rotate Headline 1 to a question-led variant',
         'Add a new "free in-home estimate" callout extension',
-        'Pin a freshness signal — "Booking May installs now" — in description 2',
+        'Pin a freshness signal ("Booking May installs now") in description 2',
       ],
     },
     approvals: [
@@ -435,10 +435,10 @@ export const FEED_ITEMS: ApprovalItem[] = [
         displayUrl: 'www.graindesignflooring.com/estimate',
         headlines: [
           'Refinishing or Replacing Your Floors?',
-          'Free In-Home Hardwood Estimate — Austin',
+          'Free In-Home Hardwood Estimate, Austin',
         ],
         description:
-          'Premium hardwood, LVP & tile installs and refinishing. Booking May installs now — get a free, no-pressure in-home estimate from Austin’s top-rated flooring crew.',
+          'Premium hardwood, LVP & tile installs and refinishing. Booking May installs now. Get a free, no-pressure in-home estimate from Austin’s top-rated flooring crew.',
       },
     ],
   },

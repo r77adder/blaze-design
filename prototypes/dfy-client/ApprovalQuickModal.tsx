@@ -18,19 +18,19 @@ import type { FeedItem as FeedItemData } from '../h2/feed-data';
 import { TYPE_META } from './HomeCard';
 
 /**
- * "Approve from Home" modal — opened when a client taps a needs-sign-off to-do on
+ * "Approve from Home" modal, opened when a client taps a needs-sign-off to-do on
  * Home. The previous version showed tiny 104px thumbnails the client couldn't
  * read; this version renders a LARGE, type-specific preview driven by a typed
  * `ApprovalContent` payload attached to each action item in home-data.tsx.
  *
  * Eight content layouts (organic post, story, video/reel, email, blog, paid
  * search ad, paid social ad, reputation response). The Approve / Request-changes
- * footer is unchanged — Request changes reveals a "what to change" textarea, then
+ * footer is unchanged. Request changes reveals a "what to change" textarea, then
  * Send request.
  *
  * BATCH CAROUSEL: the item carries `approvals: ApprovalContent[]`. When it holds
- * more than one piece the modal pages through them — prev/next controls + a
- * "2 of 5" indicator — and each Approve / Request-changes decision advances to
+ * more than one piece the modal pages through them (prev/next controls + a
+ * "2 of 5" indicator) and each Approve / Request-changes decision advances to
  * the next piece, closing once the last is decided. Single-item notifications
  * (one-element array) show one piece with no nav. No "Ready to approve · source"
  * subtitle: source + time render as a small inline chip row, not a kicker.
@@ -277,7 +277,7 @@ function Preview({ content }: { content: ApprovalContent }) {
               Grain Design Journal{content.readTime ? ` · ${content.readTime}` : ''}
             </Text>
             <Heading level={4} style={{ margin: '0 0 10px', lineHeight: 1.25 }}>{content.blogTitle}</Heading>
-            {/* Standfirst — slightly larger lead paragraph */}
+            {/* Standfirst: slightly larger lead paragraph */}
             <Text style={{ display: 'block', color: dark80, lineHeight: 1.6, fontWeight: 500 }}>{content.excerpt}</Text>
             {/* Full article body */}
             {content.body?.map((section, i) => (
@@ -357,7 +357,7 @@ function Preview({ content }: { content: ApprovalContent }) {
             </div>
             <Text variant="secondary" style={{ display: 'block', color: dark80, lineHeight: 1.6 }}>{content.reviewText}</Text>
           </div>
-          {/* drafted reply — clearly distinct, indented brand bubble */}
+          {/* drafted reply: clearly distinct, indented brand bubble */}
           <div style={{ marginLeft: 24, position: 'relative' }}>
             <div style={{ border: `1px solid var(--brand)`, background: 'rgba(252,183,40,0.08)', borderRadius: 14, padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -372,7 +372,7 @@ function Preview({ content }: { content: ApprovalContent }) {
   }
 }
 
-// Fallback when no typed payload is present (older items) — keep it readable.
+// Fallback when no typed payload is present (older items). Keep it readable.
 function LegacyPreview({ item }: { item: ApprovalItem }) {
   const thumbs = item.thumbnails ?? [];
   return (
@@ -454,7 +454,7 @@ export function ApprovalQuickModal({
     <Modal.Root size="md" aria-labelledby="approval-quick-title">
       <Modal.Header title={item.title} id="approval-quick-title" onClose={close} compact subHeader={metaRow} />
       <Modal.Content compact>
-        {/* source + time as a small inline chip row — NOT a subtitle under the
+        {/* source + time as a small inline chip row, NOT a subtitle under the
             title. Batch nav (prev / "2 of 5" / next) sits on the right. */}
         {current ? <Preview content={current} /> : <LegacyPreview item={item} />}
 
@@ -479,7 +479,7 @@ export function ApprovalQuickModal({
       </Modal.Content>
 
       <Modal.Footer>
-        {/* left corner — Request changes (or Cancel while composing a note) */}
+        {/* left corner: Request changes (or Cancel while composing a note) */}
         <Modal.FooterContent slot="left">
           {requesting ? (
             <Modal.FooterButton variant="subtle" onPress={() => { setRequesting(false); setNote(''); }}>
@@ -492,7 +492,7 @@ export function ApprovalQuickModal({
           )}
         </Modal.FooterContent>
 
-        {/* middle — batch nav (prev · count · next) */}
+        {/* middle: batch nav (prev · count · next) */}
         {isBatch && (
           <Modal.FooterContent slot="center">
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -505,7 +505,7 @@ export function ApprovalQuickModal({
           </Modal.FooterContent>
         )}
 
-        {/* right corner — Approve (or Send request while composing a note) */}
+        {/* right corner: Approve (or Send request while composing a note) */}
         <Modal.FooterContent slot="right">
           {requesting ? (
             <Modal.FooterButton variant="primary" isDisabled={!note.trim()} onPress={sendRequest}>

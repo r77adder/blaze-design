@@ -6,7 +6,7 @@ import { WEEKS, Block, type ChannelProps } from './common';
 
 const WEEK_LABELS = ['Apr', 'May 1', 'May 15', 'Jun 1', 'Now'];
 
-/** SEO / AEO — avg-position trend (lower=better), keyword-movers table, AI-citations stat. */
+/** SEO / AEO: avg-position trend (lower=better), keyword-movers table, AI-citations stat. */
 export function SeoReport({ editing, narrative, onNarrative }: ChannelProps) {
   return (
     <InsightsReport weeks={WEEKS.map((w, i) => (i === 0 ? { ...w, subtitle: 'First AI answer citations this week' } : w))}>

@@ -1,10 +1,10 @@
 import styles from './ui.module.scss';
 
-/* ui helpers copied verbatim from prototypes/blaze-dfy/ui.tsx — only the ones
+/* ui helpers copied verbatim from prototypes/blaze-dfy/ui.tsx, only the ones
  * the client strategy review uses. TextArea is the multi-line field the review
  * note + inline edits render through. */
 
-/** Multi-line field — the lib has no standard textarea, so this stays a local
+/** Multi-line field, the lib has no standard textarea, so this stays a local
  *  field styled to match the TextField chrome. */
 export function TextArea({ fullWidth = true, style, className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { fullWidth?: boolean }) {
   return (

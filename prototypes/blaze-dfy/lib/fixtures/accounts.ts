@@ -22,11 +22,11 @@ const emptyDocs = (): BrandScan['docs'] => [
   { id: 'audiences', label: 'Target audiences', kind: 'Target audiences', status: 'empty' },
 ];
 
-/** All brand docs uploaded — live accounts have a complete brand kit. */
+/** All brand docs uploaded, live accounts have a complete brand kit. */
 const filledDocs = (): BrandScan['docs'] =>
   emptyDocs().map((d) => ({ ...d, fileName: `${d.id}.pdf`, status: 'uploaded' as const }));
 
-/** ISO date `days` from today — keeps live contract end dates relative to now
+/** ISO date `days` from today, keeps live contract end dates relative to now
  *  so the renewal-warning demo stays evergreen as the calendar moves. */
 function isoInDays(days: number): string {
   const d = new Date();
@@ -231,7 +231,7 @@ export const accounts: Account[] = [
     phase: 2,
     stepLabel: 'Strategy, Competitive scorecard',
     progressPct: 30,
-    aiNextStep: 'Complete the competitive scorecard setup for Tyler — website, GBP, and confirm the local competitors.',
+    aiNextStep: 'Complete the competitive scorecard setup for Tyler: website, GBP, and confirm the local competitors.',
     phases: phases(2, 'in_progress'),
     brand: {
       website: 'graindesignflooring.com',
@@ -307,7 +307,7 @@ export const accounts: Account[] = [
     phase: 3,
     stepLabel: 'Live, Monthly content & paid ads',
     progressPct: 100,
-    aiNextStep: 'Contract renews soon — confirm renewal with Dale before the 6-month term ends, then lock the summer ad budget.',
+    aiNextStep: 'Contract renews soon. Confirm renewal with Dale before the 6-month term ends, then lock the summer ad budget.',
     phases: phases(3, 'complete'),
     contractTerm: 6,
     contractEndDate: isoInDays(17),
@@ -345,7 +345,7 @@ export const accounts: Account[] = [
     phase: 3,
     stepLabel: 'Live, SEO & reputation',
     progressPct: 100,
-    aiNextStep: 'Renewal window is open — the 12-month contract ends within the month. Send Amara the year-in-review before the renewal call.',
+    aiNextStep: 'Renewal window is open. The 12-month contract ends within the month. Send Amara the year-in-review before the renewal call.',
     phases: phases(3, 'complete'),
     contractTerm: 12,
     contractEndDate: isoInDays(27),

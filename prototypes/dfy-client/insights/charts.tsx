@@ -83,7 +83,7 @@ function buildPath(values: number[], min: number, max: number): { line: string; 
 /**
  * Line + area chart with an optional faded comparison series (previous period).
  * `invert` flips the fill direction for "lower is better" metrics like avg
- * search position — the axis still maps higher value = higher on screen unless
+ * search position, the axis still maps higher value = higher on screen unless
  * you pass invert, which reverses the y-scale so a downward trend reads as up.
  */
 export function LineChart({

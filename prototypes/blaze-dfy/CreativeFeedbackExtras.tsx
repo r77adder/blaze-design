@@ -1,5 +1,5 @@
 /**
- * Creative Review — feedback "extras" surfaced after a review round.
+ * Creative Review feedback "extras" surfaced after a review round.
  *
  *  - InferredTasteCard: read-only "what we learned" summary of the customer's
  *    taste, derived from this round's approvals (inferredTaste()).

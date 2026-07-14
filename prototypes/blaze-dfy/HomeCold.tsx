@@ -17,16 +17,16 @@ import { useDfyState } from './lib/dev-state';
 import { isScorecardPublished } from './Scorecard';
 
 /**
- * HomeCold — the AM-facing "set the account up" surface shown when the
+ * HomeCold, the AM-facing "set the account up" surface shown when the
  * workspace is in its cold state. Surfaces everything that needs doing before
  * the account is live: the three onboarding flows (Competitive scorecard +
- * Strategy onboarding + Creative Review — moved here out of the sidebar) as the
+ * Strategy onboarding + Creative Review, moved here out of the sidebar) as the
  * first steps, then the account connections and feature activations. Onboarding
  * steps mark complete off the real flow state (useReview / scorecard publish);
  * connections/activations are mocked locally.
  *
- * Mirrors the H2 cold Home energy — warm gradient hero, sticky progress chip,
- * uniform rows that flip to a green "done" state — but reframed for an account
+ * Mirrors the H2 cold Home energy: warm gradient hero, sticky progress chip,
+ * uniform rows that flip to a green "done" state, but reframed for an account
  * manager getting a client workspace online.
  */
 
@@ -41,12 +41,12 @@ interface Activation {
 }
 
 const ACTIVATIONS: Activation[] = [
-  { id: 'meta', icon: Cursor04, title: 'Connect Meta', blurb: 'Link the Facebook & Instagram accounts so organic posts and paid social can publish.', cta: 'Connect', toast: 'Meta connected — Facebook & Instagram are ready to publish.' },
-  { id: 'gbp', icon: Marker03, title: 'Connect Google Business Profile', blurb: 'Sync the listing for local posts, review replies, and map ranking.', cta: 'Connect', toast: 'Google Business Profile connected — local posting is on.' },
-  { id: 'gads', icon: Google, title: 'Connect Google Ads', blurb: 'Authorize the ad account so paid search can run and optimize.', cta: 'Connect', toast: 'Google Ads connected — paid search is ready.' },
-  { id: 'site', icon: Globe, title: 'Connect website & analytics', blurb: 'Add the site and GA4 so we can track conversions and ship landing pages.', cta: 'Connect', toast: 'Website & analytics connected — conversions are tracked.' },
-  { id: 'reputation', icon: Star, title: 'Turn on Reputation', blurb: 'Start monitoring reviews across Google, Yelp, and Facebook.', cta: 'Turn on', toast: 'Reputation is on — we are watching every review surface.' },
-  { id: 'seo', icon: Insights, title: 'Turn on SEO/AEO', blurb: 'Track local rankings and draft content for Google and answer engines.', cta: 'Turn on', toast: 'SEO/AEO is on — rankings tracked and topic clusters queued.' },
+  { id: 'meta', icon: Cursor04, title: 'Connect Meta', blurb: 'Link the Facebook & Instagram accounts so organic posts and paid social can publish.', cta: 'Connect', toast: 'Meta connected. Facebook & Instagram are ready to publish.' },
+  { id: 'gbp', icon: Marker03, title: 'Connect Google Business Profile', blurb: 'Sync the listing for local posts, review replies, and map ranking.', cta: 'Connect', toast: 'Google Business Profile connected. Local posting is on.' },
+  { id: 'gads', icon: Google, title: 'Connect Google Ads', blurb: 'Authorize the ad account so paid search can run and optimize.', cta: 'Connect', toast: 'Google Ads connected. Paid search is ready.' },
+  { id: 'site', icon: Globe, title: 'Connect website & analytics', blurb: 'Add the site and GA4 so we can track conversions and ship landing pages.', cta: 'Connect', toast: 'Website & analytics connected. Conversions are tracked.' },
+  { id: 'reputation', icon: Star, title: 'Turn on Reputation', blurb: 'Start monitoring reviews across Google, Yelp, and Facebook.', cta: 'Turn on', toast: 'Reputation is on. We are watching every review surface.' },
+  { id: 'seo', icon: Insights, title: 'Turn on SEO/AEO', blurb: 'Track local rankings and draft content for Google and answer engines.', cta: 'Turn on', toast: 'SEO/AEO is on. Rankings tracked and topic clusters queued.' },
 ];
 
 export function HomeCold({ account, onOpenSection }: { account: Account; onOpenSection?: (section: string) => void }) {
@@ -96,7 +96,7 @@ export function HomeCold({ account, onOpenSection }: { account: Account; onOpenS
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '8px 4px 60px' }}>
-      {/* hero — no wrapper / eyebrow, just the headline + intro */}
+      {/* hero, no wrapper / eyebrow, just the headline + intro */}
       <div style={{ marginBottom: 28 }}>
         <Heading level={2} style={{ lineHeight: 1.15, letterSpacing: '-0.6px', marginBottom: 10, fontSize: 30 }}>Let's get {account.name} live.</Heading>
         <Text variant="primary" style={{ display: 'block', lineHeight: 1.5, color: 'var(--dark-60)', fontSize: 16, maxWidth: 560 }}>
@@ -121,7 +121,7 @@ export function HomeCold({ account, onOpenSection }: { account: Account; onOpenS
             <StepRow
               n={2}
               title="Strategy onboarding"
-              blurb={stratReview ? `${account.poc.name} requested changes and made edits — open to review them.` : 'Capture brand context and creative guidelines, then send them to the client for review.'}
+              blurb={stratReview ? `${account.poc.name} requested changes and made edits. Open to review them.` : 'Capture brand context and creative guidelines, then send them to the client for review.'}
               done={strategyComplete}
               review={stratReview}
               onStart={() => openReview('strategy')}
@@ -129,7 +129,7 @@ export function HomeCold({ account, onOpenSection }: { account: Account; onOpenS
             <StepRow
               n={3}
               title="Goals & theme"
-              blurb={goalsReview ? `${account.poc.name} requested changes and made edits — open to review them.` : 'Set goals, channels, and the first campaign theme, then send it to the client for review.'}
+              blurb={goalsReview ? `${account.poc.name} requested changes and made edits. Open to review them.` : 'Set goals, channels, and the first campaign theme, then send it to the client for review.'}
               done={goalsComplete}
               review={goalsReview}
               locked={!strategyComplete}
@@ -139,7 +139,7 @@ export function HomeCold({ account, onOpenSection }: { account: Account; onOpenS
             <StepRow
               n={4}
               title="Creative Review"
-              blurb={creativeReview ? `${account.poc.name} requested changes and made edits — open to review them.` : 'Generate the first wave of creative, mark what to send the client, and set the campaign cadence.'}
+              blurb={creativeReview ? `${account.poc.name} requested changes and made edits. Open to review them.` : 'Generate the first wave of creative, mark what to send the client, and set the campaign cadence.'}
               done={creativeComplete}
               review={creativeReview}
               locked={!goalsComplete}
@@ -160,7 +160,7 @@ export function HomeCold({ account, onOpenSection }: { account: Account; onOpenS
   );
 }
 
-/** A numbered onboarding step — navigates into its flow, flips to done when the
+/** A numbered onboarding step, navigates into its flow, flips to done when the
  *  flow reports complete. Can be locked behind the previous step. When the
  *  client has reviewed and sent back changes/edits, `review` flips it to a
  *  "needs review" state that opens the change summary. */
@@ -175,7 +175,7 @@ function StepRow({ n, title, blurb, done, locked, lockedHint, onStart, isFirst, 
   isFirst?: boolean;
   review?: { changes: number; edited: number };
 }) {
-  // The whole row is clickable when unlocked — starts the flow (or re-runs it
+  // The whole row is clickable when unlocked, starts the flow (or re-runs it
   // once complete). Locked steps stay inert.
   const clickable = !locked;
   const reviewLabel = review ? [review.changes ? `${review.changes} change${review.changes === 1 ? '' : 's'}` : '', review.edited ? `${review.edited} edit${review.edited === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') : '';
@@ -215,7 +215,7 @@ function StepRow({ n, title, blurb, done, locked, lockedHint, onStart, isFirst, 
   );
 }
 
-/** An account connection / feature activation — mocked: flips to "on" locally. */
+/** An account connection / feature activation, mocked: flips to "on" locally. */
 function ActivationRow({ activation, done, onConnect, isFirst }: {
   activation: Activation;
   done: boolean;

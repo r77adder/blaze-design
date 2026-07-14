@@ -50,7 +50,7 @@ export function Directory() {
 
   const rows = (accounts ?? []).filter((a) => filter === 'all' || a.status === filter);
 
-  // Live workspaces whose contract ends within the next 30 days — surfaced as a
+  // Live workspaces whose contract ends within the next 30 days, surfaced as a
   // warning banner so the AM can renew before it lapses.
   const expiring = (accounts ?? [])
     .filter((a) => a.status === 'live' && a.contractEndDate)
@@ -77,7 +77,7 @@ export function Directory() {
       topbarRight={<Button size="lg" variant="secondary" frontIcon={Plus} onPress={() => go('/new')}>New workspace</Button>}
     >
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-        {/* Contract-renewal warning — live workspaces expiring within 30 days.
+        {/* Contract-renewal warning, live workspaces expiring within 30 days.
             Same pattern as the Paid Social fatigue banner: a neutral card with
             an alert header and clickable rows that jump to the workspace. */}
         {expiring.length > 0 && (
@@ -119,7 +119,7 @@ export function Directory() {
               onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--neutral-5)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
-              {/* Account — name + short business description underneath */}
+              {/* Account: name + short business description underneath */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <span style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 8, background: a.accent, color: 'var(--light-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{a.name.charAt(0)}</span>
                 <div style={{ minWidth: 0 }}>
@@ -128,10 +128,10 @@ export function Directory() {
                 </div>
               </div>
 
-              {/* Stage — simplified lifecycle */}
+              {/* Stage: simplified lifecycle */}
               <div style={{ minWidth: 0 }}><StatusPill tone={stageTone(a)}>{stageLabel(a)}</StatusPill></div>
 
-              {/* Next step — editable inline */}
+              {/* Next step: editable inline */}
               <div style={{ minWidth: 0 }} onClick={(e) => e.stopPropagation()}>
                 <HoverInput value={steps[a.id] ?? a.aiNextStep} onChange={(v) => setSteps({ ...steps, [a.id]: v })} multiline style={{ fontSize: 13, color: 'var(--dark-80)', minHeight: 34, padding: '5px 7px' }} />
               </div>
@@ -161,7 +161,7 @@ export function Directory() {
   );
 }
 
-/** One clickable row in the contract-renewal banner — mirrors the Paid Social
+/** One clickable row in the contract-renewal banner, mirrors the Paid Social
  *  fatigue-banner rows: avatar + name + days-left pill + detail + chevron,
  *  hover-tinted, full-row button. */
 function ExpiringRow({ account, days, onSelect, isLast }: { account: Account; days: number; onSelect: () => void; isLast: boolean }) {

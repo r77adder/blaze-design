@@ -1,6 +1,6 @@
 import { useMemo, useState, type ComponentType } from 'react';
 import { Heading, Text, Button, IconButton, Modal, useModals } from '@/components';
-import { TabChip, useToast } from '@/staging';
+import { TabChip, useToast, Pill } from '@/staging';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import ChevronRight from '@/icons/16/ChevronRight';
 import Check2 from '@/icons/20/Check2';
@@ -18,7 +18,7 @@ import ApprovalsIcon from '@/icons/20/Approvals';
 import EyeOpen from '@/icons/20/EyeOpen';
 import StillImageIcon from '../h2/StillImageIcon';
 // Shared with the AM side so both use exactly the same cards + page layout.
-import { CardBody, TypeIcon, TYPE_LABEL as AM_TYPE_LABEL, CARD_W, CARD_H, PAGE_W, ContentTypeSections, StatusTabContent, StatusTabChevron, statusTabStyle, type Post as AmPost } from '../blaze-dfy/Approvals';
+import { CardBody, TypeIcon, TYPE_LABEL as AM_TYPE_LABEL, CARD_W, CARD_H, PAGE_W, BATCH_LIST_W, ContentTypeSections, StatusTabContent, StatusTabChevron, statusTabStyle, BatchCard, BatchDetailHeader, NestedTitle, formatDue, CAMPAIGNS, SEED_BATCHES, STATUS_SEED, CLIENT_REVIEW, type Batch as AmBatch, type Post as AmPost } from '../blaze-dfy/Approvals';
 import { ClientShell } from './shell';
 import { PostPreviewModal } from './PostPreviewModal';
 import { ColdState } from './ColdState';
@@ -64,41 +64,37 @@ const IMG = {
 };
 
 // ── Types ───────────────────────────────────────────────────────────────────
-// 'updated' = the team revised a piece the client asked changes on and re-sent
-// it for another look. It's actionable like 'pending', filed under its own tab.
-type Status = 'pending' | 'approved' | 'rejected' | 'updated';
+type Status = 'pending' | 'approved' | 'rejected';
 type ContentType = 'Organic' | 'Story' | 'Reel' | 'Carousel' | 'Paid' | 'PaidSearch' | 'Blog' | 'Email' | 'Reputation';
 
-// ── Status filter subtabs (mirror the AM side, minus the AM-only Draft) ────────
-type Subtab = 'in-review' | 'changes' | 'updated' | 'approved';
+// ── Status filter subtabs (per batch; mirror the AM side, minus Draft) ─────────
+// A revised piece returns to In review (no Updated state); its version history
+// is preserved in the preview.
+type Subtab = 'in-review' | 'changes' | 'approved';
 const CLIENT_TABS: { key: Subtab; label: string }[] = [
   { key: 'in-review', label: 'In review' },
   { key: 'changes',   label: 'Requested changes' },
-  { key: 'updated',   label: 'Updated' },
   { key: 'approved',  label: 'Approved' },
 ];
 const SUBTAB_STATUS: Record<Subtab, Status> = {
-  'in-review': 'pending', changes: 'rejected', updated: 'updated', approved: 'approved',
+  'in-review': 'pending', changes: 'rejected', approved: 'approved',
 };
-// Demo seeds so the steady client always lands on a populated pipeline (never an
-// empty tab): a healthy In review queue, plus a few pieces already in each other
-// state. `CHANGES_SEED` also carries the note the client left on each.
-const UPDATED_SEED = [1, 5];                  // team revised, awaiting a second look
-const APPROVED_SEED = [3, 13];                // already signed off
-const CHANGES_SEED: Record<number, string> = {
-  11: 'Can we lead with the waterproof + pet-proof angle in the headline? That’s what our buyers search for.',
-  8: 'Great draft. Add a short cost section so it ranks for the “refinish vs replace cost” query.',
-};
-// The original change the client asked for on each updated piece, plus the
-// team's reply when they re-sent it. Together these seed the feedback thread
-// shown in the preview for an updated design.
+// Demo seeds. Change-request notes + approved/in-review verdicts are derived
+// from the shared CLIENT_REVIEW / STATUS_SEED (see the component). REVISED_SEED
+// is the piece re-sent as a V2 (post 1, the Westlake reel).
+const REVISED_SEED = [1];
+// The original change the client asked for + the team's reply, seeding the
+// feedback thread shown in the preview for the revised piece.
 const UPDATED_NOTES: Record<number, string> = {
   1: 'Love the room, but can we use a brighter, daytime photo? This one reads a little dark.',
-  5: 'Can we make the “no install fee” offer the headline instead of burying it in the caption?',
 };
 const UPDATED_REPLIES: Record<number, string> = {
-  1: 'Done, we swapped in the brighter midday shot of the Tarrytown install. Take another look whenever you have a minute.',
-  5: 'Updated, the fee-waiver offer now leads the headline and the caption is tightened up. Ready for your review.',
+  1: 'Done, we swapped in the brighter midday shot of the Westlake install. Take another look whenever you have a minute.',
+};
+// V1 (original) content for the revised piece, the current content is V2, so the
+// preview shows a real before/after.
+const CLIENT_REVISIONS: Record<number, { img?: string; caption?: string; headline?: string }> = {
+  1: { img: IMG.crew, caption: 'Watch 1,400 sq ft of European white oak go in over two days in Westlake. The satisfying part starts at 0:18.' },
 };
 
 // Same content-type taxonomy the AM side uses, so both tell one story.
@@ -140,226 +136,29 @@ const SECTION_GROUPS: { label: string; sections: Section[] }[] = [
 ];
 
 // ── Content authored for Grain Design Flooring ──────────────────────────────────
-const ITEMS: Item[] = [
-  {
-    id: 1,
-    type: 'Organic',
-    section: 'organic',
-    batch: 'current',
-    campaign: 'Fall Hardwood Showcase',
-    date: 'Oct 2 · 10:00 AM',
-    channelIcon: 'organic',
-    img: IMG.hardwood,
-    caption:
-      'Floor of the week 🪵 This Tarrytown living room went from tired carpet to wide-plank white oak with a matte hardwax finish. Quarter-sawn for that tight, even grain, and yes, it’s pet-friendly. Eight days, start to finish. Swipe to see the before. #GrainDesignFlooring #AustinHardwood',
-  },
-  {
-    id: 2,
-    type: 'Reel',
-    section: 'organic',
-    batch: 'current',
-    campaign: 'Fall Hardwood Showcase',
-    date: 'Oct 4 · 9:00 AM',
-    channelIcon: 'organic',
-    img: IMG.install,
-    caption:
-      'Watch 1,400 sq ft of European white oak go in over two days in Westlake. Rack, glue, set, repeat, every board hand-selected so the grain flows room to room. The satisfying part starts at 0:18. 🎬',
-  },
-  {
-    id: 3,
-    type: 'Story',
-    section: 'organic',
-    batch: 'current',
-    campaign: 'Fall Hardwood Showcase',
-    date: 'Oct 5 · 8:00 AM',
-    channelIcon: 'organic',
-    img: IMG.detail,
-    caption:
-      'Behind the finish ✨ Our crew sands to 120 grit, then again by hand at the edges before a single coat goes down. This is the part nobody sees, and the reason your floors still look right in ten years.',
-  },
-  {
-    id: 4,
-    type: 'Carousel',
-    section: 'organic',
-    batch: 'current',
-    campaign: 'Fall Hardwood Showcase',
-    date: 'Oct 7 · 11:00 AM',
-    channelIcon: 'organic',
-    slides: 5,
-    img: IMG.swatch,
-    caption:
-      'Five hardwood tones we’re specifying most this season, from pale Scandi white oak to a deep walnut-stained ash. Each one reacts differently to Austin’s afternoon light, so we sample on-site before you commit. Which would you pick? 🎨',
-  },
-  {
-    id: 5,
-    type: 'Paid',
-    section: 'paid-social',
-    batch: 'current',
-    campaign: 'LVP Fall Promo, Meta',
-    date: 'Oct 9 · 9:00 AM',
-    channelIcon: 'paid',
-    img: IMG.livingRoom,
-    headline: 'Free in-home consult, no install fee',
-    cta: 'Book now',
-    dest: 'graindesignflooring.com/lvp',
-    caption:
-      'Waterproof luxury vinyl plank that looks like real oak, and stands up to kids, dogs, and Texas summers. Book your free in-home design consult before Oct 31 and we’ll waive the install fee on any LVP project over 600 sq ft. 🏡',
-  },
-  // Six paid socials awaiting the client's first look (In review).
-  {
-    id: 50, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Hardwood, Meta', date: 'Oct 12 · 9:00 AM', img: IMG.hardwood,
-    headline: 'Wide-plank white oak, installed', cta: 'Book now', dest: 'graindesignflooring.com/white-oak',
-    caption: 'Wide-plank white oak that warms up any Austin home. Book a free in-home consult and see samples under your own light. 🪵',
-  },
-  {
-    id: 51, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Hardwood, Meta', date: 'Oct 12 · 1:00 PM', img: IMG.stairs,
-    headline: 'Stairs done right, in white oak', cta: 'Get a quote', dest: 'graindesignflooring.com/stairs',
-    caption: 'Stair treads are the hardest part of any install. We template, cut, and set a full flight of white oak so it flows with your floors.',
-  },
-  {
-    id: 52, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Showroom, Meta', date: 'Oct 13 · 9:00 AM', img: IMG.showroom,
-    headline: 'Visit the South Lamar showroom', cta: 'Learn more', dest: 'graindesignflooring.com/showroom',
-    caption: 'Walk three wide-plank white oak collections and a matte herringbone tile under real light. Open Saturdays 10 to 4. ☀️',
-  },
-  {
-    id: 53, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Refinishing, Meta', date: 'Oct 13 · 2:00 PM', img: IMG.detail,
-    headline: 'Dust-free floor refinishing', cta: 'Book now', dest: 'graindesignflooring.com/dust-free',
-    caption: 'Refinish, don’t replace. Our sealed sanding system keeps your home livable while we bring tired floors back to life in three days.',
-  },
-  {
-    id: 54, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Showroom, Meta', date: 'Oct 14 · 9:00 AM', img: IMG.tile,
-    headline: 'Matte herringbone tile', cta: 'See the gallery', dest: 'graindesignflooring.com/tile',
-    caption: 'Herringbone tile that reads warm, not cold. Perfect for entryways and mudrooms that take a beating. Design consults open this fall.',
-  },
-  {
-    id: 55, type: 'Paid', section: 'paid-social', batch: 'current', channelIcon: 'paid', campaign: 'Fall Hardwood, Meta', date: 'Oct 14 · 1:00 PM', img: IMG.swatch,
-    headline: 'Find your perfect tone', cta: 'Book a consult', dest: 'graindesignflooring.com/consult',
-    caption: 'From pale Scandi oak to deep walnut-stained ash, we sample on-site so you commit with confidence. Free design consult this fall. 🎨',
-  },
-  {
-    id: 10,
-    type: 'PaidSearch',
-    section: 'paid-search',
-    batch: 'current',
-    campaign: 'Fall Refinishing, Google',
-    date: 'Oct 9 · 8:00 AM',
-    channelIcon: 'paid',
-    headline: 'Hardwood Floor Refinishing Austin | Free Estimate in 24 Hrs',
-    caption:
-      'Dust-free sanding, custom stains, and a 10-year finish warranty. Trusted by 400+ Austin homeowners. Book your free in-home estimate today.',
-  },
-  {
-    id: 11,
-    type: 'PaidSearch',
-    section: 'paid-search',
-    batch: 'current',
-    campaign: 'Fall Refinishing, Google',
-    date: 'Oct 12 · 8:00 AM',
-    channelIcon: 'paid',
-    headline: 'Luxury Vinyl Plank Installation | Waterproof, Pet-Proof Floors',
-    caption:
-      'Realistic wood look, built for Texas homes. Free design consult + no install fee over 600 sq ft this fall. Serving greater Austin.',
-  },
-  {
-    id: 7,
-    type: 'Blog',
-    section: 'seo',
-    batch: 'current',
-    campaign: 'SEO Relevance Blogs',
-    date: 'Oct 11 · 10:00 AM',
-    channelIcon: 'seo',
-    img: IMG.tile,
-    title: 'Hardwood vs. LVP vs. Tile: Which Flooring Actually Holds Up in an Austin Home?',
-    caption:
-      'A design-led breakdown of how each material handles heat, humidity, pets, and resale, and where we’d use each one.',
-  },
-  {
-    id: 8,
-    type: 'Blog',
-    section: 'seo',
-    batch: 'current',
-    campaign: 'SEO Relevance Blogs',
-    date: 'Oct 13 · 10:00 AM',
-    channelIcon: 'seo',
-    img: IMG.stairs,
-    title: 'Should You Refinish or Replace Your Hardwood Floors?',
-    caption:
-      'Our master installer walks through the five things we check on every floor, board thickness, gaps, cupping, finish wear, and subfloor, to tell you which path actually makes sense.',
-  },
-  {
-    id: 12,
-    type: 'Reputation',
-    section: 'reputation',
-    batch: 'current',
-    campaign: 'Reputation Management',
-    date: 'Oct 10 · 1:00 PM',
-    channelIcon: 'reputation',
-    rating: 5,
-    reviewer: 'Maria H.',
-    source: 'Google',
-    title: 'Reply to Maria H. · ★★★★★',
-    caption:
-      'We love our new white-oak floors, the crew was tidy and finished early. Only hiccup was a squeak near the stair landing that showed up a week later.',
-  },
-  {
-    id: 13,
-    type: 'Reputation',
-    section: 'reputation',
-    batch: 'current',
-    campaign: 'Reputation Management',
-    date: 'Oct 11 · 11:00 AM',
-    channelIcon: 'reputation',
-    rating: 3,
-    reviewer: 'Karen L.',
-    source: 'Yelp',
-    title: 'Reply to Karen L. · ★★★☆☆',
-    caption:
-      'Floors look great but scheduling took two calls to pin down. Wish the start date had been firmer up front.',
-  },
-  {
-    id: 9,
-    type: 'Email',
-    section: 'organic',
-    batch: 'current',
-    campaign: 'Showroom Newsletter',
-    date: 'Oct 16 · 8:00 AM',
-    channelIcon: 'organic',
-    img: IMG.showroom,
-    title: 'New in the showroom this month',
-    caption:
-      'Three wide-plank white oak collections and a matte herringbone tile you have to see in person. Walk the samples under real light, bring your paint chips, and meet the design team. Open Sat 10–4 on South Lamar. ☀️',
-  },
-
-  // ── Previous batch, already decided, revealed via the header toggle ──────────
-  {
-    id: 101, type: 'Organic', section: 'organic', batch: 'previous',
-    campaign: 'September Refresh', date: 'Sep 12 · 10:00 AM', channelIcon: 'organic', img: IMG.livingRoom,
-    caption: 'Before & after: a South Congress bungalow that traded worn pine for engineered white oak. Same footprint, entirely new light. ✨',
-  },
-  {
-    id: 102, type: 'Paid', section: 'paid-social', batch: 'previous',
-    campaign: 'Summer LVP, Meta', date: 'Sep 15 · 9:00 AM', channelIcon: 'paid', img: IMG.kitchen,
-    caption: 'End-of-summer LVP event, waterproof floors installed in as little as one day. Free consult through Sep 30.',
-  },
-  {
-    id: 103, type: 'Blog', section: 'seo', batch: 'previous',
-    campaign: 'SEO Relevance Blogs', date: 'Sep 18 · 10:00 AM', channelIcon: 'seo', img: IMG.detail,
-    title: 'How to Care for Hardwood Floors in Central Texas Humidity',
-    caption: 'A seasonal maintenance guide our installers actually follow, cleaning, humidity, and when to recoat.',
-  },
-  {
-    id: 104, type: 'Reputation', section: 'reputation', batch: 'previous',
-    campaign: 'Reputation Management', date: 'Sep 20 · 2:00 PM', channelIcon: 'reputation', rating: 5, reviewer: 'Devon P.', source: 'Google',
-    title: 'Reply to Devon P. · ★★★★★',
-    caption: 'Best contractor experience we have had in Austin. Clear quote, no surprises, and the herringbone entry is stunning.',
-  },
-];
+// ── Shared mock data: derive the client's pieces from the AM canonical dataset
+//    so both surfaces show the same batches, pieces, and statuses (one story). ──
+const AM_TO_CLIENT: Record<AmPost['type'], ContentType> = {
+  still: 'Organic', 'feed-video': 'Reel', gbp: 'Organic', carousel: 'Carousel',
+  story: 'Story', short: 'Reel', 'paid-social': 'Paid', 'paid-search': 'PaidSearch',
+  blog: 'Blog', email: 'Email', review: 'Reputation',
+};
+const channelFor = (section: Section): Item['channelIcon'] =>
+  section === 'seo' ? 'seo' : section === 'reputation' ? 'reputation'
+    : section.startsWith('paid') ? 'paid' : 'organic';
+const fromAmPost = (p: AmPost, campaign: string): Item => ({
+  id: p.id, type: AM_TO_CLIENT[p.type], section: p.section as Section, caption: p.caption,
+  img: p.img, headline: p.headline, cta: p.cta, dest: p.dest, slides: p.slides,
+  rating: p.rating, reviewer: p.reviewer, source: p.source,
+  date: p.date, campaign, channelIcon: channelFor(p.section as Section),
+});
+const ITEMS: Item[] = CAMPAIGNS.flatMap((c) => c.posts.map((p) => fromAmPost(p, c.name)));
 
 // AI-drafted reply the client is approving, keyed by reputation item id.
 const REPLY_DRAFT: Record<number, string> = {
-  12: 'Thank you so much, Maria, we’re thrilled you love the white oak! We’d like to come back and take care of that squeak near the landing at no charge. Someone from our team will reach out to schedule a quick visit. 🙌',
-  13: 'Thanks for the honest feedback, Karen. You’re right that scheduling should have been tighter, we’ve since changed how we confirm start dates. We’d love to make it right; a team member will follow up shortly.',
-  104: 'Thank you, Devon! It was a pleasure working with you, that herringbone entry turned out beautifully. We appreciate you trusting us with your home. 🙏',
+  40: 'Thank you so much, Maria, we’re thrilled you love the white oak! We’d like to come back and take care of that squeak near the landing at no charge. Someone from our team will reach out to schedule a quick visit. 🙌',
+  41: 'Thank you, Devon! It was a pleasure working with you, that herringbone entry turned out beautifully. We appreciate you trusting us with your home. 🙏',
+  42: 'Thanks for the honest feedback, Karen. You’re right that scheduling should have been tighter, we’ve since changed how we confirm start dates. We’d love to make it right; a team member will follow up shortly.',
 };
 
 // ── Star rating (reputation) ──────────────────────────────────────────────────
@@ -463,8 +262,8 @@ const toPost = (i: Item): AmPost => ({
 
 // Client content card, identical shell + CardBody to the AM side. Approve /
 // Request changes live on hover; the card opens the full preview on click.
-function ClientCard({ item, status, requestedNote, onApprove, onOpenPreview }: {
-  item: Item; status: Status; requestedNote?: string; onApprove: () => void; onOpenPreview: () => void;
+function ClientCard({ item, status, requestedNote, onApprove, onRequestChanges, onOpenPreview }: {
+  item: Item; status: Status; requestedNote?: string; onApprove: () => void; onRequestChanges: () => void; onOpenPreview: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const post = toPost(item);
@@ -480,6 +279,7 @@ function ClientCard({ item, status, requestedNote, onApprove, onOpenPreview }: {
       <div style={{ height: 40, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px 2px', flexShrink: 0 }}>
         <TypeIcon type={post.type} size={16} />
         <span style={{ fontSize: 14, color: dark80, fontFamily: F, flex: 1, letterSpacing: '0.14px' }}>{AM_TYPE_LABEL[post.type]}</span>
+        {!!CLIENT_REVISIONS[item.id] && <Pill size="sm">V2</Pill>}
         <span style={{ fontSize: 12.5, color: dark40, fontFamily: F, letterSpacing: '0.12px', whiteSpace: 'nowrap' }}>{item.date}</span>
       </div>
       <CardBody post={post} />
@@ -494,13 +294,6 @@ function ClientCard({ item, status, requestedNote, onApprove, onOpenPreview }: {
           )}
         </div>
       )}
-      {status === 'updated' && (
-        <div style={{ padding: '0 14px 14px', marginTop: 'auto' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--status-posting)', fontFamily: F, fontWeight: 500 }}>
-            <Edit3 size={16} color="var(--status-posting)" /> Revised by your team · take another look
-          </span>
-        </div>
-      )}
       {/* Hover overlay */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', opacity: hovered ? 1 : 0, transition: 'opacity 0.18s', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, pointerEvents: hovered ? 'all' : 'none' }}>
         <div style={{ transform: hovered ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(4px)', transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
@@ -509,7 +302,7 @@ function ClientCard({ item, status, requestedNote, onApprove, onOpenPreview }: {
           ) : (
             <>
               <Button variant="green" size="sm" frontIcon={Check2} onClick={(e) => { e.stopPropagation(); onApprove(); }}>Approve</Button>
-              <Button variant="secondary" size="sm" frontIcon={Edit3} onClick={(e) => { e.stopPropagation(); onOpenPreview(); }}>Request changes</Button>
+              <Button variant="secondary" size="sm" frontIcon={Edit3} onClick={(e) => { e.stopPropagation(); onRequestChanges(); }}>Request changes</Button>
             </>
           )}
         </div>
@@ -727,6 +520,8 @@ function ClientGroups({ itemsBySection, statuses, renderCard }: {
 
 // The AM's note that ships with the current batch (shown in the grey banner).
 const CURRENT_NOTE = 'Here’s this week’s batch for Grain Design Flooring. Approve anything that’s good to go, or leave a note on whatever you’d like changed. The paid ads are timed for the fall refinishing push, so start with those if you can. Thanks!';
+// The current batch's review-by date + name (mirrors the AM send).
+const CURRENT_BATCH = { id: 'current', name: 'This week’s content', dueDate: '2026-10-10' };
 
 // Previously-reviewed batches. Each carries the note the team sent with it and
 // the pieces the client already signed off on.
@@ -747,7 +542,6 @@ const PREVIOUS_BATCHES: Batch[] = [
     items: [
       { id: 9101, type: 'Reel', section: 'organic', channelIcon: 'organic', campaign: 'Showroom', date: 'Sep 23 · 9:00 AM', img: IMG.install, caption: 'Two days, 1,400 sq ft of white oak. The satisfying part starts at 0:18.' },
       { id: 9102, type: 'Reputation', section: 'reputation', channelIcon: 'reputation', campaign: 'Reputation Management', date: 'Sep 24 · 1:00 PM', rating: 5, reviewer: 'Priya S.', source: 'Google', caption: 'Beautiful work on our stairs and hallway. The crew was on time every day.' },
-      { id: 9103, type: 'PaidSearch', section: 'paid-search', channelIcon: 'paid', campaign: 'Fall Refinishing, Google', date: 'Sep 25 · 8:00 AM', headline: 'Dust-Free Hardwood Refinishing | Austin, TX', caption: 'Custom stains and a 10 year finish warranty. Free estimate in 24 hours.' },
     ],
   },
   {
@@ -801,33 +595,38 @@ export function Approvals({ sub: _sub }: { sub?: string }) {
   const { showToast } = useToast();
   const { openModal } = useModals();
 
-  // Current batch is what the client acts on now; previous batches are decided
-  // history revealed via the header toggle. Previous items seed as approved.
-  const CURRENT = useMemo(() => ITEMS.filter((i) => i.batch !== 'previous'), []);
+  // The pieces the client acts on = everything in the shared batches, resolved
+  // from the AM-derived ITEMS.
+  const CURRENT = useMemo(() => {
+    const byId = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+    return SEED_BATCHES.flatMap((b) => b.postIds.map((id) => byId[id]).filter(Boolean));
+  }, []);
 
+  // Verdicts derive from the shared CLIENT_REVIEW / STATUS_SEED so the client
+  // matches the AM: approved / changes / in-review (incl. re-sent V2 pieces).
   const [statuses, setStatuses] = useState<Record<number, Status>>(() => {
     const initial: Record<number, Status> = {};
     CURRENT.forEach((i) => {
-      initial[i.id] = UPDATED_SEED.includes(i.id) ? 'updated'
-        : CHANGES_SEED[i.id] ? 'rejected'
-        : APPROVED_SEED.includes(i.id) ? 'approved'
+      initial[i.id] = STATUS_SEED[i.id] === 'in-review' ? 'pending'
+        : CLIENT_REVIEW[i.id]?.status === 'approved' ? 'approved'
+        : CLIENT_REVIEW[i.id]?.status === 'changes' ? 'rejected'
         : 'pending';
     });
     return initial;
   });
-  const [notes, setNotes] = useState<Record<number, string>>(() => ({ ...CHANGES_SEED, ...UPDATED_NOTES }));
-  // Which batch is on screen: null = the current batch, else a previous batch id.
-  const [viewBatchId, setViewBatchId] = useState<string | null>(null);
-  const selectedBatch = viewBatchId ? PREVIOUS_BATCHES.find((b) => b.id === viewBatchId) ?? null : null;
+  const [notes, setNotes] = useState<Record<number, string>>(() => {
+    const n: Record<number, string> = { ...UPDATED_NOTES };
+    Object.entries(CLIENT_REVIEW).forEach(([id, r]) => { if (r.status === 'changes' && r.comment) n[Number(id)] = r.comment; });
+    return n;
+  });
+  // Which batch is open (null = the batch list) + the in-batch status subtab.
+  // On the list, fully-approved batches hide behind a "See all approved" reveal.
+  const [openBatchId, setOpenBatchId] = useState<string | null>(null);
+  const [subtab, setSubtab] = useState<Subtab>('in-review');
+  const [showApprovedBatches, setShowApprovedBatches] = useState(false);
 
-  // Status filter subtab. Deep-linkable via the route param (Home's "updated
-  // designs" notification lands straight on the Updated tab).
-  const initialSub = (CLIENT_TABS.some((t) => t.key === _sub) ? _sub : 'in-review') as Subtab;
-  const [subtab, setSubtab] = useState<Subtab>(initialSub);
-
-  // Cold, account is still being set up pre-go-live. Nothing to approve yet, so
-  // omit the steady topbar controls and show the shared explanatory state. (All
-  // hooks run above this line — the early return must stay below them.)
+  // Cold, account is still being set up pre-go-live. (All hooks run above this
+  // line, the early return must stay below them.)
   if (state !== 'steady') {
     return (
       <ClientShell section="approvals">
@@ -846,8 +645,18 @@ export function Approvals({ sub: _sub }: { sub?: string }) {
     );
   }
 
-  const countByStatus = (st: Status) => CURRENT.filter((i) => (statuses[i.id] ?? 'pending') === st).length;
-  const totalPending = countByStatus('pending');
+  const itemById: Record<number, Item> = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+  const postById = (id: number) => toPost(itemById[id]);
+  const clientToPost = (s: Status): 'in-review' | 'changes' | 'approved' => s === 'approved' ? 'approved' : s === 'rejected' ? 'changes' : 'in-review';
+
+  // Batches come straight from the shared AM canonical (same names, due dates,
+  // and pieces on both surfaces). All are live for the client to act on.
+  const batches = SEED_BATCHES.map((b) => ({
+    id: b.id, name: b.name, dueDate: b.dueDate, note: b.note,
+    items: b.postIds.map((id) => itemById[id]).filter(Boolean) as Item[], previous: false,
+  }));
+  const openBatch = batches.find((b) => b.id === openBatchId) ?? null;
+  const isCurrent = !!openBatch;
 
   const approve = (id: number) => {
     setStatuses((prev) => ({ ...prev, [id]: 'approved' }));
@@ -867,62 +676,64 @@ export function Approvals({ sub: _sub }: { sub?: string }) {
     showToast({ variant: 'success', message: 'Approved everything pending' });
   };
 
-  // Status subtabs (mirror the AM side). Only the current batch is filterable;
-  // a selected previous batch is read-only history, so no subtabs there.
-  const subtabs = selectedBatch ? undefined : (
-    <div style={{ display: 'inline-flex', gap: 2, flexWrap: 'nowrap', alignItems: 'center' }}>
-      {CLIENT_TABS.map((t, i) => (
-        <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-          {i > 0 && <StatusTabChevron />}
-          <TabChip selected={subtab === t.key} onSelect={() => setSubtab(t.key)} style={statusTabStyle(t.key, subtab === t.key)}>
-            {/* Client counters live on the two states that need their attention
-               (In review, Updated); Requested changes is already settled. */}
-            <StatusTabContent
-              status={t.key}
-              selected={subtab === t.key}
-              count={t.key === 'in-review' ? totalPending : t.key === 'updated' ? countByStatus('updated') : undefined}
-            />
-          </TabChip>
-        </span>
-      ))}
-    </div>
-  );
+  const statusFor = (id: number): Status => (isCurrent ? (statuses[id] ?? 'pending') : 'approved');
+  const isAllApproved = (b: typeof batches[number]) => b.items.every((i) => (b.previous ? true : (statuses[i.id] ?? 'pending') === 'approved'));
+  const openBatchPage = (id: string) => {
+    const b = batches.find((x) => x.id === id);
+    setOpenBatchId(id);
+    setSubtab(b && isAllApproved(b) ? 'approved' : 'in-review');
+  };
 
-  // "Previous batches" now lives on the right, next to the avatar.
-  const topbarRight = selectedBatch || PREVIOUS_BATCHES.length === 0 ? undefined : (
-    <Button variant="tertiary" size="sm" onPress={() => openModal(PreviousBatchesModal, { batches: PREVIOUS_BATCHES, onSelect: setViewBatchId })}>
-      Previous batches
-    </Button>
-  );
+  // ── Batch list view: active batches, with fully-approved ones behind a reveal ──
+  if (!openBatch) {
+    const renderBatchCard = (b: typeof batches[number], faded = false) => {
+      const postStatus = Object.fromEntries(b.items.map((i) => [i.id, b.previous ? 'approved' : clientToPost(statuses[i.id] ?? 'pending')])) as Record<number, 'in-review' | 'changes' | 'approved'>;
+      const amBatch: AmBatch = { id: b.id, name: b.name, dueDate: b.dueDate, note: b.note, postIds: b.items.map((i) => i.id), createdAt: '' };
+      return <BatchCard key={b.id} batch={amBatch} postStatus={postStatus} postById={postById} summaryMode="in-review" faded={faded} onOpen={() => openBatchPage(b.id)} />;
+    };
+    const active = batches.filter((b) => !isAllApproved(b));
+    const approved = batches.filter((b) => isAllApproved(b));
+    return (
+      <ClientShell section="approvals">
+        <div style={{ maxWidth: BATCH_LIST_W, margin: '0 auto', padding: '20px 24px 60px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {active.map((b) => renderBatchCard(b))}
+          {active.length === 0 && !showApprovedBatches && (
+            <div style={{ padding: '40px 0 12px', textAlign: 'center', color: dark40, fontFamily: F, fontSize: 14 }}>You’re all caught up. Nothing waiting on your review.</div>
+          )}
+          {approved.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0' }}>
+              <Button variant="tertiary" size="sm" onPress={() => setShowApprovedBatches((v) => !v)}>
+                {showApprovedBatches ? 'Hide Approved' : `Show All ${approved.length} Approved`}
+              </Button>
+            </div>
+          )}
+          {showApprovedBatches && approved.map((b) => renderBatchCard(b, true))}
+        </div>
+      </ClientShell>
+    );
+  }
 
-  // The visible pieces: a selected previous batch, else the current batch
-  // filtered to the active status subtab.
-  const visible = selectedBatch
-    ? selectedBatch.items
-    : CURRENT.filter((i) => (statuses[i.id] ?? 'pending') === SUBTAB_STATUS[subtab]);
+  // ── Batch detail view ────────────────────────────────────────────────────
+  const visible = openBatch.items.filter((i) => statusFor(i.id) === SUBTAB_STATUS[subtab]);
   const visiblePosts = visible.map(toPost);
   const byId: Record<number, Item> = Object.fromEntries(visible.map((i) => [i.id, i]));
-  const statusFor = (id: number): Status => (selectedBatch ? 'approved' : (statuses[id] ?? 'pending'));
+  const pendingCount = openBatch.items.filter((i) => statusFor(i.id) === 'pending').length;
 
-  // The preview modal only knows pending / approved / rejected; surface an
-  // 'updated' piece as pending so it reads as ready for another review.
-  const previewStatuses: Record<number, 'pending' | 'approved' | 'rejected'> = selectedBatch
-    ? Object.fromEntries(visible.map((i) => [i.id, 'approved' as const]))
-    : Object.fromEntries(CURRENT.map((i) => {
-        const s = statuses[i.id] ?? 'pending';
-        return [i.id, s === 'updated' ? 'pending' : s];
-      }));
-
-  const openPreviewFor = (item: Item) => openModal(PostPreviewModal, {
+  const previewStatuses: Record<number, 'pending' | 'approved' | 'rejected'> = Object.fromEntries(
+    openBatch.items.map((i) => [i.id, statusFor(i.id)]),
+  );
+  const openPreviewFor = (item: Item, request = false) => openModal(PostPreviewModal, {
     items: visible,
     initialIndex: visible.findIndex((i) => i.id === item.id),
+    initialRequest: request,
+    revisionsById: CLIENT_REVISIONS,
     typeMeta: TYPE_META,
     typeLabel: TYPE_LABEL,
     replyDrafts: REPLY_DRAFT,
     initialStatuses: previewStatuses,
     initialNotes: notes,
     rejectedIds: visible.filter((i) => statusFor(i.id) === 'rejected').map((i) => i.id),
-    updatedIds: visible.filter((i) => statusFor(i.id) === 'updated').map((i) => i.id),
+    updatedIds: visible.filter((i) => REVISED_SEED.includes(i.id) && statusFor(i.id) === 'pending').map((i) => i.id),
     updatedReplies: UPDATED_REPLIES,
     onApprove: (id: number) => approve(id),
     onRequestChanges: (id: number, note: string) => requestChanges(id, note),
@@ -937,53 +748,47 @@ export function Approvals({ sub: _sub }: { sub?: string }) {
         status={statusFor(item.id)}
         requestedNote={notes[item.id]}
         onApprove={() => approve(item.id)}
+        onRequestChanges={() => openPreviewFor(item, true)}
         onOpenPreview={() => openPreviewFor(item)}
       />
     );
   };
 
-  // The note lives on the In review tab (and on any opened previous batch); it's
-  // the team's message for the pieces still awaiting the client's first look.
-  const showNote = selectedBatch ? true : subtab === 'in-review';
-  const subtabLabel = CLIENT_TABS.find((t) => t.key === subtab)?.label.toLowerCase() ?? '';
-
-  const title = selectedBatch ? (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back to current batch" onPress={() => setViewBatchId(null)} />
-      <Text variant="largeList" style={{ color: dark90, fontWeight: 500 }}>{selectedBatch.title}<span style={{ color: dark40, fontWeight: 400 }}> · {selectedBatch.dateRange}</span></Text>
+  // Per-batch status subtabs (In review / Requested changes / Approved).
+  const subtabs = (
+    <div style={{ display: 'inline-flex', gap: 2, flexWrap: 'nowrap', alignItems: 'center' }}>
+      {CLIENT_TABS.map((t, i) => (
+        <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+          {i > 0 && <StatusTabChevron />}
+          <TabChip selected={subtab === t.key} onSelect={() => setSubtab(t.key)} style={statusTabStyle(t.key, subtab === t.key)}>
+            <StatusTabContent status={t.key} selected={subtab === t.key} count={t.key === 'in-review' && pendingCount > 0 ? pendingCount : undefined} />
+          </TabChip>
+        </span>
+      ))}
     </div>
-  ) : (
-    <Text variant="largeList" style={{ color: dark90, fontWeight: 500 }}>Approvals</Text>
   );
 
-  return (
-    <ClientShell section="approvals" title={title} topbarCenter={subtabs} topbarRight={topbarRight}>
-      <div style={{ maxWidth: PAGE_W, margin: '0 auto', padding: '20px 0 60px' }}>
+  // Header: back + name in the topbar title; Due pill on the topbar right,
+  // matching the AM side. The pending count + Approve-all live inside the note.
+  const title = <NestedTitle title={openBatch.name} onBack={() => setOpenBatchId(null)} />;
+  const duePill = openBatch.dueDate ? <Pill size="md">Due {formatDue(openBatch.dueDate)}</Pill> : undefined;
+  const noteFooter = isCurrent && pendingCount > 0 ? (
+    <>
+      <Text variant="secondary" style={{ color: dark60 }}>{pendingCount} pending</Text>
+      <Button variant="secondary" size="md" frontIcon={Check2} onPress={approveAll}>Approve all</Button>
+    </>
+  ) : undefined;
 
-        {/* The team's note. On the In review tab it also carries the pending
-            count + the primary Approve-all action, on the right under the message. */}
-        {showNote && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, background: dark2, border: `1px solid ${dark8}`, borderRadius: 12, padding: '16px 18px', marginBottom: 24 }}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-              <span style={{ width: 32, height: 32, borderRadius: 99, flexShrink: 0, background: 'var(--brand)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, color: dark90, fontFamily: F }}>D</span>
-              <Text variant="primary" style={{ color: dark90, lineHeight: 1.55 }}>{selectedBatch ? selectedBatch.note : CURRENT_NOTE}</Text>
-            </div>
-            {!selectedBatch && totalPending > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
-                <Text variant="secondary" style={{ color: dark60 }}>{totalPending} pending</Text>
-                <Button variant="secondary" size="lg" frontIcon={Check2} onPress={approveAll}>
-                  Approve all
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+  return (
+    <ClientShell section="approvals" title={title} topbarCenter={subtabs} topbarRight={duePill}>
+      <div style={{ maxWidth: PAGE_W, margin: '0 auto', padding: '20px 0 60px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <BatchDetailHeader batch={{ id: openBatch.id, name: openBatch.name, dueDate: openBatch.dueDate, note: openBatch.note, postIds: [], createdAt: '' }} footer={noteFooter} />
 
         {visiblePosts.length > 0 ? (
           <ContentTypeSections posts={visiblePosts} renderCard={renderCard} />
         ) : (
           <div style={{ padding: '56px 0', textAlign: 'center', color: dark40, fontFamily: F, fontSize: 14 }}>
-            {selectedBatch ? 'Nothing in this batch.' : `Nothing in ${subtabLabel}.`}
+            Nothing in {CLIENT_TABS.find((t) => t.key === subtab)?.label.toLowerCase() ?? ''}.
           </div>
         )}
       </div>

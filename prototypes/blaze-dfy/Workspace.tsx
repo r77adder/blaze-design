@@ -42,7 +42,7 @@ const H2_FEATURE_ROUTES: Record<string, ComponentType> = {
 };
 
 export function Workspace() {
-  // The client experience lives in a separate prototype now — this workspace is
+  // The client experience lives in a separate prototype now, this workspace is
   // always the AM side, so we ignore any `:side` URL segment.
   const { accountId = '', section, sub } = useParams();
   const { pathname } = useLocation();
@@ -54,11 +54,11 @@ export function Workspace() {
   const [campaignMessages, setCampaignMessages] = useState<Record<number, string>>({});
 
   useEffect(() => { setAccount(null); getAccount(accountId).then((a) => setAccount(a ?? undefined)); }, [accountId]);
-  // Re-pull the (mutated) in-session account without a full reset — used after
+  // Re-pull the (mutated) in-session account without a full reset, used after
   // a handoff so the new owner shows up live across the workspace.
   const reload = () => getAccount(accountId).then((a) => { if (a) setAccount(a); });
 
-  // Reset scroll on any section/sub-step change — the shell's content section
+  // Reset scroll on any section/sub-step change, the shell's content section
   // owns the scroll, so window.scrollTo alone isn't enough.
   useEffect(() => {
     document.querySelector('section[class*="content"]')?.scrollTo({ top: 0 });
@@ -116,7 +116,7 @@ function CreativeLocked({ account, go }: { account: Account; go: Go }) {
     <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', padding: '64px 0' }}>
       <div style={{ width: 56, height: 56, margin: '0 auto 16px', borderRadius: 99, background: 'var(--dark-3)', color: 'var(--dark-40)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🔒</div>
       <Heading level={3} style={{ marginTop: 0 }}>Finish Strategy onboarding first</Heading>
-      <Text variant="primary" color="var(--dark-60)" style={{ display: 'block', margin: '8px 0 24px', lineHeight: 1.6 }}>Creative Review unlocks once the strategy is locked in — the creative is generated from it.</Text>
+      <Text variant="primary" color="var(--dark-60)" style={{ display: 'block', margin: '8px 0 24px', lineHeight: 1.6 }}>Creative Review unlocks once the strategy is locked in. The creative is generated from it.</Text>
       <Button size="lg" onPress={() => go(`/${account.id}/am/strategy`)}>Go to Strategy onboarding</Button>
     </div>
   );

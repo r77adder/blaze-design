@@ -8,7 +8,7 @@ type Glyph = ComponentType<{ size?: number; color?: string }>;
  * Shared "cold" explanatory state for client pages that have nothing to show
  * until the account goes live. Laid out like a normal page (left-aligned, same
  * 960 width as the rest of the portal): a muted icon, an H2 headline, a
- * plain-English description, and — the only boxed element — a Card listing what
+ * plain-English description, and (the only boxed element) a Card listing what
  * will appear here once live. An optional `children` slot can add a faded
  * page-specific preview.
  *

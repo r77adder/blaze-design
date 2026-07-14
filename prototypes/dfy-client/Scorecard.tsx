@@ -8,7 +8,7 @@ import Edit3 from '@/icons/20/Edit3';
 import Check2 from '@/icons/20/Check2';
 import { ClientShell, BackTitle } from './shell';
 
-// ─── Account type (copied from blaze-dfy lib/types.ts — the parts the client
+// ─── Account type (copied from blaze-dfy lib/types.ts, the parts the client
 //     scorecard view + S.competitors actually read) ────────────────────────
 
 type PhaseId = 1 | 2 | 3;
@@ -93,13 +93,13 @@ interface Account {
   aiNextStep: string;
   phases: PhaseProgress[];
   brand: BrandScan;
-  /** Signed contract term in months — set once a workspace goes live. */
+  /** Signed contract term in months, set once a workspace goes live. */
   contractTerm?: 3 | 6 | 12;
   /** When the live contract ends (ISO date). Drives renewal warnings. */
   contractEndDate?: string;
 }
 
-// ─── Competitor generation (copied from blaze-dfy lib/strategy.ts — only the
+// ─── Competitor generation (copied from blaze-dfy lib/strategy.ts, only the
 //     pieces buildScorecardData() reads via S.competitors) ─────────────────
 
 const COMP_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'];
@@ -208,13 +208,13 @@ function buildScorecardData(account: Account): ScorecardData {
       title: 'Paid Ads',
       score: 12,
       strengths: [
-        'Conversion tracking is partially installed — analytics are live',
+        'Conversion tracking is partially installed, analytics are live',
         'Website has a phone number in the header, so paid traffic has a clear exit',
       ],
       weaknesses: [
-        `No active Google Search campaigns — competitors in ${city} are bidding on high-intent terms right now`,
+        `No active Google Search campaigns. Competitors in ${city} are bidding on high-intent terms right now`,
         'Zero Meta ad spend in the last 90 days while competitors run always-on local reels',
-        'No branded keyword protection — a competitor may be intercepting your name searches',
+        'No branded keyword protection. A competitor may be intercepting your name searches',
       ],
       nextSteps: [
         { label: 'Launch a "free estimate" Google Search campaign targeting local keywords', effort: 'quick' },
@@ -232,13 +232,13 @@ function buildScorecardData(account: Account): ScorecardData {
         'Past posts with before/after content drove strong organic reach',
       ],
       weaknesses: [
-        'Posting cadence has stalled — last social post was 30+ days ago',
+        'Posting cadence has stalled. Last social post was 30+ days ago',
         'Google Business Profile is missing recent photos and has no posts in months',
-        'Organic reach is limited by single-channel distribution — no TikTok or YouTube Shorts',
+        'Organic reach is limited by single-channel distribution, no TikTok or YouTube Shorts',
         'No local SEO content targeting city + service keywords',
       ],
       nextSteps: [
-        { label: 'Post 2× per week minimum — before/after photos and crew shots perform best in this category', effort: 'quick' },
+        { label: 'Post 2× per week minimum. Before/after photos and crew shots perform best in this category', effort: 'quick' },
         { label: 'Add 5+ fresh photos to Google Business Profile and publish a monthly GBP post', effort: 'quick' },
         { label: 'Build a "best [service] in [city]" landing page targeting local search intent', effort: 'project' },
       ],
@@ -248,13 +248,13 @@ function buildScorecardData(account: Account): ScorecardData {
       title: 'Website & Conversion',
       score: 58,
       strengths: [
-        'Click-to-call is visible on every page — critical for a services business',
+        'Click-to-call is visible on every page, critical for a services business',
         'Reviews, licensing badges, and "insured" signals are present above the fold',
         'The site is mobile-responsive and loads correctly on small screens',
       ],
       weaknesses: [
-        '"Contact us" is the primary CTA — "Get a free estimate" converts 30–60% better',
-        'Mobile LCP is slow — around 30% of visitors likely bounce before the page loads',
+        '"Contact us" is the primary CTA. "Get a free estimate" converts 30–60% better',
+        'Mobile LCP is slow. Around 30% of visitors likely bounce before the page loads',
         'Lead form has too many fields; trimming to name, phone, ZIP, and project type reduces drop-off',
       ],
       nextSteps: [
@@ -268,14 +268,14 @@ function buildScorecardData(account: Account): ScorecardData {
       title: 'Reputation',
       score: 72,
       strengths: [
-        '4.7★ average rating across Google, Yelp, and Facebook — the strongest asset in the market',
-        'Owner is responding to most reviews — response rate lifts conversion ~11%',
+        '4.7★ average rating across Google, Yelp, and Facebook, the strongest asset in the market',
+        'Owner is responding to most reviews. Response rate lifts conversion ~11%',
         'Review quality is high; several mention specific crew members by name',
       ],
       weaknesses: [
-        `Behind the top ${city} competitors on total review count — volume is a ranking signal`,
-        'New review velocity has slowed — less than 2 new reviews/month recently',
-        '3 unanswered negative reviews are visible on Google — each can deter 30 potential customers',
+        `Behind the top ${city} competitors on total review count. Volume is a ranking signal`,
+        'New review velocity has slowed. Less than 2 new reviews/month recently',
+        '3 unanswered negative reviews are visible on Google. Each can deter 30 potential customers',
       ],
       nextSteps: [
         { label: 'Respond to the 3 unanswered Google reviews this week', effort: 'quick' },
@@ -311,7 +311,7 @@ function buildScorecardData(account: Account): ScorecardData {
   const bottomSection = [...sections].sort((a, b) => a.score - b.score)[0];
 
   const summary = `${account.name} scores ${ourOverall}/100 overall, ranking #${rank} of ${total} businesses in ${city}. `
-    + `The strongest area is ${topSection.title.toLowerCase()} (${topSection.score}/100) — ${topSection.strengths[0].toLowerCase()}. `
+    + `The strongest area is ${topSection.title.toLowerCase()} (${topSection.score}/100): ${topSection.strengths[0].toLowerCase()}. `
     + `The biggest opportunity is ${bottomSection.title.toLowerCase()} (${bottomSection.score}/100): ${bottomSection.weaknesses[0].toLowerCase()}.`;
 
   return { sections, competitors, ourName: account.name, ourScores, overallRank: rank, summary };
@@ -321,8 +321,8 @@ function buildScorecardData(account: Account): ScorecardData {
 
 const publishedAccounts = new Set<string>(['grain-design-flooring']);
 
-/** Whether the competitive scorecard has been published to the client portal —
- *  the cold-home onboarding step reads this to flip itself to "done". */
+/** Whether the competitive scorecard has been published to the client portal.
+ *  The cold-home onboarding step reads this to flip itself to "done". */
 export function isScorecardPublished(accountId: string): boolean {
   return publishedAccounts.has(accountId);
 }
@@ -333,12 +333,12 @@ const EFFORT_TONE = { quick: 'success', medium: 'warning', project: 'accent' } a
 /** Score → StatusPill tone: good (green) / fair (orange) / poor (red). */
 const scoreTone = (s: number): 'success' | 'warning' | 'danger' => (s >= 65 ? 'success' : s >= 40 ? 'warning' : 'danger');
 
-/** Score badge — DS StatusPill; the tone carries the good/fair/poor meaning. */
+/** Score badge: DS StatusPill; the tone carries the good/fair/poor meaning. */
 function ScorePill({ score }: { score: number }) {
   return <StatusPill tone={scoreTone(score)} size="md">{score}/100</StatusPill>;
 }
 
-/** Effort badge — DS StatusPill keyed to the effort level. */
+/** Effort badge: DS StatusPill keyed to the effort level. */
 function EffortPill({ effort }: { effort: keyof typeof EFFORT_LABELS }) {
   return <StatusPill tone={EFFORT_TONE[effort]} size="sm">{EFFORT_LABELS[effort]}</StatusPill>;
 }
@@ -385,7 +385,7 @@ export function ScorecardClientView({ account }: { account: Account }) {
   );
 }
 
-// How each dimension's 0–100 score is calculated — surfaced to the client via
+// How each dimension's 0–100 score is calculated, surfaced to the client via
 // the question-mark tooltip on each section header.
 const METHODOLOGY: Record<string, string> = {
   'Paid Ads': 'Google Search ads active (+35) · Meta ads in last 90 days (+35) · Conversion tracking (+20) · Branded keyword defense (+10)',
@@ -394,7 +394,7 @@ const METHODOLOGY: Record<string, string> = {
   'Reputation': 'Avg rating × 20 (+40 max) · Review count tier ≥ 50 (+30) · ≥ 2 new reviews/month (+20) · Response rate ≥ 80% (+10)',
 };
 
-/** Hover tooltip (copied from blaze-dfy ui.tsx) — explains how a score is built. */
+/** Hover tooltip (copied from blaze-dfy ui.tsx), explains how a score is built. */
 function Tooltip({ label, children, width = 300, placement = 'below' }: { label: ReactNode; children: ReactNode; width?: number; placement?: 'above' | 'below' }) {
   const [show, setShow] = useState(false);
   return (
@@ -495,7 +495,7 @@ function ComparisonTable({ data }: { data: ScorecardData }) {
     <div>
       <Heading level={3} style={{ margin: '0 0 4px' }}>How you compare locally</Heading>
       <Text style={{ display: 'block', marginBottom: 14, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
-        Scores are estimated from publicly visible signals — ad library activity, social presence, website audit, and review data. Open any section below to see exactly how each score is calculated.
+        Scores are estimated from publicly visible signals: ad library activity, social presence, website audit, and review data. Open any section below to see exactly how each score is calculated.
       </Text>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--dark-8)', overflow: 'hidden' }}>
@@ -578,7 +578,7 @@ const GRAIN_ACCOUNT: Account = {
   phase: 2,
   stepLabel: 'Strategy, Competitive scorecard',
   progressPct: 30,
-  aiNextStep: 'Complete the competitive scorecard setup for Tyler — website, GBP, and confirm the local competitors.',
+  aiNextStep: 'Complete the competitive scorecard setup for Tyler: website, GBP, and confirm the local competitors.',
   phases: phases(2, 'in_progress'),
   brand: {
     website: 'graindesignflooring.com',
@@ -599,7 +599,7 @@ const GRAIN_ACCOUNT: Account = {
   },
 };
 
-// ─── Export — renders the copied client view inside the dfy-client shell ─────
+// ─── Export: renders the copied client view inside the dfy-client shell ─────
 
 export function Scorecard() {
   const { showToast } = useToast();
@@ -619,7 +619,7 @@ export function Scorecard() {
   }, [reqOpen]);
 
   const approve = () => { setApproved(true); showToast({ variant: 'success', message: 'Scorecard approved' }); };
-  const sendRequest = () => { setReqOpen(false); setNote(''); showToast({ message: 'Change request sent — your account manager will follow up.' }); };
+  const sendRequest = () => { setReqOpen(false); setNote(''); showToast({ message: 'Change request sent. Your account manager will follow up.' }); };
 
   return (
     <ClientShell section="scorecard" title={<BackTitle label="Scorecard" />}>

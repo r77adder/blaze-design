@@ -62,7 +62,7 @@ interface Meeting {
   decisions?: string[];
   /** Kickoff-only: the foundational "cold" content captured once. */
   foundation?: { label: string; body: string }[];
-  /** AM-only note — never rendered in client view. */
+  /** AM-only note, never rendered in client view. */
   internalNote?: string;
   /** Apr 28: embed the campaign that was shared for review on this call. */
   campaignEmbed?: boolean;
@@ -84,11 +84,11 @@ const MEETINGS: Meeting[] = [
     summary: [
       'June planning: the wave leads with the team-intro post, then the interior-season teaser mid-month.',
       'Sarah will send final color picks for the June palette by Friday.',
-      'Spring Wave 2 performing well — estimate requests up 18% month over month.',
+      'Spring Wave 2 performing well, estimate requests up 18% month over month.',
     ],
     decisions: [
       'June wave = 6 posts, team-intro post runs first',
-      'Hold TikTok for now — revisit in July',
+      'Hold TikTok for now. Revisit in July',
     ],
     campaignDraft: true,
     actions: [
@@ -96,12 +96,12 @@ const MEETINGS: Meeting[] = [
       { text: 'Upload team + kitchen interior photos to Drive', owner: 'sarah', done: false },
       { text: 'Share June wave for client review', owner: 'alex', done: false },
     ],
-    internalNote: "Sarah hesitated when TikTok came up — don't push it again next call unless she raises it.",
+    internalNote: "Sarah hesitated when TikTok came up. Don't push it again next call unless she raises it.",
   },
   {
     id: 'm-apr28', type: 'creative-review', date: 'Apr 28', duration: '47 min', attendees: ['sarah', 'tom', 'alex', 'petar'],
     summary: [
-      'Reviewed the spring wave drafts — Sarah approved 5 of 6 on the call.',
+      'Reviewed the spring wave drafts. Sarah approved 5 of 6 on the call.',
       'Sarah emphasized the spring promotion window and leading with the prep process as the differentiator from DIY.',
       'Palette direction for summer: warm neutrals anchored by sage green.',
     ],
@@ -119,8 +119,8 @@ const MEETINGS: Meeting[] = [
   {
     id: 'm-apr2', type: 'check-in', date: 'Apr 2', duration: '28 min', attendees: ['sarah', 'alex'],
     summary: [
-      'Confirmed the April promo window — spring exterior wave kicked off Apr 15.',
-      'Growing interest in cabinet refinishing — candidate for a June teaser.',
+      'Confirmed the April promo window. Spring exterior wave kicked off Apr 15.',
+      'Growing interest in cabinet refinishing. Candidate for a June teaser.',
       'Sarah asked for more before/after content; project photography prioritized.',
     ],
     decisions: [
@@ -143,7 +143,7 @@ const MEETINGS: Meeting[] = [
       { label: 'Goals', body: '25 exterior estimate requests/month through spring–summer · grow Instagram in West Austin neighborhoods' },
       { label: 'Brand direction', body: 'Professional, direct, locally grounded. No discount framing, no urgency hooks.' },
       { label: 'Services', body: 'Exterior repaints (primary) · cabinet refinishing (secondary) · commercial repaints (occasional)' },
-      { label: 'Audience', body: 'Homeowners 35–65 in West Austin, Lakeway, Westlake — HOA-conscious, value trust over price' },
+      { label: 'Audience', body: 'Homeowners 35–65 in West Austin, Lakeway, Westlake. HOA-conscious, value trust over price' },
       { label: 'Off-limits', body: 'Competitor comparisons, price callouts, stock photography' },
     ],
     actions: [
@@ -156,9 +156,9 @@ const MEETINGS: Meeting[] = [
 // ─── AGENT CAMPAIGN DRAFT (from the Jun 3 call) ────────────────────
 
 const CAMPAIGN_DRAFT = {
-  title: 'June Wave — Team & Interiors',
+  title: 'June Wave: Team & Interiors',
   meta: '6 posts · Instagram, Facebook, LinkedIn · starts Jun 16',
-  theme: '“The Crew Behind the Paint” — team-intro post leads, interior-season teaser mid-month, prep-process proof points throughout.',
+  theme: '“The Crew Behind the Paint”. Team-intro post leads, interior-season teaser mid-month, prep-process proof points throughout.',
   matched: 9,
   total: 12,
   thumbs: [
@@ -167,10 +167,10 @@ const CAMPAIGN_DRAFT = {
     'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=200&h=200&fit=crop',
     'https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=200&h=200&fit=crop',
   ],
-  missing: ['Team photos — new uniforms', 'Lakeway kitchen interiors'],
+  missing: ['Team photos: new uniforms', 'Lakeway kitchen interiors'],
 };
 
-// ─── AGENT TASKS (right rail — the agent's own work queue) ─────────
+// ─── AGENT TASKS (right rail, the agent's own work queue) ─────────
 // Each task carries its own plan; the AM reviews and approves them
 // one at a time. Nothing runs before its plan is approved.
 
@@ -181,7 +181,7 @@ interface AgentTask {
   text: string;
   detail: string;
   plan: string[];
-  /** Summary of the part of the call that triggered this action — shown in the
+  /** Summary of the part of the call that triggered this action, shown in the
    *  task detail so the AM sees the "why", not a fabricated plan. */
   conversation: string;
   status: AgentTaskStatus;
@@ -189,24 +189,24 @@ interface AgentTask {
   assignee: PersonId;
   /** Which product surface the work lands in. */
   source: string;
-  /** The stakes — why this needs approval now, what it blocks. */
+  /** The stakes, why this needs approval now, what it blocks. */
   why: string;
-  /** Where the finished work / change landed — surfaces a "go to it" button on
+  /** Where the finished work / change landed, surfaces a "go to it" button on
    *  the done task that deep-links to that workspace section. */
   output?: { label: string; section: string };
   /** Campaign-creation tasks open the full Review-campaign-details modal on Edit. */
   kind?: 'campaign';
 }
 
-// Every agent task here comes from one analyzed call — rendered as a single
+// Every agent task here comes from one analyzed call, rendered as a single
 // Fathom meeting card with each task individually approvable.
 const SEED_AGENT_TASKS: AgentTask[] = [
   {
     id: 'p1', text: 'Create the Summer Sale campaign (June–July)', status: 'review', assignee: 'alex', kind: 'campaign',
-    source: 'Organic Campaigns', why: 'Sale runs Jun 20–Jul 31 — content should start landing the week before.',
-    conversation: 'Sarah: “Summer’s our big season — I want a real sale in June and July, push the exterior packages hard, maybe 20% off. Last year we left it too late and missed the window.” Alex: “We can build a 6-week wave that ramps into the final week.”',
+    source: 'Organic Campaigns', why: 'Sale runs Jun 20–Jul 31. Content should start landing the week before.',
+    conversation: 'Sarah: “Summer’s our big season, I want a real sale in June and July, push the exterior packages hard, maybe 20% off. Last year we left it too late and missed the window.” Alex: “We can build a 6-week wave that ramps into the final week.”',
     output: { label: 'Review the Campaign', section: 'approvals' },
-    detail: 'A 6-week organic push across Instagram, Facebook & GBP — 3 posts/week ramping to daily in the final week, leading with the “20% off exterior packages” offer Sarah confirmed on the call.',
+    detail: 'A 6-week organic push across Instagram, Facebook & GBP: 3 posts/week ramping to daily in the final week, leading with the “20% off exterior packages” offer Sarah confirmed on the call.',
     plan: [
       'Build the June–July calendar at 3×/week, daily in the final week',
       'Draft the hero offer posts plus supporting proof / testimonial posts',
@@ -217,7 +217,7 @@ const SEED_AGENT_TASKS: AgentTask[] = [
   {
     id: 'p2', text: 'Address the May campaign feedback', status: 'review', assignee: 'petar',
     source: 'Creative', why: 'Sarah wants the reworks before the June wave so the look carries over.',
-    conversation: 'Sarah: “The May posts felt a bit stock-photo-y. Can we use our own crew shots instead? The colors looked cold too — warm them up. And the captions ran long, keep them tight.”',
+    conversation: 'Sarah: “The May posts felt a bit stock-photo-y. Can we use our own crew shots instead? The colors looked cold too. Warm them up. And the captions ran long, keep them tight.”',
     output: { label: 'Review the Reworked Posts', section: 'approvals' },
     detail: 'Sarah’s notes on the May wave: lead with real crew photos over stock, warm up the color grade, and cut the long captions to two lines. Rework the 4 flagged posts to match.',
     plan: [
@@ -231,7 +231,7 @@ const SEED_AGENT_TASKS: AgentTask[] = [
     id: 'p3', text: 'Update the brand voice from the call', status: 'review', assignee: 'alex',
     source: 'Brand Kit', why: 'Keeps every future generation on the voice Sarah described.',
     output: { label: 'Open the Brand Kit', section: 'brand' },
-    conversation: 'Sarah: “However we write, it should sound like us — confident but neighborly, no jargon. And ease off the constant ‘limited time!’ urgency unless it’s an actual sale.”',
+    conversation: 'Sarah: “However we write, it should sound like us, confident but neighborly, no jargon. And ease off the constant ‘limited time!’ urgency unless it’s an actual sale.”',
     detail: 'Sarah described the voice as “confident, neighborly, no jargon” and asked us to drop urgency / discount framing outside of sales. Update the brand brain so every agent picks it up.',
     plan: [
       'Update the voice + tone notes in the brand brain',
@@ -244,18 +244,18 @@ const SEED_AGENT_TASKS: AgentTask[] = [
 const FATHOM_MEETING = {
   title: 'Jun 3 check-in with Sarah',
   meta: 'Jun 3 · 32 min · analyzed by Fathom',
-  summary: 'Sarah greenlit a Summer Sale push, gave feedback on the May wave, and described how she wants the brand to sound. Blaze turned the call into the tasks below — approve any to set it running.',
+  summary: 'Sarah greenlit a Summer Sale push, gave feedback on the May wave, and described how she wants the brand to sound. Blaze turned the call into the tasks below. Approve any to set it running.',
   transcript: [
     { speaker: 'Alex · Blaze', text: 'Thanks for hopping on, Sarah. Want to start with summer plans?' },
-    { speaker: 'Sarah · CertaPro', text: 'Yeah — summer’s our big season. I want a real sale in June and July, push the exterior packages, maybe 20% off. Last year we left it too late.' },
-    { speaker: 'Alex · Blaze', text: 'Got it. We can build a 6-week wave that ramps into the final week. On the May posts — any feedback?' },
+    { speaker: 'Sarah · CertaPro', text: 'Yeah, summer’s our big season. I want a real sale in June and July, push the exterior packages, maybe 20% off. Last year we left it too late.' },
+    { speaker: 'Alex · Blaze', text: 'Got it. We can build a 6-week wave that ramps into the final week. On the May posts, any feedback?' },
     { speaker: 'Sarah · CertaPro', text: 'They felt a bit stock-photo-y. Can we use our own crew shots? The colors looked cold too, and the captions ran long.' },
     { speaker: 'Alex · Blaze', text: 'We’ll rework those. Anything on overall voice?' },
-    { speaker: 'Sarah · CertaPro', text: 'It should sound like us — confident but neighborly, no jargon. And ease off the constant “limited time” urgency unless it’s an actual sale.' },
+    { speaker: 'Sarah · CertaPro', text: 'It should sound like us, confident but neighborly, no jargon. And ease off the constant “limited time” urgency unless it’s an actual sale.' },
   ],
 };
 
-// ─── TEAM FLAGS (right rail — what the agent can't resolve alone) ──
+// ─── TEAM FLAGS (right rail, what the agent can't resolve alone) ──
 // Escalations the agent raises while working: hard blockers it cannot
 // resolve itself, and judgment calls that need a human owner's review.
 // Each flag has one named owner on the team. Never client-visible.
@@ -274,11 +274,11 @@ interface TeamFlag {
 }
 
 const SEED_TEAM_FLAGS: TeamFlag[] = [
-  { id: 'f1', kind: 'blocked', text: 'No reel template for “Crew Day in the Life” — can’t assemble the reel without one', owner: 'petar', source: 'June wave draft', cta: { label: 'Open reel post', to: '/h2/campaigns?campaign=jw' }, resolved: false },
-  { id: 'f2', kind: 'review', text: 'Crew photos show two new hires — confirm photo releases before featuring them', owner: 'alex', source: 'June wave draft', cta: { label: 'Review crew photos', to: '/h2/campaigns?campaign=jw' }, resolved: false },
-  { id: 'f3', kind: 'review', text: 'Sage green conflict: brand kit #A3B18A vs the Apr 28 call direction — confirm which wins', owner: 'petar', source: 'quality check', cta: { label: 'Open brand kit', to: '/h2/brand-kit' }, resolved: false },
-  // Already cleared — the agent detected the fix and closed its own flag.
-  { id: 'f4', kind: 'blocked', text: 'Lakeway exterior photos were low-res — Sarah re-uploaded originals to Drive', owner: 'alex', source: 'June wave draft', cta: { label: 'View in Drive', to: '/h2/living-doc' }, resolved: true },
+  { id: 'f1', kind: 'blocked', text: 'No reel template for “Crew Day in the Life”. Can’t assemble the reel without one', owner: 'petar', source: 'June wave draft', cta: { label: 'Open reel post', to: '/h2/campaigns?campaign=jw' }, resolved: false },
+  { id: 'f2', kind: 'review', text: 'Crew photos show two new hires. Confirm photo releases before featuring them', owner: 'alex', source: 'June wave draft', cta: { label: 'Review crew photos', to: '/h2/campaigns?campaign=jw' }, resolved: false },
+  { id: 'f3', kind: 'review', text: 'Sage green conflict: brand kit #A3B18A vs the Apr 28 call direction. Confirm which wins', owner: 'petar', source: 'quality check', cta: { label: 'Open brand kit', to: '/h2/brand-kit' }, resolved: false },
+  // Already cleared, the agent detected the fix and closed its own flag.
+  { id: 'f4', kind: 'blocked', text: 'Lakeway exterior photos were low-res. Sarah re-uploaded originals to Drive', owner: 'alex', source: 'June wave draft', cta: { label: 'View in Drive', to: '/h2/living-doc' }, resolved: true },
 ];
 
 const FLAG_META: Record<FlagKind, { label: string; color: string; bg: string }> = {
@@ -287,7 +287,7 @@ const FLAG_META: Record<FlagKind, { label: string; color: string; bg: string }> 
 };
 
 // ─── ACCOUNT WORK (Workstream tab) ─────────────────────────────────
-// Cross-product items — everything moving across the Blaze products
+// Cross-product items, everything moving across the Blaze products
 // configured in Meta Strategy (organic, Local SEO, reputation, paid…),
 // each with an assignee so the team can filter to their own queue.
 
@@ -303,17 +303,17 @@ interface AccountWorkItem {
   body: string;
   time: string;
   cta: { label: string; to: string };
-  /** What you're being asked to judge — the draft itself. */
+  /** What you're being asked to judge, the draft itself. */
   excerpt?: string;
   /** What the draft responds to (e.g. the review being replied to). */
   quote?: string;
   /** Visual preview of the items in question. */
   thumbs?: string[];
-  /** Stakes / what happens next — deadline, slot, consequence. */
+  /** Stakes / what happens next, deadline, slot, consequence. */
   statusLine?: string;
-  /** Label for an inline approve action — sign-off without leaving the feed. */
+  /** Label for an inline approve action, sign-off without leaving the feed. */
   approveLabel?: string;
-  /** Item is waiting on the client — surface a nudge instead of an approve. */
+  /** Item is waiting on the client, surface a nudge instead of an approve. */
   remind?: boolean;
 }
 
@@ -321,8 +321,8 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
   {
     id: 'w1', kind: 'signoff', sourceLabel: 'Local SEO', icon: Marker03, assignee: 'alex', time: 'Today',
     title: '4 June Google Business posts drafted',
-    body: 'Adapted from the June wave — service-area copy, no hashtags, booking link on each.',
-    excerpt: '“Spring booked up fast — June exterior slots are open now. One local crew, from first walkthrough to final coat. Book a free estimate.”',
+    body: 'Adapted from the June wave: service-area copy, no hashtags, booking link on each.',
+    excerpt: '“Spring booked up fast. June exterior slots are open now. One local crew, from first walkthrough to final coat. Book a free estimate.”',
     statusLine: 'Publishes to the Jun 6 GBP slot once approved',
     approveLabel: 'Approve all 4',
     cta: { label: 'Review each', to: '/h2/organic-profile' },
@@ -331,8 +331,8 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
     id: 'w2', kind: 'signoff', sourceLabel: 'Reputation', icon: Star, assignee: 'alex', time: 'Today',
     title: 'Reply drafted for a new 5★ review',
     body: '',
-    quote: '“The crew’s prep work was unreal — best paint job we’ve had.” — ★★★★★ · Lakeway homeowner',
-    excerpt: 'Thank you — prep is where good paint jobs are won, and that crew treats every home that way. Enjoy the new look!',
+    quote: '“The crew’s prep work was unreal. Best paint job we’ve had.” · ★★★★★ · Lakeway homeowner',
+    excerpt: 'Thank you. Prep is where good paint jobs are won, and that crew treats every home that way. Enjoy the new look!',
     statusLine: 'Replying within 24h keeps local ranking momentum',
     approveLabel: 'Approve reply',
     cta: { label: 'Edit reply', to: '/h2/reputation' },
@@ -347,27 +347,27 @@ const ACCOUNT_WORK: AccountWorkItem[] = [
       'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=120&h=120&fit=crop',
       'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=120&h=120&fit=crop',
     ],
-    statusLine: '2 of 6 opened since Jun 1 — June schedule slips if not approved by Jun 9',
+    statusLine: '2 of 6 opened since Jun 1. June schedule slips if not approved by Jun 9',
     remind: true,
     cta: { label: 'Open approvals', to: '/h2/approvals' },
   },
   {
     id: 'w4', kind: 'flag', sourceLabel: 'Paid Social', icon: Cursor04, assignee: 'alex', time: 'Yesterday',
-    title: 'Meta token expires Jun 10 — boosts will pause',
+    title: 'Meta token expires Jun 10. Boosts will pause',
     body: 'The connected ad account needs a reconnect before the Wave 2 boost schedule continues. Takes about two minutes.',
-    statusLine: 'Boosts pause in 6 days — $240/wk of scheduled spend stops',
+    statusLine: 'Boosts pause in 6 days. $240/wk of scheduled spend stops',
     cta: { label: 'Reconnect Meta', to: '/h2/paid-social' },
   },
   {
     id: 'w5', kind: 'insight', sourceLabel: 'SEO/AEO', icon: Globe, assignee: 'alex', time: 'Yesterday',
     title: '“exterior painting austin” climbed to #4',
-    body: 'Up 3 spots since the spring wave started — first-page traffic up 22% month over month. No action needed; worth mentioning on the Jun 16 call.',
+    body: 'Up 3 spots since the spring wave started. First-page traffic up 22% month over month. No action needed; worth mentioning on the Jun 16 call.',
     cta: { label: 'Open rankings', to: '/h2/seo-aeo' },
   },
 ];
 
 // ─── CLIENT REQUESTS (Workstream tab, AM side) ─────────────────────
-// Things the client sent back that now sit in the AM's queue — change
+// Things the client sent back that now sit in the AM's queue, change
 // requests on content, scheduling asks. Each links into Approvals.
 interface ClientRequest {
   id: string;
@@ -380,7 +380,7 @@ interface ClientRequest {
   cta: { label: string; section: string };
 }
 
-// Derived from the shared client-review data in Approvals — the location is
+// Derived from the shared client-review data in Approvals, the location is
 // the Approvals tab and the CTA deep-links straight to the post's preview.
 const CLIENT_REQUESTS: ClientRequest[] = approvalsChangeRequests().map((r) => ({
   id: `cr-${r.postId}`,
@@ -396,7 +396,7 @@ const CLIENT_REQUESTS: ClientRequest[] = approvalsChangeRequests().map((r) => ({
 // ─── CLIENT WORKSTREAM (Workstream tab, client side) ───────────────
 // What the client sees: led by the few things needing their approval
 // (pointing into Approvals / content), then read-only updates on what
-// the Blaze team is handling — informational, nothing to action.
+// the Blaze team is handling, informational, nothing to action.
 type ClientWorkKind = 'approve' | 'info';
 interface ClientWorkItem {
   id: string;
@@ -415,7 +415,7 @@ const CLIENT_WORK: ClientWorkItem[] = [
   {
     id: 'cw1', kind: 'approve', sourceLabel: 'Approvals', icon: Approvals, time: 'Today',
     title: '6 posts are ready for your approval',
-    body: 'The June “Crew Behind the Paint” wave — stills, a carousel and a reel — plus the June newsletter.',
+    body: 'The June “Crew Behind the Paint” wave (stills, a carousel and a reel) plus the June newsletter.',
     thumbs: [
       'https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=120&h=120&fit=crop',
       'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=120&h=120&fit=crop',
@@ -428,25 +428,25 @@ const CLIENT_WORK: ClientWorkItem[] = [
   {
     id: 'cw2', kind: 'approve', sourceLabel: 'Reputation', icon: Star, time: 'Today',
     title: 'Approve the reply to your new 5★ review',
-    body: 'We drafted a thank-you to the Lakeway homeowner — give it a quick look before it posts.',
+    body: 'We drafted a thank-you to the Lakeway homeowner. Give it a quick look before it posts.',
     cta: { label: 'Review Reply', section: 'approvals' },
   },
   {
     id: 'cw3', kind: 'info', sourceLabel: 'Your change request', icon: Edit1, time: 'Yesterday',
     title: 'Your note on the June carousel is being applied',
     body: 'The team is reworking the lead slide to open with the sage Lakeway exterior, like you asked. We’ll resurface it for approval when it’s ready.',
-    statusLine: 'No action needed — we’ll let you know when it’s ready',
+    statusLine: 'No action needed. We’ll let you know when it’s ready',
   },
   {
     id: 'cw4', kind: 'info', sourceLabel: 'SEO/AEO', icon: Globe, time: 'Yesterday',
     title: '“exterior painting austin” climbed to #4',
-    body: 'Up 3 spots since spring — your first-page traffic is up 22% month over month.',
+    body: 'Up 3 spots since spring. Your first-page traffic is up 22% month over month.',
     cta: { label: 'See Performance', section: 'home/insights' },
   },
   {
     id: 'cw5', kind: 'info', sourceLabel: 'Organic Campaigns', icon: CalendarPost, time: 'Mon',
     title: '2 posts went live this week',
-    body: 'Your team-intro still and the prep-process reel are now published — nothing needed from you.',
+    body: 'Your team-intro still and the prep-process reel are now published. Nothing needed from you.',
   },
 ];
 
@@ -468,7 +468,7 @@ const SEED_THREADS: Thread[] = [
   },
 ];
 
-// Mock pool the paperclip cycles through — stands in for a real file picker.
+// Mock pool the paperclip cycles through, stands in for a real file picker.
 const SAMPLE_ATTACHMENTS: Attachment[] = [
   { name: 'sage-exterior-ref.jpg', thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=120&h=120&fit=crop' },
   { name: 'kitchen-before.jpg', thumb: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=120&h=120&fit=crop' },
@@ -480,7 +480,7 @@ const SAMPLE_ATTACHMENTS: Attachment[] = [
 interface NextStep { id: string; text: string; owner: PersonId; due: string; source: string; fromPending: boolean; done: boolean }
 
 // Asset requests come from the agent's Drive scan, NOT the unpublished call
-// notes — so they're client-visible immediately (fromPending: false). Steps
+// notes, so they're client-visible immediately (fromPending: false). Steps
 // sourced from the Jun 3 notes stay hidden from the client until publish.
 const SEED_STEPS: NextStep[] = [
   { id: 's1', text: 'Send final June color picks', owner: 'sarah', due: 'Jun 6', source: 'Jun 3 call', fromPending: true, done: false },
@@ -494,7 +494,7 @@ const SEED_STEPS: NextStep[] = [
 
 type ActivityKind = 'agent' | 'fathom' | 'comment' | 'publish' | 'posted' | 'review';
 
-/** Kinds the client is allowed to see — content lifecycle + conversation,
+/** Kinds the client is allowed to see, content lifecycle + conversation,
  *  never the AM/agent production process. */
 const CLIENT_VISIBLE_KINDS: ActivityKind[] = ['posted', 'review', 'comment'];
 
@@ -502,8 +502,8 @@ interface ActivityItem { id: string; kind: ActivityKind; text: string; time: str
 
 const SEED_ACTIVITY: ActivityItem[] = [
   { id: 'a1', kind: 'agent', text: 'Agent drafted Jun 3 notes, a June campaign draft + 3 next steps', time: 'Yesterday', sub: 'Waiting for your review' },
-  { id: 'a1b', kind: 'agent', text: 'Agent flagged 3 items for the team — 1 blocking', time: 'Yesterday' },
-  { id: 'a1c', kind: 'agent', text: 'Agent cleared its Lakeway photo flag — re-uploaded originals detected', time: 'Yesterday' },
+  { id: 'a1b', kind: 'agent', text: 'Agent flagged 3 items for the team, 1 blocking', time: 'Yesterday' },
+  { id: 'a1c', kind: 'agent', text: 'Agent cleared its Lakeway photo flag. Re-uploaded originals detected', time: 'Yesterday' },
   { id: 'a2', kind: 'fathom', text: 'Fathom synced the Jun 3 check-in (32 min)', time: 'Yesterday' },
   { id: 'a3', kind: 'posted', text: '3 Wave 2 posts went live on Instagram & Facebook', time: 'Jun 2' },
   { id: 'a4', kind: 'comment', text: 'Sarah commented on the Apr 28 creative review', time: 'May 30' },
@@ -563,7 +563,7 @@ function AvatarStack({ ids, size = 20 }: { ids: PersonId[]; size?: number }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center' }}>
       {ids.map((id, i) => (
-        <span key={id} style={{ marginLeft: i === 0 ? 0 : -6, borderRadius: '50%', border: '1.5px solid var(--light-100)', display: 'inline-flex' }} title={`${PEOPLE[id].name} — ${PEOPLE[id].role}`}>
+        <span key={id} style={{ marginLeft: i === 0 ? 0 : -6, borderRadius: '50%', border: '1.5px solid var(--light-100)', display: 'inline-flex' }} title={`${PEOPLE[id].name}, ${PEOPLE[id].role}`}>
           <Avatar src={PEOPLE[id].img} fallback={PEOPLE[id].short.slice(0, 2)} size={size} />
         </span>
       ))}
@@ -656,7 +656,7 @@ function ThreadCard({ thread, viewer, onReply, onResolve }: {
   );
 }
 
-/** "New thread" affordance — collapsed to a ghost button, expands to a
+/** "New thread" affordance, collapsed to a ghost button, expands to a
  *  composer with mock attachment support. Works for both AM and client. */
 function ThreadComposer({ viewer, onPost }: { viewer: PersonId; onPost: (text: string, attachments: Attachment[]) => void }) {
   const [open, setOpen] = useState(false);
@@ -680,7 +680,7 @@ function ThreadComposer({ viewer, onPost }: { viewer: PersonId; onPost: (text: s
         <TextArea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Start a thread — questions, direction, feedback…"
+          placeholder="Start a thread: questions, direction, feedback…"
           autoFocus
           fullWidth={false}
           style={{ flex: 1, minHeight: 52 }}
@@ -723,7 +723,7 @@ function CampaignDraftCard() {
         <span style={{ color: 'var(--focus-50)', display: 'inline-flex' }}><Stars /></span>
         <Text variant="smallList" style={{ flex: 1 }}>Agent drafted a campaign from this call</Text>
         <Text variant="label" color="var(--dark-40)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <EyeClosed /> AM only — hidden from client
+          <EyeClosed /> AM only, hidden from client
         </Text>
       </div>
       <div style={{ padding: '13px 14px' }}>
@@ -734,7 +734,7 @@ function CampaignDraftCard() {
         {/* Assets: matched from Drive + flagged gaps */}
         <div style={{ marginTop: 12 }}>
           <Text variant="smallList" color="var(--dark-70)" style={{ display: 'block', marginBottom: 7 }}>
-            Assets — {CAMPAIGN_DRAFT.matched} of {CAMPAIGN_DRAFT.total} matched from Drive
+            Assets: {CAMPAIGN_DRAFT.matched} of {CAMPAIGN_DRAFT.total} matched from Drive
           </Text>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {CAMPAIGN_DRAFT.thumbs.map((src, i) => (
@@ -754,7 +754,7 @@ function CampaignDraftCard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 13 }}>
           <Button variant="primary" size="xs" onPress={() => navigate('/h2/campaigns?campaign=jw')}>Open draft campaign</Button>
           <Text variant="metadata" color="var(--positive-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Check2 /> Asset request sent — in Sarah's next steps
+            <Check2 /> Asset request sent, in Sarah's next steps
           </Text>
         </div>
       </div>
@@ -794,19 +794,19 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
         overflow: 'hidden',
       }}
     >
-      {/* Draft banner — the agent wrote this, the AM gates it */}
+      {/* Draft banner, the agent wrote this, the AM gates it */}
       {isDraft && !clientView && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'var(--focus-5)', borderBottom: '1px solid var(--focus-10)' }}>
           <span style={{ color: 'var(--focus-50)', display: 'inline-flex' }}><Stars /></span>
           <Text variant="secondary" color="var(--dark-80)" style={{ flex: 1 }}>
-            <strong style={{ fontWeight: 600 }}>Drafted by agent</strong> from the Fathom transcript — updates Overview, drafts the June campaign, and adds 3 next steps. Notes not visible to the client yet.
+            <strong style={{ fontWeight: 600 }}>Drafted by agent</strong> from the Fathom transcript. Updates Overview, drafts the June campaign, and adds 3 next steps. Notes not visible to the client yet.
           </Text>
           <Button variant="secondary" size="xs" frontIcon={Edit1} onPress={() => showToast({ message: 'Opens the entry in the doc editor' })}>Edit</Button>
           <Button variant="primary" size="xs" frontIcon={Send1} onPress={onPublish}>Publish to client</Button>
         </div>
       )}
 
-      {/* Header — date anchors the scan; logistics drop to a quiet meta line */}
+      {/* Header, date anchors the scan; logistics drop to a quiet meta line */}
       <button
         onClick={onToggle}
         style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 5, padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
@@ -847,14 +847,14 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
         </Text>
       </button>
 
-      {/* Collapsed preview — aligned to the title text column */}
+      {/* Collapsed preview, aligned to the title text column */}
       {!expanded && (
         <Text variant="secondary" color="var(--dark-40)" lineClamp={1} style={{ display: 'block', padding: '0 16px 13px 32px' }}>
-          {meeting.foundation ? 'Goals, brand direction, audience and more — the foundation this account runs on.' : meeting.summary[0]}
+          {meeting.foundation ? 'Goals, brand direction, audience and more. The foundation this account runs on.' : meeting.summary[0]}
         </Text>
       )}
 
-      {/* Expanded body — same text column as the title */}
+      {/* Expanded body, same text column as the title */}
       {expanded && (
         <div style={{ padding: '2px 16px 16px 32px', display: 'flex', flexDirection: 'column', gap: 18 }}>
 
@@ -871,7 +871,7 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
             </div>
           </div>
 
-          {/* Kickoff foundation — the cold content, captured once */}
+          {/* Kickoff foundation, the cold content, captured once */}
           {meeting.foundation && (
             <Card padding="none" style={{ borderRadius: 10, padding: '13px 15px', background: 'var(--dark-2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -906,12 +906,12 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
             </div>
           )}
 
-          {/* Agent campaign draft — the production process. NEVER client-visible. */}
+          {/* Agent campaign draft, the production process. NEVER client-visible. */}
           {meeting.campaignDraft && !clientView && (
             <CampaignDraftCard />
           )}
 
-          {/* Embedded campaign — content shared for client review on this call.
+          {/* Embedded campaign, content shared for client review on this call.
               The client sees the reference; only the AM gets the link into the pipeline. */}
           {meeting.campaignEmbed && (
             <EmbeddedCampaign clientView={clientView} />
@@ -933,18 +933,18 @@ function MeetingEntry({ meeting, expanded, published, clientView, threads, onTog
             </div>
           )}
 
-          {/* Internal note — AM-only, never client-visible */}
+          {/* Internal note, AM-only, never client-visible */}
           {meeting.internalNote && !clientView && (
             <div style={{ border: '1px dashed var(--dark-20)', borderRadius: 10, padding: '10px 13px', display: 'flex', gap: 9, alignItems: 'flex-start' }}>
               <span style={{ color: 'var(--dark-40)', display: 'inline-flex', marginTop: 1 }}><EyeClosed /></span>
               <div>
-                <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 3 }}>Internal — hidden from client</Text>
+                <Text variant="label" color="var(--dark-40)" style={{ display: 'block', marginBottom: 3 }}>Internal, hidden from client</Text>
                 <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5 }}>{meeting.internalNote}</Text>
               </div>
             </div>
           )}
 
-          {/* Threads — shared conversation, both sides can start one */}
+          {/* Threads, shared conversation, both sides can start one */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {threads.length > 0 && <SectionLabel>Threads</SectionLabel>}
             {threads.map((t) => (
@@ -999,7 +999,7 @@ function SpinnerIcon() {
   );
 }
 
-/** The meeting — opened from the workstream card. Recaps the call, opens the
+/** The meeting, opened from the workstream card. Recaps the call, opens the
  *  transcript, and lets the AM approve / ignore / request changes on each task
  *  inline (no separate per-task screen). Holds local task state and syncs it
  *  back to the workstream card via onTasksChange. */
@@ -1029,7 +1029,7 @@ function MeetingModal({ close, meeting, initialTasks, onTasksChange, onOpenTrans
   const ignore = (id: string) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'ignored' as const } : t)));
     if (active?.id === id) setActive(null);
-    showToast({ message: 'Ignored — Blaze won’t action this' });
+    showToast({ message: 'Ignored. Blaze won’t action this' });
   };
   const submitPrompt = (id: string) => {
     const p = (active?.prompt ?? '').trim();
@@ -1037,7 +1037,7 @@ function MeetingModal({ close, meeting, initialTasks, onTasksChange, onOpenTrans
     setActive(null);
     setRewriting(id);
     setTimeout(() => {
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, detail: `Updated to reflect your note — “${p}”. ${t.detail}` } : t)));
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, detail: `Updated to reflect your note: “${p}”. ${t.detail}` } : t)));
       setRewriting(null);
     }, 1200);
   };
@@ -1151,9 +1151,9 @@ function TranscriptModal({ close, meeting }: StackModalProps & { meeting: typeof
 }
 
 // ─── PROJECT BRAIN (Overview tab, AM-only) ─────────────────────────
-// Replaces the DFY team's Claude project. One curated file per client —
+// Replaces the DFY team's Claude project. One curated file per client,
 // brand voice, content preferences, products, audience, materials, and
-// every call conversation — that every agent run reads from. The agent
+// every call conversation, that every agent run reads from. The agent
 // keeps it current; the team edits and approves changes.
 
 const BRAIN_VOICE = [
@@ -1164,13 +1164,13 @@ const BRAIN_VOICE = [
 ];
 
 const BRAIN_PREFERENCES = [
-  { label: 'Platforms', value: 'Instagram · Facebook · LinkedIn (TikTok on hold — Jun 3 call)' },
+  { label: 'Platforms', value: 'Instagram · Facebook · LinkedIn (TikTok on hold, Jun 3 call)' },
   { label: 'Formats', value: 'Stills, carousels, reels · 4:5 for feed' },
   { label: 'Cadence', value: '6 posts per wave · 2 waves per month' },
   { label: 'Off-limits', value: 'Competitor comparisons, price callouts, stock photography' },
 ];
 
-const BRAIN_AUDIENCE = 'Homeowners 35–65 in West Austin, Lakeway and Westlake — HOA-conscious, value trust over price. Secondary: property managers for occasional commercial repaints.';
+const BRAIN_AUDIENCE = 'Homeowners 35–65 in West Austin, Lakeway and Westlake. HOA-conscious, value trust over price. Secondary: property managers for occasional commercial repaints.';
 
 interface BrainProduct { name: string; priority: string }
 
@@ -1217,11 +1217,11 @@ function BrainCard({ title, prov, onEdit, headerAction, children }: { title: str
 }
 
 // ─── DFY TEAM (Overview tab, client view) ──────────────────────────
-// The client's view of who's on their account — the humans plus the
+// The client's view of who's on their account, the humans plus the
 // agent, with how each one shows up for them.
 
 const DFY_TEAM: { id: PersonId; blurb: string; canBook?: boolean }[] = [
-  { id: 'alex', blurb: 'Your main point of contact — plans campaigns with you and reviews everything before it ships.', canBook: true },
+  { id: 'alex', blurb: 'Your main point of contact. Plans campaigns with you and reviews everything before it ships.', canBook: true },
   { id: 'petar', blurb: 'Designs your visual style and builds the templates your content is made from.' },
 ];
 
@@ -1252,11 +1252,11 @@ export const HOME_TAB_COUNTS = {
     SEED_AGENT_TASKS.filter((t) => t.status === 'review').length +
     SEED_TEAM_FLAGS.filter((f) => !f.resolved).length +
     ACCOUNT_WORK.filter((w) => w.kind !== 'insight').length,
-  // Client sees only the items that actually need them — their approvals.
+  // Client sees only the items that actually need them, their approvals.
   clientWork: CLIENT_WORK.filter((i) => i.kind === 'approve').length,
 };
 
-/** Meeting browser — call summaries, decisions and comment threads. Lives as a
+/** Meeting browser, call summaries, decisions and comment threads. Lives as a
  *  Brand Kit tab; self-contained (owns its own publish / thread / expand state). */
 export function MeetingsView({ clientView }: { clientView: boolean }) {
   const { showToast } = useToast();
@@ -1375,24 +1375,24 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
     showToast({ message: 'Jun 3 notes are now visible to CertaPro' });
   };
 
-  /** Inline sign-off on a cross-product item — no page hop needed. */
+  /** Inline sign-off on a cross-product item, no page hop needed. */
   const approveWorkItem = (w: AccountWorkItem) => {
     setApprovedWork((prev) => new Set(prev).add(w.id));
     setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'publish', text: `Approved: ${w.title}`, time: 'Just now' }, ...a]);
-    showToast({ message: 'Approved — publishing on schedule' });
+    showToast({ message: 'Approved. Publishing on schedule' });
   };
 
   const remindClient = () => {
     setReminded(true);
-    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'review', text: 'Reminder sent to Sarah — 6 items awaiting approval', time: 'Just now' }, ...a]);
+    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'review', text: 'Reminder sent to Sarah. 6 items awaiting approval', time: 'Just now' }, ...a]);
     showToast({ message: 'Reminder sent to Sarah' });
   };
 
   const acceptProductSuggestion = () => {
     setProductSuggestion('accepted');
     setBrainProducts((ps) => ps.map((p) => (p.name === 'Cabinet refinishing' ? { ...p, priority: 'Secondary' } : p)));
-    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'agent', text: 'Brain updated — cabinet refinishing promoted to secondary focus', time: 'Just now' }, ...a]);
-    showToast({ message: 'Brain updated — the agent uses this on its next run' });
+    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'agent', text: 'Brain updated. Cabinet refinishing promoted to secondary focus', time: 'Just now' }, ...a]);
+    showToast({ message: 'Brain updated. The agent uses this on its next run' });
   };
 
   const addThread =(meetingId: string, text: string, attachments: Attachment[]) => {
@@ -1425,20 +1425,20 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
     onGoToOutput: (section: string) => openSection(section),
   });
 
-  /** Approve every plan still in review — agent works through them in order. */
+  /** Approve every plan still in review, agent works through them in order. */
   const approveAllTasks = () => {
     const ids = agentTasks.filter((t) => t.status === 'review').map((t) => t.id);
     if (ids.length === 0) return;
     setAgentTasks((ts) => ts.map((t) => (t.status === 'review' ? { ...t, status: 'running' as const } : t)));
-    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'agent', text: `${ids.length} plans approved — agent working through the queue`, time: 'Just now' }, ...a]);
-    showToast({ message: `${ids.length} plans approved — agent is off to work` });
+    setActivity((a) => [{ id: `a-${a.length + 1}`, kind: 'agent', text: `${ids.length} plans approved. Agent working through the queue`, time: 'Just now' }, ...a]);
+    showToast({ message: `${ids.length} plans approved. Agent is off to work` });
     // Prototype-only: tasks complete one after another so the rail visibly works.
     ids.forEach((id, i) => {
       setTimeout(() => {
         setAgentTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status: 'done' as const } : t)));
         const task = SEED_AGENT_TASKS.find((t) => t.id === id)!;
         if (task.output) {
-          setActivity((a) => [{ id: `a-${a.length + 1}-${id}`, kind: 'review', text: `“${task.text}” finished — output ready for review`, time: 'Just now' }, ...a]);
+          setActivity((a) => [{ id: `a-${a.length + 1}-${id}`, kind: 'review', text: `“${task.text}” finished. Output ready for review`, time: 'Just now' }, ...a]);
         }
       }, 2200 + i * 1100);
     });
@@ -1460,8 +1460,8 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
   const hasBlocked = teamFlags.some((f) => !f.resolved && f.kind === 'blocked');
 
   const overviewText = published
-    ? 'June planning kicked off on the Jun 3 call — the next wave leads with the team-intro post, with the interior-season teaser mid-month. Awaiting Sarah’s final color picks (due Jun 6). Spring Exterior — Wave 2 runs through Jun 13, with estimate requests up 18% month over month.'
-    : 'Spring Exterior — Wave 2 is live through Jun 13 — six posts approved on the Apr 28 review, performing ahead of the spring benchmark. The summer palette direction is locked: warm neutrals anchored by sage green, built on the Lakeway photo set.';
+    ? 'June planning kicked off on the Jun 3 call. The next wave leads with the team-intro post, with the interior-season teaser mid-month. Awaiting Sarah’s final color picks (due Jun 6). Spring Exterior · Wave 2 runs through Jun 13, with estimate requests up 18% month over month.'
+    : 'Spring Exterior · Wave 2 is live through Jun 13. Six posts approved on the Apr 28 review, performing ahead of the spring benchmark. The summer palette direction is locked: warm neutrals anchored by sage green, built on the Lakeway photo set.';
 
   const openThreadCount = threads.filter((t) => !t.resolved).length;
   const outputsReady = agentTasks.filter((t) => t.status === 'done' && t.output).length;
@@ -1470,12 +1470,12 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto', paddingBottom: 48 }}>
 
-        {/* Client view banner — shown on every tab */}
+        {/* Client view banner, shown on every tab */}
         {clientView && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--dark-90)', color: 'var(--light-100)', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
             <EyeOpen />
             <Text variant="secondary" color="var(--light-100)" style={{ flex: 1 }}>
-              Viewing as <strong style={{ fontWeight: 600 }}>Sarah Johnson</strong> — drafts, internal notes and production activity are hidden.
+              Viewing as <strong style={{ fontWeight: 600 }}>Sarah Johnson</strong>. Drafts, internal notes and production activity are hidden.
             </Text>
           </div>
         )}
@@ -1485,7 +1485,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: 780, paddingTop: 15 }}>
 
-          {/* Doc header — identity + health for the AM, reassurance for the client */}
+          {/* Doc header, identity + health for the AM, reassurance for the client */}
           <div style={{ marginBottom: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <Heading level={2} style={{ margin: 0 }}>
@@ -1505,7 +1505,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
 
             <div style={{ display: 'flex', gap: 10 }}>
 
-              {/* Client approvals — first: the most actionable thing on the page */}
+              {/* Client approvals, first: the most actionable thing on the page */}
               <Card padding="none" style={{ flex: 1, borderRadius: 9, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Text variant="label" color="var(--dark-40)">{clientView ? 'Your approvals' : 'Client approvals'}</Text>
                 <Text variant="smallList" style={{ lineHeight: 1.35 }}>
@@ -1518,10 +1518,10 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                 </div>
               </Card>
 
-              {/* Next call — meeting logistics */}
+              {/* Next call, meeting logistics */}
               <Card padding="none" style={{ flex: 1, borderRadius: 9, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Text variant="label" color="var(--dark-40)">Next call</Text>
-                <Text variant="smallList" style={{ lineHeight: 1.35 }}>Creative review — Mon, Jun 16</Text>
+                <Text variant="smallList" style={{ lineHeight: 1.35 }}>Creative review: Mon, Jun 16</Text>
                 <Text variant="metadata" color="var(--dark-50)">10:00–10:45 AM CT · Zoom</Text>
                 <div style={{ marginTop: 'auto', paddingTop: 7 }}>
                   <Button variant="secondary" size="xs" frontIcon={Video} onPress={() => showToast({ message: 'Opening Zoom…' })}>Join</Button>
@@ -1530,7 +1530,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
             </div>
           </div>
 
-          {/* ── PROJECT BRAIN — the client's curated context file. AM-only:
+          {/* ── PROJECT BRAIN, the client's curated context file. AM-only:
                 this replaces the team's Claude project. ── */}
           {!clientView && (
             <>
@@ -1544,11 +1544,11 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                 <Text variant="metadata" color="var(--dark-40)">Read by every agent run</Text>
               </div>
               <Text variant="secondary" color="var(--dark-50)" style={{ display: 'block', margin: '0 0 14px', lineHeight: 1.5 }}>
-                Replaces the Claude project — one curated file with everything the agents work from: voice, preferences, products, audience, materials and every conversation.
+                Replaces the Claude project. One curated file with everything the agents work from: voice, preferences, products, audience, materials and every conversation.
               </Text>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                <BrainCard title="Brand voice" prov="Kickoff · refined Apr 28" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
+                <BrainCard title="Brand voice" prov="Kickoff · refined Apr 28" onEdit={() => showToast({ message: 'Opens in the brain editor. Agents re-read on the next run' })}>
                   {BRAIN_VOICE.map(({ label, value }) => (
                     <div key={label} style={{ marginBottom: 10 }}>
                       <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 2 }}>{label}</Text>
@@ -1557,7 +1557,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                   ))}
                 </BrainCard>
 
-                <BrainCard title="Content preferences" prov="Updated Jun 3" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
+                <BrainCard title="Content preferences" prov="Updated Jun 3" onEdit={() => showToast({ message: 'Opens in the brain editor. Agents re-read on the next run' })}>
                   {BRAIN_PREFERENCES.map(({ label, value }) => (
                     <div key={label} style={{ marginBottom: 10 }}>
                       <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 2 }}>{label}</Text>
@@ -1566,7 +1566,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                   ))}
                 </BrainCard>
 
-                <BrainCard title="Products & services" prov="Reviewed Mar 12" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
+                <BrainCard title="Products & services" prov="Reviewed Mar 12" onEdit={() => showToast({ message: 'Opens in the brain editor. Agents re-read on the next run' })}>
                   {brainProducts.map((p) => (
                     <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                       <Text variant="secondary" color="var(--dark-80)" style={{ flex: 1 }}>{p.name}</Text>
@@ -1575,7 +1575,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                   ))}
                   {productSuggestion === 'open' && (
                     <div style={{ background: 'var(--focus-5)', border: '1px solid var(--focus-10)', borderRadius: 8, padding: '9px 11px', marginTop: 9 }}>
-                      <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.5 }}>Agent suggests promoting cabinet refinishing to secondary focus — interest raised on the Apr 2 and Jun 3 calls.</Text>
+                      <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.5 }}>Agent suggests promoting cabinet refinishing to secondary focus. Interest raised on the Apr 2 and Jun 3 calls.</Text>
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                         <Button variant="primary" size="xs" frontIcon={Check2} onPress={acceptProductSuggestion}>Accept</Button>
                         <Button variant="secondary" size="xs" onPress={() => setProductSuggestion('dismissed')}>Dismiss</Button>
@@ -1584,17 +1584,17 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                   )}
                   {productSuggestion === 'accepted' && (
                     <Text variant="metadata" color="var(--positive-60)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8 }}>
-                      <Check2 /> Updated — agent reads this on its next run
+                      <Check2 /> Updated. Agent reads this on its next run
                     </Text>
                   )}
                 </BrainCard>
 
-                <BrainCard title="Audience" prov="From kickoff" onEdit={() => showToast({ message: 'Opens in the brain editor — agents re-read on the next run' })}>
+                <BrainCard title="Audience" prov="From kickoff" onEdit={() => showToast({ message: 'Opens in the brain editor. Agents re-read on the next run' })}>
                   <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.55 }}>{BRAIN_AUDIENCE}</Text>
                 </BrainCard>
               </div>
 
-              {/* Materials + Conversations — side by side */}
+              {/* Materials + Conversations, side by side */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10, alignItems: 'start' }}>
                 <BrainCard title="Materials" prov="3 sources connected" onEdit={() => showToast({ message: 'Manage connected sources' })}>
                   <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
@@ -1647,7 +1647,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
             </>
           )}
 
-          {/* ── YOUR BLAZE TEAM — client view: who's on the account ── */}
+          {/* ── YOUR BLAZE TEAM, client view: who's on the account ── */}
           {clientView && (
             <>
               <div style={{ height: 32 }} />
@@ -1657,7 +1657,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                 <Text variant="metadata" color="var(--dark-40)">On CertaPro every week</Text>
               </div>
               <Text variant="secondary" color="var(--dark-50)" style={{ display: 'block', margin: '0 0 14px', lineHeight: 1.5 }}>
-                Two people and an agent — questions land with Alex, creative direction with Petar.
+                Two people and an agent. Questions land with Alex, creative direction with Petar.
               </Text>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
@@ -1683,7 +1683,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                   );
                 })}
 
-                {/* The agent — always-on third member, human-reviewed */}
+                {/* The agent, always-on third member, human-reviewed */}
                 <Card padding="none" style={{ border: '1px solid var(--focus-10)', background: 'var(--focus-5)', borderRadius: 10, padding: '14px 15px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                     <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--focus-10)', color: 'var(--focus-50)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -1695,7 +1695,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                     </div>
                   </div>
                   <Text variant="secondary" color="var(--dark-70)" style={{ display: 'block', lineHeight: 1.5, flex: 1 }}>
-                    Drafts your content, preps call notes and keeps this page current — everything is reviewed by Alex before it reaches you.
+                    Drafts your content, preps call notes and keeps this page current. Everything is reviewed by Alex before it reaches you.
                   </Text>
                 </Card>
               </div>
@@ -1706,7 +1706,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
         {/* Overview right rail */}
         <div style={{ width: 312, flexShrink: 0, position: 'sticky', top: 12, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-          {/* Insights — at-a-glance metrics, moved out of the doc body */}
+          {/* Insights, at-a-glance metrics, moved out of the doc body */}
           <Card padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <Heading level={5} style={{ margin: 0 }}>Insights</Heading>
@@ -1747,7 +1747,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
             </Card>
           )}
 
-          {/* Client to-dos — what's waiting on CertaPro, both views */}
+          {/* Client to-dos, what's waiting on CertaPro, both views */}
           <Card padding="none" style={{ borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <Heading level={5} style={{ margin: 0 }}>{clientView ? 'Your next steps' : 'Waiting on CertaPro'}</Heading>
@@ -1794,26 +1794,26 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
 
         {/* Meetings moved to a Brand Kit tab (see MeetingsView). */}
 
-        {/* ── WORKSTREAM TAB — everything moving across the account, one
+        {/* ── WORKSTREAM TAB, everything moving across the account, one
               filterable feed (old-Home card anatomy) + activity timeline. ── */}
         {tab === 'work' && !clientView && (
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '8px 4px 60px' }}>
         <div>
 
-          {/* Hero — mirrors old Home's greeting block */}
+          {/* Hero, mirrors old Home's greeting block */}
           <div style={{ padding: '16px 0 20px' }}>
             <Heading level={3} style={{ margin: 0, lineHeight: 1.2 }}>
               Everything moving on CertaPro.
             </Heading>
             <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 6, lineHeight: 1.5 }}>
-              {needsTeam} item{needsTeam === 1 ? '' : 's'} need someone — across organic, Local SEO, reputation and paid. The agent handles the rest ({agentDone}/{agentTasks.length} queue tasks done).
+              {needsTeam} item{needsTeam === 1 ? '' : 's'} need someone: across organic, Local SEO, reputation and paid. The agent handles the rest ({agentDone}/{agentTasks.length} queue tasks done).
             </Text>
           </div>
 
-          {/* THE feed — plans, flags, cross-product items, each with its own tag */}
+          {/* THE feed, plans, flags, cross-product items, each with its own tag */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-            {/* Client requests — things the client sent back, now in the team's queue */}
+            {/* Client requests, things the client sent back, now in the team's queue */}
             {workFilter === 'all' && personFilter === 'all' && CLIENT_REQUESTS.map((r) => {
               const RIcon = r.icon;
               return (
@@ -1839,7 +1839,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
               );
             })}
 
-            {/* Approved content — the client-approved posts, grouped by campaign */}
+            {/* Approved content, the client-approved posts, grouped by campaign */}
             {workFilter === 'all' && personFilter === 'all' && approvalsApprovedGroups().map((g) => (
               <Card key={`approved-${g.campaign}`} padding="none" style={{ border: '1px solid var(--dark-4)', borderRadius: 14, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -1871,7 +1871,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
               </Card>
             ))}
 
-            {/* Fathom meeting — one card; click it to review & act on the tasks in the modal */}
+            {/* Fathom meeting, one card; click it to review & act on the tasks in the modal */}
             {(workFilter === 'all' || workFilter === 'plans') && personFilter === 'all' && (() => {
               const meetingTasks = agentTasks.filter((t) => t.status !== 'ignored');
               return (
@@ -1887,7 +1887,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
                 <Text variant="largeList" style={{ display: 'block', lineHeight: 1.35, letterSpacing: '-0.1px', marginBottom: 6 }}>{FATHOM_MEETING.title}</Text>
                 <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.55 }}>{FATHOM_MEETING.summary}</Text>
                 <Text variant="metadata" color="var(--dark-50)" style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 9, marginBottom: 4 }}>
-                  <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><Stars /></span> {meetingTasks.length} task{meetingTasks.length === 1 ? '' : 's'} Blaze can run from this call — open to review &amp; approve.
+                  <span style={{ color: 'var(--dark-40)', display: 'inline-flex' }}><Stars /></span> {meetingTasks.length} task{meetingTasks.length === 1 ? '' : 's'} Blaze can run from this call. Open to review &amp; approve.
                 </Text>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
@@ -1912,7 +1912,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
         </div>
         )}
 
-        {/* ── WORKSTREAM TAB (client) — approvals-led, read-mostly ── */}
+        {/* ── WORKSTREAM TAB (client), approvals-led, read-mostly ── */}
         {tab === 'work' && clientView && (
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '8px 4px 60px' }}>
         <div>
@@ -1920,7 +1920,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
           <div style={{ padding: '16px 0 20px' }}>
             <Heading level={3} style={{ margin: 0, lineHeight: 1.2 }}>Here's what's moving on your account.</Heading>
             <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 6, lineHeight: 1.5 }}>
-              {clientApproveCount} thing{clientApproveCount === 1 ? '' : 's'} need your approval. Everything else is your Blaze team keeping things moving — nothing for you to do.
+              {clientApproveCount} thing{clientApproveCount === 1 ? '' : 's'} need your approval. Everything else is your Blaze team keeping things moving. Nothing for you to do.
             </Text>
           </div>
 
@@ -1975,7 +1975,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
         </div>
         )}
 
-        {/* ── INSIGHTS TAB — performance + reporting, client-safe ── */}
+        {/* ── INSIGHTS TAB, performance + reporting, client-safe ── */}
         {tab === 'insights' && (
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 14 }}>
@@ -1994,7 +1994,7 @@ function HomeSteady({ clientView, tab, onTabChange, onOpenSection }: { clientVie
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <Text variant="smallList">Reports</Text>
               {!clientView && (
-                <Button variant="primary" size="xs" onPress={() => showToast({ message: 'June report queued — the agent assembles it from campaign results' })}>
+                <Button variant="primary" size="xs" onPress={() => showToast({ message: 'June report queued. The agent assembles it from campaign results' })}>
                   Generate June report
                 </Button>
               )}

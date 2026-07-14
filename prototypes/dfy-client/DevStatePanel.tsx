@@ -7,7 +7,7 @@ import { ChangesPanel, CHANGES_COUNT } from '../blaze-dfy/ChangesPanel';
  * Designer-only control pinned to the bottom-left of the client portal. Flips
  * the whole portal between its cold (early onboarding), reviewing (everything
  * but go-live is ready), mixed (each item mid-review at a different stage),
- * and steady (live) state. Mirrors blaze-dfy's own DevStatePanel — dashed
+ * and steady (live) state. Mirrors blaze-dfy's own DevStatePanel: dashed
  * brand-yellow border on a dark surface, monospace, draggable, with the
  * position persisted in localStorage. Prototype chrome, not part of the
  * shipped client view.
@@ -165,7 +165,7 @@ export function DevStatePanel() {
         </>
       )}
 
-      {/* Controls row — drag handle + state group + side switch. */}
+      {/* Controls row: drag handle + state group + side switch. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, rowGap: 4, flexWrap: 'wrap' }}>
         <div
           data-dev-drag-handle
@@ -191,13 +191,13 @@ export function DevStatePanel() {
         >
           ⋮⋮
         </div>
-        {/* Group 1 — portal state. Stays together on its own row. */}
+        {/* Group 1: portal state. Stays together on its own row. */}
         <div style={GROUP_STYLE}>
           {OPTIONS.map((o) => (
             <DevStateButton key={o.value} text={o.label} selected={state === o.value} onClick={() => setState(o.value)} />
           ))}
         </div>
-        {/* Group 2 — AM/Client side switch (approvals + home). Wraps to its own row. */}
+        {/* Group 2: AM/Client side switch (approvals + home). Wraps to its own row. */}
         {surface && (
           <div style={GROUP_STYLE}>
             <SideButton text="AM" onClick={() => navigate(amHref)} />

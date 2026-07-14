@@ -14,16 +14,16 @@ import {
 } from '../h2/qualification-criteria-data';
 
 /**
- * AI Receptionist settings — the client-facing (Grain Design Flooring) mirror
+ * AI Receptionist settings: the client-facing (Grain Design Flooring) mirror
  * of the operator's AI Receptionist settings (h2/pages/SdrSettings.tsx).
  *
  * Opens as a full page from a button in the Leads topbar (see Leads.tsx) and
- * closes back to the Leads inbox via the back arrow — it is NOT a routed page.
+ * closes back to the Leads inbox via the back arrow. It is NOT a routed page.
  *
  * The client sees EVERYTHING Blaze configured, but read-only. For the six
  * config areas Blaze owns (escalation rules, qualification criteria, system
  * prompt, voice & personality, recipients, hours) the client can only
- * "Request a change" — a note goes to their Blaze team. The one exception is
+ * "Request a change". A note goes to their Blaze team. The one exception is
  * Compliance (A2P / 10DLC), which is legally the client's to complete, so the
  * real editable ComplianceSection is embedded with full access.
  */
@@ -51,7 +51,7 @@ export function ReceptionistSettings({ onBack }: { onBack: () => void }) {
       existing: requests[key] ?? '',
       onSubmit: (note: string) => {
         setRequests((r) => ({ ...r, [key]: note }));
-        showToast({ message: `Change request sent to your Blaze team — ${label}` });
+        showToast({ message: `Change request sent to your Blaze team: ${label}` });
       },
     });
   };
@@ -155,8 +155,8 @@ function Row({ label, children, top }: { label: string; children: ReactNode; top
   );
 }
 
-/** Static multi-line text block (system prompt, knowledge base, greeting) —
- *  sits directly inside the Section card, no extra inner container. */
+/** Static multi-line text block (system prompt, knowledge base, greeting).
+ *  Sits directly inside the Section card, no extra inner container. */
 function TextBlock({ children }: { children: ReactNode }) {
   return (
     <div style={{ padding: '14px 18px', color: 'var(--dark-80)', fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
@@ -201,8 +201,8 @@ function TriggersTab({ requests, requestChange }: TabProps) {
         requests={requests}
         requestChange={requestChange}
       >
-        <Row label="During business hours" top>Picks up on the 4th ring — giving your team a chance to grab it first.</Row>
-        <Row label="After hours">Answers on the 1st ring — no one&rsquo;s in the office, so the AI responds immediately.</Row>
+        <Row label="During business hours" top>Picks up on the 4th ring, giving your team a chance to grab it first.</Row>
+        <Row label="After hours">Answers on the 1st ring. No one&rsquo;s in the office, so the AI responds immediately.</Row>
         <div style={{ borderTop: '1px solid var(--dark-8)', padding: '14px 18px' }}>
           <Text variant="secondary" style={{ color: 'var(--dark-60)', display: 'block', marginBottom: 10 }}>Shift hours</Text>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -224,7 +224,7 @@ function TriggersTab({ requests, requestChange }: TabProps) {
 
 const SYSTEM_PROMPT = `You are Riley, the AI receptionist for Grain Design Flooring, a premium flooring company serving the Austin metro.
 
-Always introduce yourself as Riley. Be warm, professional, and efficient — keep calls under 4 minutes.
+Always introduce yourself as Riley. Be warm, professional, and efficient. Keep calls under 4 minutes.
 
 Collect the project type (hardwood / laminate / vinyl / carpet), the property location within the Austin service area, the approximate project budget, and preferred timeline. Confirm the caller is the homeowner or decision-maker before booking an in-home measure.`;
 
@@ -298,12 +298,12 @@ function AgentTab({ requests, requestChange }: TabProps) {
         requests={requests}
         requestChange={requestChange}
       >
-        <Row label="AI voice" top>Sarah — Friendly, clear</Row>
+        <Row label="AI voice" top>Sarah · Friendly, clear</Row>
         <Row label="Tone">Warm</Row>
         <Row label="Max call duration">5 minutes</Row>
         <Row label="Greeting">
           <span style={{ fontStyle: 'italic', color: 'var(--dark-80)' }}>
-            &ldquo;Hi, thanks for calling Grain Design Flooring! This is Riley — I can help you get a free in-home measure booked. How can I help today?&rdquo;
+            &ldquo;Hi, thanks for calling Grain Design Flooring! This is Riley. I can help you get a free in-home measure booked. How can I help today?&rdquo;
           </span>
         </Row>
       </Section>
@@ -356,7 +356,7 @@ function OutcomesTab({ requests, requestChange }: TabProps) {
         requests={requests}
         requestChange={requestChange}
       >
-        <Row label="Booking calendar" top>Grain Design Flooring — In-home measures</Row>
+        <Row label="Booking calendar" top>Grain Design Flooring: In-home measures</Row>
         <Row label="Confirmation">SMS + email confirmation sent to the caller on booking.</Row>
         <Row label="Notification email">bookings@graindesignflooring.com</Row>
       </Section>
@@ -443,7 +443,7 @@ function NotificationsTab({ requests, requestChange }: TabProps) {
   );
 }
 
-// ── Compliance (editable — the client's to complete) ────────────────────────
+// ── Compliance (editable, the client's to complete) ────────────────────────
 
 function ComplianceTab() {
   return (
@@ -451,7 +451,7 @@ function ComplianceTab() {
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '12px 16px', marginBottom: 24, border: '1px solid var(--dark-8)', borderRadius: 10, background: 'var(--dark-2)' }}>
         <span style={{ marginTop: 1, color: 'var(--status-approved)' }}><Check size={16} /></span>
         <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.5 }}>
-          Carrier registration (A2P / 10DLC) is required before your AI Receptionist can send texts. This is yours to complete — fill it in and submit it directly.
+          Carrier registration (A2P / 10DLC) is required before your AI Receptionist can send texts. This is yours to complete. Fill it in and submit it directly.
         </Text>
       </div>
       <ComplianceSection embedded />

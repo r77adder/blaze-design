@@ -22,10 +22,10 @@ import { ReviewGoals } from './ReviewGoals';
 import { ReviewCreative } from './ReviewCreative';
 
 /**
- * Blaze DFY — the **client** portal (done-for-you customer's view).
+ * Blaze DFY, the **client** portal (done-for-you customer's view).
  *
  * Built on `main` so it harvests current H2 designs (home feed, ApprovalsV2,
- * per-channel Insights, Website Analytics, content calendar, Brand Kit) —
+ * per-channel Insights, Website Analytics, content calendar, Brand Kit),
  * reframed view-only for a client who reviews results and approves work.
  *
  * Routes (relative to /dfy-client): / · /approvals · /calendar ·
@@ -33,7 +33,7 @@ import { ReviewCreative } from './ReviewCreative';
  *
  * The bottom-left <DevStatePanel/> flips the whole portal between `cold`
  * (mid-onboarding), `reviewing` (everything but go-live is ready), `mixed`
- * (each item at a different review stage), and `steady` (live) — each page
+ * (each item at a different review stage), and `steady` (live). Each page
  * reads useClientState().
  */
 function HomeRoute() {

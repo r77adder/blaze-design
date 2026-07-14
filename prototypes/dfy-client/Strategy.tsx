@@ -11,10 +11,10 @@ import SupportBubble from '@/icons/20/SupportBubble';
 import { ClientShell } from './shell';
 
 /**
- * Client Strategy — a strictly VIEW-ONLY overview of the marketing plan Blaze is
+ * Client Strategy: a strictly VIEW-ONLY overview of the marketing plan Blaze is
  * running for Grain Design Flooring. The client can SEE which channels are in the
  * plan, plus the cadence/goal and a one-line plan summary for each. There are NO
- * toggles, NO edit affordances, and NO active/recommended status pills — the
+ * toggles, NO edit affordances, and NO active/recommended status pills. The
  * account manager controls the plan; the client just reads it.
  *
  * The channel taxonomy is harvested from H2's "Blaze Products" list (Tools.tsx)
@@ -93,7 +93,7 @@ const GROUPS: ChannelGroup[] = [
         name: 'AI Receptionist',
         icon: SupportBubble,
         cadence: '24/7 · calls, texts & chats',
-        plan: 'An AI receptionist answering every call, text, and chat in seconds — qualifying and booking leads around the clock.',
+        plan: 'An AI receptionist answering every call, text, and chat in seconds, qualifying and booking leads around the clock.',
       },
     ],
   },

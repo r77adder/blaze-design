@@ -9,7 +9,7 @@ import Check2 from '@/icons/20/Check2';
 import type { GeneratedAsset, AssetType } from './lib/types';
 import { TextInput, TextArea, HoverInput } from './ui';
 
-/** Preview aspect ratio per format — Instagram portrait (4:5) for stills, ads &
+/** Preview aspect ratio per format, Instagram portrait (4:5) for stills, ads &
  *  carousels; vertical (9:16) for stories and video reels. */
 export const ASPECT: Partial<Record<AssetType, string>> = {
   'Still Image': '4 / 5',

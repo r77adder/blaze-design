@@ -28,8 +28,8 @@ const KIND_META: Record<DetailKind, { Icon: React.ComponentType<{ size?: number;
 
 /**
  * Simplified, per-type detail modal for the DFY client feed. Drop-in for H2's
- * FeedItemModal — same `openModal(FeedDetailModal, { items, initialIndex,
- * onAction })` shape — but each notification type gets its own minimal layout
+ * FeedItemModal, same `openModal(FeedDetailModal, { items, initialIndex,
+ * onAction })` shape, but each notification type gets its own minimal layout
  * instead of the dense why/steps stack.
  */
 export function FeedDetailModal({
@@ -113,7 +113,7 @@ function ReviewLayout({ item }: { item: FeedItemData }) {
           fontStyle: 'italic',
         }}
       >
-        “Thank you so much, Maria! We’re thrilled you’re loving the white-oak floors. We’d love to make that stair landing right — our team will reach out this week to schedule a quick comeback visit at no charge. We appreciate your trust in Grain Design Flooring.”
+        “Thank you so much, Maria! We’re thrilled you’re loving the white-oak floors. We’d love to make that stair landing right. Our team will reach out this week to schedule a quick comeback visit at no charge. We appreciate your trust in Grain Design Flooring.”
       </blockquote>
     </>
   );

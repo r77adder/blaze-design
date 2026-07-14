@@ -1,4 +1,4 @@
-// Onboarding-port content — ported 1:1 from the H2 web onboarding rework
+// Onboarding-port content, ported 1:1 from the H2 web onboarding rework
 // (origin/prototype/h2-onboarding-rework: prototypes/h2/cold-flows/strategy-data.ts).
 // Only the slices the SwipeStep + GoalsStep bodies consume are kept here.
 //
@@ -42,7 +42,7 @@ export const SWIPE_FILE: SwipeItem[] = [
     kind: 'search',
     searchAd: {
       url: 'lonestarpainting.com/austin',
-      title: 'Austin Painters — Free Estimate Today',
+      title: 'Austin Painters: Free Estimate Today',
       desc: 'Interior, exterior & cabinet pros. 1,500+ local jobs. Book a free on-site quote this week.',
     },
   },
@@ -51,7 +51,7 @@ export const SWIPE_FILE: SwipeItem[] = [
     source: 'Hill Country Finishes',
     channel: 'TikTok / Reels',
     headline: 'Cabinet refinish time-lapse',
-    note: 'High-reach short video, unpolished. Cabinet content over-indexes — worth testing as paid social creative.',
+    note: 'High-reach short video, unpolished. Cabinet content over-indexes. Worth testing as paid social creative.',
     aspect: '9 / 16',
   },
   {
@@ -66,7 +66,7 @@ export const SWIPE_FILE: SwipeItem[] = [
     id: 'sw5',
     source: 'Sherwin-Williams',
     channel: 'Instagram',
-    headline: 'Before/after carousel — color of the month',
+    headline: 'Before/after carousel: color of the month',
     note: 'Clean portrait carousel with a bold swipe-through reveal. Strong organic, easily boosted.',
     aspect: '4 / 5',
   },
@@ -74,7 +74,7 @@ export const SWIPE_FILE: SwipeItem[] = [
     id: 'sw6',
     source: 'Five Star Painting',
     channel: 'YouTube Ad',
-    headline: '15s pre-roll — "Why Austin trusts us"',
+    headline: '15s pre-roll: "Why Austin trusts us"',
     note: 'Skippable in-stream with a hook in the first 5 seconds. Cheap reach for brand awareness.',
     aspect: '16 / 9',
   },
@@ -82,7 +82,7 @@ export const SWIPE_FILE: SwipeItem[] = [
     id: 'sw7',
     source: 'WOW 1 Day Painting',
     channel: 'Display Ad',
-    headline: 'Retargeting banner — "Still thinking it over?"',
+    headline: 'Retargeting banner: "Still thinking it over?"',
     note: 'Classic GDN retargeting banner. Keeps the brand in front after a site visit.',
     aspect: '1.91 / 1',
   },
@@ -134,7 +134,7 @@ export interface MajorEvent {
   tag: 'Company' | 'Industry';
 }
 export const MAJOR_EVENTS: MajorEvent[] = [
-  { label: 'Spring exterior season — peak demand', when: '2026-03', tag: 'Industry' },
+  { label: 'Spring exterior season: peak demand', when: '2026-03', tag: 'Industry' },
   { label: 'Summer interior + cabinet push', when: '2026-06', tag: 'Industry' },
   { label: 'Fall booking promo window', when: '2026-09', tag: 'Company' },
   { label: 'Year-end commercial repaint budgets', when: '2026-11', tag: 'Industry' },

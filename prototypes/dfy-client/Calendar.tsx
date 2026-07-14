@@ -18,25 +18,25 @@ import { ColdState } from './ColdState';
 import { useClientState } from './dev-state';
 
 /**
- * Client Calendar — the done-for-you customer SEES the content they're getting,
+ * Client Calendar: the done-for-you customer SEES the content they're getting,
  * across two views, but never operates it. No Create / Regenerate / Improve /
- * Unscheduled, no filters, no density toggle — just the schedule and themes.
+ * Unscheduled, no filters, no density toggle, just the schedule and themes.
  *
- *   • Calendar  — the 7-day post grid harvested from h2/OrganicSocial
+ *   • Calendar: the 7-day post grid harvested from h2/OrganicSocial
  *                 (DayColumn + PostCard + StatusBadge, week nav, status badges),
  *                 with every operator toolbar button stripped out.
- *   • Campaigns — a clean weekly-campaigns timeline (NOT the operator Gantt):
+ *   • Campaigns: a clean weekly-campaigns timeline (NOT the operator Gantt):
  *                 each week is a card with its theme, date range, channels, and
  *                 post count. Derived from the same campaign concept in
  *                 h2/Campaigns but reframed as a read-only "here's what's running
  *                 each week" list for the client.
  *
  * The calendar card markup (SEED_POSTS / CONTENT_META / PostCard / DayColumn /
- * StatusBadge / weekFromOffset) is harvested from h2/OrganicSocial.tsx — those
+ * StatusBadge / weekFromOffset) is harvested from h2/OrganicSocial.tsx, those
  * symbols aren't exported there, so they're inlined here (we only own this file).
  */
 
-// ─── CALENDAR VIEW — harvested from h2/OrganicSocial ────────────────
+// ─── CALENDAR VIEW: harvested from h2/OrganicSocial ────────────────
 
 type PlatformKey = 'instagram' | 'tiktok' | 'linkedin' | 'x';
 type Status = 'scheduled' | 'draft' | 'review' | 'approved';
@@ -73,21 +73,21 @@ const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const BASE_MONDAY = new Date(2026, 4, 4);
 
 const SEED_POSTS: Post[] = [
-  { day: 'mon', time: '9:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Before & after — Tarrytown white oak hardwood install in 60 seconds.', thumb: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=70', status: 'approved', source: 'Hardwood Refresh May' },
+  { day: 'mon', time: '9:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Before & after: Tarrytown white oak hardwood install in 60 seconds.', thumb: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=70', status: 'approved', source: 'Hardwood Refresh May' },
   { day: 'mon', time: '1:00 PM', platform: 'tiktok', type: 'Short', contentType: 'still', title: '30-second guide to picking floors that hold up to Texas heat & pets.', thumb: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=600&q=70', status: 'approved', source: 'Flooring Trends 2026' },
-  { day: 'tue', time: '8:00 AM', platform: 'linkedin', type: 'Post', contentType: 'blog', title: 'Why subfloor prep matters more than the plank — the playbook our crews run on every install', body: 'Subfloor prep is the part nobody sees, and the part that decides whether a floor lasts five years or twenty-five. Here is the exact sequence Matthew walks before a single board goes down.', thumb: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=70', status: 'review', source: 'Crew Spotlights' },
+  { day: 'tue', time: '8:00 AM', platform: 'linkedin', type: 'Post', contentType: 'blog', title: 'Why subfloor prep matters more than the plank: the playbook our crews run on every install', body: 'Subfloor prep is the part nobody sees, and the part that decides whether a floor lasts five years or twenty-five. Here is the exact sequence Matthew walks before a single board goes down.', thumb: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=70', status: 'review', source: 'Crew Spotlights' },
   { day: 'tue', time: '4:00 PM', platform: 'instagram', type: 'Carousel', contentType: 'carousel', title: '5 flooring mistakes Austin homeowners keep making (and how to avoid them).', thumb: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&q=70', status: 'approved', source: 'Flooring Trends 2026' },
-  { day: 'wed', time: '9:00 AM', platform: 'instagram', type: 'Story', contentType: 'still', title: 'BTS — Round Rock whole-home LVP install, day 3 of 6.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=70', status: 'approved', source: 'Whole-Home LVP' },
-  { day: 'wed', time: '2:00 PM', platform: 'x', type: 'Post', contentType: 'still', title: 'What a free flooring estimate actually covers — the six things every Austin homeowner should expect.', thumb: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=70', status: 'review', source: 'Estimate FAQ' },
-  { day: 'thu', time: '10:00 AM', platform: 'instagram', type: 'Reel', contentType: 'avatar-video', title: 'A day on the crew — hardwood refinish in Westlake.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=70', status: 'approved', source: 'Crew Spotlights' },
-  { day: 'thu', time: '5:00 PM', platform: 'tiktok', type: 'Short', contentType: 'carousel', title: 'Refinish vs replace your hardwood — what it really costs in Austin.', thumb: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=70', status: 'approved', source: 'Hardwood Refresh May' },
-  { day: 'tue', time: '11:00 AM', platform: 'instagram', type: 'Reel', contentType: 'feed-video', title: 'Floor of the week — wide-plank white oak in a Tarrytown remodel.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=70', status: 'approved', source: 'Flooring Trends 2026' },
+  { day: 'wed', time: '9:00 AM', platform: 'instagram', type: 'Story', contentType: 'still', title: 'BTS: Round Rock whole-home LVP install, day 3 of 6.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=70', status: 'approved', source: 'Whole-Home LVP' },
+  { day: 'wed', time: '2:00 PM', platform: 'x', type: 'Post', contentType: 'still', title: 'What a free flooring estimate actually covers: the six things every Austin homeowner should expect.', thumb: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=600&q=70', status: 'review', source: 'Estimate FAQ' },
+  { day: 'thu', time: '10:00 AM', platform: 'instagram', type: 'Reel', contentType: 'avatar-video', title: 'A day on the crew: hardwood refinish in Westlake.', thumb: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=70', status: 'approved', source: 'Crew Spotlights' },
+  { day: 'thu', time: '5:00 PM', platform: 'tiktok', type: 'Short', contentType: 'carousel', title: 'Refinish vs replace your hardwood: what it really costs in Austin.', thumb: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=70', status: 'approved', source: 'Hardwood Refresh May' },
+  { day: 'tue', time: '11:00 AM', platform: 'instagram', type: 'Reel', contentType: 'feed-video', title: 'Floor of the week: wide-plank white oak in a Tarrytown remodel.', thumb: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=70', status: 'approved', source: 'Flooring Trends 2026' },
   { day: 'fri', time: '6:00 PM', platform: 'tiktok', type: 'Short', contentType: 'short-video', title: 'Three floor types that survive Texas summers, kids, and big dogs.', thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', status: 'review', source: 'Flooring Trends 2026' },
-  { day: 'fri', time: '11:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Friday reveal — Lakeway great room, 4 days from tear-out to finished tile.', thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', status: 'review', source: 'Tile Showcase' },
+  { day: 'fri', time: '11:00 AM', platform: 'instagram', type: 'Reel', contentType: 'still', title: 'Friday reveal: Lakeway great room, 4 days from tear-out to finished tile.', thumb: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', status: 'review', source: 'Tile Showcase' },
   { day: 'fri', time: '3:00 PM', platform: 'linkedin', type: 'Post', contentType: 'blog', title: 'What we learned flooring 14 units across one apartment community on a single timeline', body: 'Fourteen units, one timeline, zero missed handoffs. What coordinating a community-scale LVP install taught us about sequencing crews and keeping material deliveries moving.', thumb: 'https://images.unsplash.com/photo-1448630360428-65456885c650?w=600&q=70', status: 'approved', source: 'Multi-Unit LVP' },
-  { day: 'sat', time: '9:00 AM', platform: 'instagram', type: 'Carousel', contentType: 'carousel', title: 'Weekend project — 5 small flooring upgrades that change a whole room.', thumb: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=70', status: 'approved', source: 'Flooring Trends 2026' },
-  { day: 'sat', time: '7:00 PM', platform: 'tiktok', type: 'Short', contentType: 'still', title: 'Why we never skip moisture testing the slab — even on tight timelines.', thumb: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&q=70', status: 'approved', source: 'Crew Spotlights' },
-  { day: 'sun', time: '5:00 PM', platform: 'instagram', type: 'Story', contentType: 'avatar-video', title: 'Sunday Q&A — drop your Austin flooring questions, John is answering.', thumb: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=70', status: 'approved', source: 'Estimate FAQ' },
+  { day: 'sat', time: '9:00 AM', platform: 'instagram', type: 'Carousel', contentType: 'carousel', title: 'Weekend project: 5 small flooring upgrades that change a whole room.', thumb: 'https://images.unsplash.com/photo-1599619351208-3e6c839d6828?w=600&q=70', status: 'approved', source: 'Flooring Trends 2026' },
+  { day: 'sat', time: '7:00 PM', platform: 'tiktok', type: 'Short', contentType: 'still', title: 'Why we never skip moisture testing the slab, even on tight timelines.', thumb: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&q=70', status: 'approved', source: 'Crew Spotlights' },
+  { day: 'sun', time: '5:00 PM', platform: 'instagram', type: 'Story', contentType: 'avatar-video', title: 'Sunday Q&A: drop your Austin flooring questions, John is answering.', thumb: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=70', status: 'approved', source: 'Estimate FAQ' },
 ];
 
 interface DayInfo {
@@ -415,7 +415,7 @@ function CalendarView() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--default-bg)' }}>
-      {/* Week nav only — operator toolbar (Create / Regenerate / Improve /
+      {/* Week nav only, operator toolbar (Create / Regenerate / Improve /
           Unscheduled / density / filter) intentionally removed for the client. */}
       <div
         style={{
@@ -481,10 +481,10 @@ function CalendarView() {
   );
 }
 
-// ─── CAMPAIGNS VIEW — weekly themes (clean read-only timeline) ──────
+// ─── CAMPAIGNS VIEW: weekly themes (clean read-only timeline) ──────
 // Reframes the campaign concept from h2/Campaigns (theme + date range +
 // channels + post count) as a client-facing "what's running each week" list.
-// NOT the operator Gantt — no editing, no proposed/accept, no wizard.
+// NOT the operator Gantt, no editing, no proposed/accept, no wizard.
 
 type Channel = 'Instagram' | 'Facebook' | 'TikTok' | 'LinkedIn' | 'X' | 'Email' | 'Blog';
 type WeekStatus = 'live' | 'scheduled' | 'review' | 'upcoming';
@@ -511,7 +511,7 @@ const WEEKLY_CAMPAIGNS: WeeklyCampaign[] = [
   {
     weekLabel: 'This week',
     range: 'May 4 – May 10',
-    theme: 'Hardwood Refresh — Spring Launch',
+    theme: 'Hardwood Refresh: Spring Launch',
     blurb: 'Before/after hardwood installs and refinishes and the subfloor prep that makes them last, leading with the reveal.',
     channels: ['Instagram', 'TikTok', 'LinkedIn'],
     posts: 9,
@@ -522,7 +522,7 @@ const WEEKLY_CAMPAIGNS: WeeklyCampaign[] = [
     weekLabel: 'Next week',
     range: 'May 11 – May 17',
     theme: 'Flooring Trends 2026',
-    blurb: 'Hardwood, LVP & tile picks built for Texas homes — floor-of-the-week reels plus a "5 mistakes" carousel.',
+    blurb: 'Hardwood, LVP & tile picks built for Texas homes, floor-of-the-week reels plus a "5 mistakes" carousel.',
     channels: ['Instagram', 'TikTok', 'X'],
     posts: 8,
     status: 'review',
@@ -532,7 +532,7 @@ const WEEKLY_CAMPAIGNS: WeeklyCampaign[] = [
     weekLabel: 'Week of May 18',
     range: 'May 18 – May 24',
     theme: 'Crew Spotlights',
-    blurb: 'A day on the crew — authentic, behind-the-scenes installs and refinishes from Westlake to Round Rock.',
+    blurb: 'A day on the crew: authentic, behind-the-scenes installs and refinishes from Westlake to Round Rock.',
     channels: ['Instagram', 'TikTok', 'LinkedIn', 'Blog'],
     posts: 7,
     status: 'scheduled',
@@ -542,7 +542,7 @@ const WEEKLY_CAMPAIGNS: WeeklyCampaign[] = [
     weekLabel: 'Week of May 25',
     range: 'May 25 – May 31',
     theme: 'Multi-Unit LVP',
-    blurb: 'Coordinating a community-scale LVP install — 14 units, one timeline, the playbook that keeps it moving.',
+    blurb: 'Coordinating a community-scale LVP install: 14 units, one timeline, the playbook that keeps it moving.',
     channels: ['Instagram', 'LinkedIn', 'Email'],
     posts: 6,
     status: 'scheduled',
@@ -552,7 +552,7 @@ const WEEKLY_CAMPAIGNS: WeeklyCampaign[] = [
     weekLabel: 'Week of Jun 1',
     range: 'Jun 1 – Jun 7',
     theme: 'Estimate FAQ',
-    blurb: 'What a free flooring estimate actually covers — the six things every Austin homeowner should expect.',
+    blurb: 'What a free flooring estimate actually covers: the six things every Austin homeowner should expect.',
     channels: ['Instagram', 'X', 'Blog'],
     posts: 6,
     status: 'upcoming',
@@ -633,7 +633,7 @@ function CampaignsView({ onOpenCampaign }: { onOpenCampaign: (w: WeeklyCampaign)
           Weekly campaigns
         </div>
         <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.55 }}>
-          The themes Blaze is running for Grain Design Flooring, week by week — what's going out, where, and how much.
+          The themes Blaze is running for Grain Design Flooring, week by week: what's going out, where, and how much.
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -645,10 +645,10 @@ function CampaignsView({ onOpenCampaign }: { onOpenCampaign: (w: WeeklyCampaign)
   );
 }
 
-// ─── CAMPAIGN DETAIL — ported & reframed from h2/pages/Campaigns.tsx DetailView ──
+// ─── CAMPAIGN DETAIL: ported & reframed from h2/pages/Campaigns.tsx DetailView ──
 // View-only client take: hero + status banner + campaign details + the week's
 // review grid. Operator affordances (regenerate / add posts / crosspost toggle /
-// settings) are stripped — the client just sees what Blaze is running. Mock
+// settings) are stripped, the client just sees what Blaze is running. Mock
 // content is flooring (Grain Design Flooring), matching the campaign list.
 
 type ReviewKind = 'still' | 'story' | 'carousel' | 'feed-video';
@@ -669,15 +669,15 @@ interface ReviewItem {
   overlaySub?: string;
 }
 
-// Flooring-flavored review posts for Grain Design Flooring — the client-facing
+// Flooring-flavored review posts for Grain Design Flooring, the client-facing
 // equivalent of H2's painting REVIEW_ITEMS, reusing the calendar's install imagery.
 const REVIEW_ITEMS: ReviewItem[] = [
-  { kind: 'still', date: 'Mon 9:00am', img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=70', caption: 'Before & after — a Tarrytown white-oak install, tear-out to final board.' },
-  { kind: 'story', date: 'Tue 8:00am', img: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=70', overlayTitle: 'What Subfloor Prep Really Changes', overlaySub: 'The step nobody sees — and the reason your floors last decades.' },
-  { kind: 'carousel', date: 'Tue 4:00pm', img: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&q=70', caption: '5 flooring mistakes Austin homeowners keep making — swipe for the fixes.' },
+  { kind: 'still', date: 'Mon 9:00am', img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=70', caption: 'Before & after: a Tarrytown white-oak install, tear-out to final board.' },
+  { kind: 'story', date: 'Tue 8:00am', img: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=70', overlayTitle: 'What Subfloor Prep Really Changes', overlaySub: 'The step nobody sees, and the reason your floors last decades.' },
+  { kind: 'carousel', date: 'Tue 4:00pm', img: 'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&q=70', caption: '5 flooring mistakes Austin homeowners keep making. Swipe for the fixes.' },
   { kind: 'feed-video', date: 'Wed 11:00am', img: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=70', overlayTitle: 'Refinish or Replace Your Hardwood?', overlaySub: 'What it really costs in Austin before you decide.' },
-  { kind: 'carousel', date: 'Thu 10:00am', img: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=70', caption: 'A day on the crew — wide-plank oak going down in Westlake.' },
-  { kind: 'still', date: 'Fri 11:00am', img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', caption: 'Weekend-ready — five LVP picks built for Texas heat, kids & big dogs.' },
+  { kind: 'carousel', date: 'Thu 10:00am', img: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=70', caption: 'A day on the crew: wide-plank oak going down in Westlake.' },
+  { kind: 'still', date: 'Fri 11:00am', img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=70', caption: 'Weekend-ready: five LVP picks built for Texas heat, kids & big dogs.' },
 ];
 
 // Per-status framing: the post badge + the banner copy the client reads.
@@ -689,10 +689,10 @@ const CAMPAIGN_POST_BADGE: Record<WeekStatus, { tone: StatusPillTone; label: str
 };
 
 const CAMPAIGN_BANNER: Record<WeekStatus, string> = {
-  live: 'This campaign is live — these posts are publishing across your channels this week.',
+  live: 'This campaign is live. These posts are publishing across your channels this week.',
   scheduled: 'Approved and scheduled. Here’s everything going out this week.',
-  review: 'These posts are ready for your sign-off — approve them from the Approvals tab.',
-  upcoming: 'Coming up — Blaze is preparing this week’s content.',
+  review: 'These posts are ready for your sign-off. Approve them from the Approvals tab.',
+  upcoming: 'Coming up: Blaze is preparing this week’s content.',
 };
 
 function DetailRow({ label, icon, children, first }: { label: string; icon: ReactNode; children: ReactNode; first?: boolean }) {
@@ -832,7 +832,7 @@ export function Calendar({ sub }: { sub?: string }) {
   const [view, setView] = useState<CalSub>(sub && SUBS.has(sub as CalSub) ? (sub as CalSub) : 'calendar');
   const [activeCampaign, setActiveCampaign] = useState<WeeklyCampaign | null>(null);
 
-  // Cold — pre-go-live: no schedule yet, just an explanatory empty state.
+  // Cold, pre-go-live: no schedule yet, just an explanatory empty state.
   // Centered (no fullBleed) and no Calendar/Campaigns tab strip.
   if (state !== 'steady') {
     return (
@@ -840,7 +840,7 @@ export function Calendar({ sub }: { sub?: string }) {
         <ColdState
           icon={Calendar1}
           title="Your content calendar fills in once you’re live."
-          description="Every scheduled post across your channels will show up here, organized by date — so you always know what’s going out and when."
+          description="Every scheduled post across your channels will show up here, organized by date, so you always know what’s going out and when."
           points={[
             'Posts scheduled across Instagram, Facebook, and Google',
             'Campaign timelines and weekly themes',
@@ -851,7 +851,7 @@ export function Calendar({ sub }: { sub?: string }) {
     );
   }
 
-  // Campaign detail — replaces the page chrome with a back button + name.
+  // Campaign detail: replaces the page chrome with a back button + name.
   if (activeCampaign) {
     return (
       <ClientShell

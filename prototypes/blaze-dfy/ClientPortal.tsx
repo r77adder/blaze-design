@@ -26,7 +26,7 @@ import { SectionHeading, EditableMarkdown, TextInput, TextArea, FontFamilySelect
 import { MeetingsView } from './Home';
 import { ScorecardClientView } from './Scorecard';
 
-// AM steady-state reuse only — the workspace routes Brand Kit / Content Calendar
+// AM steady-state reuse only, the workspace routes Brand Kit / Content Calendar
 // here. The old client-portal sections (review-*, approvals, insights) are no
 // longer reachable now that the client lives in a separate prototype.
 export function ClientPortal({ account, section, clientView }: { account: Account; section: string; clientView: boolean }) {
@@ -216,7 +216,7 @@ function BrandKit({ account, clientView }: { account: Account; clientView: boole
 
         {tab === 'sources' && (
           <div style={{ marginTop: 16 }}>
-            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Raw inputs that inform everything Blaze generates — the sales call, brand docs, and anything else the client shares.</Text>
+            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Raw inputs that inform everything Blaze generates: the sales call, brand docs, and anything else the client shares.</Text>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {materials.map((m) => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, background: m.uploaded ? 'var(--light-100)' : 'var(--dark-2)', border: m.uploaded ? '1px solid var(--dark-6)' : '1.5px dashed var(--dark-12)' }}>
@@ -237,7 +237,7 @@ function BrandKit({ account, clientView }: { account: Account; clientView: boole
 
         {tab === 'media' && (
           <div style={{ marginTop: 16 }}>
-            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>The client's own images — scanned from {account.brand.website || 'their site'} and uploads. Used directly in content.</Text>
+            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>The client's own images, scanned from {account.brand.website || 'their site'} and uploads. Used directly in content.</Text>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
               {Array.from({ length: 11 }).map((_, i) => <div key={i} style={{ aspectRatio: '1', borderRadius: 12, background: gradientFor(i + 2) }} />)}
               <button style={{ aspectRatio: '1', borderRadius: 12, border: '1.5px dashed var(--dark-12)', background: 'var(--dark-2)', cursor: 'pointer', color: 'var(--dark-40)', fontFamily: 'inherit', fontSize: 13 }}>+ Upload</button>
@@ -246,7 +246,7 @@ function BrandKit({ account, clientView }: { account: Account; clientView: boole
         )}
         {tab === 'moodboard' && (
           <div style={{ marginTop: 16 }}>
-            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Inspiration the client loves — the look and feel we generate against (not their own assets).</Text>
+            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Inspiration the client loves, the look and feel we generate against (not their own assets).</Text>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
               {Array.from({ length: 7 }).map((_, i) => <div key={i} style={{ aspectRatio: '1', borderRadius: 12, background: gradientFor(i + 1 + account.name.length) }} />)}
               <button style={{ aspectRatio: '1', borderRadius: 12, border: '1.5px dashed var(--dark-12)', background: 'var(--dark-2)', cursor: 'pointer', color: 'var(--dark-40)', fontFamily: 'inherit', fontSize: 13 }}>+ Add inspiration</button>
@@ -310,11 +310,11 @@ function WeeklyContent({ account }: { account: Account }) {
   );
 }
 
-/* ─── Content calendar — weekly view ─────────────────────────────────────────
+/* ─── Content calendar, weekly view ─────────────────────────────────────────
  * Faithful port of the H2 OrganicSocial weekly calendar
  * (prototypes/h2/pages/OrganicSocial.tsx): a toolbar with prev/Today/next week
  * nav, then a horizontally-scrolling 7-column Mon–Sun grid. Each day stacks
- * post cards — a media variant (header + caption + portrait image with status
+ * post cards, a media variant (header + caption + portrait image with status
  * overlay) and a blog/text variant (header + landscape image + serif title +
  * body). Driven by DFY's generated assets rather than H2's seed posts. */
 
@@ -343,7 +343,7 @@ const CAL_TIMES = ['9:00 AM', '1:00 PM', '8:00 AM', '4:00 PM', '11:00 AM', '5:00
 const CAL_DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 const CAL_DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const CAL_TODAY_KEY = 'wed';
-// Base week — Monday Jun 8, 2026 (today = Wed Jun 10, matching the prototype date).
+// Base week, Monday Jun 8, 2026 (today = Wed Jun 10, matching the prototype date).
 const CAL_BASE_MONDAY = new Date(2026, 5, 8);
 
 interface CalDayInfo {
@@ -379,7 +379,7 @@ interface CalPost {
   status: CalStatus;
 }
 
-// Opaque status badge — readable over a photo or on a white surface.
+// Opaque status badge, readable over a photo or on a white surface.
 function CalStatusBadge({ status }: { status: CalStatus }) {
   const base: React.CSSProperties = {
     display: 'inline-flex',
@@ -492,7 +492,7 @@ const calCardShell: React.CSSProperties = {
 function CalPostCard({ post, dayFull }: { post: CalPost; dayFull: string }) {
   const kind = CAL_ASSET_META[post.type].kind;
 
-  // ── Blog / text variant — header, landscape image, serif title + body ──
+  // ── Blog / text variant, header, landscape image, serif title + body ──
   if (kind === 'blog') {
     return (
       <div style={calCardShell}>
@@ -540,7 +540,7 @@ function CalPostCard({ post, dayFull }: { post: CalPost; dayFull: string }) {
     );
   }
 
-  // ── Media variant — header + caption, then portrait image with overlays ──
+  // ── Media variant, header + caption, then portrait image with overlays ──
   return (
     <div style={calCardShell}>
       <div style={{ padding: '11px 12px 10px', display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -686,7 +686,7 @@ function ContentCalendar({ account }: { account: Account }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--default-bg)', margin: '-24px', borderRadius: 12, overflow: 'hidden' }}>
-      {/* Toolbar — week navigation */}
+      {/* Toolbar, week navigation */}
       <div
         style={{
           display: 'flex',
@@ -711,7 +711,7 @@ function ContentCalendar({ account }: { account: Account }) {
         </Text>
       </div>
 
-      {/* Week grid — horizontally scrolling 7 columns */}
+      {/* Week grid, horizontally scrolling 7 columns */}
       <div style={{ overflowX: 'auto', overflowY: 'auto', background: 'var(--default-bg)' }}>
         <div
           style={{

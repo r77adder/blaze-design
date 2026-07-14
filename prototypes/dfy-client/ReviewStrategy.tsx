@@ -28,13 +28,13 @@ import { StoryPreview, ReelPreview } from './SocialPreviewFrames';
 
 /* ─── Verbatim copy of prototypes/blaze-dfy Review.tsx (ClientReview + its
  * strategy/goals/creative section renderers, Empty, Popover, ScorecardRead,
- * StoryboardRead, CalendarRead). AmReviewPanel and its deps are dropped — it's
+ * StoryboardRead, CalendarRead). AmReviewPanel and its deps are dropped, it's
  * only used by the AM-side "done" screens, never by the client. Only import
  * paths changed. */
 
 const PHASE_TITLE: Record<Phase, string> = { strategy: 'strategy', goals: 'goals', creative: 'creative' };
 
-/** A subsection of a review section — its own H5 label, a read rendering, and
+/** A subsection of a review section: its own H5 label, a read rendering, and
  *  (when text-based) editable copy the client can revise field-by-field. */
 interface SubPart { key: string; label: string; read: ReactNode; editText?: string }
 
@@ -44,7 +44,7 @@ const para = (t: string) => <Text variant="secondary" color="var(--dark-80)" sty
  *  edit flow can carry an array through the same string-keyed feedback map. */
 const parseColors = (json?: string): BrandColor[] => { try { return json ? JSON.parse(json) : []; } catch { return []; } };
 const parseFonts = (json?: string): BrandFont[] => { try { return json ? JSON.parse(json) : []; } catch { return []; } };
-const fontsDisplayText = (fonts: BrandFont[]) => fonts.map((f) => f.family).filter(Boolean).join(', ') || '—';
+const fontsDisplayText = (fonts: BrandFont[]) => fonts.map((f) => f.family).filter(Boolean).join(', ') || 'None yet';
 
 const FONT_FAMILY_OPTIONS = ['Sohne', 'Inter', 'Playfair Display', 'Merriweather', 'Montserrat', 'Poppins', 'Lato', 'Roboto', 'Georgia', 'Helvetica Neue'].map((f) => ({ value: f, label: f }));
 const fontFamilyOptionsFor = (family: string) => (FONT_FAMILY_OPTIONS.some((o) => o.value === family) ? FONT_FAMILY_OPTIONS : [{ value: family, label: family }, ...FONT_FAMILY_OPTIONS]);
@@ -59,11 +59,11 @@ const FONT_ROLE_OPTIONS: { value: BrandFont['role']; label: string }[] = [
 const parseChannels = (json?: string): string[] => { try { return json ? JSON.parse(json) : []; } catch { return []; } };
 
 /** Major events merge the account's companyEvents + industryEvents into one
- *  tagged, chronological list — the same shape the AM's goals page edits. */
+ *  tagged, chronological list, the same shape the AM's goals page edits. */
 interface GoalEvent { label: string; when: string; tag: 'Company' | 'Industry' }
 const parseEvents = (json?: string): GoalEvent[] => { try { return json ? JSON.parse(json) : []; } catch { return []; } };
 const fmtEventDate = (iso: string) => {
-  if (!iso) return '—';
+  if (!iso) return 'TBD';
   const d = new Date(`${iso}T00:00:00`);
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
@@ -150,15 +150,15 @@ export function ClientReview({ account, phase }: { account: Account; phase: Phas
   const reviewed = sections.filter((s) => { const f = fb[s.id]; return f && (f.status !== 'pending' || hasEdits(f)); }).length;
 
   // In the "Mixed" portal state, Home tells the client their strategist
-  // already addressed a note on Taglines — highlight that same field here so
+  // already addressed a note on Taglines, highlight that same field here so
   // it's easy to find, instead of making them re-read the whole page.
   const highlightKeys = phase === 'strategy' && state === 'mixed' ? new Set(['taglines']) : null;
 
   // Rather than dead-ending on a "Thanks" screen, submit redirects the client
   // to Home and hands the confirmation copy along so Home can show it in a
-  // modal — the client lands somewhere they can keep navigating from.
+  // modal. The client lands somewhere they can keep navigating from.
   const submitAndRedirect = () => {
-    // Nothing touched — "Approve All" means exactly that, so mark every
+    // Nothing touched. "Approve All" means exactly that, so mark every
     // section approved before submitting instead of leaving them pending.
     if (reviewed === 0) sections.forEach((sec) => setItem(phase, sec.id, { status: 'approved' }));
     const changes = sections.filter((s) => fb[s.id]?.status === 'changes').length;
@@ -169,7 +169,7 @@ export function ClientReview({ account, phase }: { account: Account; phase: Phas
       : `Everything's approved and sent to ${account.am.name}.`;
     submit(phase);
     setPhaseSubmitted(phase, true);
-    navigate(BASE, { state: { feedbackSubmitted: { title: 'Thanks — feedback sent', body } } });
+    navigate(BASE, { state: { feedbackSubmitted: { title: 'Thanks, feedback sent', body } } });
   };
 
   if (status === 'draft') {
@@ -179,7 +179,7 @@ export function ClientReview({ account, phase }: { account: Account; phase: Phas
     const changes = sections.filter((s) => fb[s.id]?.status === 'changes').length;
     const edits = sections.filter((s) => hasEdits(fb[s.id])).length;
     const parts = [changes > 0 ? `${changes} change request${changes === 1 ? '' : 's'}` : '', edits > 0 ? `${edits} edit${edits === 1 ? '' : 's'}` : ''].filter(Boolean);
-    return <Empty tone="positive" title="Thanks — feedback sent" body={parts.length ? `We shared ${parts.join(' and ')} with the team. ${account.am.name} will follow up with the next version.` : `Everything's approved and sent to ${account.am.name}.`} />;
+    return <Empty tone="positive" title="Thanks, feedback sent" body={parts.length ? `We shared ${parts.join(' and ')} with the team. ${account.am.name} will follow up with the next version.` : `Everything's approved and sent to ${account.am.name}.`} />;
   }
 
   // Creative phase reviews individual content pieces (Approvals-tab style)
@@ -191,7 +191,7 @@ export function ClientReview({ account, phase }: { account: Account; phase: Phas
         onSubmitted={(body) => {
           submit(phase);
           setPhaseSubmitted(phase, true);
-          navigate(BASE, { state: { feedbackSubmitted: { title: 'Thanks — feedback sent', body } } });
+          navigate(BASE, { state: { feedbackSubmitted: { title: 'Thanks, feedback sent', body } } });
         }}
       />
     );
@@ -203,7 +203,7 @@ export function ClientReview({ account, phase }: { account: Account; phase: Phas
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
           <Heading level={2} style={{ marginTop: 0 }}>{phase === 'strategy' ? 'Review your strategy' : phase === 'goals' ? 'Review your goals' : 'Review your first creative'}</Heading>
           <Text variant="primary" color="var(--dark-60)" style={{ display: 'block', margin: '6px 0 24px', lineHeight: 1.6 }}>
-            {account.am.name} put this together for {account.name}. Approve what looks right, edit any field directly, or request changes with a note — it goes straight back to the team.
+            {account.am.name} put this together for {account.name}. Approve what looks right, edit any field directly, or request changes with a note. It goes straight back to the team.
           </Text>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
@@ -248,7 +248,7 @@ function ReviewSection({ account, phase, sec, highlightKeys }: { account: Accoun
 
   // Sections with exactly one subpart that just repeats the section title
   // (Major events, Channels to develop plans around, Scorecard, First
-  // creative, Campaign calendar) don't need their own H5 + Edit row — that
+  // creative, Campaign calendar) don't need their own H5 + Edit row. That
   // Edit control moves up into the section header instead, replacing
   // Request changes/Approve with a single Save while active.
   const singleField = parts.length === 1 && parts[0].label === sec.title ? parts[0] : null;
@@ -257,7 +257,7 @@ function ReviewSection({ account, phase, sec, highlightKeys }: { account: Accoun
 
   return (
     <div>
-      {/* header — headline and verdict buttons outside the container */}
+      {/* header: headline and verdict buttons outside the container */}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center', paddingBottom: 16, borderBottom: '1px solid var(--dark-8)', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Heading level={3} style={{ margin: 0 }}>{sec.title}</Heading>
@@ -297,7 +297,7 @@ function ReviewSection({ account, phase, sec, highlightKeys }: { account: Accoun
         </div>
       )}
 
-      {/* subsections, each with its own H5 and Edit button — no outer container */}
+      {/* subsections, each with its own H5 and Edit button, no outer container */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
         {partRows.map((row) => (
           <div key={row[0].key} style={row.length === 2 ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 } : undefined}>
@@ -363,7 +363,7 @@ function ReviewSection({ account, phase, sec, highlightKeys }: { account: Accoun
   );
 }
 
-/** Read-only swatch grid — the default view before the client taps Edit. */
+/** Read-only swatch grid. The default view before the client taps Edit. */
 function ColorSwatches({ colors }: { colors: BrandColor[] }) {
   return (
     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -377,7 +377,7 @@ function ColorSwatches({ colors }: { colors: BrandColor[] }) {
   );
 }
 
-/** Add / rename / remove brand colors — only reachable behind the Colors
+/** Add / rename / remove brand colors, only reachable behind the Colors
  *  subsection's Edit button, matching every other field's edit affordance. */
 function ColorsEditor({ colors, onChange }: { colors: BrandColor[]; onChange: (colors: BrandColor[]) => void }) {
   const update = (i: number, patch: Partial<BrandColor>) => onChange(colors.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
@@ -403,7 +403,7 @@ function ColorsEditor({ colors, onChange }: { colors: BrandColor[]; onChange: (c
   );
 }
 
-/** Add / rename / remove brand fonts — only reachable behind the Fonts
+/** Add / rename / remove brand fonts, only reachable behind the Fonts
  *  subsection's Edit button, matching every other field's edit affordance. */
 function FontsEditor({ fonts, onChange }: { fonts: BrandFont[]; onChange: (fonts: BrandFont[]) => void }) {
   const update = (i: number, patch: Partial<BrandFont>) => onChange(fonts.map((f, idx) => (idx === i ? { ...f, ...patch } : f)));
@@ -428,7 +428,7 @@ function FontsEditor({ fonts, onChange }: { fonts: BrandFont[]; onChange: (fonts
   );
 }
 
-/** Read-only chip grid — shared by "Channels they're on" and "Channels to
+/** Read-only chip grid, shared by "Channels they're on" and "Channels to
  *  develop plans around" before the client taps Edit. */
 function ChannelPills({ channels }: { channels: string[] }) {
   return (
@@ -438,7 +438,7 @@ function ChannelPills({ channels }: { channels: string[] }) {
   );
 }
 
-/** Add / remove arbitrary channels — free text, for "Channels they're on". */
+/** Add / remove arbitrary channels, free text, for "Channels they're on". */
 function ChannelsEditor({ channels, onChange }: { channels: string[]; onChange: (channels: string[]) => void }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
@@ -470,7 +470,7 @@ function ChannelsEditor({ channels, onChange }: { channels: string[]; onChange: 
   );
 }
 
-/** Toggle membership in a fixed candidate list — for "Channels to develop
+/** Toggle membership in a fixed candidate list, for "Channels to develop
  *  plans around", where the options come from the audit, not free text. */
 function PlanChannelsEditor({ selected, onChange }: { selected: string[]; onChange: (channels: string[]) => void }) {
   return (
@@ -485,7 +485,7 @@ function PlanChannelsEditor({ selected, onChange }: { selected: string[]; onChan
   );
 }
 
-/** Read-only tagged event list — Major events before the client taps Edit. */
+/** Read-only tagged event list: Major events before the client taps Edit. */
 function EventsRead({ events }: { events: GoalEvent[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -500,7 +500,7 @@ function EventsRead({ events }: { events: GoalEvent[] }) {
   );
 }
 
-/** Add / edit / remove / retag major events — a repeating list of label +
+/** Add / edit / remove / retag major events: a repeating list of label +
  *  date + Company/Industry toggle, matching the AM goals page's editing UI. */
 function EventsEditor({ events, onChange }: { events: GoalEvent[]; onChange: (events: GoalEvent[]) => void }) {
   const update = (i: number, patch: Partial<GoalEvent>) => onChange(events.map((e, idx) => (idx === i ? { ...e, ...patch } : e)));
@@ -579,7 +579,7 @@ function ScorecardRead({ account }: { account: Account }) {
  * Approvals tab's ContentCard interaction (see Approvals.tsx) rather than
  * PR97's AM-only AssetCard/Calendar authoring tools. PR97's real "Campaign
  * calendar" AM step has no per-item approval UI at all (it's a day-by-day
- * scheduling CRUD tool) — since the client needs to approve individual
+ * scheduling CRUD tool). Since the client needs to approve individual
  * content in BOTH views, both views here share one item list built from
  * S.generatedAssets, grouped by asset type ("Visual review") and by the
  * account's real S.seasonalThemes week ("Campaign calendar"). ─────────────*/
@@ -592,8 +592,8 @@ function buildCreativeItems(account: Account): CreativeItem[] {
   const theme = S.campaignThemes(account).find((t) => t.recommended) ?? S.campaignThemes(account)[0];
   const assets = S.generatedAssets(account, theme.title);
   const weeks = S.seasonalThemes(account);
-  // Two of each asset type — a representative "first wave", not the full
-  // 24-asset backlog — spread two per week to match the seasonal calendar.
+  // Two of each asset type, a representative "first wave", not the full
+  // 24-asset backlog, spread two per week to match the seasonal calendar.
   const items: CreativeItem[] = [];
   CREATIVE_ASSET_TYPES.forEach((type, typeIdx) => {
     assets.filter((a) => a.type === type).slice(0, 2).forEach((a, i) => {
@@ -629,7 +629,7 @@ const CREATIVE_TYPE_META: Record<GeneratedAsset['type'], { icon: typeof VideoOn;
 
 type CreativeStatus = 'pending' | 'approved' | 'changes';
 
-/** Status banner shown once a card is decided — mirrors Approvals.tsx's
+/** Status banner shown once a card is decided, mirrors Approvals.tsx's
  *  DecisionBanner. */
 function CreativeDecisionBanner({ status, note }: { status: Exclude<CreativeStatus, 'pending'>; note?: string }) {
   const approved = status === 'approved';
@@ -644,7 +644,7 @@ function CreativeDecisionBanner({ status, note }: { status: Exclude<CreativeStat
   );
 }
 
-/** One approvable creative card — image, caption, and inline Approve /
+/** One approvable creative card: image, caption, and inline Approve /
  *  Request changes actions, adapted directly from Approvals.tsx's
  *  ContentCard so the client's creative review feels like the Approvals tab. */
 function CreativeCard({ item, image, status, note, onApprove, onRequestChanges }: {
@@ -704,7 +704,7 @@ function CreativeCard({ item, image, status, note, onApprove, onRequestChanges }
   );
 }
 
-/** Creative phase screen — replaces the generic per-field ReviewSection flow
+/** Creative phase screen: replaces the generic per-field ReviewSection flow
  *  with a per-item approvals grid (Approvals-tab style), shown two ways:
  *  grouped by format ("Visual review") and by week ("Campaign calendar"). */
 function CreativeReviewScreen({ account, onSubmitted }: { account: Account; onSubmitted: (body: string) => void }) {
@@ -740,7 +740,7 @@ function CreativeReviewScreen({ account, onSubmitted }: { account: Account; onSu
         <div style={{ maxWidth: 1040, margin: '0 auto' }}>
           <Heading level={2} style={{ marginTop: 0 }}>Review your first creative</Heading>
           <Text variant="primary" color="var(--dark-60)" style={{ display: 'block', margin: '6px 0 24px', lineHeight: 1.6 }}>
-            {account.am.name} put this together for {account.name}. Approve each piece or request changes with a note — it goes straight back to the team.
+            {account.am.name} put this together for {account.name}. Approve each piece or request changes with a note. It goes straight back to the team.
           </Text>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>

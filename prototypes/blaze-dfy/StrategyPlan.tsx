@@ -14,7 +14,7 @@ import type { Account } from './lib/types';
 import { HoverInput } from './ui';
 
 /**
- * AM Strategy — the account-manager mirror of the client's read-only strategy
+ * AM Strategy, the account-manager mirror of the client's read-only strategy
  * tab. Same grouped channel layout, but the AM sees EVERY feature (including the
  * ones that are switched off), can toggle any of them on, and can edit both the
  * cadence text (right of the title) and the plan description (below) that the
@@ -108,7 +108,7 @@ const INITIAL: Channel[] = [
     icon: SupportBubble,
     on: true,
     cadence: '24/7 · calls, texts & chats',
-    plan: 'An AI receptionist answering every call, text, and chat in seconds — qualifying and booking leads around the clock.',
+    plan: 'An AI receptionist answering every call, text, and chat in seconds, qualifying and booking leads around the clock.',
   },
 ];
 
@@ -170,7 +170,7 @@ function ChannelRow({
 }) {
   const Icon = channel.icon;
   const on = channel.on;
-  // Keep the icon tile a square whose side matches the row's content height —
+  // Keep the icon tile a square whose side matches the row's content height,
   // flexbox won't transfer a stretched cross-size to the main axis, so mirror
   // the rendered height onto the width with a ResizeObserver.
   const boxRef = useRef<HTMLSpanElement>(null);

@@ -23,7 +23,7 @@ import Upload from '@/icons/20/Upload';
 import { ClientShell } from './shell';
 
 /**
- * Client Brand Kit — Grain Design Flooring (Austin, TX).
+ * Client Brand Kit: Grain Design Flooring (Austin, TX).
  *
  * Self-contained rewrite (no ../h2/brand-kit imports, no BrandKitProvider). The
  * left sub-rail IA + ClientShell wrapper are kept from the original; every
@@ -107,7 +107,7 @@ function RailItem({ icon: Icon, active, onSelect, children }: { icon: ComponentT
 
 // ─── Shared sub-page primitives ──────────────────────────────────────
 
-/** Section header — shows the section name as the page header and a per-section
+/** Section header: shows the section name as the page header and a per-section
  *  "Request changes" control. The client can't edit the brand kit directly, but
  *  can ask their account manager to update any section. The button reveals a
  *  note box (in normal flow, below the header); sending fires a toast. */
@@ -127,7 +127,7 @@ function SectionHeading({ title, children }: { title: string; children?: ReactNo
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
-  const send = () => { setOpen(false); setNote(''); showToast({ message: `Change requested for ${title} — your account manager will update it.` }); };
+  const send = () => { setOpen(false); setNote(''); showToast({ message: `Change requested for ${title}. Your account manager will update it.` }); };
 
   return (
     <div style={{ paddingBottom: 16, borderBottom: '1px solid var(--dark-8)' }}>
@@ -136,7 +136,7 @@ function SectionHeading({ title, children }: { title: string; children?: ReactNo
           <Heading level={2} style={{ margin: 0, fontSize: 22 }}>{title}</Heading>
           {children}
         </div>
-        {/* Request changes — anchored popover so the input never pushes the page down */}
+        {/* Request changes, anchored popover so the input never pushes the page down */}
         <span ref={anchorRef} style={{ position: 'relative', flexShrink: 0, display: 'inline-flex' }}>
           <Button variant="secondary" size="sm" frontIcon={Edit3} onPress={() => setOpen((o) => !o)}>
             Request changes
@@ -244,7 +244,7 @@ const CONTENT_STRATEGIES = ['Educational / local authority', 'Educational', 'Loc
 
 const OVERVIEW_TEXT = `Grain Design Flooring is a premium, design-led flooring studio serving Austin, TX and the surrounding Hill Country (Westlake, Lakeway, Dripping Springs, Cedar Park). We specialize in hardwood, luxury vinyl plank (LVP), and tile for residential homes and light-commercial spaces.
 
-We position on craftsmanship over commodity: "floors with character, built to last." Every project starts with an in-home design consultation — matching species, finish, and layout to the room's light and the home's style — and every installation is backed by a lifetime workmanship warranty, installed by trained in-house crews.`;
+We position on craftsmanship over commodity: "floors with character, built to last." Every project starts with an in-home design consultation (matching species, finish, and layout to the room's light and the home's style), and every installation is backed by a lifetime workmanship warranty, installed by trained in-house crews.`;
 
 const SEGMENTS_TEXT = `Renovating homeowners in Westlake, Lakeway, and Dripping Springs
 Past clients and referral relationships
@@ -259,15 +259,15 @@ In-home design consultation`;
 
 const FOUNDER_TEXT = `Grain Design Flooring was founded by master craftsman Daniel Reyes, who spent fifteen years installing and refinishing floors across Central Texas before opening his own studio. Frustrated by warehouse-style flooring sold by the square foot, Daniel built Grain around a single idea: a floor is a design decision, not a commodity.
 
-He leads every design consultation personally, matching species and finish to each home's light and architecture, and trains the in-house crews who carry out each install. His philosophy — natural materials, honest timelines, and work that ages well underfoot — runs through everything the studio touches.`;
+He leads every design consultation personally, matching species and finish to each home's light and architecture, and trains the in-house crews who carry out each install. His philosophy (natural materials, honest timelines, and work that ages well underfoot) runs through everything the studio touches.`;
 
 interface CompetitorRow { id: string; name: string; channels: string; note: string; }
 
 const SEED_COMPETITORS: CompetitorRow[] = [
-  { id: 'c1', name: 'Floor & Decor', channels: 'Google Business Profile · Instagram · Facebook', note: 'Big-box specialty retailer — huge in-stock selection, price-led, no design service.' },
+  { id: 'c1', name: 'Floor & Decor', channels: 'Google Business Profile · Instagram · Facebook', note: 'Big-box specialty retailer with huge in-stock selection, price-led, no design service.' },
   { id: 'c2', name: 'LL Flooring', channels: 'Google Business Profile · Facebook', note: 'National flooring chain (formerly Lumber Liquidators); value hardwood and LVP, limited install support.' },
   { id: 'c3', name: 'The Home Depot (flooring services)', channels: 'Google Business Profile · YouTube', note: 'Home-improvement giant offering subcontracted flooring installs; convenient but impersonal.' },
-  { id: 'c4', name: 'Austin Hardwood Co.', channels: 'Google Business Profile · Instagram', note: 'Local independent hardwood crew — strong on refinishing, lighter on design guidance.' },
+  { id: 'c4', name: 'Austin Hardwood Co.', channels: 'Google Business Profile · Instagram', note: 'Local independent hardwood crew, strong on refinishing, lighter on design guidance.' },
   { id: 'c5', name: 'Hill Country Tile & Stone', channels: 'Google Business Profile · Houzz', note: 'Regional tile and stone contractor; overlaps on tile, not a full-service flooring studio.' },
 ];
 
@@ -280,7 +280,7 @@ const ADDITIONAL_CONTEXT: { id: string; title: string; kind: DisplayKind; text: 
   },
   {
     id: 'visual-identity', title: 'Visual identity', kind: 'prose',
-    text: 'Warm, natural, design-led. Walnut and oak browns grounded by a terracotta accent against limewash neutrals. Photography is real grain — close-up board texture, raking light on a finished floor, in-progress craftsmanship — never flat catalog swatches.',
+    text: 'Warm, natural, design-led. Walnut and oak browns grounded by a terracotta accent against limewash neutrals. Photography is real grain (close-up board texture, raking light on a finished floor, in-progress craftsmanship), never flat catalog swatches.',
   },
   {
     id: 'vocabulary-kpis', title: 'Industry vocabulary & KPIs', kind: 'list',
@@ -311,7 +311,7 @@ function BrandProfile() {
   const [businessType, setBusinessType] = useState(BUSINESS_TYPES[0]);
   const [contentStrategy, setContentStrategy] = useState(CONTENT_STRATEGIES[0]);
 
-  // Editable prose/list sections — committed to local state on Save.
+  // Editable prose/list sections, committed to local state on Save.
   const [overview, setOverview] = useState(OVERVIEW_TEXT);
   const [segments, setSegments] = useState(SEGMENTS_TEXT);
   const [services, setServices] = useState(SERVICES_TEXT);
@@ -562,7 +562,7 @@ function Collapsible({
 
 // ─── Brand Style ─────────────────────────────────────────────────────
 
-// Grain Design Flooring brand swatches — these literal hex values ARE the brand
+// Grain Design Flooring brand swatches: these literal hex values ARE the brand
 // colors, so they are intentionally not tokenized. Surrounding UI chrome uses tokens.
 interface ColorSwatchSpec { hex: string; label: string; }
 const SWATCHES: ColorSwatchSpec[] = [
@@ -596,7 +596,7 @@ function BrandStyle() {
         <Panel title="Typography">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <FontRow role="Display / headlines" family="Fraunces" weight="Semibold" preview="Floors with character" previewFamily='Georgia, "Times New Roman", serif' previewWeight={600} />
-            <FontRow role="Body / UI" family="Inter" weight="Regular" preview="A free in-home design consult — species, finish, and layout matched to the room." previewFamily='"Helvetica Neue", Arial, sans-serif' previewWeight={400} />
+            <FontRow role="Body / UI" family="Inter" weight="Regular" preview="A free in-home design consult, species, finish, and layout matched to the room." previewFamily='"Helvetica Neue", Arial, sans-serif' previewWeight={400} />
           </div>
         </Panel>
       </div>
@@ -606,8 +606,8 @@ function BrandStyle() {
         <Panel title="Visual identity description">
           <div style={{ padding: '14px 16px', background: 'var(--dark-2)', borderRadius: 8, color: 'var(--dark-90)', fontSize: 14, lineHeight: 1.5 }}>
             Warm, natural, and design-led. Walnut and oak browns grounded by a terracotta accent,
-            set against limewash neutrals and generous breathing room. Photography is real grain —
-            close-up board texture, raking light across a finished floor, in-progress craftsmanship —
+            set against limewash neutrals and generous breathing room. Photography is real grain:
+            close-up board texture, raking light across a finished floor, in-progress craftsmanship,
             never flat catalog swatches or stocky abstraction.
           </div>
         </Panel>
@@ -668,10 +668,10 @@ function BrandVoice() {
         <ProfileSection title="Tone summary">
           <BodyParagraph>
             Warm, design-led, and craftsmanship-forward. Grain Design Flooring speaks like a maker
-            who knows wood — equal parts designer and craftsman, plain-spoken about materials and
+            who knows wood, equal parts designer and craftsman, plain-spoken about materials and
             quietly confident about the result. Natural-material language ("grain," "patina,"
-            "underfoot") over sales pressure. Confidence comes from the work itself — real grain,
-            honest timelines — not hype.
+            "underfoot") over sales pressure. Confidence comes from the work itself, real grain and
+            honest timelines, not hype.
           </BodyParagraph>
         </ProfileSection>
 
@@ -686,7 +686,7 @@ function BrandVoice() {
         <ProfileSection title="Do / Don't">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
             <VoiceList variant="do" items={[
-              'Lead with craftsmanship and materials — species, finish, grain, longevity.',
+              'Lead with craftsmanship and materials: species, finish, grain, longevity.',
               'Reference Austin and the Hill Country, and how local light and slab homes shape the choice.',
               'Show real grain and in-progress work; name the service (hardwood, LVP, tile, refinishing).',
               'Sound like a maker-designer: warm, precise, confident about the result.',
@@ -694,7 +694,7 @@ function BrandVoice() {
             <VoiceList variant="dont" items={[
               "Don't run discount-driven hard sells or price-per-square-foot races.",
               "Don't use generic catalog-swatch language or empty superlatives.",
-              "Don't get jargon-heavy — keep it client-friendly, not contractor-speak.",
+              "Don't get jargon-heavy, keep it client-friendly, not contractor-speak.",
               "Don't sound like a big-box warehouse; we're a design studio, not a pick-list.",
             ]} />
           </div>
@@ -724,7 +724,7 @@ function VoiceList({ variant, items }: { variant: 'do' | 'dont'; items: string[]
 
 // ─── Media Library ───────────────────────────────────────────────────
 
-// Flooring imagery — the feed-data assets are painting-specific, so the Media
+// Flooring imagery: the feed-data assets are painting-specific, so the Media
 // Library uses warm wood-tone gradient tiles (per the rebrand brief). Each tile
 // gets a `tone` that maps to a gradient in MediaCard.
 type Tone = 'walnut' | 'oak' | 'terracotta' | 'tile' | 'limewash' | 'espresso';
@@ -745,7 +745,7 @@ const MEDIA: MediaItem[] = [
   { id: '12', tone: 'limewash', title: 'Refinish · before/after', kind: 'image', date: 'Image · Jan 8, 2026' },
 ];
 
-// Warm wood-tone gradients keyed by Tone — these literal values are imagery
+// Warm wood-tone gradients keyed by Tone: these literal values are imagery
 // stand-ins for the brand, intentionally not tokenized.
 const TILE_GRADIENT: Record<Tone, string> = {
   walnut: 'linear-gradient(135deg, #5a3a23 0%, #8a5a38 100%)',
@@ -769,7 +769,7 @@ function MediaLibrary() {
         <Heading level={4} style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>Job photos that keep your content fresh</Heading>
         <Text variant="secondary" style={{ display: 'block', marginTop: 4, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
           Blaze uses your install, refinish, and detail photos and videos to create social posts,
-          blogs, and emails — sourced from Grain Design Flooring projects across Austin and the
+          blogs, and emails, sourced from Grain Design Flooring projects across Austin and the
           Hill Country.
         </Text>
       </div>
@@ -807,10 +807,10 @@ interface SourceRow { id: string; name: string; type: string; status: DocStatus;
 
 const DOCS: SourceRow[] = [
   { id: '1', name: 'Grain Design Flooring Brand Guidelines', type: 'PDF', status: 'uploaded', meta: 'Added Sep 17, 2025' },
-  { id: '2', name: 'Species & finish spec sheet — hardwood, LVP & tile', type: 'PDF', status: 'uploaded', meta: 'Added Sep 18, 2025' },
+  { id: '2', name: 'Species & finish spec sheet · hardwood, LVP & tile', type: 'PDF', status: 'uploaded', meta: 'Added Sep 18, 2025' },
   { id: '3', name: 'Lifetime install warranty & care guide', type: 'Document', status: 'uploaded', meta: 'Added Aug 14, 2025' },
-  { id: '4', name: 'Sales-call transcript — Westlake design consult', type: 'Transcript', status: 'uploaded', meta: 'Added Nov 14, 2025' },
-  { id: '5', name: 'Light-commercial line sheet — contract flooring', type: 'PDF', status: 'empty', meta: 'Not uploaded yet' },
+  { id: '4', name: 'Sales-call transcript · Westlake design consult', type: 'Transcript', status: 'uploaded', meta: 'Added Nov 14, 2025' },
+  { id: '5', name: 'Light-commercial line sheet · contract flooring', type: 'PDF', status: 'empty', meta: 'Not uploaded yet' },
 ];
 
 /** Best-guess material type from a file extension (drives the row glyph). */
@@ -853,7 +853,7 @@ function SourceMaterials() {
 
       {/* section: blurb */}
       <Text variant="secondary" style={{ display: 'block', marginTop: 16, marginBottom: 16, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, maxWidth: 640 }}>
-        Brand and marketing materials Blaze has indexed — guidelines, species &amp; finish specs,
+        Brand and marketing materials Blaze has indexed: guidelines, species &amp; finish specs,
         the install warranty, and recorded sales calls. Blaze pulls from these to keep content on-brand.
         Add your own any time.
       </Text>
@@ -881,7 +881,7 @@ function SourceMaterials() {
       >
         <Upload size={24} color="var(--dark-60)" />
         <Text style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>Upload source materials</Text>
-        <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>Drag files here, or click to browse — PDFs, docs, transcripts, images</Text>
+        <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>Drag files here, or click to browse. PDFs, docs, transcripts, images</Text>
       </button>
 
       {/* section: list */}

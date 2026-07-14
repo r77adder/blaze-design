@@ -3,16 +3,16 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 /**
  * Prototype-only view-state switch for the DFY **client** portal. A single
  * global flag flips every page between four variants:
- *   - `cold`      — account just started onboarding (scorecard + strategy
+ *   - `cold`: account just started onboarding (scorecard + strategy
  *                   ready, goals/creative still being worked on, go-live not
  *                   started).
- *   - `reviewing` — onboarding is nearly done: everything (scorecard,
+ *   - `reviewing`: onboarding is nearly done. Everything (scorecard,
  *                   strategy, goals, creative) is ready for the client to
- *                   review — only go-live itself is still pending.
- *   - `mixed`     — the client has already started reviewing: each item is in
+ *                   review, only go-live itself is still pending.
+ *   - `mixed`: the client has already started reviewing: each item is in
  *                   a different stage (approved / changes requested / the AM
  *                   sent one back with addressed feedback / still untouched).
- *   - `steady`    — live, populated — the current design.
+ *   - `steady`: live, populated, the current design.
  * Pages read `state` at the top of their render and branch.
  *
  * Defaults to `steady` (the live workspace) and persists the designer's choice

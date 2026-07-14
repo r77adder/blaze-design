@@ -7,7 +7,7 @@ import { ClientReview } from './ReviewStrategy';
 /* ─── dfy-client route export + seed ─────────────────────────────────────────
  * Same pattern as ReviewStrategy.tsx: PR97 starts every packet as 'draft', so
  * a tiny mount effect shares the creative packet before rendering ClientReview.
- * ClientReview itself is phase-generic — StoryboardRead/CalendarRead already
+ * ClientReview itself is phase-generic, StoryboardRead/CalendarRead already
  * cover the storyboard + calendar sections for phase="creative". */
 function CreativeReviewBody() {
   const { packet, share } = useReview();

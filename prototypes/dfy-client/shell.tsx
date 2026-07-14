@@ -19,7 +19,7 @@ export const BASE = '/dfy-client';
 /**
  * Client-facing shell for the DFY portal. Mirrors H2's chrome (PrototypeShell)
  * but with a slim, view-only client IA. The done-for-you customer sees results
- * and approves work — they don't operate the account, so the operator nav
+ * and approves work, they don't operate the account, so the operator nav
  * (Meta Strategy, Content Settings, Competitor Tracking, …) is intentionally
  * absent.
  */
@@ -45,7 +45,7 @@ export function useGo() {
   return (path: string) => navigate(BASE + path);
 }
 
-/** Back-arrow + label topbar title cluster — for detail/review pages that
+/** Back-arrow + label topbar title cluster, for detail/review pages that
  *  aren't top-level nav sections (e.g. the review-* pages). Matches the
  *  back-button convention already used in h2's detail views. */
 export function BackTitle({ label }: { label: string }) {

@@ -21,10 +21,10 @@ export function CreativeReview({ account, sub, go }: { account: Account; sub: st
   const theme = (S.campaignThemes(account).find((t) => t.recommended) ?? S.campaignThemes(account)[0]).title;
   const { setCreativeComplete, packet } = useReview();
   // In the Reviewed state the client has already reviewed a generated wave, so
-  // seed one — the Visual review shows the content and the Plan step shows the
+  // seed one, the Visual review shows the content and the Plan step shows the
   // per-piece verdicts.
   const reviewed = packet('creative') === 'submitted';
-  // Generation waves live here so they persist across sub-steps — the items the
+  // Generation waves live here so they persist across sub-steps, the items the
   // AM marks in the Plan step flow into the Visual review step.
   const [waves, setWaves] = useState<Wave[]>(() => (reviewed ? [reviewedWave(account)] : []));
   useEffect(() => { if (sub === 'done') setCreativeComplete(true); }, [sub, setCreativeComplete]);
@@ -73,7 +73,7 @@ export function CreativeReview({ account, sub, go }: { account: Account; sub: st
   );
 }
 
-/** Reviewed state — the Plan step shows the client's per-piece verdict on the
+/** Reviewed state, the Plan step shows the client's per-piece verdict on the
  *  generated wave, so the AM can regenerate the flagged pieces and re-send. */
 function CreativeReviewResults({ account, items }: { account: Account; items: SampleItem[] }) {
   const { showToast } = useToast();
@@ -83,7 +83,7 @@ function CreativeReviewResults({ account, items }: { account: Account; items: Sa
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <SectionHeading
         title="Client review"
-        desc={`${account.poc.name} reviewed each piece — ${approved} approved, ${changes} with changes. Regenerate the flagged ones, then send another round.`}
+        desc={`${account.poc.name} reviewed each piece: ${approved} approved, ${changes} with changes. Regenerate the flagged ones, then send another round.`}
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, alignItems: 'start' }}>
         {items.map((it) => (
@@ -114,7 +114,7 @@ function Storyboard({ account, items, onGoToPlan }: { account: Account; items: S
       {items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 0', border: '1px dashed var(--dark-12)', borderRadius: 12 }}>
           <Heading level={4} style={{ margin: '0 0 6px' }}>Nothing marked for review yet</Heading>
-          <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Generate samples and tick “Include in customer review” in the Plan step — they’ll show up here.</Text>
+          <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 16 }}>Generate samples and tick “Include in customer review” in the Plan step. They’ll show up here.</Text>
           <Button variant="secondary" onPress={onGoToPlan}>Go to Plan</Button>
         </div>
       ) : (

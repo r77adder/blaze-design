@@ -6,7 +6,7 @@ import { DataTable } from '../h2/insights/shared';
 import { ClientShell } from './shell';
 
 /**
- * Client settings — a slim, view-only surface for the done-for-you customer.
+ * Client settings: a slim, view-only surface for the done-for-you customer.
  * Operator settings (Content Settings, Competitor Tracking, Meta Strategy…)
  * are intentionally absent. Two sub-tabs: who can see the account, and the
  * plan + billing relationship with Blaze.
@@ -97,11 +97,11 @@ function PlansPayments() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Heading level={4} style={{ margin: 0 }}>Done-For-You — Growth</Heading>
+              <Heading level={4} style={{ margin: 0 }}>Done-For-You · Growth</Heading>
               <StatusPill tone="success" size="sm">Active</StatusPill>
             </div>
             <Text variant="secondary" style={{ color: 'var(--dark-60)', lineHeight: 1.5 }}>
-              Full-service marketing across organic, paid, SEO, local & reputation — with a dedicated account manager (Dana Reyes).
+              Full-service marketing across organic, paid, SEO, local & reputation, with a dedicated account manager (Dana Reyes).
             </Text>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>

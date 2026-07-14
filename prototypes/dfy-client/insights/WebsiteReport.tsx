@@ -26,7 +26,7 @@ function Step({ rate, label }: { rate: string; label: string }) {
   );
 }
 
-/** Website — traffic line (this period vs previous), conversion funnel, traffic-by-channel table. */
+/** Website: traffic line (this period vs previous), conversion funnel, traffic-by-channel table. */
 export function WebsiteReport({ editing, narrative, onNarrative }: ChannelProps) {
   return (
     <InsightsReport weeks={WEEKS.map((w, i) => (i === 0 ? { ...w, subtitle: 'Consult-request page converting above benchmark' } : w))}>

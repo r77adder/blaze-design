@@ -14,7 +14,7 @@ import { GOALS, DEFAULT_PLAN, MAJOR_EVENTS, type Goals, type MajorEvent } from '
 
 const PHASE_TITLE: Record<Phase, string> = { strategy: 'strategy', goals: 'goals & theme', creative: 'creative' };
 
-/** A subsection of a review section — its own H5 label, a read rendering, and
+/** A subsection of a review section, its own H5 label, a read rendering, and
  *  (when text-based) editable copy the client can revise field-by-field. */
 interface SubPart { key: string; label: string; read: ReactNode; editText?: string }
 
@@ -42,7 +42,7 @@ function sectionParts(account: Account, id: string): SubPart[] {
           ))}
         </div>
       ) },
-      { key: 'fonts', label: 'Fonts', read: para(fonts || '—'), editText: fonts },
+      { key: 'fonts', label: 'Fonts', read: para(fonts || '-'), editText: fonts },
       { key: 'voice', label: 'Voice', read: para(g.toneSummary), editText: g.toneSummary },
     ];
   }
@@ -80,7 +80,7 @@ export function ClientReview({ account, phase }: { account: Account; phase: Phas
     const changes = sections.filter((s) => fb[s.id]?.status === 'changes').length;
     const edits = sections.filter((s) => hasEdits(fb[s.id])).length;
     const parts = [changes > 0 ? `${changes} change request${changes === 1 ? '' : 's'}` : '', edits > 0 ? `${edits} edit${edits === 1 ? '' : 's'}` : ''].filter(Boolean);
-    return <Empty tone="positive" title="Thanks — feedback sent" body={parts.length ? `We shared ${parts.join(' and ')} with the team. ${account.am.name} will follow up with the next version.` : `Everything's approved and sent to ${account.am.name}.`} />;
+    return <Empty tone="positive" title="Thanks, feedback sent" body={parts.length ? `We shared ${parts.join(' and ')} with the team. ${account.am.name} will follow up with the next version.` : `Everything's approved and sent to ${account.am.name}.`} />;
   }
 
   return (
@@ -89,7 +89,7 @@ export function ClientReview({ account, phase }: { account: Account; phase: Phas
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
           <Heading level={2} style={{ marginTop: 0 }}>{phase === 'strategy' ? 'Review your strategy' : phase === 'goals' ? 'Review your goals & first theme' : 'Review your first creative'}</Heading>
           <Text variant="primary" color="var(--dark-60)" style={{ display: 'block', margin: '6px 0 24px', lineHeight: 1.6 }}>
-            {account.am.name} put this together for {account.name}. Approve what looks right, edit any field directly, or request changes with a note — it goes straight back to the team.
+            {account.am.name} put this together for {account.name}. Approve what looks right, edit any field directly, or request changes with a note. It goes straight back to the team.
           </Text>
 
           {phase === 'goals'
@@ -121,7 +121,7 @@ function ReviewSection({ account, phase, sec }: { account: Account; phase: Phase
 
   return (
     <div>
-      {/* header — headline, subhead and verdict buttons outside the container */}
+      {/* header: headline, subhead and verdict buttons outside the container */}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', marginBottom: 12 }}>
         <div>
           <Heading level={3} style={{ margin: 0 }}>{sec.title}</Heading>
@@ -133,7 +133,7 @@ function ReviewSection({ account, phase, sec }: { account: Account; phase: Phase
         </div>
       </div>
 
-      {/* container — subsections, each with its own H5 and Edit button */}
+      {/* container: subsections, each with its own H5 and Edit button */}
       <Card>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {parts.map((p) => {
@@ -166,7 +166,7 @@ function ReviewSection({ account, phase, sec }: { account: Account; phase: Phase
   );
 }
 
-/** Shared verdict controls — a Request-changes button that opens a note popover,
+/** Shared verdict controls: a Request-changes button that opens a note popover,
  *  and an Approve toggle. Both read/write the section's feedback directly. */
 function RequestChanges({ phase, id }: { phase: Phase; id: string }) {
   const { feedback, setItem } = useReview();
@@ -196,7 +196,7 @@ function ApproveButton({ phase, id }: { phase: Phase; id: string }) {
   return <Button size="sm" variant={f.status === 'approved' ? 'green' : 'secondary'} frontIcon={Check2} onPress={() => setItem(phase, id, { status: f.status === 'approved' ? 'pending' : 'approved' })}>Approve</Button>;
 }
 
-/* ─── Goals & theme review — mirrors the pre-submission Goals screen, read-only,
+/* ─── Goals & theme review, mirrors the pre-submission Goals screen, read-only,
  *  with per-subsection Edit + section-level Approve / Request changes. No card
  *  around the subsections (matches the pre-submission layout). ────────────── */
 function GoalsReviewSections() {
@@ -315,7 +315,7 @@ function Empty({ title, body, tone }: { title: string; body: string; tone?: 'pos
   );
 }
 
-/** One section's returned feedback — a change request, a client edit, or an
+/** One section's returned feedback: a change request, a client edit, or an
  *  approval. Shared by the inline SectionFeedback and the goals AmReviewPanel. */
 function SectionFeedbackCard({ account, phase, sec, hideTitle }: { account: Account; phase: Phase; sec: ReviewSectionMeta; hideTitle?: boolean }) {
   const { feedback, resolve, setItem } = useReview();
@@ -434,7 +434,7 @@ export function AmReviewPanel({ account, phase, go, stepped }: { account: Accoun
             <Button size="sm" variant="ghost" onPress={() => reset(phase)}>Reset</Button>
           </div>
           {stepped
-            ? <Text variant="secondary" color="var(--dark-60)">{[changes.length ? `${changes.length} change request${changes.length === 1 ? '' : 's'}` : '', edited.length ? `${edited.length} edit${edited.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ') || 'Everything approved'} — open the highlighted steps above to review each in place.</Text>
+            ? <Text variant="secondary" color="var(--dark-60)">{[changes.length ? `${changes.length} change request${changes.length === 1 ? '' : 's'}` : '', edited.length ? `${edited.length} edit${edited.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ') || 'Everything approved'}. Open the highlighted steps above to review each in place.</Text>
             : (<>
                 {changes.map((s) => <SectionFeedbackCard key={s.id} account={account} phase={phase} sec={s} />)}
                 {edited.map((s) => <SectionFeedbackCard key={s.id} account={account} phase={phase} sec={s} />)}

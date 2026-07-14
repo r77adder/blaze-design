@@ -5,7 +5,7 @@ import ApprovalsIcon from '@/icons/20/Approvals';
 import { Sparkline } from './insights/charts';
 import { useGo, ClientShell } from './shell';
 
-/** At-a-glance results across the channels Blaze runs — links into Insights.
+/** At-a-glance results across the channels Blaze runs, links into Insights.
  *  `spark` is the trailing-30d shape rendered as a Sparkline inside each card;
  *  `sparkColor` tints it to match the metric's accent. */
 const METRICS: { label: string; value: string; delta: string; to: string; spark: number[]; sparkColor: string }[] = [
@@ -50,8 +50,8 @@ const IMG = {
   tile: 'https://images.unsplash.com/photo-1607400201515-c2c41c07d307?w=400&auto=format&fit=crop',
 };
 
-// Two approvals notifications — the only things on the steady Home feed. Each
-// links into the Approvals tab (the second lands straight on the Updated subtab).
+// Two approvals notifications, the only things on the steady Home feed. Both
+// link into the Approvals tab (the batch list).
 interface Notification {
   id: string;
   icon: ComponentType<{ size?: number; color?: string }>;
@@ -72,10 +72,10 @@ const NOTIFICATIONS: Notification[] = [
     iconColor: 'var(--status-approved)',
     label: 'Approvals',
     time: '2h ago',
-    title: 'Updated designs are ready for another look',
+    title: 'Revised designs are back in review',
     body: 'Your team revised the pieces you asked changes on and re-sent them. Take a quick look and approve when they’re right.',
-    cta: 'See updated designs',
-    to: '/approvals/updated',
+    cta: 'See what changed',
+    to: '/approvals',
     images: [IMG.hardwood, IMG.livingRoom],
     total: 2,
   },

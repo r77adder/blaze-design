@@ -17,7 +17,7 @@ import { MetaCampaignProvider } from '../h2-port/meta-campaign/meta-campaign-con
 import { ClientViewProvider } from '../h2-port/client-view-context';
 
 /**
- * Blaze DFY — Done-For-You onboarding (AM workspace + client portal).
+ * Blaze DFY: Done-For-You onboarding (AM workspace + client portal).
  *
  * Routed with the playground's react-router (prototypes mount at
  * `/blaze-dfy/*`). Routes, relative to that base:

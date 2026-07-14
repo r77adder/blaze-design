@@ -1,5 +1,5 @@
 /**
- * Creative Review — sample-wave planning + generation model.
+ * Creative Review, sample-wave planning + generation model.
  *
  * The AM plans what to generate (PlanRow[]), generates samples in waves, marks
  * the ones worth the customer's time (`includeInReview`), and those flow into
@@ -34,7 +34,7 @@ export interface Wave {
   items: SampleItem[];
 }
 
-/** A row in the planning table — "generate N of <type> about <topic> for <channel>". */
+/** A row in the planning table: "generate N of <type> about <topic> for <channel>". */
 export interface PlanRow {
   id: string;
   type: AssetType;
@@ -69,13 +69,13 @@ export const CHANNEL_FOR_TYPE: Record<string, string> = {
 let rowSeq = 1;
 export const newRowId = () => `row-${rowSeq++}`;
 
-/** Seeded plan, loosely themed off the account — the AM tweaks before generating. */
+/** Seeded plan, loosely themed off the account. The AM tweaks before generating. */
 export function defaultPlan(account: Account): PlanRow[] {
   const seeds: [AssetType, string][] = [
     ['Still Image', 'Local focus, signature work'],
     ['Still Image', 'Why customers choose us'],
     ['Carousel', '3 things to know before you book'],
-    ['Story', `${account.industry} — a day on the job`],
+    ['Story', `${account.industry} · a day on the job`],
     ['Video', 'Before & after, in motion'],
   ];
   return seeds.map(([type, topic]) => ({
@@ -88,7 +88,7 @@ export function defaultPlan(account: Account): PlanRow[] {
 }
 
 let waveSeq = 1;
-/** Build a fresh wave from the plan. Items start `generating` — the UI flips
+/** Build a fresh wave from the plan. Items start `generating`, the UI flips
  *  them to `done` after a short delay to mimic the model working. */
 export function waveFromPlan(plan: PlanRow[], account: Account, guidance?: string): Wave {
   const idx = waveSeq++;
@@ -99,7 +99,7 @@ export function waveFromPlan(plan: PlanRow[], account: Account, guidance?: strin
         id: `w${idx}-r${ri}-${i}`,
         type: row.type,
         topic: row.topic,
-        caption: `${row.topic}. ${account.name} — book your free estimate this week and see the difference a local crew makes.`,
+        caption: `${row.topic}. ${account.name}, book your free estimate this week and see the difference a local crew makes.`,
         overlay: row.topic,
         seed: idx * 1000 + ri * 10 + i,
         channel: row.channel,
@@ -133,7 +133,7 @@ export function customSample(type: AssetType = 'Still Image'): SampleItem {
 export const reviewItems = (waves: Wave[]): SampleItem[] =>
   waves.flatMap((w) => w.items).filter((it) => it.includeInReview);
 
-/** A finished, already-reviewed wave for the "Reviewed" demo state — every piece
+/** A finished, already-reviewed wave for the "Reviewed" demo state. Every piece
  *  is done + included, with a per-piece client verdict (a realistic mix of
  *  approved and changes-requested). */
 export function reviewedWave(account: Account): Wave {
@@ -141,7 +141,7 @@ export function reviewedWave(account: Account): Wave {
   const verdicts: { status: 'approved' | 'changes'; note?: string }[] = [
     { status: 'approved' },
     { status: 'approved' },
-    { status: 'changes', note: 'Love the concept — warm up the tone and cut the caption in half.' },
+    { status: 'changes', note: 'Love the concept. Warm up the tone and cut the caption in half.' },
     { status: 'approved' },
     { status: 'changes', note: 'Lead with the finished floor, not the install process.' },
   ];
@@ -173,7 +173,7 @@ export interface BrandTaste {
 /** What the model inferred the customer likes, from this round's approvals. */
 export function inferredTaste(account: Account): BrandTaste {
   return {
-    summary: `${account.name} consistently approved content with a confident, aspirational tone and visually striking imagery — concise, professional captions and a darker, sophisticated aesthetic.`,
+    summary: `${account.name} consistently approved content with a confident, aspirational tone and visually striking imagery, concise, professional captions and a darker, sophisticated aesthetic.`,
     liked: [
       'Short, sweet, professional captions',
       'Contrasting / dichotomous themes',
@@ -214,7 +214,7 @@ export interface BrandGuidelinesData {
 export function defaultGuidelines(account: Account): BrandGuidelinesData {
   return {
     tone: [
-      `${account.name} speaks with a confident, inspiring voice — innovation, performance, and style for a dynamic, active audience.`,
+      `${account.name} speaks with a confident, inspiring voice: innovation, performance, and style for a dynamic, active audience.`,
       'Empowering, aspirational, and sophisticated.',
     ],
     leanInto: [

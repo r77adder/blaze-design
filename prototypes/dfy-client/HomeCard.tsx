@@ -76,13 +76,13 @@ function pieceImage(c: ApprovalContent): string | undefined {
       return c.cover;
     case 'paid-search':
     case 'reputation':
-      return undefined; // text-led previews — no photo
+      return undefined; // text-led previews, no photo
   }
 }
 
 const THUMB = 56;
 
-// Thumbnail strip (up to 4) with a "+N" overflow tile — used for batches.
+// Thumbnail strip (up to 4) with a "+N" overflow tile, used for batches.
 function ThumbStrip({ images, total, isVideo }: { images: string[]; total: number; isVideo?: boolean }) {
   const visible = images.slice(0, 4);
   const overflow = total - visible.length;
@@ -266,7 +266,7 @@ function InsightCard({ item, onSee }: { item: ApprovalItem; onSee: (to: string) 
         {item.body}
       </Text>
 
-      {/* QUIET tertiary link — no primary button on insights */}
+      {/* QUIET tertiary link, no primary button on insights */}
       {ins && (
         <div>
           <Button variant="subtle" size="sm" endIcon={ArrowUpRightSm} onClick={() => onSee(ins.to)}>

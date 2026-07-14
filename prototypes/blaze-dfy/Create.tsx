@@ -46,7 +46,7 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, padding: '5px 0' }}>
       <Text variant="secondary" color="var(--dark-60)">{label}</Text>
       <div style={{ textAlign: 'right', minWidth: 0 }}>
-        {typeof value === 'string' ? <Text variant="secondary" color="var(--dark-90)">{value || '—'}</Text> : value}
+        {typeof value === 'string' ? <Text variant="secondary" color="var(--dark-90)">{value || '-'}</Text> : value}
       </div>
     </div>
   );
@@ -66,7 +66,7 @@ export function Create() {
   const [accent, setAccent] = useState(ACCENT_SWATCHES[0]);
   const [billing, setBilling] = useState<BillingInfo>({ packages: [], term: 6, startDate: TODAY });
   const [billingImported, setBillingImported] = useState(false);
-  // Confirm-step inline editing — which summary cards are expanded into editors.
+  // Confirm-step inline editing, which summary cards are expanded into editors.
   const [editing, setEditing] = useState<Set<string>>(new Set());
   const toggleEdit = (k: string) => setEditing((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const [colors, setColors] = useState<BrandColor[]>([{ hex: '#1F2A44', name: 'Primary' }, { hex: '#F0B429', name: 'Accent' }]);
@@ -91,7 +91,7 @@ export function Create() {
     setTimeout(() => { setScanning(false); setStep('scan'); }, 2200);
   };
 
-  // Mock "pull from the signed contract" — fills a realistic package set.
+  // Mock "pull from the signed contract", fills a realistic package set.
   const importBilling = () => {
     setBilling({
       packages: [
@@ -192,7 +192,7 @@ export function Create() {
       </div>
       <div>
         <Heading level={3} style={{ margin: '0 0 4px' }}>Source materials</Heading>
-        <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 12 }}>Drop the sales call and any brand docs the scan couldn't pull — these inform everything Blaze generates.</Text>
+        <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 12 }}>Drop the sales call and any brand docs the scan couldn't pull. These inform everything Blaze generates.</Text>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {docs.map((d) => {
             const ext = d.id === 'transcript' ? 'txt' : 'pdf';
@@ -235,7 +235,7 @@ export function Create() {
       </SummaryCard>
       <SummaryCard title="Brand" editing={editing.has('brand')} onToggle={() => toggleEdit('brand')} edit={brandScanFields}>
         <Row label="Colors" value={<div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>{colors.map((c, i) => <span key={i} title={c.name} style={{ width: 20, height: 20, borderRadius: 5, background: c.hex, border: '1px solid var(--dark-8)' }} />)}</div>} />
-        <Row label="Fonts" value={fonts.map((f) => `${f.family || '—'} (${f.role})`).join(', ')} />
+        <Row label="Fonts" value={fonts.map((f) => `${f.family || '-'} (${f.role})`).join(', ')} />
         <Row label="Source materials" value={`${docs.filter((d) => d.uploaded).length} of ${docs.length} uploaded`} />
       </SummaryCard>
     </div>
@@ -243,7 +243,7 @@ export function Create() {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--light-100)' }}>
-      {/* Header — stepper centered (no dividers), Cancel pinned right. */}
+      {/* Header: stepper centered (no dividers), Cancel pinned right. */}
       <header style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 20px', background: 'var(--light-100)', borderBottom: '1px solid var(--dark-4)' }}>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
@@ -286,7 +286,7 @@ export function Create() {
           {!scanning && step === 'scan' && (
             <>
               <Heading level={2} style={{ marginTop: 0 }}>Brand scan</Heading>
-              <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', margin: '4px 0 32px' }}>We scanned {website || 'the website'} — review what we pulled, edit anything, and drop in materials we couldn't find.</Text>
+              <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', margin: '4px 0 32px' }}>We scanned {website || 'the website'}. Review what we pulled, edit anything, and drop in materials we couldn't find.</Text>
               {brandScanFields}
             </>
           )}
@@ -301,7 +301,7 @@ export function Create() {
         </div>
       </div>
 
-      {/* Sticky, full-width footer — hidden during the scan. */}
+      {/* Sticky, full-width footer, hidden during the scan. */}
       {!scanning && (
         <div style={{ flexShrink: 0, borderTop: '1px solid var(--dark-8)', background: 'var(--light-100)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', gap: 16 }}>
           {step === 'details'

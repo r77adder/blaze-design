@@ -185,7 +185,7 @@ export interface Account {
   aiNextStep: string;
   phases: PhaseProgress[];
   brand: BrandScan;
-  /** Signed contract term in months — set once a workspace goes live. */
+  /** Signed contract term in months, set once a workspace goes live. */
   contractTerm?: 3 | 6 | 12;
   /** When the live contract ends (ISO date). Drives renewal warnings. */
   contractEndDate?: string;

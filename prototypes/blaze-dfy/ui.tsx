@@ -6,7 +6,7 @@ import Trash2 from '@/icons/20/Trash2';
 import Close from '@/icons/12/Close';
 import styles from './ui.module.scss';
 
-/** Native color picker restyled as a clean rounded color chip — no browser
+/** Native color picker restyled as a clean rounded color chip, no browser
  *  swatch border, rounded fill. */
 export function ColorSwatch({ value, onChange, style }: { value: string; onChange: (hex: string) => void; style?: CSSProperties }) {
   return <input type="color" className={styles.colorSwatch} value={value} onChange={(e) => onChange(e.target.value)} style={style} />;
@@ -24,7 +24,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
-/** Standard DS text input — the lib's `TextField`. Call sites keep an
+/** Standard DS text input, the lib's `TextField`. Call sites keep an
  *  event-based `onChange`; we adapt it to TextField's value-first signature so
  *  none of them need to change. */
 export function TextInput({ inputSize = 'md', onChange, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { inputSize?: 'sm' | 'md' | 'lg' }) {
@@ -37,7 +37,7 @@ export function TextInput({ inputSize = 'md', onChange, ...props }: React.InputH
     />
   );
 }
-/** Multi-line field — the lib has no standard textarea, so this stays a local
+/** Multi-line field. The lib has no standard textarea, so this stays a local
  *  field styled to match the TextField chrome. */
 export function TextArea({ fullWidth = true, style, className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { fullWidth?: boolean }) {
   return (
@@ -56,7 +56,7 @@ export const FONT_FAMILIES = [
   'Lato', 'Merriweather', 'Oswald', 'Raleway', 'Nunito', 'Work Sans',
 ];
 
-/** Font family picker — a select rendered IN the chosen typeface so the user
+/** Font family picker, a select rendered IN the chosen typeface so the user
  *  previews it, paired with the role. Falls back to including the current
  *  value if it isn't one of the presets. */
 export function FontFamilySelect({ value, onChange, style, size }: { value: string; onChange: (v: string) => void; style?: CSSProperties; size?: 'sm' | 'md' | 'lg' }) {
@@ -87,17 +87,17 @@ export function SectionHeading({ title, note, desc, right }: { title: string; no
   );
 }
 
-/** "Add row" action — secondary button that hugs its content (the flex wrapper
+/** "Add row" action, secondary button that hugs its content (the flex wrapper
  *  stops the lib Button stretching in a flex-column list). Matches the Create flow. */
 export function AddLink({ label, onClick, variant = 'secondary' }: { label: string; onClick: () => void; variant?: 'secondary' | 'tertiary' | 'ghost' }) {
   return <div style={{ display: 'flex' }}><Button variant={variant} frontIcon={Plus} onPress={onClick}>{label}</Button></div>;
 }
-/** Remove-row action — secondary trash IconButton. Matches the Create flow. */
+/** Remove-row action, secondary trash IconButton. Matches the Create flow. */
 export function RemoveX({ onClick, size = 'md', variant = 'secondary' }: { onClick: () => void; size?: 'sm' | 'md' | 'lg'; variant?: 'secondary' | 'tertiary' | 'ghost' }) {
   return <IconButton icon={Trash2} variant={variant} size={size} title="Remove" onPress={onClick} />;
 }
 
-/** Editable token list — each value is a static DS `Pill` with an inline remove
+/** Editable token list, each value is a static DS `Pill` with an inline remove
  *  ×; adding opens an inline field and commits to a new pill. The pills are
  *  display tokens (not pressable), the "add" affordance is the DS add Chip.
  *  `readOnly` renders the pills with no remove × and no add affordance. */
@@ -150,7 +150,7 @@ export function TokenInput({ tokens, setTokens, placeholder, readOnly }: { token
   );
 }
 
-/** Lightweight hover tooltip — wraps a trigger and shows a dark bubble on hover.
+/** Lightweight hover tooltip, wraps a trigger and shows a dark bubble on hover.
  *  For short explanatory text (e.g. a "?" help affordance). Wraps long copy. */
 export function Tooltip({ label, children, width = 300, placement = 'below' }: { label: ReactNode; children: ReactNode; width?: number; placement?: 'above' | 'below' }) {
   const [show, setShow] = useState(false);
@@ -314,7 +314,7 @@ export function ScorecardHeader({ data, accountName }: { data: ScorecardLike; ac
         </span>
       </GaugeRing>
       <div style={{ minWidth: 0 }}>
-        <Heading level={3} style={{ display: 'block' }}>{accountName} — marketing scorecard</Heading>
+        <Heading level={3} style={{ display: 'block' }}>{accountName} · marketing scorecard</Heading>
         <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 2 }}>
           <strong style={{ color: ringColor(status) }}>{ringLabel(status)}</strong> overall. {data.reviewed} things reviewed, {data.needWork} need work.
         </Text>
@@ -329,7 +329,7 @@ export function FieldCard({ children, style }: { children: ReactNode; style?: CS
 }
 
 /** Input that looks like plain text until hovered/focused, then reveals a
- *  field outline — used for in-place editing of titles & descriptions. */
+ *  field outline, used for in-place editing of titles & descriptions. */
 export function HoverInput({ value, onChange, placeholder, multiline, style }: { value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean; style?: CSSProperties }) {
   const [hot, setHot] = useState(false);
   const shared: CSSProperties = {

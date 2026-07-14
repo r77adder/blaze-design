@@ -9,7 +9,7 @@ import { FONT } from './charts';
  * they swap to plain textareas so an account manager can rewrite what the
  * client will see read-only. State lives in the parent Insights component.
  *
- * H2's `insights/shared.tsx` is intentionally left untouched — this is a
+ * H2's `insights/shared.tsx` is intentionally left untouched, this is a
  * client-side wrapper around its primitives.
  */
 
@@ -37,7 +37,7 @@ function EditLabel({ children }: { children: ReactNode }) {
   );
 }
 
-/** "Account health" — headline + body. Editable as two fields. */
+/** "Account health": headline + body. Editable as two fields. */
 export function AccountHealth({
   editing,
   headline,
@@ -75,7 +75,7 @@ export function AccountHealth({
   );
 }
 
-/** "What we're doing next" — an ordered list. Editable as one line per item. */
+/** "What we're doing next": an ordered list. Editable as one line per item. */
 export function NextSteps({
   editing,
   items,

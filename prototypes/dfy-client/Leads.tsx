@@ -40,7 +40,7 @@ import { useClientState } from './dev-state';
 import { ReceptionistSettings } from './ReceptionistSettings';
 
 /**
- * Leads — the AI Receptionist's lead inbox, surfaced as a first-party client
+ * Leads: the AI Receptionist's lead inbox, surfaced as a first-party client
  * tab for Grain Design Flooring. Reuses H2's `LEADS` data in a read-only table
  * (clients watch the pipeline the receptionist is filling; they don't work the
  * queue). Each row is CLICKABLE → opens a view-only lead detail modal showing
@@ -54,13 +54,13 @@ export function Leads() {
   const { openModal } = useModals();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Full-page AI Receptionist settings, scoped to the Leads tab — opens from the
+  // Full-page AI Receptionist settings, scoped to the Leads tab, opens from the
   // topbar button and returns here on back (no route change).
   if (settingsOpen) {
     return <ReceptionistSettings onBack={() => setSettingsOpen(false)} />;
   }
 
-  // Cold — pre-go-live: the AI Receptionist isn't capturing leads yet, so the
+  // Cold, pre-go-live: the AI Receptionist isn't capturing leads yet, so the
   // inbox is empty. Show an explanatory empty state describing what will land
   // here once the receptionist goes live.
   if (state !== 'steady') {
@@ -166,7 +166,7 @@ function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen
       onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
       onMouseLeave={(e) => (e.currentTarget.style.background = baseBg)}
     >
-      {/* Prospect — blue dot signals a prospect message waiting on a reply */}
+      {/* Prospect: blue dot signals a prospect message waiting on a reply */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, position: 'relative' }}>
         {unread && (
           <span
@@ -217,7 +217,7 @@ function LeadsTable({ leads, onOpen }: { leads: Lead[]; onOpen: (leads: Lead[], 
   const groups = STATUS_FUNNEL_ORDER
     .map((status) => ({ status, ss: STATUS_STYLES[status], groupLeads: sorted.filter((l) => l.status === status) }))
     .filter((g) => g.groupLeads.length > 0);
-  // Flat display order — powers the modal's up/down lead navigation.
+  // Flat display order, powers the modal's up/down lead navigation.
   const ordered = groups.flatMap((g) => g.groupLeads);
 
   return (
@@ -300,7 +300,7 @@ function leadLocation(lead: Lead): string | undefined {
 /** Group the raw transcript into human-readable touchpoints. Consecutive text
  *  messages collapse into one conversation node; calls and system events stay
  *  discrete. A synthetic first-touch node guarantees every lead opens on how it
- *  came in — even a one-message lead shows its form/chat origin. */
+ *  came in, even a one-message lead shows its form/chat origin. */
 function buildTimeline(lead: Lead): TimelineItem[] {
   const items: TimelineItem[] = [];
   const msgs = lead.transcript;
@@ -518,7 +518,7 @@ function NextActionStep({ lead }: { lead: Lead }) {
           <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginTop: 2 }}>{lead.scheduled_at}{lead.location ? ` · ${lead.location}` : ''}</Text>
         </div>
       ) : (
-        <Text variant="secondary" color="var(--dark-60)">No action needed right now — the AI receptionist is handling this lead.</Text>
+        <Text variant="secondary" color="var(--dark-60)">No action needed right now. The AI receptionist is handling this lead.</Text>
       )}
     </TimelineRow>
   );
@@ -538,7 +538,7 @@ function seedIndex(seed: string, mod: number): number {
 const leadZip = (lead: Lead) => SAMPLE_ZIPS[seedIndex(lead.id, SAMPLE_ZIPS.length)];
 const leadService = (lead: Lead) => FLOORING_SERVICES[seedIndex(`${lead.id}·svc`, FLOORING_SERVICES.length)];
 
-/** This lead's answer to a configured qualification question — shared by the
+/** This lead's answer to a configured qualification question, shared by the
  *  lead detail rail and the CSV export columns/filters. */
 function qualificationAnswer(lead: Lead, id: string): string | undefined {
   switch (id) {
@@ -570,7 +570,7 @@ function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lea
   const timeline = buildTimeline(lead);
   const go = (delta: number) => { setIdx((i) => Math.min(leads.length - 1, Math.max(0, i + delta))); setPage(null); };
 
-  // Transcript / message threads open as their own modal page — footer holds
+  // Transcript / message threads open as their own modal page, footer holds
   // Back (to the lead detail) and a primary Done.
   if (page) {
     return (
@@ -613,7 +613,7 @@ function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lea
       </Modal.Header>
       <Modal.Content withoutFooter>
         <div style={{ display: 'flex', gap: 28, alignItems: 'stretch' }}>
-          {/* main — timeline of touchpoints, ending on the proposed next step */}
+          {/* main: timeline of touchpoints, ending on the proposed next step */}
           <div style={{ flex: 1, minWidth: 0 }}>
             {timeline.filter((item) => item.kind !== 'system').map((item, i) => (
               <TimelineNode key={i} item={item} onOpenPage={setPage} />
@@ -621,9 +621,9 @@ function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lea
             <NextActionStep key={lead.id} lead={lead} />
           </div>
 
-          {/* right rail — contact + qualification, phone first */}
+          {/* right rail: contact + qualification, phone first */}
           <aside style={{ width: 244, flexShrink: 0, borderLeft: '1px solid var(--dark-8)', paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 32 }}>
-            {/* contact — the client's primary handle on this lead, elevated */}
+            {/* contact: the client's primary handle on this lead, elevated */}
             <div style={{ padding: 16, background: 'var(--dark-2)', border: '1px solid var(--dark-8)', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 2 }}>Phone</Text>
@@ -647,7 +647,7 @@ function LeadDetailModal({ leads, index, close }: StackModalProps & { leads: Lea
               )}
             </div>
 
-            {/* qualification criteria — one row per configured question */}
+            {/* qualification criteria: one row per configured question */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Heading level={5} style={{ margin: 0 }}>Qualification criteria</Heading>
               {DEFAULT_QUALIFICATION_QUESTIONS.map((q) => (
@@ -858,7 +858,7 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
           document.body,
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* columns — lead details */}
+          {/* columns: lead details */}
           <div>
             <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 10 }}>Lead details</Text>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
@@ -866,7 +866,7 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
             </div>
           </div>
 
-          {/* columns — qualification criteria */}
+          {/* columns: qualification criteria */}
           <div>
             <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 10 }}>Qualification criteria</Text>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
@@ -877,7 +877,7 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
           {/* filter which leads to include */}
           <div style={{ borderTop: '1px solid var(--dark-8)', paddingTop: 20 }}>
             <Heading level={5} style={{ margin: '0 0 2px' }}>Filter leads</Heading>
-            <Text variant="secondary" style={{ color: 'var(--dark-60)', display: 'block', marginBottom: 14 }}>Optional — export only the leads that match.</Text>
+            <Text variant="secondary" style={{ color: 'var(--dark-60)', display: 'block', marginBottom: 14 }}>Optional: export only the leads that match.</Text>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
               <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
               <FilterSelect label="Method" value={methodFilter} onChange={setMethodFilter} options={methodOptions} />
@@ -886,7 +886,7 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
             </div>
           </div>
 
-          {/* not sure? contact your strategist — kept subtle */}
+          {/* not sure? contact your strategist, kept subtle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid var(--dark-5)', borderRadius: 10 }}>
             <Avatar fallback={STRATEGIST.initials} size={28} style={{ background: 'var(--purple)', flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>

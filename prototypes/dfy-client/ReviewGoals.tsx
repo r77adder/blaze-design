@@ -8,7 +8,7 @@ import { useClientState } from './dev-state';
 /* ─── dfy-client route export + seed ─────────────────────────────────────────
  * Same pattern as ReviewStrategy.tsx: PR97 starts every packet as 'draft', so
  * a tiny mount effect shares the goals packet before rendering ClientReview.
- * ClientReview itself is phase-generic — no goals-specific rendering needed. */
+ * ClientReview itself is phase-generic, no goals-specific rendering needed. */
 function GoalsReviewBody() {
   const { packet, share, setItem, feedback } = useReview();
   const { state } = useClientState();
@@ -17,7 +17,7 @@ function GoalsReviewBody() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Home's "Mixed" state tells the client they already asked for changes on
-  // their goals and are waiting on a reply — seed that same request here so
+  // their goals and are waiting on a reply, seed that same request here so
   // the section it applies to (and the note itself) are visible on the page.
   useEffect(() => {
     if (state === 'mixed' && feedback('goals').plan === undefined) {

@@ -1,7 +1,7 @@
 /* Native <input type="color"> restyled as a clean rounded color chip: no
  * browser swatch border, rounded fill. The swatch border + wrapper padding
  * live on ::-webkit-color-swatch pseudo-elements, which inline styles can't
- * reach — hence this module. */
+ * reach. Hence this module. */
 .colorSwatch {
   appearance: none;
   -webkit-appearance: none;
@@ -30,7 +30,7 @@
   border-radius: 10px;
 }
 
-/* Multi-line field — the lib has no standard textarea, so this mirrors the
+/* Multi-line field, the lib has no standard textarea, so this mirrors the
  * TextField chrome (8px radius, --dark-8 border, Sohne body, hover/focus). */
 .textArea {
   font-family: 'Sohne', sans-serif;

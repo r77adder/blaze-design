@@ -3,7 +3,7 @@
  * profile. Stands in for real model output - tailored per account but
  * deterministic, and fully editable in the UI.
  *
- * Copied verbatim from prototypes/blaze-dfy/lib/strategy.ts — the S.* functions
+ * Copied verbatim from prototypes/blaze-dfy/lib/strategy.ts, the S.* functions
  * the client strategy/goals/creative review renders through: brandContextMarkdown,
  * creativeGuidelines, goals, campaignThemes, scorecard, generatedAssets,
  * seasonalThemes (plus their private helpers).
@@ -128,7 +128,7 @@ export function goals(a: Account): Goals {
   };
 }
 
-/** Candidate channels the AM proposes to build out plans for — a fixed
+/** Candidate channels the AM proposes to build out plans for, a fixed
  *  audit-driven shortlist, not per-account. Copied verbatim from
  *  prototypes/blaze-dfy/onboarding-port/data.ts. */
 export const PLAN_CHANNELS = ['Paid Search', 'Paid Social', 'Local Services Ads', 'Local SEO', 'Reputation', 'Email', 'Landing Pages', 'Retargeting'];

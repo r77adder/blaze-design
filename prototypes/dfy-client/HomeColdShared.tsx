@@ -8,7 +8,7 @@ import Google from '@/icons/20/Google';
 import Globe from '@/icons/20/Globe';
 
 /**
- * Shared building blocks + fixtures for the pre-go-live Home variants —
+ * Shared building blocks + fixtures for the pre-go-live Home variants:
  * HomeCold (early onboarding) and HomeReviewing (everything but go-live is
  * ready). Keeps the "Ready for you" / "What we're working on" / "Connect
  * your accounts" row components and the account-connection fixture in one
@@ -50,7 +50,7 @@ export const ICON_BOX: React.CSSProperties = {
 
 /** A "Ready for you" row: muted icon, title + status pill, blurb, and a
  *  single action the client can take now. Lives in the shared section Card.
- *  `extra` renders below the blurb — used for a Callout note (e.g. when the
+ *  `extra` renders below the blurb, used for a Callout note (e.g. when the
  *  AM sends an item back with addressed feedback). */
 export function ReadyRow({ icon: Icon, title, blurb, action, isFirst, badge = 'Ready', badgeTone = 'success', extra }: {
   icon: Glyph;

@@ -17,13 +17,13 @@ import {
 } from './HomeColdShared';
 
 /**
- * HomeReviewing — the **client** Home once onboarding is nearly done: the
+ * HomeReviewing, the **client** Home once onboarding is nearly done: the
  * scorecard, strategy, goals, and first creative are all ready for the
- * client to review — only go-live itself is still pending. Sits between
+ * client to review. Only go-live itself is still pending. Sits between
  * HomeCold (early onboarding) and Home (live) in the cold/steady toggle.
  *
  * Shares its "Ready for you" / "What we're working on" / "Connect your
- * accounts" building blocks with HomeCold (see HomeColdShared) — only the
+ * accounts" building blocks with HomeCold (see HomeColdShared). Only the
  * content of each section differs: everything is Ready here except go-live,
  * and accounts default to fully connected since the account is this close
  * to launch.
@@ -34,8 +34,8 @@ const READY_ITEMS: { phase: ReviewPhaseId; icon: typeof Target5; title: string; 
     phase: 'strategy',
     icon: Target5,
     title: 'Your Strategy',
-    blurb: 'The first campaign plan, audiences, and channel mix are mapped out — review and approve it before we launch.',
-    submittedBlurb: 'Thanks for reviewing — your strategist has your feedback and will follow up with the next version.',
+    blurb: 'The first campaign plan, audiences, and channel mix are mapped out. Review and approve it before we launch.',
+    submittedBlurb: 'Thanks for reviewing. Your strategist has your feedback and will follow up with the next version.',
     path: '/review-strategy',
     cta: 'Approve your strategy',
     submittedCta: 'View strategy',
@@ -45,7 +45,7 @@ const READY_ITEMS: { phase: ReviewPhaseId; icon: typeof Target5; title: string; 
     icon: CalendarStart,
     title: 'Your Goals',
     blurb: 'Your first 30/60/90-day goals, channels, and major events to plan around are ready to review.',
-    submittedBlurb: 'Thanks for reviewing — your strategist has your feedback and will follow up with the next version.',
+    submittedBlurb: 'Thanks for reviewing. Your strategist has your feedback and will follow up with the next version.',
     path: '/review-goals',
     cta: 'Approve your goals',
     submittedCta: 'View goals',
@@ -55,7 +55,7 @@ const READY_ITEMS: { phase: ReviewPhaseId; icon: typeof Target5; title: string; 
     icon: Camera1,
     title: 'Your Creative',
     blurb: 'Your first wave of posts and a draft campaign calendar are ready for your sign-off on the look and voice.',
-    submittedBlurb: 'Thanks for reviewing — your strategist has your feedback and will follow up with the next version.',
+    submittedBlurb: 'Thanks for reviewing. Your strategist has your feedback and will follow up with the next version.',
     path: '/review-creative',
     cta: 'Approve your creative',
     submittedCta: 'View creative',
@@ -94,7 +94,7 @@ export function HomeReviewing() {
           </Text>
         </div>
 
-        {/* section: ready for you — scorecard + all three review phases */}
+        {/* section: ready for you, scorecard + all three review phases */}
         <section>
           <Heading level={3} style={{ margin: '0 0 12px' }}>Ready for you</Heading>
           <Card padding="none">
@@ -121,7 +121,7 @@ export function HomeReviewing() {
           </Card>
         </section>
 
-        {/* section: what we're working on — only go-live left */}
+        {/* section: what we're working on, only go-live left */}
         <section>
           <Heading level={3} style={{ margin: '0 0 12px' }}>What we&rsquo;re working on</Heading>
           <Card padding="none">
@@ -135,7 +135,7 @@ export function HomeReviewing() {
           </Card>
         </section>
 
-        {/* section: connect your accounts — accordion, closed by default, all connected */}
+        {/* section: connect your accounts, accordion, closed by default, all connected */}
         <section>
           <button
             type="button"
@@ -184,7 +184,7 @@ export function HomeReviewing() {
             color="var(--dark-60)"
             style={{ display: 'block', textAlign: 'center', marginTop: 20, lineHeight: 1.5 }}
           >
-            You&rsquo;ll get full access — results, approvals, your calendar — the moment you go live.
+            You&rsquo;ll get full access (results, approvals, your calendar) the moment you go live.
           </Text>
         </section>
       </div>

@@ -7,7 +7,7 @@ const WEEK_LABELS = ['Apr', 'May 1', 'May 15', 'Jun 1', 'Now'];
 
 const REVIEWS = [
   { name: 'Marcia D.', stars: 5, src: 'Google', text: 'Crew was on time, tidy, and the wide-plank oak looks flawless. Would hire again.' },
-  { name: 'Tom R.', stars: 5, src: 'Google', text: 'Got three quotes — Grain was clear on scope and finished the install a day early.' },
+  { name: 'Tom R.', stars: 5, src: 'Google', text: 'Got three quotes. Grain was clear on scope and finished the install a day early.' },
   { name: 'Priya S.', stars: 4, src: 'Yelp', text: 'Beautiful tile work in the bath. Small grout touch-up needed but they came right back.' },
   { name: 'Devon W.', stars: 5, src: 'Facebook', text: 'They refinished our whole downstairs hardwood. Neighbors keep asking who did it.' },
 ];
@@ -16,7 +16,7 @@ function Stars({ n }: { n: number }) {
   return <span aria-hidden style={{ color: 'var(--brand)', letterSpacing: 1 }}>{'★'.repeat(n)}<span style={{ color: 'var(--dark-15)' }}>{'★'.repeat(5 - n)}</span></span>;
 }
 
-/** Reputation — rating-over-time line, sentiment split donut, recent reviews list. */
+/** Reputation: rating-over-time line, sentiment split donut, recent reviews list. */
 export function ReputationReport({ editing, narrative, onNarrative }: ChannelProps) {
   return (
     <InsightsReport weeks={WEEKS.map((w, i) => (i === 0 ? { ...w, subtitle: 'Review velocity tripled since the post-install ask' } : w))}>

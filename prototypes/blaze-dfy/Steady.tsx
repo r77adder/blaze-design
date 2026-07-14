@@ -127,7 +127,7 @@ function TeamSection({ account }: { account: Account }) {
 
 /* ─── Billing: subscription / first invoice / autopay / credits / links ───── */
 
-/** Deterministic demo billing record — package model + contract dates, with
+/** Deterministic demo billing record, package model + contract dates, with
  *  the contract end set ~40 days out so the renewal window is live for the demo. */
 function billingFor(account: Account) {
   const tok = (prefix: string, len: number) => {
@@ -175,7 +175,7 @@ function billingFor(account: Account) {
   };
 }
 
-/** A flat, divider-separated billing section — H3 header + read-only
+/** A flat, divider-separated billing section, H3 header + read-only
  *  label/value rows. Matches the General settings layout (no card container). */
 function BillingSection({ title, rows, footer }: { title: string; rows: { label: string; value: ReactNode }[]; footer?: ReactNode }) {
   return (
@@ -210,12 +210,12 @@ export function BillingTab({ account }: { account: Account }) {
     <div style={{ maxWidth: 820, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
       <div>
         <Heading level={2} style={{ marginTop: 0, marginBottom: 4 }}>Billing</Heading>
-        <Text variant="secondary" color="var(--dark-60)">The packages, contract term and renewal status pulled from the signed contract — everything you need for the Pipedrive note lives here.</Text>
+        <Text variant="secondary" color="var(--dark-60)">The packages, contract term and renewal status pulled from the signed contract. Everything you need for the Pipedrive note lives here.</Text>
       </div>
 
       {b.inWindow
-        ? <Callout tone="warning" icon={Check2}>Renewal window — the {b.term}-month contract ends {fmtDate(b.endISO)}. Confirm renew or cancel by {fmtDate(b.decideISO)} ({b.daysToDecide} days).</Callout>
-        : <Callout tone="success" icon={Check2}>Billing is set up — the first invoice has been issued to the customer.</Callout>}
+        ? <Callout tone="warning" icon={Check2}>Renewal window. The {b.term}-month contract ends {fmtDate(b.endISO)}. Confirm renew or cancel by {fmtDate(b.decideISO)} ({b.daysToDecide} days).</Callout>
+        : <Callout tone="success" icon={Check2}>Billing is set up. The first invoice has been issued to the customer.</Callout>}
 
       <BillingSection
         title="Packages"
@@ -250,7 +250,7 @@ export function BillingTab({ account }: { account: Account }) {
 
       <BillingSection
         title="Autopay"
-        rows={[{ label: 'Status', value: <StatusPill tone="neutral">Off — paying by invoice</StatusPill> }]}
+        rows={[{ label: 'Status', value: <StatusPill tone="neutral">Off, paying by invoice</StatusPill> }]}
         footer={<Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginTop: 10, lineHeight: 1.5 }}>Autopay switches on by itself once the customer pays their first invoice (the card is saved on file). Nothing to do here.</Text>}
       />
 
@@ -268,7 +268,7 @@ export function BillingTab({ account }: { account: Account }) {
   );
 }
 
-/* ─── Strategy tab — the AM mirror of the client's channel plan (editable). ── */
+/* ─── Strategy tab, the AM mirror of the client's channel plan (editable). ── */
 export function StrategyTab({ account }: { account: Account }) {
   return <AmStrategyPlan account={account} />;
 }

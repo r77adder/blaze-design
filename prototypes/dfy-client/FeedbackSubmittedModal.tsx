@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Modal, Text, useModals, type StackModalProps } from '@/components';
 
-/** Shown right after Submit feedback redirects the client to Home — confirms
+/** Shown right after Submit feedback redirects the client to Home, confirms
  *  the review went through without dead-ending them on the review page itself. */
 function FeedbackSubmittedModal({ title, body, close }: StackModalProps & { title: string; body: string }) {
   return (
@@ -20,7 +20,7 @@ function FeedbackSubmittedModal({ title, body, close }: StackModalProps & { titl
   );
 }
 
-/** Call once from any Home variant (cold / reviewing / steady) — opens the
+/** Call once from any Home variant (cold / reviewing / steady), opens the
  *  confirmation modal if the client was just redirected here from a review
  *  page's Submit feedback, then clears the nav state so a refresh or revisit
  *  doesn't reopen it. */

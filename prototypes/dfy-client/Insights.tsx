@@ -20,18 +20,18 @@ import type { Narrative } from './insights/common';
 /**
  * Client Insights for Grain Design Flooring (premium flooring, Austin TX).
  *
- * The FIRST tab — "Account health" — is the central overview: it owns the
+ * The FIRST tab, "Account health", is the central overview: it owns the
  * account-level narrative, an AM-authored central goal, a cross-channel KPI
  * summary, and the single "what we're doing next" list. The per-channel tabs
  * (Organic Social, Paid Social, Paid Search, SEO/AEO, Local Search, Website,
- * Reputation) are now purely METRICS — charts and tables, no narrative block.
+ * Reputation) are now purely METRICS, charts and tables, no narrative block.
  *
  * The product switcher is a single horizontally-scrollable TabChip row so it
- * never overflows the topbar. `sub` (from /insights/:sub) sets the default tab
- * — `health`/`overview` both resolve to the central tab.
+ * never overflows the topbar. `sub` (from /insights/:sub) sets the default tab.
+ * `health`/`overview` both resolve to the central tab.
  *
  * AM-EDIT MODE: a topbar toggle flips the central goal + the account-health
- * headline/summary into editable inputs — simulating the account manager
+ * headline/summary into editable inputs, simulating the account manager
  * editing what the (read-only) client sees. Default OFF.
  */
 type ProductKey = 'health' | 'organic' | 'paid-social' | 'paid-search' | 'seo' | 'local' | 'website' | 'reputation';
@@ -59,8 +59,8 @@ const DEFAULT_GOAL = 'Get more booked design consults from homeowners across the
 type NarrativeKey = 'health' | 'organic' | 'seo' | 'local' | 'website' | 'reputation';
 const NARRATIVES: Record<NarrativeKey, Narrative> = {
   health: {
-    headline: 'Strong month — leads up 14% and the install pipeline is filling from organic + local.',
-    body: 'Demand is climbing across the board: before/after install Reels are driving social reach, "flooring near me" searches are converting on the consult-request page, and a #2 map rank is feeding the showroom. The estimate-to-install funnel is healthy — 81 new clients this period at a 4.7★ rating.',
+    headline: 'Strong month. Leads up 14% and the install pipeline is filling from organic + local.',
+    body: 'Demand is climbing across the board: before/after install Reels are driving social reach, "flooring near me" searches are converting on the consult-request page, and a #2 map rank is feeding the showroom. The estimate-to-install funnel is healthy: 81 new clients this period at a 4.7★ rating.',
     next: [
       'Push paid budget toward the highest-intent flooring searches (install + refinish).',
       'Ship mobile speed fixes so the consult-request page stops losing visitors.',
@@ -68,7 +68,7 @@ const NARRATIVES: Record<NarrativeKey, Narrative> = {
     ],
   },
   organic: {
-    headline: 'Steady growth — reach up 18%, carried by before/after install content.',
+    headline: 'Steady growth. Reach up 18%, carried by before/after install content.',
     body: '9 posts went out on schedule. Before/after install Reels did the heavy lifting (2.4× the engagement of stills), and posts that named the neighborhood in the first line out-reached the rest by ~30%.',
     next: [
       'Shift two static posts/week to before/after install Reels.',
@@ -78,7 +78,7 @@ const NARRATIVES: Record<NarrativeKey, Narrative> = {
   },
   seo: {
     headline: 'Two priority keywords broke into the top 10, and AI answers started citing you.',
-    body: 'The flooring cost/pricing explainer is pulling the most qualified organic traffic, and you now appear in Gemini & Perplexity answers for 12 buyer questions — a brand-new channel.',
+    body: 'The flooring cost/pricing explainer is pulling the most qualified organic traffic, and you now appear in Gemini & Perplexity answers for 12 buyer questions, a brand-new channel.',
     next: [
       'Publish the "flooring near me" comparison page to push from pos 11 → top 5.',
       'Add FAQ schema to the install & refinish pages for more answer-engine coverage.',
@@ -94,7 +94,7 @@ const NARRATIVES: Record<NarrativeKey, Narrative> = {
   },
   website: {
     headline: 'Traffic up 12% and the consult-request page is converting above benchmark.',
-    body: 'The dedicated consult-request landing page is converting 2.3× the homepage. Mobile page speed is still the main drag — about 30% of visitors bounce before the page loads.',
+    body: 'The dedicated consult-request landing page is converting 2.3× the homepage. Mobile page speed is still the main drag: about 30% of visitors bounce before the page loads.',
     next: [
       'Ship the mobile speed fixes to cut the load-time bounce.',
       'Route more paid traffic to the consult-request page over the homepage.',
@@ -126,7 +126,7 @@ export function Insights({ sub }: { sub?: string }) {
   const patch = (key: NarrativeKey) => (p: Partial<Narrative>) =>
     setNarratives((prev) => ({ ...prev, [key]: { ...prev[key], ...p } }));
 
-  // COLD — pre-go-live: no metrics yet. Skip the product tab strip + AM-edit
+  // COLD, pre-go-live: no metrics yet. Skip the product tab strip + AM-edit
   // topbar controls entirely and show the shared explanatory empty state.
   if (state !== 'steady') {
     return (
@@ -134,9 +134,9 @@ export function Insights({ sub }: { sub?: string }) {
         <ColdState
           icon={BarChartSquare}
           title="Insights light up once your campaigns are running."
-          description="When you're live, this becomes your results dashboard — reach, leads, clients, and reputation across every channel Blaze runs for you."
+          description="When you're live, this becomes your results dashboard: reach, leads, clients, and reputation across every channel Blaze runs for you."
           points={[
-            'Cross-channel KPIs — reach, leads, clients, conversion',
+            'Cross-channel KPIs: reach, leads, clients, conversion',
             'Per-channel reports: organic, paid, SEO/AEO, local, website, reputation',
             'A weekly summary from your strategist',
           ]}
@@ -145,7 +145,7 @@ export function Insights({ sub }: { sub?: string }) {
     );
   }
 
-  // Single horizontally-scrollable row — never wraps / overflows the topbar.
+  // Single horizontally-scrollable row, never wraps / overflows the topbar.
   const topbarCenter = (
     <div style={{ display: 'flex', gap: 6, overflowX: 'auto', width: 'max-content', maxWidth: 'calc(100vw - 380px)', padding: '2px 2px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
       <style>{`.dfy-tabs::-webkit-scrollbar{display:none}`}</style>

@@ -19,7 +19,7 @@ import { SectionHeading, TextInput, AddLink, RemoveX } from './ui';
 import { AssetCard } from './AssetCard';
 import { usePhaseChrome } from './nav';
 
-/** Per-format preview aspect ratio — Instagram portrait (4:5) for stills &
+/** Per-format preview aspect ratio, Instagram portrait (4:5) for stills &
  *  carousels, vertical (9:16) for stories & video; mirrors CreativeReview. */
 const ASPECT: Partial<Record<AssetType, string>> = {
   'Still Image': '4 / 5',
@@ -32,7 +32,7 @@ const aspectFor = (type: AssetType) => ASPECT[type] ?? '4 / 5';
 const GEN_DELAY = 1600;
 
 /**
- * Creative planning + sample-wave generation — the step shown BEFORE the visual
+ * Creative planning + sample-wave generation, the step shown BEFORE the visual
  * review. With no waves yet it shows an editable plan table; once samples are
  * generated it shows the latest wave as cards the AM marks for the customer.
  */
@@ -87,7 +87,7 @@ export function CreativePlan({
   return <Generated account={account} plan={plan} waves={waves} setWaves={setWaves} finishWave={finishWave} />;
 }
 
-/* ─── Mode 1 — Planning ──────────────────────────────────────────────────── */
+/* ─── Mode 1, Planning ──────────────────────────────────────────────────── */
 
 function Planning({
   account,
@@ -254,7 +254,7 @@ function Stepper({ value, onChange }: { value: number; onChange: (n: number) => 
   );
 }
 
-/* ─── Mode 2 — Generated waves ───────────────────────────────────────────── */
+/* ─── Mode 2, Generated waves ───────────────────────────────────────────── */
 
 /** Left chevron = the right chevron rotated; the icon set has no ChevronLeft. */
 function ChevronLeft(props: { size?: number }) {
@@ -381,7 +381,7 @@ function RegenerateBar({ onRegenerate }: { onRegenerate: (guidance: string) => v
       <div style={{ flex: 1, minWidth: 0 }}>
         <TextInput
           value={guidance}
-          placeholder="Guidance for a fresh wave — e.g. warmer tones, bigger logo, less text"
+          placeholder="Guidance for a fresh wave, e.g. warmer tones, bigger logo, less text"
           onChange={(e) => setGuidance(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}

@@ -16,15 +16,15 @@ import {
 } from './HomeColdShared';
 
 /**
- * HomeMixed — the **client** Home once the client has actually started
+ * HomeMixed, the **client** Home once the client has actually started
  * reviewing: every item sits at a different stage instead of all showing
  * "Ready" at once. Demonstrates the full review-cycle vocabulary in one
- * screen — approved, awaiting the strategist's reply, and the strategist
+ * screen: approved, awaiting the strategist's reply, and the strategist
  * sending something back with addressed feedback (with the note visible
- * right on the card) — alongside one untouched item.
+ * right on the card), alongside one untouched item.
  *
  * Fixed, scripted content (not wired to the live ReviewProvider, which
- * resets on every visit) — this is a Home-only presentation variant, same
+ * resets on every visit). This is a Home-only presentation variant, same
  * as HomeCold/HomeReviewing.
  */
 
@@ -54,12 +54,12 @@ export function HomeMixed() {
             Your strategist has updates for you.
           </Heading>
           <Text variant="primary" style={{ display: 'block', lineHeight: 1.55, color: 'var(--dark-60)', maxWidth: 560 }}>
-            A few things are moving — see what&rsquo;s been approved, what&rsquo;s changed based on
+            A few things are moving. See what&rsquo;s been approved, what&rsquo;s changed based on
             your feedback, and what&rsquo;s still waiting on a reply.
           </Text>
         </div>
 
-        {/* section: ready for you — each item at a different review stage */}
+        {/* section: ready for you, each item at a different review stage */}
         <section>
           <Heading level={3} style={{ margin: '0 0 12px' }}>Ready for you</Heading>
           <Card padding="none">
@@ -79,7 +79,7 @@ export function HomeMixed() {
               blurb="The first campaign plan, audiences, and channel mix are mapped out."
               extra={(
                 <Callout tone="info" title="Dana updated your strategy">
-                  &ldquo;I swapped the hero photo on the LVP Fall Promo brief and tightened the call-to-action per your note — take a look when you get a chance.&rdquo;
+                  &ldquo;I swapped the hero photo on the LVP Fall Promo brief and tightened the call-to-action per your note. Take a look when you get a chance.&rdquo;
                 </Callout>
               )}
               action={<Button variant="secondary" size="sm" onPress={() => go('/review-strategy')}>Review update</Button>}
@@ -89,7 +89,7 @@ export function HomeMixed() {
               title="Your Goals"
               badge="Changes requested"
               badgeTone="warning"
-              blurb="You asked for changes — your strategist is revising and will follow up soon."
+              blurb="You asked for changes. Your strategist is revising and will follow up soon."
               action={<Button variant="secondary" size="sm" onPress={() => go('/review-goals')}>View goals</Button>}
             />
             <ReadyRow
@@ -115,7 +115,7 @@ export function HomeMixed() {
           </Card>
         </section>
 
-        {/* section: connect your accounts — accordion, closed by default, all connected */}
+        {/* section: connect your accounts, accordion, closed by default, all connected */}
         <section>
           <button
             type="button"
@@ -164,7 +164,7 @@ export function HomeMixed() {
             color="var(--dark-60)"
             style={{ display: 'block', textAlign: 'center', marginTop: 20, lineHeight: 1.5 }}
           >
-            You&rsquo;ll get full access — results, approvals, your calendar — the moment you go live.
+            You&rsquo;ll get full access (results, approvals, your calendar) the moment you go live.
           </Text>
         </section>
       </div>

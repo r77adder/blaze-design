@@ -164,7 +164,7 @@ export function DevStatePanel() {
         </>
       )}
 
-      {/* Controls row — drag handle + state group + side switch. */}
+      {/* Controls row: drag handle + state group + side switch. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, rowGap: 4, flexWrap: 'wrap' }}>
         <div
           data-dev-drag-handle
@@ -190,13 +190,13 @@ export function DevStatePanel() {
         >
           ⋮⋮
         </div>
-        {/* Group 1 — workspace state. Stays together on its own row. */}
+        {/* Group 1: workspace state. Stays together on its own row. */}
         <div style={GROUP_STYLE}>
           <DevStateButton text="Cold" selected={state === 'cold'} onClick={() => { clearReview(); setState('cold'); }} />
           <DevStateButton text="Reviewed" selected={state === 'reviewed'} onClick={() => { seedReviewed(); setState('reviewed'); }} />
           <DevStateButton text="Steady" selected={state === 'steady'} onClick={() => { clearReview(); setState('steady'); }} />
         </div>
-        {/* Group 2 — AM/Client side switch (approvals + home). Wraps to its own row. */}
+        {/* Group 2: AM/Client side switch (approvals + home). Wraps to its own row. */}
         {surface && (
           <div style={GROUP_STYLE}>
             <SideButton text="AM" current onClick={() => {}} />

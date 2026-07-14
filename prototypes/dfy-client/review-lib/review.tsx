@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
 /* ─── Shared client-review state ─────────────────────────────────────────────
- * The client reviews onboarding in two separate parts — Strategy (part 1) and
- * Creative (part 2) — each its own packet the AM shares from that phase. The
+ * The client reviews onboarding in two separate parts, Strategy (part 1) and
+ * Creative (part 2), each its own packet the AM shares from that phase. The
  * client sees almost the same screens the AM set up, with approve / request-
  * changes / comment per section. All in one session via a context wrapping the
  * AM and client routes.
@@ -12,14 +12,14 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 export type Phase = 'strategy' | 'goals' | 'creative';
 // Section-level verdict from the client (the Request changes / Approve buttons).
 export type ItemStatus = 'pending' | 'approved' | 'changes';
-// `edits` holds the client's revised copy keyed by subsection — the client can
+// `edits` holds the client's revised copy keyed by subsection, the client can
 // edit individual fields directly, independent of the approve/changes verdict.
 export interface ItemFeedback { status: ItemStatus; comment: string; edits?: Record<string, string> }
 export type PacketStatus = 'draft' | 'shared' | 'submitted';
 
 export interface ReviewSectionMeta { id: string; title: string; blurb: string }
 
-/** Section list per phase — mirrors what the AM set up in that phase. */
+/** Section list per phase, mirrors what the AM set up in that phase. */
 export function reviewSections(phase: Phase): ReviewSectionMeta[] {
   if (phase === 'strategy') {
     return [
@@ -33,7 +33,7 @@ export function reviewSections(phase: Phase): ReviewSectionMeta[] {
       { id: 'success', title: 'What does success look like?', blurb: 'Drafted from your goals and the audit.' },
       { id: 'history', title: 'Marketing history', blurb: 'Summarized from your intake and current channels.' },
       { id: 'events', title: 'Major events', blurb: 'Dates worth planning campaigns around. Tagged as company or industry.' },
-      { id: 'plan', title: 'Channels to develop plans around', blurb: "Pre-selected from the audit's biggest gaps — paid-first." },
+      { id: 'plan', title: 'Channels to develop plans around', blurb: "Pre-selected from the audit's biggest gaps. Paid-first." },
     ];
   }
   return [
@@ -47,10 +47,10 @@ type ByPhase<T> = Record<Phase, T>;
 const byPhase = <T,>(make: () => T): ByPhase<T> => Object.fromEntries(PHASES.map((p) => [p, make()])) as ByPhase<T>;
 
 interface ReviewState {
-  /** Set once the AM finishes Strategy onboarding — unlocks the Goals flow. */
+  /** Set once the AM finishes Strategy onboarding, unlocks the Goals flow. */
   strategyComplete: boolean;
   setStrategyComplete: (v: boolean) => void;
-  /** Set once the AM finishes the Goals & theme flow — unlocks Creative Review. */
+  /** Set once the AM finishes the Goals & theme flow, unlocks Creative Review. */
   goalsComplete: boolean;
   setGoalsComplete: (v: boolean) => void;
   /** Set once the AM finishes Creative Review. */

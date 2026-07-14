@@ -1,5 +1,5 @@
 /**
- * Billing catalog + helpers — shared by the New Workspace billing step and the
+ * Billing catalog + helpers, shared by the New Workspace billing step and the
  * Billing settings tab so both speak the same package model.
  *
  * Packages, durations and prices are normally pulled from the signed contract
@@ -42,7 +42,7 @@ export interface SelectedPackage {
 export interface BillingInfo {
   packages: SelectedPackage[];
   term: ContractTerm;
-  /** ISO yyyy-mm-dd — when the contract starts (drives renewal dates). */
+  /** ISO yyyy-mm-dd, when the contract starts (drives renewal dates). */
   startDate: string;
 }
 

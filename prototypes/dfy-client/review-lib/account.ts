@@ -42,7 +42,7 @@ export const GRAIN_ACCOUNT: Account = {
   phase: 2,
   stepLabel: 'Strategy, Competitive scorecard',
   progressPct: 30,
-  aiNextStep: 'Complete the competitive scorecard setup for Tyler — website, GBP, and confirm the local competitors.',
+  aiNextStep: 'Complete the competitive scorecard setup for Tyler: website, GBP, and confirm the local competitors.',
   phases: phases(2, 'in_progress'),
   brand: {
     website: 'graindesignflooring.com',

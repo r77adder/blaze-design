@@ -27,7 +27,7 @@ interface ChangeGroup {
   items: ChangeItem[];
 }
 
-// PR #112 — "rebuild approvals around content types" — organized by area. UX
+// PR #112, "rebuild approvals around content types", organized by area. UX
 // items stay specific; UI is summarised into one general item per area.
 const GROUPS: ChangeGroup[] = [
   {
@@ -81,7 +81,7 @@ const GROUPS: ChangeGroup[] = [
   },
 ];
 
-/** Total number of listed changes — surfaced on the DevStatePanel trigger. */
+/** Total number of listed changes, surfaced on the DevStatePanel trigger. */
 export const CHANGES_COUNT = GROUPS.reduce((n, g) => n + g.items.length, 0);
 
 function KindTag({ kind }: { kind: ChangeKind }) {

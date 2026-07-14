@@ -5,9 +5,9 @@ import { WEEKS, type Narrative } from './common';
 import { Heading } from '@/components';
 
 /**
- * Business Health — the central overview tab. Leads with the four cross-channel
+ * Business Health, the central overview tab. Leads with the four cross-channel
  * KPIs (reach · leads · clients · conversion) and the account narrative, then a
- * 2×2 grid expanding each KPI into its top traffic sources — styled after the
+ * 2×2 grid expanding each KPI into its top traffic sources, styled after the
  * Website analytics "Traffic by channel" (neutral volume bars) and drilling into
  * the Website tab, whose own stat row is exactly these four. The engagement goal
  * rides along as the week's subheadline.
@@ -68,7 +68,7 @@ const SOURCE_TAB: Record<string, string> = {
 };
 
 /**
- * Ranked source row — borrowed from the Website analytics "Traffic by channel"
+ * Ranked source row, borrowed from the Website analytics "Traffic by channel"
  * treatment: a neutral volume bar behind the row (width ∝ value), source name on
  * the left, value right-aligned. The whole row is a button that drills into the
  * channel's own Insights sub-tab.
@@ -99,7 +99,7 @@ function SourceBarRow({ label, display, fraction, onOpen }: { label: string; dis
   );
 }
 
-/** One KPI — H3 title above (outside the card), its top traffic sources within.
+/** One KPI, H3 title above (outside the card), its top traffic sources within.
  *  Each source row drills into that channel's own Insights sub-tab. */
 function StatBreakdownCard({ spec, onNavigate }: { spec: CardSpec; onNavigate: (key: string) => void }) {
   const rows = [...TRAFFIC_SOURCES].sort((a, b) => b[spec.metric] - a[spec.metric]).slice(0, 5);
@@ -122,7 +122,7 @@ function StatBreakdownCard({ spec, onNavigate }: { spec: CardSpec; onNavigate: (
   );
 }
 
-/** Business Health — KPIs + narrative + per-source breakdowns. */
+/** Business Health: KPIs + narrative + per-source breakdowns. */
 export function AccountHealthReport({ editing, goal, narrative, onNarrative, onNavigate }: BusinessHealthProps) {
   return (
     <InsightsReport weeks={WEEKS.map((w) => ({ ...w, subtitle: goal }))} subtitleVariant="primary">
@@ -134,7 +134,7 @@ export function AccountHealthReport({ editing, goal, narrative, onNarrative, onN
         <Stat label="Reputation" value="4.7★" delta="+0.1" spark={[4.5, 4.5, 4.6, 4.6, 4.7, 4.7, 4.7]} sparkColor="var(--brand)" />
       </StatRow>
 
-      {/* Business Health narrative — sits above the breakdown */}
+      {/* Business Health narrative, sits above the breakdown */}
       <AccountHealth
         editing={editing}
         headline={narrative.headline}
@@ -143,7 +143,7 @@ export function AccountHealthReport({ editing, goal, narrative, onNarrative, onN
         onBody={(body) => onNarrative({ body })}
       />
 
-      {/* 2×2 — each KPI broken down by traffic source, drilling into Website */}
+      {/* 2×2, each KPI broken down by traffic source, drilling into Website */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '32px 40px' }}>
         {METRIC_CARDS.map((spec) => (
           <StatBreakdownCard key={spec.metric} spec={spec} onNavigate={onNavigate} />

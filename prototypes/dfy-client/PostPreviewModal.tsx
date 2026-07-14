@@ -23,7 +23,7 @@ import FacebookBrand from '@/icons/35/FacebookBrand';
 import LinkedInBrand from '@/icons/32/LinkedInBrand';
 import TwitterBrand from '@/icons/20/TwitterBrand';
 import Google from '@/icons/20/Google';
-import { StoryPreview, ReelPreview, BlogPreview } from './SocialPreviewFrames';
+import { StoryPreview, ReelPreview, BlogArticlePreview, ARTICLES } from './SocialPreviewFrames';
 import { MetaAdPreview, AdDestination } from '../blaze-dfy/Approvals';
 import { BASE } from './shell';
 
@@ -110,10 +110,17 @@ export function PostPreviewModal({
   updatedReplies,
   onApprove,
   onRequestChanges,
+  initialRequest,
+  revisionsById,
   close,
 }: StackModalProps & {
   items: PreviewItem[];
   initialIndex: number;
+  /** Open with the request-changes composer already showing (card CTA). */
+  initialRequest?: boolean;
+  /** V1 (original) content per revised piece; presence means the piece has a
+   *  V2 (the current content), and a version stepper is shown. */
+  revisionsById?: Record<number, { img?: string; caption?: string; headline?: string }>;
   typeMeta: Record<string, { icon: Glyph; color: string }>;
   typeLabel?: Record<string, string>;
   replyDrafts?: Record<number, string>;
@@ -134,8 +141,8 @@ export function PostPreviewModal({
   const [approved, setApproved] = useState<Set<number>>(() =>
     new Set(Object.entries(initialStatuses ?? {}).filter(([, s]) => s === 'approved').map(([id]) => Number(id))),
   );
-  const [draft, setDraft] = useState('');
-  const [dialog, setDialog] = useState<'none' | 'edit' | 'view'>('none');
+  const [draft, setDraft] = useState(() => initialRequest ? (initialNotes[items[Math.max(0, initialIndex)]?.id] ?? '') : '');
+  const [dialog, setDialog] = useState<'none' | 'edit' | 'view'>(initialRequest ? 'edit' : 'none');
   // Inline "request changes" composer opened straight from the Feedback tab.
   const [composing, setComposing] = useState(false);
   const anchorRef = useRef<HTMLSpanElement>(null);
@@ -180,6 +187,16 @@ export function PostPreviewModal({
   const hasConversation = itemRequested || itemUpdated;
   const label = typeLabel?.[item.type] ?? item.type;
   const isTextCard = item.type === 'PaidSearch' || item.type === 'Reputation';
+
+  // Version tracker: a revised piece carries V1 (the original) + V2 (current).
+  const rev = revisionsById?.[item.id];
+  const verCount = rev ? 2 : 1;
+  const [versionIdx, setVersionIdx] = useState<Record<number, number>>({});
+  const verIdx = versionIdx[item.id] ?? verCount - 1; // view the latest by default
+  const view = (rev && verIdx === 0)
+    ? { img: rev.img ?? item.img, caption: rev.caption ?? item.caption, headline: rev.headline ?? item.headline }
+    : { img: item.img, caption: item.caption, headline: item.headline };
+  const goVersion = (n: number) => setVersionIdx((m) => ({ ...m, [item.id]: Math.max(0, Math.min(verCount - 1, n)) }));
 
   // Default the sidebar to Feedback when this post has a conversation (a
   // change request or a team revision awaiting another look).
@@ -245,8 +262,6 @@ export function PostPreviewModal({
               <StatusPill tone="success" size="md">Approved</StatusPill>
             ) : itemRequested ? (
               <StatusPill tone="danger" size="md">Changes requested</StatusPill>
-            ) : itemUpdated ? (
-              <StatusPill tone="info" size="md">Updated</StatusPill>
             ) : (
               <StatusPill tone="warning" size="md">Review</StatusPill>
             )}
@@ -307,9 +322,9 @@ export function PostPreviewModal({
         {/* ── Body ─────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           {/* center region: "view as" rail + phone preview */}
-          <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, padding: '40px 24px', background: 'var(--default-bg)' }}>
-            {/* view-as rail, hidden for the Meta ad (it is a fixed Facebook ad) */}
-            {item.type !== 'Paid' && (
+          <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: item.type === 'Blog' ? 'flex-start' : 'center', gap: 28, padding: '40px 24px', background: 'var(--default-bg)' }}>
+            {/* view-as rail, hidden for the Meta ad and blog articles */}
+            {item.type !== 'Paid' && item.type !== 'Blog' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
               <Text variant="metadata" style={{ color: 'var(--dark-60)', marginBottom: 2 }}>View as</Text>
               {PLATFORMS.map(({ glyph: G, label }, i) => (
@@ -330,13 +345,25 @@ export function PostPreviewModal({
             </div>
             )}
 
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            {/* Version tracker, shown once a piece has been revised (V1 → V2). */}
+            {verCount > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 99, padding: '2px 4px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <IconButton variant="ghost" size="sm" icon={ChevronLeft} aria-label="Previous version" isDisabled={verIdx === 0} onPress={() => goVersion(verIdx - 1)} />
+                <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500, minWidth: 26, textAlign: 'center' }}>V{verIdx + 1}</Text>
+                <IconButton variant="ghost" size="sm" icon={ChevronRight} aria-label="Next version" isDisabled={verIdx === verCount - 1} onPress={() => goVersion(verIdx + 1)} />
+              </div>
+            )}
             {item.type === 'Paid' ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, flexShrink: 0 }}>
-                <MetaAdPreview post={item} scale={1} expandable />
+                <MetaAdPreview post={{ ...item, caption: view.caption, headline: view.headline }} scale={1} expandable />
                 <AdDestination dest={item.dest} cta={item.cta} />
               </div>
+            ) : item.type === 'Blog' ? (
+              /* Full, in-frame scrollable article, the live blog post. */
+              <BlogArticlePreview image={view.img} article={ARTICLES[item.id] ?? { title: item.title ?? view.caption, intro: view.caption, sections: [] }} brandName={CLIENT} />
             ) : (
-            <div style={{ width: item.type === 'Blog' || isTextCard ? 480 : 360, flexShrink: 0, border: '1px solid var(--dark-8)', borderRadius: 16, background: 'var(--light-100)', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+            <div style={{ width: isTextCard ? 480 : 360, flexShrink: 0, border: '1px solid var(--dark-8)', borderRadius: 16, background: 'var(--light-100)', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
               {item.type === 'PaidSearch' ? (
                 <div style={{ padding: '24px 26px' }}>
                   <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-40)', marginBottom: 14 }}>Google Search, sponsored result</Text>
@@ -381,20 +408,18 @@ export function PostPreviewModal({
               ) : item.type === 'Story' || item.type === 'Reel' ? (
                 <div style={{ position: 'relative', aspectRatio: '9 / 16' }}>
                   {item.type === 'Story' ? (
-                    <StoryPreview image={item.img} brandInitial="G" brandName={CLIENT} headline={item.caption} />
+                    <StoryPreview image={view.img} brandInitial="G" brandName={CLIENT} headline={view.caption} />
                   ) : (
-                    <ReelPreview image={item.img} brandInitial="G" brandName={CLIENT} caption={item.caption} />
+                    <ReelPreview image={view.img} brandInitial="G" brandName={CLIENT} caption={view.caption} />
                   )}
                 </div>
-              ) : item.type === 'Blog' ? (
-                <BlogPreview image={item.img} title={item.title ?? 'Blog post'} excerpt={item.caption} brandName={CLIENT} />
               ) : (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
                     <Avatar fallback="G" size={28} style={{ background: 'var(--brand)' }} />
                     <Text style={{ fontWeight: 500, color: 'var(--dark-90)' }}>{CLIENT}</Text>
                   </div>
-                  <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${item.img}'), var(--dark-4)` }} />
+                  <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${view.img}'), var(--dark-4)` }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 14px 4px', color: 'var(--dark-90)' }}>
                     <Heart size={24} color="var(--dark-90)" />
                     <Comment size={20} color="var(--dark-90)" />
@@ -402,7 +427,7 @@ export function PostPreviewModal({
                   </div>
                   <div style={{ padding: '6px 14px 16px' }}>
                     <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.5 }}>
-                      <span style={{ fontWeight: 500 }}>{CLIENT}</span> {item.caption}
+                      <span style={{ fontWeight: 500 }}>{CLIENT}</span> {view.caption}
                     </Text>
                     <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-40)', marginTop: 2 }}>see more</Text>
                   </div>
@@ -410,6 +435,7 @@ export function PostPreviewModal({
               )}
             </div>
             )}
+            </div>
           </div>
 
           {/* ── Sidebar, Edit / Feedback tabs ─────────────────────── */}
@@ -425,7 +451,7 @@ export function PostPreviewModal({
                 {hasConversation ? (
                   <>
                     <span style={LABEL}>Your requested changes</span>
-                    {/* Client's request (sent bubble) — editable while the team hasn't revised it yet */}
+                    {/* Client's request (sent bubble), editable while the team hasn't revised it yet */}
                     {editingBubble ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
                         <textarea

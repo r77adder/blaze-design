@@ -12,7 +12,7 @@ import * as S from './lib/strategy';
 import { Field, TextInput, TextArea, RemoveX, AddLink, SectionHeading, Tooltip } from './ui';
 import { useWorkspaceChrome, type Go } from './nav';
 
-/** Translucent tint of a token color — `var(--x) + '18'` is invalid CSS, so use
+/** Translucent tint of a token color. `var(--x) + '18'` is invalid CSS, so use
  *  color-mix to fade a design-system token to a soft background fill. */
 const tint = (color: string, pct = 12) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 
@@ -91,13 +91,13 @@ function buildScorecardData(account: Account): ScorecardData {
       title: 'Paid Ads',
       score: 12,
       strengths: [
-        'Conversion tracking is partially installed — analytics are live',
+        'Conversion tracking is partially installed, analytics are live',
         'Website has a phone number in the header, so paid traffic has a clear exit',
       ],
       weaknesses: [
-        `No active Google Search campaigns — competitors in ${city} are bidding on high-intent terms right now`,
+        `No active Google Search campaigns. Competitors in ${city} are bidding on high-intent terms right now`,
         'Zero Meta ad spend in the last 90 days while competitors run always-on local reels',
-        'No branded keyword protection — a competitor may be intercepting your name searches',
+        'No branded keyword protection. A competitor may be intercepting your name searches',
       ],
       nextSteps: [
         { label: 'Launch a "free estimate" Google Search campaign targeting local keywords', effort: 'quick' },
@@ -115,13 +115,13 @@ function buildScorecardData(account: Account): ScorecardData {
         'Past posts with before/after content drove strong organic reach',
       ],
       weaknesses: [
-        'Posting cadence has stalled — last social post was 30+ days ago',
+        'Posting cadence has stalled. Last social post was 30+ days ago',
         'Google Business Profile is missing recent photos and has no posts in months',
-        'Organic reach is limited by single-channel distribution — no TikTok or YouTube Shorts',
+        'Organic reach is limited by single-channel distribution, no TikTok or YouTube Shorts',
         'No local SEO content targeting city + service keywords',
       ],
       nextSteps: [
-        { label: 'Post 2× per week minimum — before/after photos and crew shots perform best in this category', effort: 'quick' },
+        { label: 'Post 2× per week minimum. Before/after photos and crew shots perform best in this category', effort: 'quick' },
         { label: 'Add 5+ fresh photos to Google Business Profile and publish a monthly GBP post', effort: 'quick' },
         { label: 'Build a "best [service] in [city]" landing page targeting local search intent', effort: 'project' },
       ],
@@ -131,13 +131,13 @@ function buildScorecardData(account: Account): ScorecardData {
       title: 'Website & Conversion',
       score: 58,
       strengths: [
-        'Click-to-call is visible on every page — critical for a services business',
+        'Click-to-call is visible on every page, critical for a services business',
         'Reviews, licensing badges, and "insured" signals are present above the fold',
         'The site is mobile-responsive and loads correctly on small screens',
       ],
       weaknesses: [
-        '"Contact us" is the primary CTA — "Get a free estimate" converts 30–60% better',
-        'Mobile LCP is slow — around 30% of visitors likely bounce before the page loads',
+        '"Contact us" is the primary CTA. "Get a free estimate" converts 30–60% better',
+        'Mobile LCP is slow, around 30% of visitors likely bounce before the page loads',
         'Lead form has too many fields; trimming to name, phone, ZIP, and project type reduces drop-off',
       ],
       nextSteps: [
@@ -151,14 +151,14 @@ function buildScorecardData(account: Account): ScorecardData {
       title: 'Reputation',
       score: 72,
       strengths: [
-        '4.7★ average rating across Google, Yelp, and Facebook — the strongest asset in the market',
-        'Owner is responding to most reviews — response rate lifts conversion ~11%',
+        '4.7★ average rating across Google, Yelp, and Facebook, the strongest asset in the market',
+        'Owner is responding to most reviews, response rate lifts conversion ~11%',
         'Review quality is high; several mention specific crew members by name',
       ],
       weaknesses: [
-        `Behind the top ${city} competitors on total review count — volume is a ranking signal`,
-        'New review velocity has slowed — less than 2 new reviews/month recently',
-        '3 unanswered negative reviews are visible on Google — each can deter 30 potential customers',
+        `Behind the top ${city} competitors on total review count, volume is a ranking signal`,
+        'New review velocity has slowed, less than 2 new reviews/month recently',
+        '3 unanswered negative reviews are visible on Google, each can deter 30 potential customers',
       ],
       nextSteps: [
         { label: 'Respond to the 3 unanswered Google reviews this week', effort: 'quick' },
@@ -194,7 +194,7 @@ function buildScorecardData(account: Account): ScorecardData {
   const bottomSection = [...sections].sort((a, b) => a.score - b.score)[0];
 
   const summary = `${account.name} scores ${ourOverall}/100 overall, ranking #${rank} of ${total} businesses in ${city}. `
-    + `The strongest area is ${topSection.title.toLowerCase()} (${topSection.score}/100) — ${topSection.strengths[0].toLowerCase()}. `
+    + `The strongest area is ${topSection.title.toLowerCase()} (${topSection.score}/100): ${topSection.strengths[0].toLowerCase()}. `
     + `The biggest opportunity is ${bottomSection.title.toLowerCase()} (${bottomSection.score}/100): ${bottomSection.weaknesses[0].toLowerCase()}.`;
 
   return { sections, competitors, ourName: account.name, ourScores, overallRank: rank, summary };
@@ -291,7 +291,7 @@ function SetupStep({ account, go }: { account: Account; go: Go }) {
 
 interface EditableComp { id: string; name: string; website: string; socials: Social[]; note: string; source: 'gbp' | 'manual' }
 
-/** Prefilled social rows for a competitor — Google Business Profile leads (it's
+/** Prefilled social rows for a competitor, Google Business Profile leads (it's
  *  the primary local-business signal), then the common channels. Handles are
  *  stubbed from the name; a blank name (new manual competitor) leaves them empty. */
 const defaultCompetitorSocials = (name: string): Social[] => {
@@ -323,7 +323,7 @@ function CompetitorsStep({ account, go }: { account: Account; go: Go }) {
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
       <Heading level={2} style={{ margin: '0 0 8px' }}>Local competitors</Heading>
       <Text style={{ display: 'block', marginBottom: 28, fontSize: 16, color: 'var(--dark-60)', lineHeight: 1.6 }}>
-        These were pulled from the GBP service area for {account.name} in {city}. Edit, delete, or add others — they'll be used in the comparison.
+        These were pulled from the GBP service area for {account.name} in {city}. Edit, delete, or add others, they'll be used in the comparison.
       </Text>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
@@ -396,7 +396,7 @@ function CompetitorsStep({ account, go }: { account: Account; go: Go }) {
 
 const publishedAccounts = new Set<string>();
 
-/** Whether the competitive scorecard has been published to the client portal —
+/** Whether the competitive scorecard has been published to the client portal,
  *  the cold-home onboarding step reads this to flip itself to "done". */
 export function isScorecardPublished(accountId: string): boolean {
   return publishedAccounts.has(accountId);
@@ -408,12 +408,12 @@ const EFFORT_TONE = { quick: 'success', medium: 'warning', project: 'accent' } a
 /** Score → StatusPill tone: good (green) / fair (orange) / poor (red). */
 const scoreTone = (s: number): 'success' | 'warning' | 'danger' => (s >= 65 ? 'success' : s >= 40 ? 'warning' : 'danger');
 
-/** Score badge — DS StatusPill; the tone carries the good/fair/poor meaning. */
+/** Score badge, DS StatusPill; the tone carries the good/fair/poor meaning. */
 function ScorePill({ score }: { score: number }) {
   return <StatusPill tone={scoreTone(score)} size="md">{score}/100</StatusPill>;
 }
 
-/** Effort badge — DS StatusPill keyed to the effort level. */
+/** Effort badge, DS StatusPill keyed to the effort level. */
 function EffortPill({ effort }: { effort: keyof typeof EFFORT_LABELS }) {
   return <StatusPill tone={EFFORT_TONE[effort]} size="sm">{EFFORT_LABELS[effort]}</StatusPill>;
 }
@@ -453,7 +453,7 @@ function ScorecardView({ account, go }: { account: Account; go: Go }) {
 
   // Publish action lives in the workspace topbar. The client reviews the
   // published scorecard in the separate client prototype, so we just share a
-  // link — no in-app client preview.
+  // link, no in-app client preview.
   const chrome = useWorkspaceChrome();
   const topbarActions = published ? (
     <Button variant={linkCopied ? 'primary' : 'secondary'} size="md" frontIcon={linkCopied ? Check2 : LinkExternal} onPress={copyLink}>{linkCopied ? 'Link Copied!' : 'Copy Client Link'}</Button>
@@ -618,7 +618,7 @@ function SectionCard({ section, onUpdate }: { section: ScorecardSection; onUpdat
 
   return (
     <div>
-      {/* Section header — pulled out above the content card */}
+      {/* Section header, pulled out above the content card */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
         <div onClick={() => setOpen((o) => !o)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}>
           <Heading level={3} style={{ margin: 0 }}>{section.title}</Heading>
@@ -754,7 +754,7 @@ function ComparisonTable({ data }: { data: ScorecardData }) {
     <div>
       <Heading level={3} style={{ margin: '0 0 4px' }}>How you compare locally</Heading>
       <Text style={{ display: 'block', marginBottom: 14, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
-        Scores are estimated from publicly visible signals — ad library activity, social presence, website audit, and review data. Open any section below to see exactly how each score is calculated.
+        Scores are estimated from publicly visible signals: ad library activity, social presence, website audit, and review data. Open any section below to see exactly how each score is calculated.
       </Text>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--dark-8)', overflow: 'hidden' }}>

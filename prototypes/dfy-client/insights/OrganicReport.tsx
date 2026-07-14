@@ -5,13 +5,13 @@ import { WEEKS, DAY_LABELS, Block, type ChannelProps } from './common';
 
 const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=320&q=80&fit=crop`;
 const TOP_POSTS = [
-  { img: U('1581858726788-75bc0f6a952d'), cap: 'Before / after — Westlake hardwood install', eng: '1,240', tag: 'Reel' },
-  { img: U('1562259949-e8e7689d7828'), cap: 'Crew spotlight — meet the install team', eng: '880', tag: 'Story' },
+  { img: U('1581858726788-75bc0f6a952d'), cap: 'Before / after: Westlake hardwood install', eng: '1,240', tag: 'Reel' },
+  { img: U('1562259949-e8e7689d7828'), cap: 'Crew spotlight: meet the install team', eng: '880', tag: 'Story' },
   { img: U('1513694203232-719a280e022f'), cap: 'Wide-plank oak refinish carousel', eng: '760', tag: 'Carousel' },
-  { img: U('1600585154340-be6161a56a0c'), cap: '"Flooring near Mueller" — finished LVP', eng: '690', tag: 'Reel' },
+  { img: U('1600585154340-be6161a56a0c'), cap: '"Flooring near Mueller": finished LVP', eng: '690', tag: 'Reel' },
 ];
 
-/** Organic Social — engagement-over-time line, reach-by-platform bars, top-posts row. */
+/** Organic Social, engagement-over-time line, reach-by-platform bars, top-posts row. */
 export function OrganicReport({ editing, narrative, onNarrative }: ChannelProps) {
   return (
     <InsightsReport weeks={WEEKS.map((w, i) => (i === 0 ? { ...w, subtitle: '9 posts published across IG, FB & GBP' } : w))}>

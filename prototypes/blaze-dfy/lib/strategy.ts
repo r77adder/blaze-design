@@ -201,7 +201,7 @@ export function seoKeywords(a: Account): SeoKeyword[] {
     { keyword: `best ${kind} ${city}`, intent: 'Commercial', volume: '480/mo', difficulty: 'Low', why: 'Low difficulty + comparison intent. A "best of" page can rank fast and convert.' },
     { keyword: `${kind} cost`, intent: 'Informational', volume: '2.1k/mo', difficulty: 'Medium', why: 'Top research question. A pricing-explainer post captures leads early in the journey.' },
     { keyword: `affordable ${kind}`, intent: 'Commercial', volume: '720/mo', difficulty: 'Low', why: 'Price-sensitive buyers ready to act; easy win that fills the funnel.' },
-    { keyword: `${kind} reviews ${city}`, intent: 'Commercial', volume: '210/mo', difficulty: 'Low', why: 'Reputation-driven intent — plays to your review strength from the audit.' },
+    { keyword: `${kind} reviews ${city}`, intent: 'Commercial', volume: '210/mo', difficulty: 'Low', why: 'Reputation-driven intent. Plays to your review strength from the audit.' },
   ];
 }
 

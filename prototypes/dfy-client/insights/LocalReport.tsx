@@ -5,7 +5,7 @@ import { WEEKS, Block, Grid2, type ChannelProps } from './common';
 
 const WEEK_LABELS = ['Apr', 'May 1', 'May 15', 'Jun 1', 'Now'];
 
-/** Local Search — map-rank trend (lower=better), review-velocity bars, profile-action stats. */
+/** Local Search: map-rank trend (lower=better), review-velocity bars, profile-action stats. */
 export function LocalReport({ editing, narrative, onNarrative }: ChannelProps) {
   return (
     <InsightsReport weeks={WEEKS.map((w, i) => (i === 0 ? { ...w, subtitle: 'Map rank up to #2 this week' } : w))}>
@@ -52,7 +52,7 @@ export function LocalReport({ editing, narrative, onNarrative }: ChannelProps) {
             { label: 'Needs fixing', value: 3, color: 'var(--red-70)' },
           ]} format={(n) => `${n}`} />
           <div style={{ marginTop: 14, fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5 }}>
-            3 listings (Yelp, Bing, Apple Maps) still carry an old phone number — queued for correction.
+            3 listings (Yelp, Bing, Apple Maps) still carry an old phone number. Queued for correction.
           </div>
         </ChartCard>
       </Block>

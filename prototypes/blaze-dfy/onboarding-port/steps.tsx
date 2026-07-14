@@ -25,11 +25,11 @@ import {
  * `ui.tsx` TextInput/TextArea (same event-based onChange), and cold-flow-shell's
  * SectionHeading/AddLink/RemoveX map to the local `ui.tsx` equivalents. The
  * full-flow chrome (FlowTakeover/FlowFooter/onboarding-context navigation) is
- * dropped — these render standalone inside an existing blaze-dfy page. The only
+ * dropped. These render standalone inside an existing blaze-dfy page. The only
  * chrome kept is FlowHeader (title + subtitle), reproduced locally below.
  */
 
-// ─── FlowHeader — per-step heading block (eyebrow + title + subtitle) ────────
+// ─── FlowHeader, per-step heading block (eyebrow + title + subtitle) ────────
 // Reproduced 1:1 from cold-flow-shell's FlowHeader.
 
 export function FlowHeader({ eyebrow, title, subtitle }: { eyebrow?: string; title: string; subtitle?: string }) {
@@ -93,7 +93,7 @@ export function SwipeStep() {
   return (
     <div>
       <div style={{ marginBottom: 40 }}>
-        <SectionHeading title="Brands you admire" desc="Brands you love — we'll study their look, voice, and paid creative." />
+        <SectionHeading title="Brands you admire" desc="Brands you love. We'll study their look, voice, and paid creative." />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {brands.map((b, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -156,7 +156,7 @@ export function SwipeStep() {
   );
 }
 
-/** Swipe-card preview — an image at the format's native aspect ratio, or a
+/** Swipe-card preview, an image at the format's native aspect ratio, or a
  *  Google text-ad mock for search ads (whose "creative" is text, not an image). */
 function SwipePreview({ item }: { item: SwipeItem }) {
   if (item.kind === 'search' && item.searchAd) {
@@ -215,11 +215,11 @@ function FieldRow({ label, children }: { label: string; children: ReactNode }) {
 
 /** Read-only value display used when a Goals field is not being edited. */
 function ReadValue({ children }: { children: ReactNode }) {
-  return <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>{children || '—'}</Text>;
+  return <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block', whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>{children || '-'}</Text>;
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const fmtMonth = (w: string) => { const [y, m] = (w || '').split('-'); return m ? `${MONTHS[+m - 1]} ${y}` : (w || '—'); };
+const fmtMonth = (w: string) => { const [y, m] = (w || '').split('-'); return m ? `${MONTHS[+m - 1]} ${y}` : (w || '-'); };
 
 /** Section metadata shared by the pre-submission GoalsStep and the client
  *  review, so both render the exact same headings in the same order. */
@@ -228,10 +228,10 @@ export const GOALS_SECTIONS: GoalsSectionMeta[] = [
   { id: 'success', title: 'What does success look like?', note: 'Drafted from your goals and the audit.' },
   { id: 'history', title: 'Marketing history', note: 'Summarized from your intake and current channels.' },
   { id: 'events', title: 'Major events', desc: 'Dates worth planning campaigns around. Tag each as company or industry.' },
-  { id: 'plan', title: 'Channels to develop plans around', note: "Pre-selected from the audit's biggest gaps — paid-first." },
+  { id: 'plan', title: 'Channels to develop plans around', note: "Pre-selected from the audit's biggest gaps, paid-first." },
 ];
 
-/** Goals section headline — H3 with a divider underneath (except Major events),
+/** Goals section headline, H3 with a divider underneath (except Major events),
  *  and an optional right slot for the review's verdict buttons. Shared by the
  *  pre-submission GoalsStep and the client review so both stay identical. */
 export function GoalsSectionHead({ id, title, right }: { id: string; title: string; right?: ReactNode }) {
@@ -247,7 +247,7 @@ export function GoalsSectionHead({ id, title, right }: { id: string; title: stri
   );
 }
 
-/** Per-subsection edit controller — the review passes this so each field toggles
+/** Per-subsection edit controller, the review passes this so each field toggles
  *  its own read/edit state. Absent (pre-submission) → always editable. */
 export interface EditControl { isEditing: (key: string) => boolean; toggle: (key: string) => void }
 interface EditableProps { ctrl?: EditControl; onEdit?: () => void }

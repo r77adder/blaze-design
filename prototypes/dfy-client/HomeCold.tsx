@@ -17,7 +17,7 @@ import {
 } from './HomeColdShared';
 
 /**
- * HomeCold — the **client** pre-go-live Home, shown right after the account
+ * HomeCold, the **client** pre-go-live Home, shown right after the account
  * starts onboarding with their Blaze strategist. The heavy operating work is
  * AM-side in blaze-dfy; this is the calm, reassuring window the client sees.
  * View-only. See HomeReviewing for the later "everything but go-live is
@@ -26,14 +26,14 @@ import {
  * Two jobs: surface what's already READY for the client to act on (scorecard,
  * strategy), and show what the strategist is still WORKING ON (onboarding
  * phases). Account connections live in a collapsed accordion. Deliberately
- * neutral — white surfaces, --dark-8 borders, color reserved for the
+ * neutral: white surfaces, --dark-8 borders, color reserved for the
  * strategist Avatar and a success pill where something is ready/connected.
  */
 
 const PHASES: { key: string; icon: typeof Target5; label: string; blurb: string; state: PhaseState }[] = [
   { key: 'goals', icon: Target5, label: 'Goals & themes', blurb: 'We’re mapping your campaign goals and the content themes we’ll run them through.', state: 'current' },
-  { key: 'creative', icon: Camera1, label: 'Creative — your first content', blurb: 'We’re generating your first wave of posts and ads for your sign-off on the look and voice.', state: 'current' },
-  { key: 'golive', icon: CalendarStart, label: 'Go-live', blurb: 'We connect the last channels and switch everything on — your full portal opens with live results.', state: 'upcoming' },
+  { key: 'creative', icon: Camera1, label: 'Creative: your first content', blurb: 'We’re generating your first wave of posts and ads for your sign-off on the look and voice.', state: 'current' },
+  { key: 'golive', icon: CalendarStart, label: 'Go-live', blurb: 'We connect the last channels and switch everything on. Your full portal opens with live results.', state: 'upcoming' },
 ];
 
 const CONNECTED_ON_LOAD = ['meta', 'gbp'];
@@ -69,7 +69,7 @@ export function HomeCold() {
           </Text>
         </div>
 
-        {/* section: ready for you — one card, rows (matches the sections below) */}
+        {/* section: ready for you, one card, rows (matches the sections below) */}
         <section>
           <Heading level={3} style={{ margin: '0 0 12px' }}>Ready for you</Heading>
           <Card padding="none">
@@ -84,8 +84,8 @@ export function HomeCold() {
               icon={Target5}
               title="Your Strategy"
               blurb={strategySubmitted
-                ? 'Thanks for reviewing — your strategist has your feedback and will follow up with the next version.'
-                : 'The first campaign plan, audiences, and channel mix are mapped out — review and approve it before we launch.'}
+                ? 'Thanks for reviewing. Your strategist has your feedback and will follow up with the next version.'
+                : 'The first campaign plan, audiences, and channel mix are mapped out. Review and approve it before we launch.'}
               badge={strategySubmitted ? 'Submitted' : 'Ready'}
               action={<Button variant="secondary" size="sm" onPress={() => go('/review-strategy')}>{strategySubmitted ? 'View strategy' : 'Approve your strategy'}</Button>}
             />
@@ -102,7 +102,7 @@ export function HomeCold() {
           </Card>
         </section>
 
-        {/* section: connect your accounts — accordion, closed by default */}
+        {/* section: connect your accounts, accordion, closed by default */}
         <section>
           <button
             type="button"
@@ -151,7 +151,7 @@ export function HomeCold() {
             color="var(--dark-60)"
             style={{ display: 'block', textAlign: 'center', marginTop: 20, lineHeight: 1.5 }}
           >
-            You&rsquo;ll get full access — results, approvals, your calendar — the moment you go live.
+            You&rsquo;ll get full access (results, approvals, your calendar) the moment you go live.
           </Text>
         </section>
       </div>

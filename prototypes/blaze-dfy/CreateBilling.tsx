@@ -46,7 +46,7 @@ function PriceField({ price, suffix, onChange }: { price: number; suffix: string
   );
 }
 
-/** Billing editor for the New Workspace flow — multi-package, durations,
+/** Billing editor for the New Workspace flow, multi-package, durations,
  *  custom prices, contract term, and a Dropbox Sign import. */
 export function BillingSection({ value, onChange, imported, onImport }: {
   value: BillingInfo;
@@ -73,7 +73,7 @@ export function BillingSection({ value, onChange, imported, onImport }: {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <Heading level={3} style={{ margin: '0 0 4px' }}>Billing</Heading>
-          <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', maxWidth: 420, lineHeight: 1.5 }}>Pulled from the signed contract in Dropbox Sign — adjust anything that was negotiated, then we create the Stripe subscription.</Text>
+          <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', maxWidth: 420, lineHeight: 1.5 }}>Pulled from the signed contract in Dropbox Sign. Adjust anything that was negotiated, then we create the Stripe subscription.</Text>
         </div>
         {imported
           ? <Text variant="metadata" color="var(--positive-60)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', paddingTop: 2 }}><Check2 /> Imported from Dropbox Sign</Text>
@@ -82,7 +82,7 @@ export function BillingSection({ value, onChange, imported, onImport }: {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
         {packages.length === 0 && (
-          <Text variant="secondary" color="var(--dark-40)" style={{ padding: '8px 0' }}>No packages yet — pull from the contract or add one.</Text>
+          <Text variant="secondary" color="var(--dark-40)" style={{ padding: '8px 0' }}>No packages yet. Pull from the contract or add one.</Text>
         )}
         {packages.map((p, i) => {
           const def = packageByKey(p.key)!;
@@ -119,7 +119,7 @@ export function BillingSection({ value, onChange, imported, onImport }: {
             <Text variant="secondary" color="var(--dark-60)">{term}-month contract</Text>
           </div>
           <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', lineHeight: 1.5 }}>
-            Ends {fmtDate(dates.end)}. We'll flag the AM on {fmtDate(dates.remindAt)} (45 days out) to confirm renewal — decision due {fmtDate(dates.decideBy)}.
+            Ends {fmtDate(dates.end)}. We'll flag the AM on {fmtDate(dates.remindAt)} (45 days out) to confirm renewal. Decision due {fmtDate(dates.decideBy)}.
           </Text>
         </div>
       </div>

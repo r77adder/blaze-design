@@ -50,7 +50,7 @@ interface PhaseChrome { setFooterCenter: (n: ReactNode) => void; setAboveFooter:
 const PhaseChromeContext = createContext<PhaseChrome | null>(null);
 export const usePhaseChrome = () => useContext(PhaseChromeContext);
 
-/** Lets a page inject chrome into the WorkspaceShell topbar — sub-tabs into the
+/** Lets a page inject chrome into the WorkspaceShell topbar, sub-tabs into the
  *  center, page actions (e.g. "Generate report") on the right.
  *  The context lives in its own module (workspace-chrome.tsx) so feature pages
  *  can use the hook without importing back into nav (avoids an import cycle).
@@ -99,8 +99,8 @@ export function PhaseScreen({ account, side, section, sub, go, prevSection, next
 export interface Step { key: string; label: string; hidden?: boolean }
 export const STEPS: Record<string, Step[]> = {
   // Home tab strip (rendered in the topbar, no step numbers). Workstream is
-  // AM-only — filtered out for the client view in WorkspaceShell.
-  // Overview is hidden for now — Workstream is the default landing tab and is
+  // AM-only, filtered out for the client view in WorkspaceShell.
+  // Overview is hidden for now, Workstream is the default landing tab and is
   // shown to both AM and client (each gets a different feed in Home).
   home: [
     { key: 'work', label: 'Workstream' },
@@ -119,7 +119,7 @@ export const STEPS: Record<string, Step[]> = {
     { key: 'calendar', label: 'Campaign calendar' },
     { key: 'done', label: 'Done', hidden: true },
   ],
-  // Settings tabs — customer details vs the billing record. No step numbers.
+  // Settings tabs, customer details vs the billing record. No step numbers.
   settings: [
     { key: 'general', label: 'General' },
     { key: 'billing', label: 'Billing' },
@@ -136,7 +136,7 @@ interface NavGroup { label?: string; items: NavDef[] }
 
 /** AM sidebar splits the onboarding flow from the steady-state run-the-account
  *  tools, mirroring how the workspace shifts after onboarding completes. */
-/** Ported H2 feature groups — shared by AM and Client sidebars. */
+/** Ported H2 feature groups, shared by AM and Client sidebars. */
 const AWARENESS_GROUP: NavGroup = { label: 'Awareness', items: [
   { label: 'Organic Campaigns', icon: CalendarPost, section: 'organic-social' },
   { label: 'Local SEO', icon: Marker03, section: 'organic-profile' },
@@ -213,7 +213,7 @@ export function WorkspaceShell({
       handoffAccount(account.id, amName, note);
       closeModal();
       onReload?.();
-      showToast({ message: `Handed off to ${amName} — they now own this workspace` });
+      showToast({ message: `Handed off to ${amName}, they now own this workspace` });
     },
   });
   const { state: dfyState } = useDfyState();
@@ -230,7 +230,7 @@ export function WorkspaceShell({
     : {};
 
   // Flat sections (Home / Settings / steady-state Strategy) render their sub-tabs
-  // as the standard TabChip strip — the same rounded-pill tab the rest of the app
+  // as the standard TabChip strip, the same rounded-pill tab the rest of the app
   // uses. Only the onboarding wizards (Strategy / Creative) get numbered step tabs,
   // since those are a sequential flow.
   const chipStrip = (withCounts: boolean) => (
@@ -247,7 +247,7 @@ export function WorkspaceShell({
   );
 
   const topbarCenter = !sub ? undefined
-    // Cold Home is a single setup checklist — no Workstream/Insights tabs.
+    // Cold Home is a single setup checklist, no Workstream/Insights tabs.
     : section === 'home' ? (dfyState !== 'steady' && side === 'am' ? undefined : chipStrip(true))
     : section === 'settings' ? chipStrip(false)
     : steps
@@ -268,7 +268,7 @@ export function WorkspaceShell({
   }));
 
   // The approvals subtabs now carry the requested-change count (in the topbar
-  // tab strip), so the title stays a plain section name — unless a page injects
+  // tab strip), so the title stays a plain section name, unless a page injects
   // its own title node (e.g. the AI Receptionist settings page swaps in a
   // back + "Settings" cluster).
   const titleNode = injectedTitle ?? active;
@@ -291,9 +291,6 @@ export function WorkspaceShell({
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           {topbarExtra}
           {injectedRight}
-          {section === 'approvals' && (
-            <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button>
-          )}
         </div>
       }
     >
@@ -305,7 +302,7 @@ export function WorkspaceShell({
   );
 }
 
-/** Account/workspace overview opened from the sidebar workspace selector —
+/** Account/workspace overview opened from the sidebar workspace selector,
  *  switch between accounts or jump back to the full directory. */
 function AccountSwitcher({ side, currentId, go, onClose }: { side: Side; currentId: string; go: Go; onClose: () => void }) {
   const [accounts, setAccounts] = useState<Account[] | null>(null);

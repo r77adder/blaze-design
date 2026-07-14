@@ -36,7 +36,7 @@ export function HandoffModal({ close, account, onConfirm }: StackModalProps & {
               fullWidth
             />
           </Field>
-          <Field label="Note for the next owner" hint="Optional — leave blank to keep the suggested next step.">
+          <Field label="Note for the next owner" hint="Optional. Leave blank to keep the suggested next step.">
             <TextArea
               value={note}
               onChange={(e) => setNote(e.target.value)}

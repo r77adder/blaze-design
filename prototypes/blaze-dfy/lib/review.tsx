@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
 /* ─── Shared client-review state ─────────────────────────────────────────────
- * The client reviews onboarding in two separate parts — Strategy (part 1) and
- * Creative (part 2) — each its own packet the AM shares from that phase. The
+ * The client reviews onboarding in two separate parts, Strategy (part 1) and
+ * Creative (part 2), each its own packet the AM shares from that phase. The
  * client sees almost the same screens the AM set up, with approve / request-
  * changes / comment per section. All in one session via a context wrapping the
  * AM and client routes.
@@ -12,14 +12,14 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 export type Phase = 'strategy' | 'goals' | 'creative';
 // Section-level verdict from the client (the Request changes / Approve buttons).
 export type ItemStatus = 'pending' | 'approved' | 'changes';
-// `edits` holds the client's revised copy keyed by subsection — the client can
+// `edits` holds the client's revised copy keyed by subsection. The client can
 // edit individual fields directly, independent of the approve/changes verdict.
 export interface ItemFeedback { status: ItemStatus; comment: string; edits?: Record<string, string> }
 export type PacketStatus = 'draft' | 'shared' | 'submitted';
 
 export interface ReviewSectionMeta { id: string; title: string; blurb: string }
 
-/** Section list per phase — mirrors what the AM set up in that phase. */
+/** Section list per phase, mirrors what the AM set up in that phase. */
 export function reviewSections(phase: Phase): ReviewSectionMeta[] {
   if (phase === 'strategy') {
     return [
@@ -51,7 +51,7 @@ export const REVIEW_STEP_SECTIONS: Partial<Record<Phase, Record<string, string[]
   creative: { storyboard: ['storyboard'], calendar: ['calendar'] },
 };
 
-/** Count how many of a step's sections have changes / edits — used to flag the
+/** Count how many of a step's sections have changes / edits, used to flag the
  *  step tab in the header. */
 export function stepReviewCounts(fb: Record<string, ItemFeedback>, phase: Phase, stepKey: string): { changes: number; edited: number } {
   const ids = REVIEW_STEP_SECTIONS[phase]?.[stepKey] ?? [];
@@ -68,13 +68,13 @@ const PHASES: Phase[] = ['strategy', 'goals', 'creative'];
 type ByPhase<T> = Record<Phase, T>;
 const byPhase = <T,>(make: () => T): ByPhase<T> => Object.fromEntries(PHASES.map((p) => [p, make()])) as ByPhase<T>;
 
-/** Demo "Reviewed" state — the client returned a realistic mix of approved,
+/** Demo "Reviewed" state, the client returned a realistic mix of approved,
  *  changes-requested and edited sections across all three reviews. Keys match
  *  reviewSections() ids. Built fresh each call so edits never mutate the seed. */
 function reviewedSeed(): ByPhase<Record<string, ItemFeedback>> {
   return {
     strategy: {
-      context: { status: 'pending', comment: '', edits: { overview: "Grain Design Flooring — Naperville's family-owned hardwood & luxury vinyl specialists since 2009." } },
+      context: { status: 'pending', comment: '', edits: { overview: "Grain Design Flooring · Naperville's family-owned hardwood & luxury vinyl specialists since 2009." } },
       brand: { status: 'approved', comment: '' },
       guidelines: { status: 'changes', comment: 'Can we punch up the taglines? The current ones feel a little safe.' },
     },
@@ -92,10 +92,10 @@ function reviewedSeed(): ByPhase<Record<string, ItemFeedback>> {
 }
 
 interface ReviewState {
-  /** Set once the AM finishes Strategy onboarding — unlocks the Goals flow. */
+  /** Set once the AM finishes Strategy onboarding, unlocks the Goals flow. */
   strategyComplete: boolean;
   setStrategyComplete: (v: boolean) => void;
-  /** Set once the AM finishes the Goals & theme flow — unlocks Creative Review. */
+  /** Set once the AM finishes the Goals & theme flow, unlocks Creative Review. */
   goalsComplete: boolean;
   setGoalsComplete: (v: boolean) => void;
   /** Set once the AM finishes Creative Review. */

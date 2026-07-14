@@ -40,11 +40,11 @@ export function Strategy({ account, sub, go }: { account: Account; sub: string; 
   );
 }
 
-/** Goals & theme — a standalone one-page flow that runs after Strategy and
+/** Goals & theme, a standalone one-page flow that runs after Strategy and
  *  before Creative Review, with its own client-review send. */
 export function GoalsOnboarding({ account, go }: { account: Account; go: Go }) {
   const { setGoalsComplete } = useReview();
-  // Full-bleed sticky footer — mirrors the PhaseScreen frame used across the
+  // Full-bleed sticky footer, mirrors the PhaseScreen frame used across the
   // other onboarding pages: content scrolls, the footer bar spans the whole
   // body width and stays pinned to the bottom.
   return (
@@ -65,7 +65,7 @@ export function GoalsOnboarding({ account, go }: { account: Account; go: Go }) {
 
 const BUSINESS_TYPES = ['Service', 'Product', 'SaaS', 'E-commerce', 'Local business', 'Agency', 'Nonprofit'];
 const CONTENT_STRATEGIES = ['Thought leadership', 'Educational', 'Promotional', 'Community building', 'Product-led'];
-// Optional deep-dive sections, collapsed by default — the AM expands the ones
+// Optional deep-dive sections, collapsed by default. The AM expands the ones
 // worth filling in. "Capture all the sections" per the brief, design TBD.
 const ADDITIONAL_CONTEXT: { key: string; label: string }[] = [
   { key: 'competitive', label: 'Competitive landscape' },
@@ -113,7 +113,7 @@ function BrandContext({ account }: { account: Account }) {
         </div>
       ))}
 
-      {/* section: additional context — collapsible deep-dive areas */}
+      {/* section: additional context, collapsible deep-dive areas */}
       <div style={{ marginTop: 8 }}>
         <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginBottom: 10 }}>Additional context</Text>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -173,7 +173,7 @@ function Creative({ account }: { account: Account }) {
         </div>
       </div>
       <div>
-        <SectionHeading title="Visual identity" desc="From the brand kit — click to edit colors and fonts." />
+        <SectionHeading title="Visual identity" desc="From the brand kit. Click to edit colors and fonts." />
         <SectionFeedback account={account} phase="strategy" sectionId="brand" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -200,7 +200,7 @@ function Creative({ account }: { account: Account }) {
         </div>
       </div>
       <div>
-        <SectionHeading title="Mood board" desc="Drop creative the client loves — it sets the inspiration target." />
+        <SectionHeading title="Mood board" desc="Drop creative the client loves. It sets the inspiration target." />
         <button style={{ width: '100%', minHeight: 150, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, border: '1.5px dashed var(--dark-12)', background: 'var(--dark-2)', cursor: 'pointer', color: 'var(--dark-40)', fontFamily: 'inherit', fontSize: 14 }}>
           <span style={{ fontSize: 26 }}>🖼️</span>
           Drop inspiration images, or click to upload
@@ -262,7 +262,7 @@ function SwipeFileStep({ account }: { account: Account }) {
   return (
     <div>
       <div style={{ marginBottom: 40 }}>
-        <SectionHeading title="Brands they admire" desc="Brands the client loves — we'll study their look, voice, and content." />
+        <SectionHeading title="Brands they admire" desc="Brands the client loves. We'll study their look, voice, and content." />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {brands.map((b, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -276,7 +276,7 @@ function SwipeFileStep({ account }: { account: Account }) {
         </div>
       </div>
 
-      <SectionHeading title="Swipe file" desc="Competitor & category benchmarks scanned from the market. React so we learn what to chase — or add your own references." />
+      <SectionHeading title="Swipe file" desc="Competitor & category benchmarks scanned from the market. React so we learn what to chase, or add your own references." />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {S.swipeFile(account).map((item: SwipeItem) => (
           <Card key={item.id} padding="none">

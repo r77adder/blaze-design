@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, type ComponentType, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { PrototypeShell, H2_SECTIONS } from '../_shell';
-import { Button, IconButton, Text, Modal, ModalStack, useModals, type StackModalProps } from '@/components';
+import { Button, IconButton, Text, Heading, Modal, ModalStack, useModals, type StackModalProps } from '@/components';
 import { Toast, StatusPill as DSStatusPill, Checkbox, Avatar, TextField, Pill, Toggle as DSToggle, TabChip } from '@/staging';
 import type { IconProps } from '@/icons/Types';
 import { Approvals as ApprovalsIcon, Check2, EyeOpen, ArrowLeft, ArrowRight, Globe, CalendarEdit, Settings } from '@/icons/20';
@@ -17,7 +17,6 @@ import Templates from '@/icons/20/Templates';
 import Stars from '@/icons/20/Stars';
 import Images from '@/icons/20/Images';
 import UserProfileAdd from '@/icons/20/UserProfileAdd';
-import Refresh01 from '@/icons/20/Refresh01';
 import Google from '@/icons/20/Google';
 import ChevronLeftLg from '@/icons/24/ChevronLeft';
 import Heart from '@/icons/24/Heart';
@@ -30,6 +29,10 @@ import Paperclip from '@/icons/24/Paperclip';
 import ArrowUp from '@/icons/20/ArrowUp';
 import { useDfyState } from './lib/dev-state';
 import { useWorkspaceChrome } from './workspace-chrome';
+// Platform-accurate Story/Reel/Blog frames, shared 1:1 with the dfy-client
+// preview so a reel reads the same on both surfaces. Leaf module (only pulls
+// @/components + @/icons), so importing it here introduces no cycle.
+import { StoryPreview, ReelPreview, BlogArticlePreview, ARTICLES } from '../dfy-client/SocialPreviewFrames';
 
 // ── Image assets (Figma + Unsplash fallbacks) ─────────────────────────────────
 const IMG_AVATAR = 'https://www.figma.com/api/mcp/asset/04425bfb-30dc-45d9-9537-cd0d3ca4cfbb';
@@ -89,7 +92,7 @@ export interface Post {
   source?: string;       // review: Google / Yelp / Facebook
 }
 
-interface Campaign {
+export interface Campaign {
   id: number;
   name: string;
   dateRange: string;
@@ -102,7 +105,7 @@ interface Campaign {
 // Grain Design Flooring (Austin, TX), the same client the portal + preview use.
 // Each post is tagged with its content-type `section` and whether it has been
 // `sent` to the client yet. `sent` posts carry a client verdict (see CLIENT_REVIEW).
-const CAMPAIGNS: Campaign[] = [
+export const CAMPAIGNS: Campaign[] = [
   {
     id: 0,
     name: 'Fall Hardwood Showcase',
@@ -134,17 +137,6 @@ const CAMPAIGNS: Campaign[] = [
       { id:53, type:'paid-social', section:'paid-social', sent:true, date:'Jun 13  2:00pm',  dateSort:'2026-06-13T14:00', img:IMG.detail,    headline:'Dust-free floor refinishing',   cta:'Book now',       dest:'graindesignflooring.com/dust-free',   caption:'Refinish, do not replace. Our sealed sanding system keeps your home livable while we bring tired floors back to life in three days.' },
       { id:54, type:'paid-social', section:'paid-social', sent:true, date:'Jun 14  9:00am',  dateSort:'2026-06-14T09:00', img:IMG.tile,      headline:'Matte herringbone tile',        cta:'See the gallery', dest:'graindesignflooring.com/tile',        caption:'Herringbone tile that reads warm, not cold. Perfect for entryways and mudrooms that take a beating. Design consults open this fall.' },
       { id:55, type:'paid-social', section:'paid-social', sent:true, date:'Jun 14  1:00pm',  dateSort:'2026-06-14T13:00', img:IMG.swatch,    headline:'Find your perfect tone',         cta:'Book a consult', dest:'graindesignflooring.com/consult',     caption:'From pale Scandi oak to deep walnut-stained ash, we sample on-site so you commit with confidence. Free design consult this fall. 🎨' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Fall Refinishing, Google',
-    dateRange: 'Jun 9 – Jun 30',
-    badge: 'Campaigns',
-    endDate: '2026-06-30',
-    posts: [
-      { id:20, type:'paid-search', section:'paid-search', sent:true,  date:'Jun 11  8:00am', dateSort:'2026-06-11T08:00', headline:'Hardwood Floor Refinishing Austin | Free Estimate in 24 Hrs', caption:'Dust-free sanding, custom stains, and a 10-year finish warranty. Trusted by 400+ Austin homeowners. Book your free in-home estimate today.' },
-      { id:21, type:'paid-search', section:'paid-search', sent:false, date:'Jun 14  8:00am', dateSort:'2026-06-14T08:00', headline:'Luxury Vinyl Plank Installation | Waterproof, Pet-Proof Floors', caption:'Realistic wood look, built for Texas homes. Free design consult + no install fee over 600 sq ft this fall. Serving greater Austin.' },
     ],
   },
   {
@@ -199,14 +191,17 @@ const SECTION_GROUPS: { label: string; sections: Section[] }[] = [
 
 // ── Pipeline status ─────────────────────────────────────────────────────────
 // The AM subtabs are a status filter. Every post sits in exactly one status.
-type PostStatus = 'draft' | 'in-review' | 'changes' | 'updated' | 'approved';
+type PostStatus = 'draft' | 'in-review' | 'changes' | 'approved';
 const STATUS_TABS: { key: PostStatus; label: string }[] = [
   { key: 'draft',     label: 'Draft' },
   { key: 'in-review', label: 'In review' },
   { key: 'changes',   label: 'Requested changes' },
-  { key: 'updated',   label: 'Updated' },
   { key: 'approved',  label: 'Approved' },
 ];
+// The status subtabs shown inside a batch (drafts never live in a sent batch).
+// A revised piece returns to In review, there is no separate Updated state; its
+// version history is preserved via REVISIONS / the preview version tracker.
+const BATCH_STATUS_TABS = STATUS_TABS.filter(t => t.key !== 'draft');
 // Single source of truth for the status colour + glyph, shared by the subtab
 // strip and the pipeline pill so both read as one system. `onColor` is the text
 // colour used when the status colour is the background (counter badges).
@@ -216,7 +211,6 @@ export const STATUS_META: Record<PostStatus, {
   draft:       { label: 'Draft',             color: 'var(--status-draft)',    onColor: white, Icon: Edit1 },
   'in-review': { label: 'In review',         color: 'var(--status-review)',   onColor: dark90, Icon: EyeOpen },
   changes:     { label: 'Requested changes', color: 'var(--status-failed)',   onColor: white, Icon: Comment },
-  updated:     { label: 'Updated',           color: 'var(--status-posting)',  onColor: white, Icon: Refresh01 },
   approved:    { label: 'Approved',          color: 'var(--status-approved)', onColor: white, Icon: Check2 },
 };
 
@@ -267,8 +261,27 @@ export function statusTabStyle(status: PostStatus, selected: boolean): CSSProper
 export function StatusTabChevron() {
   return <ChevronRight size={13} color={dark15} style={{ flexShrink: 0, alignSelf: 'center' }} />;
 }
-// Demo override so the Updated subtab has content (only applied in steady).
-const STATUS_SEED: Record<number, PostStatus> = { 41: 'updated' };
+// Demo override (steady only): posts revised after client feedback are back in
+// review as V2. RESUBMITTED marks the pieces that seed at version 2, post 1
+// (the Westlake reel, mirrors the client's V2 example) and post 41.
+export const STATUS_SEED: Record<number, PostStatus> = { 41: 'in-review' };
+const RESUBMITTED = [1, 41];
+
+// ── Batches ──────────────────────────────────────────────────────────────────
+// A batch is one "send to client": a named group of pieces with a review-by due
+// date and a cover note. Piece statuses always derive from `postStatus`.
+export interface Batch { id: string; name: string; dueDate: string; note: string; postIds: number[]; createdAt: string }
+const BATCH_NOTE = (name: string, count: number) =>
+  `Hi Tyler,\n\nThe ${name} content is ready for your review: ${count} ${count === 1 ? 'piece' : 'pieces'}. Approve anything that's good to go, or leave a note on whatever you'd like changed.\n\nThanks!`;
+// Demo batches group the already-sent posts (only applied in steady). Due dates
+// are the review-by date (the earliest scheduled post in each batch).
+export const SEED_BATCHES: Batch[] = [
+  { id: 'b1', name: 'Fall Hardwood Showcase', dueDate: '2026-06-10', createdAt: '2026-06-06', postIds: [0, 1, 3, 30, 31], note: BATCH_NOTE('Fall Hardwood Showcase', 5) },
+  { id: 'b2', name: 'Fall Paid & Reputation', dueDate: '2026-06-11', createdAt: '2026-06-07', postIds: [10, 40, 41], note: BATCH_NOTE('Fall Paid & Reputation', 3) },
+  // Past batches, fully approved, revealed behind the "Show all Approved" button.
+  { id: 'b0a', name: 'Summer Social Refresh', dueDate: '2026-05-28', createdAt: '2026-05-24', postIds: [50, 51, 52], note: BATCH_NOTE('Summer Social Refresh', 3) },
+  { id: 'b0b', name: 'Late Spring Promo',     dueDate: '2026-05-21', createdAt: '2026-05-17', postIds: [53, 54, 55], note: BATCH_NOTE('Late Spring Promo', 3) },
+];
 
 // ── Client review (shared source of truth) ─────────────────────────────────────
 // The client's verdicts on the active campaign's posts. One place drives three
@@ -287,10 +300,16 @@ export const CLIENT_REVIEW: Record<number, ClientReview> = {
   0:  { status: 'approved', author: 'Tyler', initials: 'TN', time: '3h ago' },
   3:  { status: 'changes',  author: 'Tyler', initials: 'TN', time: '2h ago', comment: 'Can we lead with the pale Scandi oak slide instead of the walnut? That is the look we are pushing for summer.' },
   10: { status: 'changes',  author: 'Tyler', initials: 'TN', time: '2h ago', comment: 'The install-fee offer gets lost at the bottom, can we pull it into the headline and make it bolder?' },
-  20: { status: 'approved', author: 'Tyler', initials: 'TN', time: '4h ago' },
   30: { status: 'approved', author: 'Tyler', initials: 'TN', time: '5h ago' },
   40: { status: 'changes',  author: 'Tyler', initials: 'TN', time: '1h ago', comment: 'Love the tone, but can the reply offer Maria a free comeback visit to fix the squeak? Want her to feel taken care of.' },
   41: { status: 'approved', author: 'Tyler', initials: 'TN', time: '4h ago' },
+  // Past, fully-approved batches (revealed behind "Show all Approved").
+  50: { status: 'approved', author: 'Tyler', initials: 'TN', time: '2 weeks ago' },
+  51: { status: 'approved', author: 'Tyler', initials: 'TN', time: '2 weeks ago' },
+  52: { status: 'approved', author: 'Tyler', initials: 'TN', time: '2 weeks ago' },
+  53: { status: 'approved', author: 'Tyler', initials: 'TN', time: '3 weeks ago' },
+  54: { status: 'approved', author: 'Tyler', initials: 'TN', time: '3 weeks ago' },
+  55: { status: 'approved', author: 'Tyler', initials: 'TN', time: '3 weeks ago' },
 };
 
 // ── Home-feed projections of the client review ─────────────────────────────────
@@ -505,6 +524,9 @@ export const CARD_W = 340;
 export const CARD_H = 500;
 // Content area caps at exactly three cards wide.
 export const PAGE_W = CARD_W * 3 + 18 * 2;
+// The batch-card list is a single column of horizontal cards, so it reads
+// better narrower than the three-up piece grid.
+export const BATCH_LIST_W = 880;
 
 // ── Meta (Facebook) feed ad preview ──────────────────────────────────────────
 // A real Meta ad: brand header + Sponsored, primary text, the creative, a link
@@ -1172,7 +1194,7 @@ function ResubmitModal({ close, onConfirm, onReviewFirst }: {
 }
 
 // (Resubmit-from-preview now uses an inline dropdown pane in PostPreview, mirroring
-//  the client's Request-changes composer — see `openResubmit` / `confirmResubmit`.)
+//  the client's Request-changes composer, see `openResubmit` / `confirmResubmit`.)
 
 function DontPostModal({ close, onConfirm }: { close: () => void; onConfirm: (reasons: string[]) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1265,7 +1287,7 @@ const REPLY_DRAFT: Record<number, string> = {
 // revision (V2), and each addresses that post's client change request so the
 // version tracker shows a real before/after. Copy follows house style (no em
 // dashes). Posts without an entry simply keep their original content.
-const REVISIONS: Record<number, Array<Partial<{ caption: string; headline: string; img: string; reply: string }>>> = {
+export const REVISIONS: Record<number, Array<Partial<{ caption: string; headline: string; img: string; reply: string }>>> = {
   // Carousel: lead with the pale Scandi oak slide instead of the walnut.
   3: [{
     img: IMG.hardwood,
@@ -1285,11 +1307,23 @@ const REVISIONS: Record<number, Array<Partial<{ caption: string; headline: strin
   }],
 };
 
-// Resolve the content shown for a given version index. V1 (index 0) is the
-// original; later indices layer the authored revision on top (clamped to the
-// last available revision so re-resubmits keep showing the revised copy).
+// V1 (prior) content for pieces revised the "client way": the current shared
+// canonical is the latest version (V2), and this holds the older V1 shown when
+// stepping back. Mirrors the client's CLIENT_REVISIONS so post 1 (the Westlake
+// reel) reads identically on both surfaces, V1 the dimmer crew shot, V2 the
+// brighter install shot that's now current.
+const PRIOR_VERSION: Record<number, Partial<{ caption: string; headline: string; img: string; reply: string }>> = {
+  1: { img: IMG.crew, caption: 'Watch 1,400 sq ft of European white oak go in over two days in Westlake. The satisfying part starts at 0:18.' },
+};
+
+// Resolve the content shown for a given version index. Two conventions coexist:
+// pieces in PRIOR_VERSION are client-style (current canonical = latest V, index 0
+// = the older override); everything else is legacy AM-style (V1 = original, later
+// indices layer the authored REVISIONS revision on top).
 function versionContent(it: PreviewPost, vIdx: number): { caption: string; headline?: string; img?: string; reply?: string } {
   const base = { caption: it.caption, headline: it.headline, img: it.img, reply: REPLY_DRAFT[it.id] };
+  const prior = PRIOR_VERSION[it.id];
+  if (prior) return vIdx === 0 ? { ...base, ...prior } : base;
   const revs = REVISIONS[it.id];
   if (vIdx <= 0 || !revs || revs.length === 0) return base;
   return { ...base, ...revs[Math.min(vIdx - 1, revs.length - 1)] };
@@ -1419,8 +1453,8 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
   const addResponse = (id: number, text: string) => setResponses((m) => ({ ...m, [id]: [...(m[id] ?? []), text] }));
 
   // Light version control: every resubmit to the client mints a new version.
-  // Posts already in "Updated" land on the board at V2; everything else at V1.
-  const seedVersions = (it: PreviewPost) => (it.status === 'updated' ? 2 : 1);
+  // Already-resubmitted posts land on the board at V2; everything else at V1.
+  const seedVersions = (it: PreviewPost) => (RESUBMITTED.includes(it.id) ? 2 : 1);
   const [versionCount, setVersionCount] = useState<Record<number, number>>({});
   const [versionIdx, setVersionIdx] = useState<Record<number, number>>({});
   const verCount = versionCount[item.id] ?? seedVersions(item);
@@ -1444,7 +1478,7 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
   const openResubmit = () => { setResubmitNote(''); setResubmitOpen(true); };
   const confirmResubmit = () => {
     const note = resubmitNote.trim();
-    changeStatus('updated');
+    changeStatus('in-review');
     if (note) addResponse(item.id, note);
     const next = verCount + 1;
     setVersionCount((m) => ({ ...m, [item.id]: next }));
@@ -1545,9 +1579,9 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           {/* left, Ask Blaze chat panel */}
           <PreviewChatPanel />
-          <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, padding: '40px 24px', background: 'var(--default-bg)' }}>
-            {/* view-as rail, only meaningful for social/organic posts */}
-            {item.type !== 'paid-search' && item.type !== 'review' && item.type !== 'paid-social' && (
+          <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: item.type === 'blog' ? 'flex-start' : 'center', gap: 28, padding: '40px 24px', background: 'var(--default-bg)' }}>
+            {/* view-as rail, only meaningful for social/organic posts (not blog articles) */}
+            {item.type !== 'paid-search' && item.type !== 'review' && item.type !== 'paid-social' && item.type !== 'blog' && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                 <Text variant="metadata" style={{ color: dark60, marginBottom: 2 }}>View as</Text>
                 {PREVIEW_PLATFORMS.map(({ glyph: G, label }, i) => (
@@ -1608,25 +1642,38 @@ function PostPreview({ items, initialIndex, onSetStatus, close }: StackModalProp
                   <Text variant="secondary" style={{ display: 'block', color: dark80, lineHeight: 1.55 }}>{view.reply ?? view.caption}</Text>
                 </div>
               </div>
+            ) : item.type === 'blog' ? (
+              /* ── Blog, the full, in-frame scrollable article (client-accurate) ── */
+              <BlogArticlePreview image={view.img} article={ARTICLES[item.id] ?? { title: view.caption, intro: view.caption, sections: [] }} brandName={PREVIEW_CLIENT} />
             ) : (
-              /* ── Social / organic post ── */
-              <div style={{ width: 440, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
-                  <Avatar fallback="G" size={28} style={{ background: 'var(--brand)' }} />
-                  <Text style={{ fontWeight: 500, color: dark90 }}>{PREVIEW_CLIENT}</Text>
-                </div>
-                {view.img
-                  ? <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${view.img}'), ${dark4}` }} />
-                  : <div style={{ aspectRatio: '4 / 5', background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Text variant="secondary" style={{ color: dark40 }}>{TYPE_LABEL[item.type]}</Text></div>}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 14px 4px', color: dark90 }}>
-                  <Heart size={24} color={dark90} />
-                  <Comment size={20} color={dark90} />
-                  <Send size={16} color={dark90} />
-                </div>
-                <div style={{ padding: '6px 14px 16px' }}>
-                  <Text variant="secondary" style={{ display: 'block', color: dark90, lineHeight: 1.5 }}><span style={{ fontWeight: 500 }}>{PREVIEW_CLIENT}</span> {view.caption}</Text>
-                  <Text variant="secondary" style={{ display: 'block', color: dark40, marginTop: 2 }}>see more</Text>
-                </div>
+              /* ── Social / organic, client-accurate frames (Reel/Story + feed) ── */
+              <div style={{ width: 360, flexShrink: 0, border: `1px solid ${dark8}`, borderRadius: 16, background: white, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+                {item.type === 'short' || item.type === 'feed-video' || item.type === 'story' ? (
+                  <div style={{ position: 'relative', aspectRatio: '9 / 16' }}>
+                    {item.type === 'story'
+                      ? <StoryPreview image={view.img ?? ''} brandInitial="G" brandName={PREVIEW_CLIENT} headline={view.caption} />
+                      : <ReelPreview image={view.img ?? ''} brandInitial="G" brandName={PREVIEW_CLIENT} caption={view.caption} />}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
+                      <Avatar fallback="G" size={28} style={{ background: 'var(--brand)' }} />
+                      <Text style={{ fontWeight: 500, color: dark90 }}>{PREVIEW_CLIENT}</Text>
+                    </div>
+                    {view.img
+                      ? <div style={{ aspectRatio: '4 / 5', background: `center/cover no-repeat url('${view.img}'), ${dark4}` }} />
+                      : <div style={{ aspectRatio: '4 / 5', background: dark4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Text variant="secondary" style={{ color: dark40 }}>{TYPE_LABEL[item.type]}</Text></div>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 14px 4px', color: dark90 }}>
+                      <Heart size={24} color={dark90} />
+                      <Comment size={20} color={dark90} />
+                      <Send size={16} color={dark90} />
+                    </div>
+                    <div style={{ padding: '6px 14px 16px' }}>
+                      <Text variant="secondary" style={{ display: 'block', color: dark90, lineHeight: 1.5 }}><span style={{ fontWeight: 500 }}>{PREVIEW_CLIENT}</span> {view.caption}</Text>
+                      <Text variant="secondary" style={{ display: 'block', color: dark40, marginTop: 2 }}>see more</Text>
+                    </div>
+                  </>
+                )}
               </div>
             )}
             </div>
@@ -2054,6 +2101,7 @@ function InternalCard({
         )}
         <TypeIcon type={post.type} size={16} />
         <span style={{ fontSize:14, color:dark80, fontFamily:F, flex:1, letterSpacing:'0.14px' }}>{TYPE_LABEL[post.type]}</span>
+        {RESUBMITTED.includes(post.id) && <Pill size="sm">V2</Pill>}
         <span style={{ fontSize:12.5, color:dark40, fontFamily:F, letterSpacing:'0.12px', whiteSpace:'nowrap' }}>{post.date}</span>
       </div>
 
@@ -2332,29 +2380,48 @@ function SendToClientModal({ close, campaignName, count, dateRange, onSend }: { 
   );
 }
 
-/** Send-for-review modal, the AM adds a note the client will see with the batch. */
-function SendReviewModal({ close, count, onSend }: { close: () => void; count: number; onSend: (note: string) => void }) {
-  const [note, setNote] = useState(`Hi there,\n\n${count} ${count === 1 ? 'piece is' : 'pieces are'} ready for your review. Approve anything that's good to go, or leave a note on whatever you'd like changed.\n\nThanks!`);
+/** Send-to-client modal: names the batch, sets a review-by due date, and carries
+ *  the cover note. All three prefilled; the client sees the note + due date. */
+function SendBatchModal({ close, count, defaultName, defaultDueDate, onSend }: {
+  close: () => void; count: number; defaultName: string; defaultDueDate: string;
+  onSend: (name: string, dueDate: string, note: string) => void;
+}) {
+  const [name, setName] = useState(defaultName);
+  const [dueDate, setDueDate] = useState(defaultDueDate);
+  const [note, setNote] = useState(BATCH_NOTE(defaultName, count));
+  const fieldLabel = { display: 'block', fontSize: 12.5, fontWeight: 500, color: dark60, fontFamily: F, marginBottom: 6 } as const;
+  const inputStyle = { width: '100%', boxSizing: 'border-box' as const, height: 40, border: `1px solid ${dark8}`, borderRadius: 8, padding: '0 12px', fontFamily: F, fontSize: 14, color: dark90, outline: 'none', background: white };
   return (
     <Modal.Root size="md" onClose={close}>
       <Modal.Header title={`Send ${count} ${count === 1 ? 'piece' : 'pieces'} to client`} onClose={close} />
       <Modal.Content>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span style={{ fontSize: 13, color: dark60, fontFamily: F, lineHeight: 1.5 }}>Leave a note, the client sees it at the top of this review batch.</span>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            autoFocus
-            style={{ width: '100%', boxSizing: 'border-box', minHeight: 156, resize: 'vertical', border: `1px solid ${dark8}`, borderRadius: 8, padding: '10px 12px', fontFamily: F, fontSize: 14, color: dark90, lineHeight: 1.6, outline: 'none', background: white }}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <label style={fieldLabel}>Batch name</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} autoFocus style={inputStyle} />
+            </div>
+            <div style={{ width: 180, flexShrink: 0 }}>
+              <label style={fieldLabel}>Review by</label>
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...inputStyle, padding: '0 10px' }} />
+            </div>
+          </div>
+          <div>
+            <label style={fieldLabel}>Note to client</label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              style={{ width: '100%', boxSizing: 'border-box', minHeight: 148, resize: 'vertical', border: `1px solid ${dark8}`, borderRadius: 8, padding: '10px 12px', fontFamily: F, fontSize: 14, color: dark90, lineHeight: 1.6, outline: 'none', background: white }}
+            />
+          </div>
         </div>
       </Modal.Content>
       <Modal.Footer>
+        <Modal.FooterContent slot="left">
+          <Modal.FooterButton variant="tertiary" onPress={close}>Cancel</Modal.FooterButton>
+        </Modal.FooterContent>
         <Modal.FooterContent slot="right">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Modal.FooterButton variant="secondary" onPress={close}>Cancel</Modal.FooterButton>
-            <Modal.FooterButton variant="primary" onPress={() => { onSend(note.trim()); close(); }}>Send to client</Modal.FooterButton>
-          </div>
+          <Modal.FooterButton variant="primary" isDisabled={!name.trim() || !dueDate} onPress={() => { onSend(name.trim(), dueDate, note.trim()); close(); }}>Send to Client</Modal.FooterButton>
         </Modal.FooterContent>
       </Modal.Footer>
     </Modal.Root>
@@ -2440,6 +2507,108 @@ export function ContentTypeSections({ posts, renderCard }: {
   );
 }
 
+// ── Batch card + detail header ─────────────────────────────────────────────────
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+export function formatDue(iso: string) {
+  const [, m, d] = iso.split('-').map(Number);
+  return m && d ? `${MONTHS[m - 1]} ${d}` : iso;
+}
+
+// A per-status count chip for the batch summary, built on the BDS StatusPill.
+function SummaryChip({ status, count }: { status: PostStatus; count: number }) {
+  const tone = status === 'changes' ? 'danger' : status === 'approved' ? 'success' : status === 'in-review' ? 'warning' : 'neutral';
+  const label = status === 'changes' ? `requested change${count === 1 ? '' : 's'}` : STATUS_META[status].label.toLowerCase();
+  return <DSStatusPill tone={tone} size="md">{count} {label}</DSStatusPill>;
+}
+
+// The gist of the cover note, minus the greeting / sign-off lines.
+function noteSummary(note: string) {
+  return note.split('\n').map(s => s.trim()).filter(Boolean)
+    .filter(l => !/^(hi|hey|hello|thanks|thank you|cheers)\b/i.test(l))
+    .join(' ');
+}
+
+// Batch card: a single square cover (full card height) on the left, then the
+// name + due/pieces, a one-line note summary, and status chips. `summaryMode`
+// 'all' shows every status (AM); 'in-review' shows one pill (client).
+export function BatchCard({ batch, postStatus, postById, summaryMode = 'all', faded = false, onOpen }: {
+  batch: Batch; postStatus: Record<number, PostStatus>; postById: (id: number) => Post;
+  summaryMode?: 'all' | 'in-review'; faded?: boolean; onOpen: () => void;
+}) {
+  const posts = batch.postIds.map(postById);
+  const count = (s: PostStatus) => posts.filter(p => postStatus[p.id] === s).length;
+  const order: PostStatus[] = ['changes', 'in-review', 'approved'];
+  const allApproved = posts.every(p => postStatus[p.id] === 'approved');
+  const cover = posts.find(p => p.img);
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 20, width: '100%', textAlign: 'left', cursor: 'pointer',
+        background: white, border: `1px solid ${dark4}`, borderRadius: 16, padding: 20, fontFamily: F,
+        opacity: faded ? 0.55 : 1, boxShadow: 'none',
+        transition: 'box-shadow 180ms ease, border-color 180ms ease',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.10)'; e.currentTarget.style.borderColor = dark8; }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = dark4; }}
+    >
+      {/* Rounded square cover, inset so the card shows around it. */}
+      <div style={{ width: 108, height: 108, flexShrink: 0, borderRadius: 8, background: cover?.img ? `center/cover no-repeat url('${cover.img}'), ${dark4}` : dark4, display: 'grid', placeItems: 'center' }}>
+        {!cover && <TypeIcon type={posts[0]?.type ?? 'still'} size={24} />}
+      </div>
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+          {/* Title + summary subtitle, stacked tight. */}
+          <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Heading level={3} style={{ margin: 0 }}>{batch.name}</Heading>
+            {batch.note && (
+              <Text variant="secondary" style={{ color: dark60, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{noteSummary(batch.note)}</Text>
+            )}
+          </div>
+          {/* Pieces + due date; the due pill sits all the way right. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <span style={{ fontSize: 13, color: dark60, whiteSpace: 'nowrap' }}>{posts.length} {posts.length === 1 ? 'piece' : 'pieces'}</span>
+            {batch.dueDate && <Pill size="md">Due {formatDue(batch.dueDate)}</Pill>}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {summaryMode === 'all'
+            ? order.filter(s => count(s) > 0).map(s => <SummaryChip key={s} status={s} count={count(s)} />)
+            : (allApproved
+                ? <SummaryChip status="approved" count={count('approved')} />
+                : <SummaryChip status="in-review" count={count('in-review')} />)}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// The batch cover note. `footer` (client side) tucks the pending count +
+// Approve-all inside the message card.
+export function BatchDetailHeader({ batch, footer }: { batch: Batch; onBack?: () => void; footer?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, background: dark2, border: `1px solid ${dark8}`, borderRadius: 12, padding: '16px 18px' }}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <span style={{ width: 30, height: 30, borderRadius: 99, flexShrink: 0, background: 'var(--brand)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: dark90, fontFamily: F }}>D</span>
+        <Text variant="primary" style={{ color: dark90, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{batch.note}</Text>
+      </div>
+      {footer && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>{footer}</div>}
+    </div>
+  );
+}
+
+// Topbar title cluster for a nested page: back arrow + title + (optional) pill.
+export function NestedTitle({ title, onBack, trailing }: { title: string; onBack: () => void; trailing?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back" onPress={onBack} />
+      <Text variant="largeList" style={{ color: dark90, fontWeight: 500 }}>{title}</Text>
+      {trailing}
+    </div>
+  );
+}
+
 /**
  * The Approvals view, decoupled from any shell. `clientView` is a controlled
  * prop so it can be driven either by the standalone prototype's own toggle or
@@ -2469,11 +2638,20 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
 
   const [postStatus, setPostStatus] = useState<Record<number, PostStatus>>(() => seedStatus(clientReviewed));
   const [selected, setSelected] = useState<Set<number>>(() => new Set());
-  const [subtab, setSubtab] = useState<PostStatus>('changes');
+  // Batches (each a "send to client"), the top-level page tab, which batch is
+  // open, its status subtab, and whether all-approved batches are revealed.
+  const [batches, setBatches] = useState<Batch[]>(() => clientReviewed ? SEED_BATCHES : []);
+  const [pageTab, setPageTab] = useState<'draft' | 'sent'>('draft');
+  const [openBatchId, setOpenBatchId] = useState<string | null>(null);
+  const [subtab, setSubtab] = useState<PostStatus>('in-review');
+  const [showApprovedBatches, setShowApprovedBatches] = useState(false);
   // Re-seed when the dev-state toggle flips, a demo reset.
   useEffect(() => {
-    setPostStatus(seedStatus(state === 'steady'));
+    const steady = state === 'steady';
+    setPostStatus(seedStatus(steady));
+    setBatches(steady ? SEED_BATCHES : []);
     setSelected(new Set());
+    setOpenBatchId(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
@@ -2527,73 +2705,99 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
   const removeApproval = (id: number) => setStatus(id, 'in-review');
   const approveAll = (campaign: Campaign) => { campaign.posts.forEach(p => setStatus(p.id, 'approved')); triggerCelebration(campaign.id); };
 
-  // AM revised a returned post and re-submits it → moves to the Updated tab.
+  // AM revised a returned piece and re-submits it → back to In review (its
+  // version history lives in the preview tracker).
   const resubmitPost = (id: number, note: string) => {
-    setStatus(id, 'updated');
+    setStatus(id, 'in-review');
     if (note) setResubmitNotes(prev => ({ ...prev, [id]: note }));
     triggerFeedbackToast('Resubmitted to the client for another review.');
   };
 
-  // Draft selection + send-for-review, with an optional note the client sees.
+  // Draft selection.
   const toggleSelect = (id: number, next: boolean) =>
     setSelected(prev => { const n = new Set(prev); next ? n.add(id) : n.delete(id); return n; });
-  const [localMessages, setLocalMessages] = useState<Record<number, string>>({});
+  const [localMessages] = useState<Record<number, string>>({});
   const campaignMessages = campaignMessagesProp ?? localMessages;
+
+  const allPosts = CAMPAIGNS.flatMap(c => c.posts);
+  const postById = (id: number) => allPosts.find(p => p.id === id)!;
+  const openBatchObj = batches.find(b => b.id === openBatchId) ?? null;
+  const batchPosts = openBatchObj ? openBatchObj.postIds.map(postById) : [];
+  const batchAllApproved = (b: Batch) => b.postIds.every(id => postStatus[id] === 'approved');
+  const openBatchAt = (b: Batch) => { setOpenBatchId(b.id); setSubtab(batchAllApproved(b) ? 'approved' : 'in-review'); };
+
+  // Send selected/all drafts as a new named batch (name + due date + note),
+  // then jump to the Sent-to-client list.
   const sendForReview = (ids: number[]) => {
     if (!ids.length) return;
-    openModal(SendReviewModal, {
-      count: ids.length,
-      onSend: (note: string) => {
-        ids.forEach(id => setStatus(id, 'in-review'));
-        if (note) onSendCampaignMessage ? onSendCampaignMessage(0, note) : setLocalMessages(prev => ({ ...prev, 0: note }));
+    const posts = ids.map(postById);
+    const campaignNames = [...new Set(posts.map(p => CAMPAIGNS.find(c => c.posts.includes(p))!.name))];
+    const defaultName = campaignNames.length === 1 ? campaignNames[0] : 'Content batch';
+    const earliest = posts.map(p => p.dateSort).sort()[0]?.slice(0, 10) ?? '';
+    openModal(SendBatchModal, {
+      count: ids.length, defaultName, defaultDueDate: earliest,
+      onSend: (name: string, dueDate: string, note: string) => {
+        const id = `b-${Date.now()}`;
+        setBatches(prev => [{ id, name, dueDate, note, postIds: ids, createdAt: today }, ...prev]);
+        ids.forEach(pid => setStatus(pid, 'in-review'));
         setSelected(new Set());
-        setSubtab('in-review');
-        triggerFeedbackToast(note ? 'Sent to client with your note.' : 'Sent to client for review.');
+        setPageTab('sent');
+        triggerFeedbackToast(`Sent “${name}” to the client for review.`);
       },
     });
   };
 
-  // Deep-link: open a specific post's review page on mount (e.g. a workstream
-  // "Open carousel" CTA routes straight to the post in question).
+  // Deep-link: open a specific post's review page on mount.
   useEffect(() => {
     if (initialReviewPostId == null) return;
     const post = CAMPAIGNS.flatMap(c => c.posts).find(p => String(p.id) === String(initialReviewPostId));
     if (post) openPreview(post.id);
   }, [initialReviewPostId]);
 
-  // ── Status subtabs in the topbar (embedded) ─────────────────────────────────
-  // The six statuses act as a filter; only Requested changes carries a badge.
+  // ── Topbar (embedded) ────────────────────────────────────────────────────────
   const chrome = useWorkspaceChrome();
-  const allPosts = CAMPAIGNS.flatMap(c => c.posts);
-  const countFor = (s: PostStatus) => allPosts.filter(p => postStatus[p.id] === s).length;
+  const batchCountFor = (s: PostStatus) => batchPosts.filter(p => postStatus[p.id] === s).length;
 
-  const subtabTabs = tab === 'internal' ? (
+  // Two page-level pill tabs when browsing; per-batch status subtabs in a batch.
+  const topTabs = (
+    <div style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+      <TabChip selected={pageTab === 'draft'} onSelect={() => { setOpenBatchId(null); setPageTab('draft'); }}>Draft content</TabChip>
+      <TabChip selected={pageTab === 'sent'} onSelect={() => { setOpenBatchId(null); setPageTab('sent'); }}>Sent to client</TabChip>
+    </div>
+  );
+  const batchSubtabTabs = (
     <div style={{ display: 'inline-flex', gap: 2, flexWrap: 'nowrap', alignItems: 'center' }}>
-      {STATUS_TABS.map((t, i) => (
+      {BATCH_STATUS_TABS.map((t, i) => (
         <span key={t.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
           {i > 0 && <StatusTabChevron />}
           <TabChip selected={subtab === t.key} onSelect={() => setSubtab(t.key)} style={statusTabStyle(t.key, subtab === t.key)}>
-            {/* AM keeps only the requested-changes counter. */}
-            <StatusTabContent status={t.key} selected={subtab === t.key} count={t.key === 'changes' ? countFor('changes') : undefined} />
+            <StatusTabContent status={t.key} selected={subtab === t.key} count={t.key === 'changes' ? batchCountFor('changes') : undefined} />
           </TabChip>
         </span>
       ))}
     </div>
-  ) : null;
-  // Draft tab always offers a send action: selected posts, or all drafts.
+  );
+  const topbarCenterNode = tab === 'internal' ? (openBatchId ? batchSubtabTabs : topTabs) : null;
+
   const draftIds = allPosts.filter(p => postStatus[p.id] === 'draft').map(p => p.id);
   const sendIds = selected.size > 0 ? [...selected] : draftIds;
-  const sendAction = tab === 'internal' && subtab === 'draft' && draftIds.length > 0
+  const sendAction = tab === 'internal' && !openBatchId && pageTab === 'draft' && draftIds.length > 0
     ? <Button variant="primary" size="sm" onPress={() => sendForReview(sendIds)}>{selected.size > 0 ? `Send ${selected.size} to client` : 'Send all to client'}</Button>
     : null;
+  // In a batch, the due date sits on the right of the topbar.
+  const batchDuePill = openBatchObj?.dueDate ? <Pill size="md">Due {formatDue(openBatchObj.dueDate)}</Pill> : null;
+  // Settings only appears on the approvals root (not inside a batch).
+  const settingsBtn = tab === 'internal' ? <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => openModal(ApprovalSettingsModal, {})}>Settings</Button> : null;
+  const rootRight = <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{sendAction}{settingsBtn}</div>;
 
-  // Push the subtabs + action up into the WorkspaceShell topbar (embedded only).
+  // Push tabs + action + (in a batch) the back-title into the WorkspaceShell topbar.
   useEffect(() => {
     if (!embedded) return;
-    chrome?.setTopbarCenter(subtabTabs);
-    chrome?.setTopbarRight(sendAction);
+    chrome?.setTopbarCenter(topbarCenterNode);
+    chrome?.setTopbarRight(openBatchId ? batchDuePill : rootRight);
+    chrome?.setTitle(openBatchObj ? <NestedTitle title={openBatchObj.name} onBack={() => setOpenBatchId(null)} /> : null);
   });
-  useEffect(() => () => { chrome?.setTopbarCenter(null); chrome?.setTopbarRight(null); }, [chrome]);
+  useEffect(() => () => { chrome?.setTopbarCenter(null); chrome?.setTopbarRight(null); chrome?.setTitle(null); }, [chrome]);
 
   return (
     <>
@@ -2608,34 +2812,86 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
       )}
 
       {tab === 'internal' ? (
-        /* ── AM tab, one status filter at a time, grouped by content type ── */
+        /* ── AM tab: Draft content · Sent to client (batch list) · Batch detail ── */
         (() => {
-          const isDraft = subtab === 'draft';
-          const renderCard = (post: Post) => (
-            <InternalCard
-              key={post.id}
-              post={post}
-              status={postStatus[post.id]}
-              showCheckbox={isDraft}
-              selected={selected.has(post.id)}
-              onToggleSelect={(next) => toggleSelect(post.id, next)}
-              clientComment={postStatus[post.id] === 'changes' ? CLIENT_REVIEW[post.id]?.comment : undefined}
-              onReview={() => openPreview(post.id)}
-              onResubmit={(note) => resubmitPost(post.id, note)}
-            />
-          );
+          const emptyMsg = (text: string) => <div style={{ padding:'56px 0', textAlign:'center', color:dark40, fontFamily:F, fontSize:14 }}>{text}</div>;
+          const col = { display:'flex', flexDirection:'column' as const, gap:24, maxWidth: PAGE_W, width:'100%', margin:'0 auto' };
 
-          const inTab = allPosts
-            .filter(p => postStatus[p.id] === subtab)
-            .sort((a, b) => a.dateSort.localeCompare(b.dateSort));
+          // ── Batch detail ──
+          if (openBatchObj) {
+            const inTab = batchPosts
+              .filter(p => postStatus[p.id] === subtab)
+              .sort((a, b) => a.dateSort.localeCompare(b.dateSort));
+            const renderCard = (post: Post) => (
+              <InternalCard
+                key={post.id}
+                post={post}
+                status={postStatus[post.id]}
+                clientComment={postStatus[post.id] === 'changes' ? CLIENT_REVIEW[post.id]?.comment : undefined}
+                onReview={() => openPreview(post.id)}
+                onResubmit={(note) => resubmitPost(post.id, note)}
+              />
+            );
+            return (
+              <div style={{ ...col, gap:20 }}>
+                {/* Standalone (no shell topbar): render the back-title + subtabs inline. */}
+                {!embedded && <NestedTitle title={openBatchObj.name} onBack={() => setOpenBatchId(null)} trailing={batchDuePill} />}
+                {!embedded && <div>{batchSubtabTabs}</div>}
+                <BatchDetailHeader batch={openBatchObj} onBack={() => setOpenBatchId(null)} />
+                {inTab.length > 0
+                  ? <ContentTypeSections posts={inTab} renderCard={renderCard} />
+                  : emptyMsg(`Nothing in ${STATUS_TABS.find(t => t.key === subtab)?.label.toLowerCase()}.`)}
+              </div>
+            );
+          }
 
+          // ── Draft content ──
+          if (pageTab === 'draft') {
+            const drafts = allPosts.filter(p => postStatus[p.id] === 'draft').sort((a, b) => a.dateSort.localeCompare(b.dateSort));
+            const renderCard = (post: Post) => (
+              <InternalCard
+                key={post.id}
+                post={post}
+                status={postStatus[post.id]}
+                showCheckbox
+                selected={selected.has(post.id)}
+                onToggleSelect={(next) => toggleSelect(post.id, next)}
+                onReview={() => openPreview(post.id)}
+              />
+            );
+            return (
+              <div style={col}>
+                {!embedded && <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>{topTabs}{sendAction}</div>}
+                {drafts.length > 0
+                  ? <ContentTypeSections posts={drafts} renderCard={renderCard} />
+                  : emptyMsg('No drafts. Everything has been sent to the client.')}
+              </div>
+            );
+          }
+
+          // ── Sent to client: active batches; fully-approved behind a reveal ──
+          const activeBatches = batches.filter(b => !batchAllApproved(b));
+          const approvedBatches = batches.filter(batchAllApproved);
           return (
-            <div style={{ display:'flex', flexDirection:'column', gap:24, maxWidth: PAGE_W, width:'100%', margin:'0 auto' }}>
-              {/* Standalone (no shell topbar): render the subtabs + action inline. */}
-              {!embedded && <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>{subtabTabs}{sendAction}</div>}
-              {inTab.length > 0
-                ? <ContentTypeSections posts={inTab} renderCard={renderCard} />
-                : <div style={{ padding:'56px 0', textAlign:'center', color:dark40, fontFamily:F, fontSize:14 }}>Nothing in {STATUS_TABS.find(t => t.key === subtab)?.label.toLowerCase()}.</div>}
+            <div style={{ ...col, maxWidth: BATCH_LIST_W, padding: '0 24px' }}>
+              {!embedded && <div>{topTabs}</div>}
+              {batches.length > 0 ? (
+                <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                  {activeBatches.map(b => (
+                    <BatchCard key={b.id} batch={b} postStatus={postStatus} postById={postById} onOpen={() => openBatchAt(b)} />
+                  ))}
+                  {approvedBatches.length > 0 && (
+                    <div style={{ display:'flex', justifyContent:'center', padding:'6px 0' }}>
+                      <Button variant="tertiary" size="sm" onPress={() => setShowApprovedBatches(v => !v)}>
+                        {showApprovedBatches ? 'Hide Approved' : `Show All ${approvedBatches.length} Approved`}
+                      </Button>
+                    </div>
+                  )}
+                  {showApprovedBatches && approvedBatches.map(b => (
+                    <BatchCard key={b.id} batch={b} postStatus={postStatus} postById={postById} faded onOpen={() => openBatchAt(b)} />
+                  ))}
+                </div>
+              ) : emptyMsg('Nothing sent yet. Send drafts from the Draft content tab.')}
             </div>
           );
         })()
@@ -2691,7 +2947,7 @@ export function ApprovalV2View({ clientView, embedded = false, initialReviewPost
 
         // Nothing to approve = no active campaign has a post still awaiting the client.
         const hasAnythingToApprove = active.some(c =>
-          c.posts.some(p => (['in-review', 'updated'] as PostStatus[]).includes(postStatus[p.id]))
+          c.posts.some(p => (['in-review'] as PostStatus[]).includes(postStatus[p.id]))
         );
 
         return (
