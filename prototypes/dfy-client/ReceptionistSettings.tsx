@@ -28,11 +28,12 @@ import {
  * real editable ComplianceSection is embedded with full access.
  */
 
-type SubKey = 'triggers' | 'agent' | 'outcomes' | 'notifications' | 'compliance';
+type SubKey = 'triggers' | 'agent' | 'qualification' | 'outcomes' | 'notifications' | 'compliance';
 
 const SUBS: { key: SubKey; label: string }[] = [
   { key: 'triggers', label: 'Triggers' },
   { key: 'agent', label: 'Agent' },
+  { key: 'qualification', label: 'Qualification' },
   { key: 'outcomes', label: 'Outcomes' },
   { key: 'notifications', label: 'Notifications' },
   { key: 'compliance', label: 'Compliance' },
@@ -78,6 +79,7 @@ export function ReceptionistSettings({ onBack }: { onBack: () => void }) {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 28px 80px' }}>
         {active === 'triggers' && <TriggersTab {...shared} />}
         {active === 'agent' && <AgentTab {...shared} />}
+        {active === 'qualification' && <QualificationTab {...shared} />}
         {active === 'outcomes' && <OutcomesTab {...shared} />}
         {active === 'notifications' && <NotificationsTab {...shared} />}
         {active === 'compliance' && <ComplianceTab />}
@@ -265,32 +267,6 @@ function AgentTab({ requests, requestChange }: TabProps) {
       </Section>
 
       <Section
-        title="Qualification criteria"
-        description="The questions the AI asks to qualify a lead, and what counts as qualified."
-        requestKey="qualification"
-        requestLabel="Qualification criteria"
-        requests={requests}
-        requestChange={requestChange}
-      >
-        {DEFAULT_QUALIFICATION_QUESTIONS.map((q, i) => (
-          <div
-            key={q.id}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 18px', borderTop: i === 0 ? 'none' : '1px solid var(--dark-8)' }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <Text style={{ color: 'var(--dark-90)', fontWeight: 500, display: 'block' }}>{q.label}</Text>
-              <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
-                {q.type === 'multiple-choice'
-                  ? `Multiple choice · ${q.options.length} options`
-                  : `Freeform · ${RESPONSE_FORMATS.find((f) => f.id === q.responseFormat)?.label}`}
-              </Text>
-            </div>
-            <StatusPill tone={q.rule.mode === 'all' ? 'neutral' : 'accent'} size="sm">{ruleSummary(q)}</StatusPill>
-          </div>
-        ))}
-      </Section>
-
-      <Section
         title="Voice & personality"
         description="How the AI sounds and greets your callers."
         requestKey="voice"
@@ -312,6 +288,40 @@ function AgentTab({ requests, requestChange }: TabProps) {
         <TextBlock>{KNOWLEDGE_BASE}</TextBlock>
       </Section>
     </>
+  );
+}
+
+// ── Qualification ─────────────────────────────────────────────────────────────
+// Read-only mirror of the questions the AI asks to qualify a lead. Same data as
+// the AM-side Qualification tab; clients review it and can request a change.
+
+function QualificationTab({ requests, requestChange }: TabProps) {
+  return (
+    <Section
+      title="Qualification criteria"
+      description="The questions the AI asks to qualify a lead, and what counts as qualified."
+      requestKey="qualification"
+      requestLabel="Qualification criteria"
+      requests={requests}
+      requestChange={requestChange}
+    >
+      {DEFAULT_QUALIFICATION_QUESTIONS.map((q, i) => (
+        <div
+          key={q.id}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 18px', borderTop: i === 0 ? 'none' : '1px solid var(--dark-8)' }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <Text style={{ color: 'var(--dark-90)', fontWeight: 500, display: 'block' }}>{q.label}</Text>
+            <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>
+              {q.type === 'multiple-choice'
+                ? `Multiple choice · ${q.options.length} options`
+                : `Freeform · ${RESPONSE_FORMATS.find((f) => f.id === q.responseFormat)?.label}`}
+            </Text>
+          </div>
+          <StatusPill tone={q.rule.mode === 'all' ? 'neutral' : 'accent'} size="sm">{ruleSummary(q)}</StatusPill>
+        </div>
+      ))}
+    </Section>
   );
 }
 

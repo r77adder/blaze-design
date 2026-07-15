@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type SVGProps } from 'react';
-import { Button, Heading, Modal, Text, useModals } from '@/components';
+import { Button, Heading, IconButton, Modal, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
 import { Avatar, StatusPill, useToast } from '@/staging';
 import Voice from '@/icons/20/Voice';
@@ -15,6 +15,11 @@ import ChevronDown from '@/icons/20/ChevronDown';
 import Trash2 from '@/icons/20/Trash2';
 import AlertTriangle from '@/icons/20/AlertTriangle';
 import Send2 from '@/icons/16/Send2';
+import Send1 from '@/icons/20/Send1';
+import Copy from '@/icons/20/Copy';
+import ArrowLeft from '@/icons/20/ArrowLeft';
+import ArrowUp from '@/icons/20/ArrowUp';
+import ArrowDown from '@/icons/20/ArrowDown';
 import {
   SOURCE_LABELS,
   STATUS_STYLES,
@@ -23,6 +28,8 @@ import {
   effectiveBookingOutcome,
   avatarColor,
   conversationSummary,
+  defaultMedium,
+  MEDIUM_LABELS,
   formatRelative,
   relativeMinutesAgo,
   type BookingOutcome,
@@ -30,10 +37,13 @@ import {
   type Contact,
   type Lead,
   type Message,
+  type MessageMedium,
   type Scorecard,
   type Status,
 } from './sdr-data';
 import { OutcomeSelect } from './BookingOutcomeSelect';
+import { DEFAULT_QUALIFICATION_QUESTIONS } from './qualification-criteria-data';
+import { qualificationAnswer } from './qualification-answer';
 
 // Blaze-style focus for the composer: the textarea has no border of its own —
 // the visible border lives on its parent pill wrapper — so focus mutates the
@@ -116,13 +126,14 @@ function initials(name: string): string {
     .join('');
 }
 
-function makeMessage(role: Message['role'], type: Message['type'], content: string): Message {
+function makeMessage(role: Message['role'], type: Message['type'], content: string, medium?: MessageMedium): Message {
   return {
     id: `m-${Math.random().toString(36).slice(2, 9)}`,
     role,
     type,
     content,
     timestamp: nowOffset(),
+    ...(medium ? { medium } : {}),
   };
 }
 
@@ -568,32 +579,311 @@ function BookingCard({ lead, onReschedule, onSetOutcome }: { lead: Lead; onResch
 // Section header that introduces each conversation in the unified contact
 // thread — a clear H3 heading (the request type) plus a subhead row with the
 // status and where/when it came in. No box, no purple.
+/** One-line touchpoint hint shown under a collapsed request, e.g.
+ *  "Website form · 1 call · 4 messages". */
+function engagementHint(lead: Lead): string {
+  const es = buildEngagements(lead);
+  const parts: string[] = [];
+  if (es.some((e) => e.kind === 'form')) parts.push('Website form');
+  const calls = es.filter((e) => e.kind === 'call').length;
+  if (calls) parts.push(`${calls} call${calls > 1 ? 's' : ''}`);
+  const msgs = es.reduce((n, e) => n + (e.kind === 'text' ? e.count : 0), 0);
+  if (msgs) parts.push(`${msgs} message${msgs > 1 ? 's' : ''}`);
+  return parts.join(' · ');
+}
+
 function LeadSegmentDivider({
   lead,
   capture,
+  collapsible,
+  collapsed,
+  onToggle,
 }: {
   lead: Lead;
   capture?: Message | null;
+  collapsible?: boolean;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }) {
   const ss = STATUS_STYLES[lead.status];
   const req = requestType(lead);
   const subhead = capture
     ? `${capture.content} · ${formatRelative(capture.timestamp)}`
     : `${lead.channel !== 'form' ? `${SOURCE_LABELS[lead.channel]} · ` : ''}${formatRelative(lead.created_at)}`;
+  const body = (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Heading level={3} style={{ marginBottom: 4 }}>{req}</Heading>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
+          <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>
+            {subhead}
+            {collapsed && engagementHint(lead) ? ` · ${engagementHint(lead)}` : ''}
+          </Text>
+        </div>
+      </div>
+      {collapsible && (
+        <ChevronDown
+          size={20}
+          color="var(--dark-60)"
+          style={{ flexShrink: 0, marginTop: 2, transform: collapsed ? 'none' : 'rotate(180deg)', transition: 'transform 120ms ease' }}
+        />
+      )}
+    </div>
+  );
+  const wrapStyle: CSSProperties = {
+    paddingBottom: 8,
+    marginBottom: collapsed ? 0 : 20,
+    borderBottom: collapsed ? 'none' : '1px solid var(--dark-8)',
+  };
+  if (collapsible) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle?.(); } }}
+        style={{ ...wrapStyle, cursor: 'pointer' }}
+      >
+        {body}
+      </div>
+    );
+  }
+  return <div style={wrapStyle}>{body}</div>;
+}
+
+// ─── Thread pane ──────────────────────────────────────────────────────
+
+// ─── Engagement summaries (main panel) ───────────────────────────────
+// Segment a lead's transcript into human-readable engagements — a Website Form
+// submission, an AI-handled call, an SMS/email conversation — each shown as a
+// summary with an inline expander to the full transcript. Mirrors the inbox
+// timeline's grouping so the detail panel reads as a list of touchpoints.
+
+type Engagement =
+  | { id: string; kind: 'form'; title: string; source: string; need?: string; when: string }
+  | { id: string; kind: 'call'; title: string; duration?: string; summary: string; turns: { speaker: string; line: string }[]; when: string }
+  | { id: string; kind: 'text'; title: string; medium: MessageMedium; count: number; messages: Message[]; summary: string; when: string };
+
+function buildEngagements(lead: Lead): Engagement[] {
+  const items: Engagement[] = [];
+  const msgs = lead.transcript;
+
+  // Website Form leads open with the form submission as their first engagement.
+  if (lead.channel === 'form') {
+    items.push({ id: `${lead.id}-form`, kind: 'form', title: 'Website Form', source: lead.first_touch_source, need: lead.scorecard.need, when: lead.first_seen });
+  }
+
+  let i = 0;
+  // Fold a leading capture/inbound system marker into the header above.
+  if (msgs[i]?.type === 'system' && /captur|form|landing|inbound|chat|option/i.test(msgs[i].content)) {
+    i += 1;
+  }
+
+  // A text "run" accumulates consecutive same-medium messages into one
+  // conversation. System messages are dropped from the summary view but do NOT
+  // break the run, so a reply appended after a system note (e.g. "AI paused")
+  // still folds into the conversation it belongs to.
+  let run: Message[] = [];
+  const flushRun = () => {
+    if (run.length === 0) return;
+    const med = run[0].medium ?? defaultMedium(run[0], lead.channel) ?? 'sms';
+    items.push({ id: run[0].id, kind: 'text', title: `${MEDIUM_LABELS[med]} conversation`, medium: med, count: run.length, messages: run, summary: conversationSummary(lead), when: run[run.length - 1].timestamp });
+    run = [];
+  };
+
+  while (i < msgs.length) {
+    const m = msgs[i];
+    if (m.type === 'system') { i += 1; continue; } // skip, don't flush the current run
+    if (m.type === 'call') {
+      flushRun();
+      const turns = m.call?.turns ?? [];
+      const callerLine = turns.find((t) => /caller|prospect|client/i.test(t.speaker))?.line;
+      items.push({ id: m.id, kind: 'call', title: m.role === 'ai' ? 'AI-handled call' : 'Call', duration: m.call?.duration, summary: callerLine ?? m.content, turns, when: m.timestamp });
+      i += 1;
+      continue;
+    }
+    // text — start a new run when the medium changes
+    const med = m.medium ?? defaultMedium(m, lead.channel) ?? 'sms';
+    const runMed = run.length ? (run[0].medium ?? defaultMedium(run[0], lead.channel) ?? 'sms') : med;
+    if (run.length && runMed !== med) flushRun();
+    run.push(m);
+    i += 1;
+  }
+  flushRun();
+  return items;
+}
+
+/** The medium a reply on this lead should send as — the last text
+ *  conversation's medium, or SMS for a call-only / fresh lead. Drives the
+ *  Send Text/Reply label and folds the sent reply into that conversation. */
+function replyMedium(lead: Lead): MessageMedium {
+  const engagements = buildEngagements(lead);
+  for (let i = engagements.length - 1; i >= 0; i--) {
+    const e = engagements[i];
+    if (e.kind === 'text') return e.medium;
+    if (e.kind === 'call') return 'sms'; // follow up a call by text
+  }
+  return 'sms';
+}
+
+/** Call transcript rendered inline (turns in a tinted box). */
+function InlineCallTurns({ turns }: { turns: { speaker: string; line: string }[] }) {
   return (
-    <div style={{ paddingBottom: 8, marginBottom: 20, borderBottom: '1px solid var(--dark-8)' }}>
-      <Heading level={3} style={{ marginBottom: 4 }}>{req}</Heading>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
-        <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>
-          {subhead}
-        </Text>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 14px', background: 'var(--dark-2)', border: '1px solid var(--dark-4)', borderRadius: 10 }}>
+      {turns.map((t, i) => (
+        <div key={i}>
+          <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 1 }}>{t.speaker}</Text>
+          <Text variant="secondary" style={{ color: 'var(--dark-90)', lineHeight: 1.5 }}>{t.line}</Text>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** SMS/email thread rendered inline as chat bubbles. Outgoing SMS bubbles are
+ *  green (texting convention); other channels keep the dark outgoing bubble. */
+function InlineMessageThread({ messages, medium }: { messages: Message[]; medium: MessageMedium }) {
+  const mineBg = medium === 'sms' ? 'var(--status-approved)' : 'var(--dark-90)';
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {messages.map((m) => {
+        const mine = m.role === 'ai' || m.role === 'owner';
+        return (
+          <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '85%', padding: '8px 12px', borderRadius: 12, background: mine ? mineBg : 'var(--dark-4)' }}>
+            <Text variant="secondary" style={{ color: mine ? 'var(--light-100)' : 'var(--dark-90)', lineHeight: 1.5 }}>{m.content}</Text>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Per-engagement icon + accent color for the summary header.
+const ENGAGEMENT_META: Record<Engagement['kind'], { Icon: React.ComponentType<{ size?: number; color?: string }>; color: string }> = {
+  call: { Icon: Voice, color: 'var(--status-posting)' },     // blue
+  text: { Icon: MessageChat01, color: 'var(--status-approved)' }, // green
+  form: { Icon: Templates, color: 'var(--purple)' },          // purple
+};
+
+/** One engagement's summary card with an inline expander to its full transcript. */
+function EngagementBlock({ engagement, open, onToggle }: { engagement: Engagement; open: boolean; onToggle: () => void }) {
+  const e = engagement;
+  const meta = ENGAGEMENT_META[e.kind];
+  const Icon = meta.Icon;
+  // Indent the body so the summary and button line up with the title text,
+  // clearing the 18px leading icon + 8px gap in the header row.
+  const INDENT = 26;
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <Icon size={18} color={meta.color} />
+        <Heading level={5} style={{ margin: 0 }}>{e.title}</Heading>
+        {e.kind === 'call' && e.duration && <Text variant="metadata" color="var(--dark-60)">· {e.duration}</Text>}
+        {e.kind === 'text' && <Text variant="metadata" color="var(--dark-60)">· {e.count} message{e.count === 1 ? '' : 's'}</Text>}
+        <Text variant="metadata" color="var(--dark-40)" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>{formatRelative(e.when)}</Text>
+      </div>
+      <div style={{ paddingLeft: INDENT }}>
+        {e.kind === 'form' ? (
+          <>
+            <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block' }}>{e.source}</Text>
+            {e.need && <Text variant="primary" style={{ display: 'block', marginTop: 4, color: 'var(--dark-90)', lineHeight: 1.5 }}>Requested: {e.need}</Text>}
+          </>
+        ) : (
+          <>
+            <Text variant="primary" style={{ display: 'block', color: 'var(--dark-90)', lineHeight: 1.5 }}>{e.summary}</Text>
+            <div style={{ marginTop: 10 }}>
+              <Button variant="secondary" size="sm" onPress={onToggle}>
+                {e.kind === 'call'
+                  ? (open ? 'Hide transcript' : 'See full transcript')
+                  : (open ? 'Hide messages' : 'See messages')}
+              </Button>
+            </div>
+            {open && e.kind === 'call' && <div style={{ marginTop: 12 }}><InlineCallTurns turns={e.turns} /></div>}
+            {open && e.kind === 'text' && <div style={{ marginTop: 12 }}><InlineMessageThread messages={e.messages} medium={e.medium} /></div>}
+            {open && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)' }}>Did the AI handle this well?</Text>
+                <FeedbackButtons context="Conversation" />
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-// ─── Thread pane ──────────────────────────────────────────────────────
+/** A lead's engagements, stacked with dividers between them. Owns the per-block
+ *  expand state and auto-opens the latest text conversation when a reply is
+ *  appended (so you can see the message you just sent). */
+function LeadEngagements({ lead }: { lead: Lead }) {
+  const engagements = buildEngagements(lead);
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  const toggle = (id: string) =>
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const prevLen = useRef(lead.transcript.length);
+  useEffect(() => {
+    if (lead.transcript.length > prevLen.current) {
+      const lastText = [...engagements].reverse().find((e) => e.kind === 'text');
+      if (lastText) setOpenIds((prev) => new Set(prev).add(lastText.id));
+    }
+    prevLen.current = lead.transcript.length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lead.transcript.length]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {engagements.map((e, i) => (
+        <div key={e.id} style={{ paddingTop: i === 0 ? 0 : 24, marginTop: i === 0 ? 0 : 24, borderTop: i === 0 ? 'none' : '1px solid var(--dark-8)' }}>
+          <EngagementBlock engagement={e} open={openIds.has(e.id)} onToggle={() => toggle(e.id)} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Recommended next step / proposed reply, rendered inline in the thread.
+ *  The Send Reply + Copy actions sit on the card; the composer input stays
+ *  pinned to the bottom. */
+function ProposedReplyInline({
+  text,
+  paused,
+  sendLabel,
+  onApprove,
+  onResumeAi,
+}: {
+  text: string;
+  paused: boolean;
+  sendLabel: string;
+  onApprove: () => void;
+  onResumeAi: () => void;
+}) {
+  const { showToast } = useToast();
+  const copy = () => {
+    try { navigator.clipboard?.writeText(text); } catch { /* ignore */ }
+    showToast({ message: 'Reply copied' });
+  };
+  return (
+    <div style={{ paddingTop: 24, marginTop: 24, borderTop: '1px solid var(--dark-8)' }}>
+      <Heading level={5} style={{ margin: 0, marginBottom: 8 }}>Recommended next step</Heading>
+      <div style={{ padding: '12px 14px', background: 'var(--dark-2)', border: '1px solid var(--dark-4)', borderRadius: 10 }}>
+        <Text variant="primary" style={{ color: 'var(--dark-90)', lineHeight: 1.5, display: 'block' }}>{text}</Text>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+          {paused && <Button variant="ghost" size="md" onPress={onResumeAi}>Resume AI</Button>}
+          <Button variant="tertiary" size="md" frontIcon={Copy} onPress={copy}>Copy</Button>
+          <Button variant="secondary" size="md" frontIcon={Send1} onPress={onApprove}>{sendLabel}</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface ThreadPaneProps {
   lead: Lead;
@@ -621,6 +911,18 @@ function ThreadPane({
   const [draft, setDraft] = useState('');
   const canSend = draft.trim().length > 0;
   const showSegments = allContactLeads.length > 1;
+
+  // With multiple requests, keep only the active request expanded; older ones
+  // collapse to their header so the page opens on the request you came for.
+  const [expandedSegments, setExpandedSegments] = useState<Set<string>>(new Set([lead.id]));
+  useEffect(() => { setExpandedSegments(new Set([lead.id])); }, [lead.id]);
+  const toggleSegment = (id: string) =>
+    setExpandedSegments((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   // The thread opens pre-scrolled to the TOP so the summary card reads first,
   // and the composer's top border only appears once the messages overflow.
@@ -693,111 +995,60 @@ function ThreadPane({
       >
         {showSegments ? (
           allContactLeads.map((l, idx) => {
-            // The leading plain system message (e.g. "Lead captured · …") is
-            // folded into the conversation heading, so drop it from the flow.
             const first = l.transcript[0];
             const capture = first && first.type === 'system' && !isTriggerMessage(first.content) ? first : null;
-            const messages = capture ? l.transcript.slice(1) : l.transcript;
+            const isOpen = expandedSegments.has(l.id);
             return (
               <div
                 key={l.id}
                 ref={(el) => { segmentRefs.current[l.id] = el; }}
                 style={{ marginTop: idx === 0 ? 0 : 40 }}
               >
-                <LeadSegmentDivider lead={l} capture={capture} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 8 }}>
-                  <ConversationSummary lead={l} />
-                  {(() => {
-                    const booked = l.status === 'resolved' && !!l.scheduled_at;
-                    const hasBookingMsg = booked && messages.some(isBookingMessage);
-                    return (
-                      <>
-                        {messages.map((msg) => {
-                          if (booked && isBookingMessage(msg)) {
-                            return <BookingCard key={msg.id} lead={l} onReschedule={l.id === lead.id ? onReschedule : undefined} onSetOutcome={(o) => onUpdateLead({ ...l, outcome: o })} />;
-                          }
-                          if (msg.type === 'system') return <SystemRow key={msg.id} msg={msg} />;
-                          if (msg.type === 'call') return <CallTurnBlock key={msg.id} msg={msg} />;
-                          return <TextBubble key={msg.id} msg={msg} prospectName={l.prospect.name} />;
-                        })}
-                        {booked && !hasBookingMsg && (
-                          <BookingCard lead={l} onReschedule={l.id === lead.id ? onReschedule : undefined} onSetOutcome={(o) => onUpdateLead({ ...l, outcome: o })} />
-                        )}
-                      </>
-                    );
-                  })()}
-                  {l.status === 'human-handling' && (
-                    <EscalationHandoffBubble leadId={l.id} muted={l.id !== lead.id} />
-                  )}
-                </div>
+                <LeadSegmentDivider
+                  lead={l}
+                  capture={capture}
+                  collapsible
+                  collapsed={!isOpen}
+                  onToggle={() => toggleSegment(l.id)}
+                />
+                {isOpen && (
+                  <div style={{ paddingBottom: 8 }}>
+                    <LeadEngagements lead={l} />
+                  </div>
+                )}
               </div>
             );
           })
         ) : (
-          <>
-            <ConversationSummary lead={lead} />
-            {(() => {
-              const booked = lead.status === 'resolved' && !!lead.scheduled_at;
-              const hasBookingMsg = booked && lead.transcript.some(isBookingMessage);
-              return (
-                <>
-                  {lead.transcript.map((msg) => {
-                    if (booked && isBookingMessage(msg)) {
-                      return <BookingCard key={msg.id} lead={lead} onReschedule={onReschedule} onSetOutcome={(o) => onUpdateLead({ ...lead, outcome: o })} />;
-                    }
-                    if (msg.type === 'system') return <SystemRow key={msg.id} msg={msg} />;
-                    if (msg.type === 'call') return <CallTurnBlock key={msg.id} msg={msg} />;
-                    return <TextBubble key={msg.id} msg={msg} prospectName={lead.prospect.name} />;
-                  })}
-                  {booked && !hasBookingMsg && (
-                    <BookingCard lead={lead} onReschedule={onReschedule} onSetOutcome={(o) => onUpdateLead({ ...lead, outcome: o })} />
-                  )}
-                </>
-              );
-            })()}
-            {(lead.status === 'human-handling' || paused) && (
-              <EscalationHandoffBubble leadId={lead.id} />
-            )}
-          </>
+          <LeadEngagements lead={lead} />
         )}
-        {/* end-of-exchange feedback */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 12, marginTop: 4 }}>
-          <Text variant="secondary" style={{ fontSize: 13, color: 'var(--dark-60)' }}>
-            Did the AI handle this well?
-          </Text>
-          <FeedbackButtons context="Conversation" />
-        </div>
-      </div>
 
-      {/* composer — top border only once the thread overflows */}
-      <div style={{ borderTop: isScrollable ? '1px solid var(--dark-8)' : '1px solid transparent', padding: '16px clamp(64px, 12%, 240px) 28px', flexShrink: 0 }}>
-        {lead.status === 'human-handling' && lead.suggested_next_action && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-            {/* label left; Resume AI (when paused) + Send Reply pinned top-right */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <Text variant="secondary" style={{ fontSize: 12 }}>Proposed reply</Text>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {paused && (
-                  <Button variant="ghost" size="xs" onPress={onResumeAi}>Resume AI</Button>
-                )}
-                <Button
-                  variant="secondary"
-                  size="xs"
-                  frontIcon={Send2}
-                  onPress={() => onApproveSuggested(lead.suggested_next_action!.payload)}
-                >
-                  Send Reply
-                </Button>
-              </div>
-            </div>
-            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, lineHeight: 1.45 }}>
-              {lead.suggested_next_action.payload}
-            </Text>
+        {/* booking confirmation — kept so the operator retains reschedule /
+            outcome controls even in the summary-first layout */}
+        {lead.status === 'resolved' && !!lead.scheduled_at && (
+          <div style={{ paddingTop: 24, marginTop: 24, borderTop: '1px solid var(--dark-8)' }}>
+            <BookingCard lead={lead} onReschedule={onReschedule} onSetOutcome={(o) => onUpdateLead({ ...lead, outcome: o })} />
           </div>
         )}
-        {/* Fallback Resume AI when the AI is paused but there's no proposed-reply
-            card to host it (keeps the action reachable without the old banner). */}
-        {paused && !(lead.status === 'human-handling' && lead.suggested_next_action) && (
+
+        {/* inline proposed reply / recommended next step */}
+        {lead.suggested_next_action && (
+          <ProposedReplyInline
+            text={lead.suggested_next_action.payload}
+            paused={paused}
+            sendLabel={replyMedium(lead) === 'sms' ? 'Send Text' : 'Send Reply'}
+            onApprove={() => onApproveSuggested(lead.suggested_next_action!.payload)}
+            onResumeAi={onResumeAi}
+          />
+        )}
+      </div>
+
+      {/* composer — fixed to the bottom. The proposed reply now lives inline in
+          the thread above; only the take-over input stays pinned here. */}
+      <div style={{ borderTop: isScrollable ? '1px solid var(--dark-8)' : '1px solid transparent', padding: '16px clamp(64px, 12%, 240px) 28px', flexShrink: 0 }}>
+        {/* Fallback Resume AI when the AI is paused and there's no inline
+            proposed-reply card to host it. */}
+        {paused && !lead.suggested_next_action && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
             <Button variant="ghost" size="xs" onPress={onResumeAi}>Resume AI</Button>
           </div>
@@ -969,7 +1220,84 @@ function BantRowView({ row, isLast }: { row: BantRow; isLast: boolean }) {
   );
 }
 
+// ─── Shared detail header ─────────────────────────────────────────────
+// Used by both the AM (Sdr.tsx) and client (dfy-client Leads) detail pages so
+// the lead header reads identically on both sides: a back button + the lead
+// name on the left, and a prev/next lead switcher in the center.
+
+/** Back button + lead name — the detail page's left title cluster. When a
+ *  status is passed, its pill (e.g. "Needs Attention") sits after the name. */
+export function LeadDetailTitle({ name, status, onBack }: { name: string; status?: Lead['status']; onBack: () => void }) {
+  const ss = status ? STATUS_STYLES[status] : undefined;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back" onPress={onBack} />
+      <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{name}</Text>
+      {ss && <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>}
+    </div>
+  );
+}
+
+/** Prev/next lead switcher with an "N of M" count. Hidden for a single lead. */
+export function LeadDetailNav({ index, total, onPrev, onNext }: { index?: number; total?: number; onPrev?: () => void; onNext?: () => void }) {
+  if (total === undefined || total <= 1) return null;
+  const navButton = (handler: (() => void) | undefined, label: string, dir: 'up' | 'down') => (
+    <button
+      type="button"
+      onClick={handler}
+      disabled={!handler}
+      aria-label={label}
+      style={{
+        width: 28, height: 28, borderRadius: 6,
+        border: '1px solid var(--dark-8)',
+        background: handler ? 'var(--light-100)' : 'var(--dark-4)',
+        color: handler ? 'var(--dark-80)' : 'var(--dark-15)',
+        cursor: handler ? 'pointer' : 'not-allowed',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+      }}
+    >
+      {dir === 'up' ? <ArrowUp size={15} /> : <ArrowDown size={15} />}
+    </button>
+  );
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        {index} of {total}
+      </span>
+      {navButton(onPrev, 'Previous lead', 'up')}
+      {navButton(onNext, 'Next lead', 'down')}
+    </div>
+  );
+}
+
 // ─── Sidebar components ───────────────────────────────────────────────
+
+/** Contact detail (phone / email) with a copy button that fades in on hover. */
+function CopyableField({ value, label }: { value: string; label: string }) {
+  const { showToast } = useToast();
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}
+    >
+      <span style={{ fontSize: 16, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
+      <span style={{ opacity: hovered ? 1 : 0, transition: 'opacity 120ms ease', flexShrink: 0, display: 'inline-flex' }}>
+        <IconButton
+          variant="ghost"
+          size="xs"
+          icon={Copy}
+          aria-label={`Copy ${label}`}
+          onPress={() => {
+            try { navigator.clipboard?.writeText(value); } catch { /* ignore */ }
+            showToast({ message: 'Copied' });
+          }}
+        />
+      </span>
+    </div>
+  );
+}
 
 /** Request type label + BANT progress bar (replaces the score donut). */
 function RequestProgress({ lead, rows }: { lead: Lead; rows: BantRow[] }) {
@@ -1182,58 +1510,46 @@ function Sidebar({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        background: 'var(--light-100)',
+        gap: 36,
+        padding: '20px 0',
+        background: 'var(--background-light)',
         overflowY: 'auto',
       }}
     >
       {/* section: compact contact identity */}
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--dark-8)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-          <Avatar src={lead.prospect.avatarUrl} fallback={initials(lead.prospect.name)} size={40} style={{ background: avatarColor(lead.prospect.name) }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <button
-              type="button"
-              onClick={onOpenContact}
-              disabled={!onOpenContact}
-              style={{
-                fontSize: 14,
-                fontWeight: 500,
-                color: 'var(--dark-90)',
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: onOpenContact ? 'pointer' : 'default',
-                fontFamily: 'inherit',
-                textAlign: 'left',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-                width: '100%',
-              }}
-            >
-              {lead.prospect.name}
-            </button>
-            <div style={{ fontSize: 14, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 3 }}>
-              {lead.prospect.phone}
-            </div>
-            <div style={{ fontSize: 14, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
-              {lead.prospect.email}
-            </div>
-          </div>
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            type="button"
+            onClick={onOpenContact}
+            disabled={!onOpenContact}
+            style={{
+              fontSize: 16,
+              fontWeight: 500,
+              color: 'var(--dark-90)',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: onOpenContact ? 'pointer' : 'default',
+              fontFamily: 'inherit',
+              textAlign: 'left',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              display: 'block',
+              width: '100%',
+            }}
+          >
+            {lead.prospect.name}
+          </button>
+          <CopyableField value={lead.prospect.phone} label="phone number" />
+          <CopyableField value={lead.prospect.email} label="email" />
         </div>
-        {lead.tags.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
-            {lead.tags.map((tag) => (
-              <StatusPill key={tag} tone="neutral" size="sm">{tag}</StatusPill>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* section: all leads for this contact */}
       {hasMultipleLeads && (
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--dark-8)' }}>
+        <div style={{ padding: '0 20px' }}>
           <Text
             variant="metadata"
             style={{ display: 'block', fontSize: 11, color: 'var(--dark-60)', fontWeight: 400, marginBottom: 8, letterSpacing: '0.04em' }}
@@ -1263,16 +1579,15 @@ function Sidebar({
 
       {/* section: manual controls — sits above the timeline, no label.
           Single column so labels don't truncate in the narrower sidebar. */}
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--dark-8)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
-          <Button variant="secondary" size="md" fullWidth frontIcon={CalendarOutline} onPress={onScheduleMeeting}>
+      <div style={{ padding: '0 20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+          <Button variant="secondary" size="md" frontIcon={CalendarOutline} onPress={onScheduleMeeting}>
             {lead.status === 'resolved' ? 'Reschedule' : 'Schedule meeting'}
           </Button>
           <div style={{ position: 'relative' }}>
             <Button
               variant="secondary"
               size="md"
-              fullWidth
               onPress={() => setStatusOpen((v) => !v)}
             >
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -1291,20 +1606,35 @@ function Sidebar({
               </PopoverMenu>
             )}
           </div>
-          <Button variant="secondary" size="md" fullWidth frontIcon={Trash2} onPress={onDisqualify}>
+          <Button variant="secondary" size="md" frontIcon={Trash2} onPress={onDisqualify}>
             Disqualify
           </Button>
         </div>
       </div>
 
+      {/* section: qualification criteria — the AI's captured answers, migrated
+          from the lead detail modal. Name + phone live in the identity header
+          above, so they're skipped here to avoid repeating them. */}
+      <div style={{ padding: '0 20px' }}>
+        <Heading level={5} style={{ margin: '0 0 12px' }}>Qualification</Heading>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {DEFAULT_QUALIFICATION_QUESTIONS
+            .filter((q) => q.id !== 'q-name' && q.id !== 'q-phone')
+            .map((q) => {
+              const answer = qualificationAnswer(lead, q.id);
+              return (
+                <div key={q.id}>
+                  <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 2 }}>{q.label}</Text>
+                  <Text variant="primary" style={{ color: 'var(--dark-90)', lineHeight: 1.4 }}>{answer ?? '—'}</Text>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+
       {/* section: contact timeline */}
-      <div style={{ padding: '16px 20px' }}>
-        <Text
-          variant="metadata"
-          style={{ display: 'block', fontSize: 11, color: 'var(--dark-60)', fontWeight: 400, marginBottom: 12, letterSpacing: '0.04em' }}
-        >
-          Timeline
-        </Text>
+      <div style={{ padding: '0 20px' }}>
+        <Heading level={5} style={{ margin: '0 0 12px' }}>Timeline</Heading>
         <ContactTimeline events={timelineEvents} scrollToLead={scrollToLead} />
       </div>
     </div>
@@ -1407,19 +1737,20 @@ export function SdrDetail({ lead, onUpdateLead, allLeads, contacts: _contacts, o
   };
 
   const handleSendOwner = (text: string) => {
-    appendMessage(makeMessage('owner', 'text', text));
+    appendMessage(makeMessage('owner', 'text', text, replyMedium(lead)));
     setPaused(true);
     showToast({ message: 'Message sent · AI paused' });
   };
 
   // Owner approved the AI's proposed reply: send it as an AI message and clear
   // the suggestion so the proposed-reply card disappears. No pause — the owner
-  // is endorsing the AI's draft rather than taking over the conversation.
+  // is endorsing the AI's draft rather than taking over the conversation. The
+  // reply inherits the last conversation's medium so it folds into that thread.
   const handleApproveSuggested = (text: string) => {
     onUpdateLead({
       ...lead,
       suggested_next_action: null,
-      transcript: [...lead.transcript, makeMessage('ai', 'text', text)],
+      transcript: [...lead.transcript, makeMessage('ai', 'text', text, replyMedium(lead))],
     });
     showToast({ message: 'Reply sent' });
   };

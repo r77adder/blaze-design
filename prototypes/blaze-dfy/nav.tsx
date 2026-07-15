@@ -18,7 +18,6 @@ import Clapperboard from '@/icons/20/Star';
 import Palette from '@/icons/20/Brand';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import ArrowSwitchHorizontal from '@/icons/20/ArrowSwitchHorizontal';
-import Lightning from '@/icons/20/Lightning';
 import Settings from '@/icons/20/Settings';
 import Marker03 from '@/icons/20/Marker03';
 import Cursor04 from '@/icons/20/Cursor04';
@@ -147,7 +146,7 @@ const AWARENESS_GROUP: NavGroup = { label: 'Awareness', items: [
 ] };
 const CONVERSION_GROUP: NavGroup = { label: 'Conversion', items: [
   { label: 'Landing Pages', icon: Templates, section: 'landing-pages' },
-  { label: 'AI Receptionist', icon: UserProfileGroup, section: 'sdr' },
+  { label: 'Leads & Bookings', icon: UserProfileGroup, section: 'sdr' },
   { label: 'Reputation', icon: Clapperboard, section: 'reputation' },
 ] };
 
@@ -161,7 +160,6 @@ const AM_SECTIONS: NavGroup[] = [
   { label: 'Settings', items: [
     { label: 'Brand Kit', icon: Palette, section: 'brand' },
     { label: 'Scorecard', icon: Insights, section: 'scorecard' },
-    { label: 'Strategy', icon: Lightning, section: 'plan' },
     { label: 'Account', icon: Settings, section: 'settings' },
     { label: 'Content Settings', icon: AudioSettings, section: 'content-settings' },
   ] },

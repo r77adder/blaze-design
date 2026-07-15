@@ -1,6 +1,8 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button, Heading, IconButton, Modal, Text, useModals, type StackModalProps } from '@/components';
-import { Avatar, Chip, Pill, Select, StatusPill, TabChip, TextField as DSTextField, useToast } from '@/staging';
+import { Chip, Pill, Select, StatusPill, TabChip, TextField as DSTextField, useToast } from '@/staging';
+import type { StatusPillTone } from '@/staging';
 import Close from '@/icons/20/Close';
 import Lock3 from '@/icons/20/Lock3';
 import ChevronDown from '@/icons/20/ChevronDown';
@@ -11,10 +13,27 @@ import CheckboxChecked from '@/icons/20/CheckboxChecked';
 import ArrowRight from '@/icons/20/ArrowRight';
 import Play3 from '@/icons/20/Play3';
 import Trash2 from '@/icons/20/Trash2';
+import AlertTriangle from '@/icons/20/AlertTriangle';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import { ChannelGlyph } from '../SdrDetail';
 import { H2Layout } from '../H2Layout';
-import { ComplianceSection } from './SdrCompliance';
+import { ComplianceSection, a2pFromDevState, type A2pStatus } from './SdrCompliance';
+import { QualificationCriteriaSection } from './QualificationCriteria';
+import {
+  FieldLabel,
+  NumberField,
+  OptionalHint,
+  RadioCard,
+  SectionDivider,
+  SectionShell,
+  TextField,
+  TextareaField,
+  Toggle,
+  inputFocusProps,
+  largeInputStyle,
+  textInputStyle,
+} from './SettingsFormControls';
+import { useDevState } from '../dev-state-context';
 import { ALL_CHANNELS, SOURCE_LABELS, type Channel } from '../sdr-data';
 import {
   AFTER_HOURS_OPTIONS,
@@ -54,7 +73,7 @@ import {
   type Vertical,
 } from '../sdr-settings-data';
 
-type SettingsSubTab = 'triggers' | 'agent' | 'outcomes' | 'notifications' | 'compliance';
+type SettingsSubTab = 'triggers' | 'agent' | 'qualification' | 'outcomes' | 'notifications' | 'compliance';
 
 // ── Agent config ──────────────────────────────────────────────────────────
 
@@ -177,27 +196,40 @@ export function SdrSettingsBody({ onBack }: { onBack?: () => void }) {
   const [subTab, setSubTab] = useState<SettingsSubTab>('triggers');
   const [chatOpen, setChatOpen] = useState(false);
 
+  // Shared A2P verification status: the Compliance tab owns the detail and
+  // reports the derived status up here; the Triggers tab's phone-number token
+  // reads it. Seeded from the dev-state controller (cold = not registered,
+  // steady = rejected) and re-seeded when the designer flips it.
+  const { pathname } = useLocation();
+  const { getState } = useDevState();
+  const devState = getState(pathname);
+  const [a2pStatus, setA2pStatus] = useState<A2pStatus>(() => a2pFromDevState(devState));
+  useEffect(() => {
+    setA2pStatus(a2pFromDevState(devState));
+  }, [devState]);
+
   const activeAgent = agents.find((a) => a.id === activeAgentId) ?? agents[0]!;
 
   const updateAgent = (next: AgentConfig) => {
     setAgents((prev) => prev.map((a) => (a.id === next.id ? next : a)));
   };
 
-  const addAgent = () => {
-    const newId = `agent-${Date.now()}`;
-    setAgents((prev) => [
-      ...prev,
-      { id: newId, name: 'New agent', persona: 'Custom receptionist', agentPhone: '', llmModel: 'claude-sonnet', systemPrompt: '', knowledgeBase: '' },
-    ]);
-    setActiveAgentId(newId);
-  };
-
-  const tabs: { id: SettingsSubTab; label: string; sub: string }[] = [
+  const tabs: { id: SettingsSubTab; label: string; sub: string; icon?: React.ComponentType<{ size?: number; color?: string }>; iconColor?: string }[] = [
     { id: 'triggers',      label: 'Triggers',      sub: 'When it runs' },
     { id: 'agent',         label: 'Agent',         sub: 'What the AI does' },
+    { id: 'qualification', label: 'Qualification', sub: 'How leads are qualified' },
     { id: 'outcomes',      label: 'Outcomes',      sub: 'What gets delivered' },
     { id: 'notifications', label: 'Notifications', sub: 'How you stay in the loop' },
-    { id: 'compliance',    label: 'Compliance',    sub: 'A2P / 10DLC registration' },
+    {
+      id: 'compliance',
+      label: 'Compliance',
+      sub: 'A2P / 10DLC registration',
+      // A small warning icon on the tab itself flags that A2P needs action
+      // (rejected / not registered) — so the status reads from the nav without
+      // repeating a pill inside the banner.
+      icon: a2pNeedsAttention(a2pStatus) ? AlertTriangle : undefined,
+      iconColor: a2pTabIconColor(a2pStatus),
+    },
   ];
 
   // Replaces the "AI Receptionist" section name on the left with a back +
@@ -208,7 +240,7 @@ export function SdrSettingsBody({ onBack }: { onBack?: () => void }) {
         variant="ghost"
         size="sm"
         icon={ArrowLeft}
-        aria-label="Back to AI Receptionist"
+        aria-label="Back to Leads & Bookings"
         onPress={() => onBack?.()}
       />
       <Heading level={1} style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: 'normal' }}>
@@ -218,12 +250,20 @@ export function SdrSettingsBody({ onBack }: { onBack?: () => void }) {
   );
 
   // Settings sub-sections ride the topbar center as the standard TabChip strip,
-  // matching the sub-tabs on every other page.
+  // matching the sub-tabs on every other page. The Compliance tab carries an
+  // inline attention icon when A2P needs action (matching H2's folder tab).
   const subTabStrip = (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
       {tabs.map((t) => (
         <TabChip key={t.id} selected={subTab === t.id} onSelect={() => setSubTab(t.id)}>
-          {t.label}
+          {t.icon ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              {t.label}
+              <t.icon size={14} color={t.iconColor} />
+            </span>
+          ) : (
+            t.label
+          )}
         </TabChip>
       ))}
     </div>
@@ -233,11 +273,6 @@ export function SdrSettingsBody({ onBack }: { onBack?: () => void }) {
     <H2Layout
       titleOverride={titleCluster}
       topbarCenter={subTabStrip}
-      topbarRight={
-        <Button variant="secondary" size="sm" frontIcon={Plus} onPress={addAgent}>
-          Add agent
-        </Button>
-      }
     >
     <div
       style={{
@@ -263,10 +298,17 @@ export function SdrSettingsBody({ onBack }: { onBack?: () => void }) {
             so the body renders just the active section's content. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
           {subTab === 'triggers' && (
-            <TriggersSection agent={activeAgent} onChange={updateAgent} />
+            <TriggersSection
+              agent={activeAgent}
+              onChange={updateAgent}
+              a2pStatus={a2pStatus}
+              onStartCompliance={() => setSubTab('compliance')}
+            />
           )}
           {subTab === 'agent' && (
             <>
+              <AgentNameSection agent={activeAgent} onChange={updateAgent} />
+              <SectionDivider />
               <SystemPromptSection agent={activeAgent} onChange={updateAgent} />
               <SectionDivider />
               <VoicePersonalitySection settings={settings} setSettings={setSettings} />
@@ -276,13 +318,16 @@ export function SdrSettingsBody({ onBack }: { onBack?: () => void }) {
               <CustomerMessagesSection />
             </>
           )}
+          {subTab === 'qualification' && (
+            <QualificationCriteriaSection systemPrompt={activeAgent.systemPrompt} />
+          )}
           {subTab === 'outcomes' && (
             <OutcomesSection settings={settings} setSettings={setSettings} />
           )}
           {subTab === 'notifications' && (
             <NotificationsSection onConfigureEscalations={() => setSubTab('outcomes')} />
           )}
-          {subTab === 'compliance' && <ComplianceSection />}
+          {subTab === 'compliance' && <ComplianceSection onStatusChange={setA2pStatus} />}
         </div>
       </div>
 
@@ -314,17 +359,11 @@ function AgentSelector({
 }) {
   const activeAgent = agents.find((a) => a.id === activeId) ?? agents[0];
 
-  // Single agent: just an avatar + the name at H2, with Add agent beside it.
+  // Single agent: no header — the name is renamed from the Agent tab instead.
   // The selectable cards (with a selected state) only appear once a 2nd agent
   // is added.
   if (agents.length <= 1) {
-    const fallback = activeAgent.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-        <Avatar fallback={fallback} size={40} />
-        <Heading level={2}>{activeAgent.name}</Heading>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -356,7 +395,6 @@ function AgentSelector({
                 transition: 'border-color 120ms ease, background 120ms ease',
               }}
             >
-              <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: '#04af00', flexShrink: 0 }} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left' }}>
                 <span style={{ fontSize: 14, fontWeight: 500, color: active ? 'var(--light-100)' : 'var(--dark-90)', lineHeight: 1.3 }}>
                   {agent.name}
@@ -370,6 +408,44 @@ function AgentSelector({
         })}
       </div>
     </div>
+  );
+}
+
+// A2P status helpers — drive the Compliance sub-tab's inline attention icon.
+
+// Whether the A2P status needs the user's attention (drives the Compliance
+// tab's warning icon). Awaiting + verified are calm states, so no icon.
+function a2pNeedsAttention(status: A2pStatus): boolean {
+  return status === 'rejected' || status === 'not-registered';
+}
+
+// Tint for the Compliance tab warning icon — matches the status color family
+// (danger red when rejected, warning orange when not yet registered).
+function a2pTabIconColor(status: A2pStatus): string {
+  return status === 'rejected' ? 'var(--red-70)' : 'var(--status-connect)';
+}
+
+// ── Agent name section ────────────────────────────────────────────────────
+
+function AgentNameSection({
+  agent,
+  onChange,
+}: {
+  agent: AgentConfig;
+  onChange: (a: AgentConfig) => void;
+}) {
+  return (
+    <SectionShell
+      title="Agent name"
+      sub="The name your receptionist introduces itself with across calls, texts, and email."
+    >
+      <TextField
+        label="Name"
+        value={agent.name}
+        onChange={(v) => onChange({ ...agent, name: v })}
+        maxWidth={320}
+      />
+    </SectionShell>
   );
 }
 
@@ -401,7 +477,7 @@ function SystemPromptSection({
               resize: 'vertical',
               lineHeight: 1.6,
               fontFamily: "'Sohne', sans-serif",
-              fontSize: 13,
+              fontSize: 14,
               color: 'var(--dark-90)',
             }}
           />
@@ -501,7 +577,7 @@ function ChatTestPanel({
             style={{
               width: 32, height: 32, borderRadius: '50%', background: 'var(--brand)',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, fontWeight: 700, color: 'var(--dark-90)', flexShrink: 0,
+              fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', flexShrink: 0,
             }}
           >
             {agentName.charAt(0).toUpperCase()}
@@ -542,7 +618,7 @@ function ChatTestPanel({
               >
                 {msg.text}
               </div>
-              <span style={{ fontSize: 11, color: 'var(--dark-40)' }}>{msg.ts}</span>
+              <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{msg.ts}</span>
             </div>
           );
         })}
@@ -571,7 +647,7 @@ function ChatTestPanel({
           style={{
             width: 36, height: 36, borderRadius: 8, border: 'none', padding: 0, flexShrink: 0,
             background: draft.trim().length > 0 ? 'var(--dark-90)' : 'var(--dark-8)',
-            color: draft.trim().length > 0 ? 'var(--light-100)' : 'var(--dark-40)',
+            color: draft.trim().length > 0 ? 'var(--light-100)' : 'var(--dark-60)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             cursor: draft.trim().length > 0 ? 'pointer' : 'not-allowed',
             transition: 'background 120ms ease',
@@ -693,7 +769,7 @@ function UnifiedChannelCard({
             <ChannelGlyph channel={channel} size={20} />
           </span>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{channelLabel(channel)}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{channelLabel(channel)}</div>
             <div style={{ fontSize: 12, color: 'var(--dark-60)', marginTop: 2 }}>{channelHint(channel)}</div>
           </div>
         </div>
@@ -782,7 +858,7 @@ function UnifiedChannelCard({
               borderRadius: 8,
             }}
           >
-            <span style={{ fontSize: 13, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>Respond within</span>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>Respond within</span>
             <NumberInput
               value={settings.slaSeconds}
               onChange={(v) => update((c) => ({ ...c, slaSeconds: v }))}
@@ -790,7 +866,7 @@ function UnifiedChannelCard({
               max={3600}
               disabled={dimmed}
             />
-            <span style={{ fontSize: 13, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>seconds</span>
+            <span style={{ fontSize: 14, color: 'var(--dark-60)', whiteSpace: 'nowrap' }}>seconds</span>
           </div>
         </div>
 
@@ -843,7 +919,7 @@ function UnifiedChannelCard({
                           transition: 'border-color 120ms ease, box-shadow 120ms ease',
                         }}
                       >
-                        <div style={{ fontSize: 13, fontWeight: 500 }}>{t.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 500 }}>{t.label}</div>
                         <div style={{ fontSize: 12, color: 'var(--dark-60)', lineHeight: 1.4 }}>{t.description}</div>
                       </button>
                     );
@@ -854,7 +930,7 @@ function UnifiedChannelCard({
               <div>
                 <FieldLabel>Steps</FieldLabel>
                 {settings.flowSteps.length === 0 ? (
-                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', padding: '4px 0', fontSize: 13 }}>
+                  <Text variant="metadata" style={{ display: 'block', color: 'var(--dark-60)', padding: '4px 0', fontSize: 14 }}>
                     No follow-up steps — the AI replies once and waits.
                   </Text>
                 ) : (
@@ -955,7 +1031,7 @@ function StepRow({
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 28, height: 28, borderRadius: '50%', background: 'var(--dark-4)',
-          color: 'var(--dark-90)', fontSize: 13, fontWeight: 500, marginTop: 2,
+          color: 'var(--dark-90)', fontSize: 14, fontWeight: 500, marginTop: 2,
         }}
       >
         {index + 1}
@@ -976,7 +1052,7 @@ function StepRow({
 }
 
 const inputStyle: React.CSSProperties = {
-  fontFamily: 'inherit', fontSize: 13, color: 'var(--dark-90)',
+  fontFamily: 'inherit', fontSize: 14, letterSpacing: '0.26px', color: 'var(--dark-90)',
   padding: '6px 8px', border: '1px solid var(--dark-8)', borderRadius: 6,
   background: 'var(--light-100)', outline: 'none', width: '100%', boxSizing: 'border-box',
 };
@@ -1002,31 +1078,6 @@ function SmallIconButton({ children, onClick, disabled, ariaLabel }: { children:
 
 // ── Shared helpers ─────────────────────────────────────────────────────────
 
-function SectionDivider() {
-  // Dividers removed for now — kept as a no-op so call sites stay intact.
-  return null;
-}
-
-function SectionShell({ title, sub, children }: { title: string; sub: string; children: React.ReactNode }) {
-  return (
-    <section>
-      <div style={{ marginBottom: 16 }}>
-        <Heading level={3} style={{ marginBottom: 4 }}>{title}</Heading>
-        <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>{sub}</Text>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <Text variant="primary" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-      {children}
-    </Text>
-  );
-}
-
 function NumberInput({ value, onChange, min, max, disabled }: { value: number; onChange: (v: number) => void; min?: number; max?: number; disabled?: boolean }) {
   return (
     <input
@@ -1042,33 +1093,6 @@ function NumberInput({ value, onChange, min, max, disabled }: { value: number; o
       }}
       style={{ width: 72, fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)', padding: '6px 8px', border: '1px solid var(--dark-8)', borderRadius: 8, background: 'var(--light-100)', outline: 'none' }}
     />
-  );
-}
-
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
-  return (
-    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}>
-      {label && <span style={{ fontSize: 13, color: 'var(--dark-60)' }}>{label}</span>}
-      <span
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        style={{
-          position: 'relative', display: 'inline-block', width: 36, height: 20, flexShrink: 0,
-          borderRadius: 999, background: checked ? 'var(--dark-90)' : 'var(--dark-15)',
-          transition: 'background-color 160ms ease',
-        }}
-      >
-        <span
-          aria-hidden
-          style={{
-            position: 'absolute', top: 2, left: checked ? 18 : 2, width: 16, height: 16,
-            borderRadius: '50%', background: 'var(--light-100)',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.15)', transition: 'left 160ms ease',
-          }}
-        />
-      </span>
-    </label>
   );
 }
 
@@ -1192,7 +1216,7 @@ function EscalationRulesSection({ settings, setSettings }: SectionProps) {
       sub="Different situations call for different responses depending on when the call comes in. Set a behavior per trigger for each time window."
     >
       <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 160px 40px', gap: 12, padding: '10px 14px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 13, color: 'var(--dark-60)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 160px 40px', gap: 12, padding: '10px 14px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 14, color: 'var(--dark-60)' }}>
           <span>Trigger</span>
           <span>During hours</span>
           <span>After hours</span>
@@ -1254,7 +1278,7 @@ function EscalationRulesSection({ settings, setSettings }: SectionProps) {
       </div>
       <div style={{ marginTop: 12 }}>
         <Button variant="secondary" size="md" frontIcon={Plus} onPress={handleAdd}>
-          Add Escalation Rule
+          Add escalation rule
         </Button>
       </div>
     </SectionShell>
@@ -1469,10 +1493,10 @@ function WindowCard({ dot, title, line1, line2, pillTone, pillLabel }: { dot: st
     <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, padding: 18, background: 'var(--light-100)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span aria-hidden style={{ width: 10, height: 10, borderRadius: '50%', background: dot }} />
-        <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
+        <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
       </div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 2 }}>{line1}</div>
-      <div style={{ fontSize: 13, color: 'var(--dark-60)', marginBottom: 10 }}>{line2}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 2 }}>{line1}</div>
+      <div style={{ fontSize: 14, color: 'var(--dark-60)', marginBottom: 10 }}>{line2}</div>
       <StatusPill tone={pillTone} size="sm">{pillLabel}</StatusPill>
     </div>
   );
@@ -1505,7 +1529,7 @@ function KnowledgeBaseSection({
           resize: 'vertical',
           lineHeight: 1.6,
           fontFamily: "'Sohne', sans-serif",
-          fontSize: 13,
+          fontSize: 14,
         }}
       />
     </SectionShell>
@@ -1582,12 +1606,59 @@ function PickupRow({
   );
 }
 
+// A2P verification status token shown beside the agent number, plus the gate
+// copy for each permutation. The whole chip is the "status token" — clicking it
+// jumps to the Compliance tab.
+const A2P_TOKEN: Record<A2pStatus, { label: string; tone: StatusPillTone; help: string }> = {
+  'not-registered': { label: 'Not registered',    tone: 'warning', help: 'SMS not available — register for A2P to enable texting.' },
+  awaiting:         { label: 'Awaiting approval', tone: 'info',    help: 'A2P registration is under carrier review.' },
+  verified:         { label: 'Verified',          tone: 'success', help: 'Approved for A2P messaging — texting is enabled.' },
+  rejected:         { label: 'Rejected',          tone: 'danger',  help: 'A2P registration was rejected — review the details.' },
+};
+
+function A2pStatusToken({ status, onOpen }: { status: A2pStatus; onOpen: () => void }) {
+  const meta = A2P_TOKEN[status];
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`A2P status: ${meta.label}. Open the Compliance tab.`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 10px 10px 14px',
+        border: '1px solid var(--dark-8)',
+        borderRadius: 8,
+        background: 'var(--dark-2)',
+        cursor: 'pointer',
+        font: 'inherit',
+        textAlign: 'left',
+      }}
+    >
+      <StatusPill tone={meta.tone} size="sm">{meta.label}</StatusPill>
+      <Text color="var(--dark-60)" style={{ fontSize: 14, lineHeight: 1.5, whiteSpace: 'nowrap' }}>
+        {meta.help}
+      </Text>
+      <span style={{ flexShrink: 0, color: 'var(--dark-60)', display: 'inline-flex' }}>
+        <ArrowRight size={16} />
+      </span>
+    </button>
+  );
+}
+
 function TriggersSection({
   agent,
   onChange,
+  a2pStatus,
+  onStartCompliance,
 }: {
   agent: AgentConfig;
   onChange: (a: AgentConfig) => void;
+  /** Current A2P verification status for the agent number (shared with Compliance). */
+  a2pStatus: A2pStatus;
+  /** Jumps to the Compliance sub-tab so the user can start A2P / 10DLC registration. */
+  onStartCompliance: () => void;
 }) {
   const [shift, setShift] = useState<ShiftDay[]>(DEFAULT_SHIFT);
   // Rings-before-pickup, separate for business hours vs after hours.
@@ -1606,21 +1677,28 @@ function TriggersSection({
         title="Agent phone number"
         sub="The number callers will reach and that the AI will use for outbound SMS."
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '10px 14px',
-            border: '1px solid var(--dark-8)',
-            borderRadius: 8,
-            background: 'var(--dark-2)',
-          }}
-        >
-          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
-            {agent.agentPhone || '—'}
-          </span>
-          <StatusPill tone="success" size="sm">Active</StatusPill>
+        {/* A2P / 10DLC verification — the number takes calls now ("Active"), but
+            its ability to text customers depends on its A2P registration status.
+            The status token reflects that and links to the Compliance tab. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 14px',
+              border: '1px solid var(--dark-8)',
+              borderRadius: 8,
+              background: 'var(--dark-2)',
+            }}
+          >
+            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>
+              {agent.agentPhone || '—'}
+            </span>
+            <StatusPill tone="success" size="sm">Active</StatusPill>
+          </div>
+
+          <A2pStatusToken status={a2pStatus} onOpen={onStartCompliance} />
         </div>
       </SectionShell>
 
@@ -1777,7 +1855,7 @@ function CustomerMessagesSection() {
           <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span
               style={{
-                fontSize: 11, fontWeight: 500,
+                fontSize: 12, fontWeight: 500,
                 color: r.type === 'sms' ? 'var(--status-posting)' : 'var(--purple)',
                 background: r.type === 'sms' ? 'rgba(1,121,207,0.08)' : 'rgba(124,92,252,0.08)',
                 padding: '3px 8px', borderRadius: 6, flexShrink: 0,
@@ -1800,7 +1878,7 @@ function CustomerMessagesSection() {
               style={{
                 width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 border: '1px solid var(--dark-8)', borderRadius: 6, background: 'none',
-                cursor: 'pointer', color: 'var(--dark-40)', flexShrink: 0, padding: 0,
+                cursor: 'pointer', color: 'var(--dark-60)', flexShrink: 0, padding: 0,
               }}
             >
               <Close size={14} />
@@ -1835,7 +1913,7 @@ function OutcomesSection({ settings, setSettings }: SectionProps) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
             <div>
               <Heading level={5}>Accept escalations</Heading>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>
                 Allow the AI to interrupt the owner when a hot prospect can't wait.
               </div>
             </div>
@@ -1897,7 +1975,7 @@ function OutcomesSection({ settings, setSettings }: SectionProps) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
                 <div>
                   <Heading level={5}>Email + ICS calendar invite</Heading>
-                  <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>Confirmation email with .ics file to prospect and owner.</div>
+                  <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>Confirmation email with .ics file to prospect and owner.</div>
                 </div>
                 <Toggle checked={config.emailIcsEnabled} onChange={(v) => update((c) => ({ ...c, emailIcsEnabled: v }))} />
               </div>
@@ -1907,7 +1985,7 @@ function OutcomesSection({ settings, setSettings }: SectionProps) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: '1px solid var(--dark-8)', borderRadius: config.bookingSmsEnabled ? '10px 10px 0 0' : 10 }}>
                   <div>
                     <Heading level={5}>SMS notification</Heading>
-                    <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>Text a phone number when a booking is confirmed.</div>
+                    <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>Text a phone number when a booking is confirmed.</div>
                   </div>
                   <Toggle checked={config.bookingSmsEnabled} onChange={(v) => update((c) => ({ ...c, bookingSmsEnabled: v }))} />
                 </div>
@@ -2133,7 +2211,7 @@ function NotificationsSection({ onConfigureEscalations }: { onConfigureEscalatio
         sub="Pick which receptionist activity pings you, and how. SMS and email can arrive in real-time, or be rolled into a once-a-day digest."
       >
         <div style={{ border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: EVENT_GRID, gap: 12, padding: '10px 16px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 13, color: 'var(--dark-60)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: EVENT_GRID, gap: 12, padding: '10px 16px', background: 'var(--dark-2)', borderBottom: '1px solid var(--dark-8)', fontSize: 14, color: 'var(--dark-60)' }}>
             <span>Event</span>
             <span style={{ textAlign: 'center' }}>Push</span>
             <span style={{ textAlign: 'center' }}>SMS</span>
@@ -2243,7 +2321,7 @@ function NotificationsSection({ onConfigureEscalations }: { onConfigureEscalatio
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px', border: '1px solid var(--dark-8)', borderRadius: 10 }}>
             <div>
               <Heading level={5}>Pause non-urgent notifications</Heading>
-              <div style={{ fontSize: 13, color: 'var(--dark-60)', marginTop: 2 }}>Quietly batch routine pings during off hours.</div>
+              <div style={{ fontSize: 14, color: 'var(--dark-60)', marginTop: 2 }}>Quietly batch routine pings during off hours.</div>
             </div>
             <Toggle checked={config.quietHoursEnabled} onChange={(v) => update((c) => ({ ...c, quietHoursEnabled: v }))} />
           </div>
@@ -2269,7 +2347,7 @@ function NotificationsSection({ onConfigureEscalations }: { onConfigureEscalatio
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
           {/* headline + subheadline — the count is folded into the description */}
           <div style={{ minWidth: 0 }}>
-            <Heading level={3} style={{ marginBottom: 4 }}>Daily Digest</Heading>
+            <Heading level={3} style={{ marginBottom: 4 }}>Daily digest</Heading>
             <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)' }}>
               {digestEvents.length === 0
                 ? 'No events are set to Digest yet — set an event’s SMS or Email to “Digest” above to start batching it here.'
@@ -2488,106 +2566,6 @@ function BookingDeliverySection({ settings, setSettings }: SectionProps) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Shared form helpers
-// ══════════════════════════════════════════════════════════════════════════
-
-// Blaze-style focus: on focus the border darkens to var(--dark-40) + a subtle
-// ring; on blur it reverts to the default var(--dark-8). Spread onto raw
-// inputs/textareas (those whose resting border is var(--dark-8)).
-const inputFocusProps = {
-  onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    e.currentTarget.style.borderColor = 'var(--dark-40)';
-    e.currentTarget.style.boxShadow = '0 0 0 3px var(--dark-4)';
-  },
-  onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    e.currentTarget.style.borderColor = 'var(--dark-8)';
-    e.currentTarget.style.boxShadow = 'none';
-  },
-};
-
-const textInputStyle: React.CSSProperties = {
-  fontFamily: 'inherit', fontSize: 14, color: 'var(--dark-90)',
-  padding: '8px 10px', border: '1px solid var(--dark-8)', borderRadius: 6,
-  background: 'var(--light-100)', outline: 'none', width: '100%', boxSizing: 'border-box',
-};
-
-const largeInputStyle: React.CSSProperties = { ...textInputStyle, fontSize: 16, padding: '12px 14px', borderRadius: 8 };
-
-function TextField({ label, value, onChange, hint, maxWidth }: { label: string; required?: boolean; value: string; onChange: (v: string) => void; hint?: string; maxWidth?: number }) {
-  return (
-    <div>
-      {hint ? (
-        <>
-          <div style={{ marginBottom: -6 }}>
-            <FieldLabel>{label}</FieldLabel>
-          </div>
-          <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 8 }}>{hint}</Text>
-        </>
-      ) : (
-        <FieldLabel>{label}</FieldLabel>
-      )}
-      <input {...inputFocusProps} type="text" value={value} onChange={(e) => onChange(e.target.value)} style={maxWidth ? { ...textInputStyle, maxWidth } : textInputStyle} />
-    </div>
-  );
-}
-
-function TextareaField({ label, value, onChange, rows, placeholder }: { label: string; value: string; onChange: (v: string) => void; rows?: number; placeholder?: string }) {
-  return (
-    <div>
-      <FieldLabel>{label}</FieldLabel>
-      <textarea
-        {...inputFocusProps}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={rows ?? 3}
-        placeholder={placeholder}
-        style={{ ...textInputStyle, resize: 'vertical', lineHeight: 1.6, fontFamily: "'Sohne', sans-serif", fontSize: 13 }}
-      />
-    </div>
-  );
-}
-
-function NumberField({ label, value, onChange, min, max }: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number }) {
-  return (
-    <div>
-      <FieldLabel>{label}</FieldLabel>
-      <input
-        {...inputFocusProps}
-        type="number"
-        value={value}
-        min={min}
-        max={max}
-        onChange={(e) => { const n = Number(e.target.value); if (Number.isFinite(n)) onChange(n); }}
-        style={textInputStyle}
-      />
-    </div>
-  );
-}
-
-function RadioCard({ selected, onClick, title, description }: { selected: boolean; onClick: () => void; title: string; description?: string }) {
-  const Icon = selected ? CheckboxChecked : CheckboxLight;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: 14, textAlign: 'left',
-        border: `1px solid ${selected ? 'var(--dark-90)' : 'var(--dark-4)'}`,
-        borderRadius: 10, background: selected ? 'var(--light-100)' : 'var(--dark-2)',
-        cursor: 'pointer', fontFamily: 'inherit',
-        transition: 'border-color 120ms ease, background 120ms ease',
-      }}
-    >
-      <Icon size={20} />
-      <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)' }}>{title}</span>
-        {description && <span style={{ fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.4 }}>{description}</span>}
-      </span>
-    </button>
-  );
-}
-
-function OptionalHint() {
-  return <Pill size="xs" style={{ marginLeft: 6 }}>Optional</Pill>;
-}
+// Shared form helpers (SectionShell, FieldLabel, TextField, RadioCard, etc.)
+// live in ./SettingsFormControls — extracted so QualificationCriteria.tsx can
+// reuse them without a circular import back into this file.

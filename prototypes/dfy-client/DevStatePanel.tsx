@@ -52,14 +52,17 @@ const GROUP_STYLE: CSSProperties = {
 export function DevStatePanel() {
   const { state, setState } = useClientState();
   const navigate = useNavigate();
-  // Show the AM/Client switch on the approvals and home surfaces, and jump to
-  // the matching surface on the other side.
+  // Show the AM/Client switch on the approvals, Leads (AI Receptionist), and
+  // home surfaces, and jump to the matching surface on the other side.
   const rest = useLocation().pathname.replace(/^\/dfy-client/, '').replace(/^\//, '').replace(/\/$/, '');
   const surface = rest.startsWith('approvals') ? 'approvals'
+    : rest.startsWith('leads') ? 'leads'
     : (rest === '' || rest === 'home') ? 'home'
     : null;
   const amHref = surface === 'approvals'
     ? '/blaze-dfy/grain-design-flooring/am/approvals'
+    : surface === 'leads'
+    ? '/blaze-dfy/grain-design-flooring/am/sdr'
     : '/blaze-dfy/grain-design-flooring/am/home';
   // Sit quietly at half opacity by default; lift to full on hover so the panel
   // never competes with the real portal chrome.
@@ -144,8 +147,9 @@ export function DevStatePanel() {
         transition: 'opacity 120ms ease',
       }}
     >
-      {/* Changes sits on top, on the surfaces it references (approvals + home). */}
-      {surface && (
+      {/* Changes sits on top, on the surfaces it references (approvals + home).
+          The Leads (AI Receptionist) surface gets the side switch but not Changes. */}
+      {(surface === 'approvals' || surface === 'home') && (
         <>
           <button
             type="button"
@@ -216,7 +220,7 @@ function SideButton({ text, current, onClick }: { text: string; current?: boolea
     <button
       type="button"
       onClick={onClick}
-      title={current ? 'Current view' : `Open ${text} approvals`}
+      title={current ? 'Current view' : `Open ${text} view`}
       style={{
         appearance: 'none', border: 'none', cursor: current ? 'default' : 'pointer',
         fontFamily: 'inherit', fontSize: 10.5, lineHeight: 1, padding: '3px 6px', borderRadius: 3,

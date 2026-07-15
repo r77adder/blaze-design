@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ComponentType } from 'react';
 import { createPortal } from 'react-dom';
 import { Heading, Text, Button, IconButton, Modal, useModals, type StackModalProps } from '@/components';
-import { StatusPill, Pill, Avatar, Checkbox, Select } from '@/staging';
+import { StatusPill, Pill, Avatar, Checkbox, Select, TabChip } from '@/staging';
 import Voice from '@/icons/20/Voice';
 import MessageText2 from '@/icons/20/MessageText2';
 import MessageChat01 from '@/icons/20/MessageChat01';
@@ -18,7 +18,6 @@ import ArrowLeft from '@/icons/20/ArrowLeft';
 import Copy from '@/icons/20/Copy';
 import { DEFAULT_QUALIFICATION_QUESTIONS } from '../h2/qualification-criteria-data';
 import {
-  LEADS,
   type Lead,
   type Status,
   STATUS_STYLES,
@@ -38,6 +37,10 @@ import { ClientShell } from './shell';
 import { ColdState } from './ColdState';
 import { useClientState } from './dev-state';
 import { ReceptionistSettings } from './ReceptionistSettings';
+import { SdrDetail, LeadDetailTitle, LeadDetailNav } from '../h2-port/SdrDetail';
+// Shared lead dataset so the client Leads & Bookings page shows the exact same
+// leads as the AM side (switching between them stays consistent).
+import { LEADS, CONTACTS } from '../h2-port/pages/Sdr';
 
 /**
  * Leads: the AI Receptionist's lead inbox, surfaced as a first-party client
@@ -53,11 +56,40 @@ export function Leads() {
   const leads = LEADS;
   const { openModal } = useModals();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [subTab, setSubTab] = useState<'leads' | 'bookings'>('leads');
+  // Opening a lead/booking swaps the whole page for a full detail view (same as
+  // the AM side), not a modal. `activeList` is the ordered list the row came
+  // from, so the detail's prev/next navigation stays in sync with the table.
+  const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
+  const [activeList, setActiveList] = useState<Lead[]>([]);
+
+  // Bookings — resolved leads that have a scheduled appointment.
+  const bookings = useMemo(
+    () => leads.filter((l) => l.status === 'resolved' && l.scheduled_at && typeof l.scheduled_when === 'number'),
+    [leads],
+  );
+
+  const openLead = (list: Lead[], index: number) => { setActiveList(list); setActiveLeadId(list[index]?.id ?? null); };
 
   // Full-page AI Receptionist settings, scoped to the Leads tab, opens from the
   // topbar button and returns here on back (no route change).
   if (settingsOpen) {
     return <ReceptionistSettings onBack={() => setSettingsOpen(false)} />;
+  }
+
+  // Full-page lead / booking detail, opens in place of the table, mirroring the
+  // AM side's SdrDetail page.
+  const activeLead = activeLeadId ? leads.find((l) => l.id === activeLeadId) ?? null : null;
+  if (activeLead) {
+    return (
+      <LeadDetailPage
+        lead={activeLead}
+        list={activeList.length ? activeList : leads}
+        allLeads={leads}
+        onBack={() => setActiveLeadId(null)}
+        onNavigate={setActiveLeadId}
+      />
+    );
   }
 
   // Cold, pre-go-live: the AI Receptionist isn't capturing leads yet, so the
@@ -83,6 +115,12 @@ export function Leads() {
   return (
     <ClientShell
       section="leads"
+      topbarCenter={
+        <div style={{ display: 'flex', gap: 6 }}>
+          <TabChip selected={subTab === 'leads'} onSelect={() => setSubTab('leads')}>Leads</TabChip>
+          <TabChip selected={subTab === 'bookings'} count={bookings.length || undefined} onSelect={() => setSubTab('bookings')}>Bookings</TabChip>
+        </div>
+      }
       topbarRight={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => setSettingsOpen(true)}>
@@ -95,9 +133,156 @@ export function Leads() {
       }
     >
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <LeadsTable leads={leads} onOpen={(list, index) => openModal(LeadDetailModal, { leads: list, index })} />
+        {subTab === 'leads' && (
+          <LeadsTable leads={leads} onOpen={openLead} />
+        )}
+        {subTab === 'bookings' && (
+          <BookingsList bookings={bookings} onOpen={openLead} />
+        )}
       </div>
     </ClientShell>
+  );
+}
+
+// ─── Full-page lead / booking detail ─────────────────────────────────
+// Renders the same SdrDetail page the AM side uses, wrapped in the client
+// shell with a back button + prev/next navigation.
+
+function LeadDetailPage({
+  lead,
+  list,
+  allLeads,
+  onBack,
+  onNavigate,
+}: {
+  lead: Lead;
+  list: Lead[];
+  allLeads: Lead[];
+  onBack: () => void;
+  onNavigate: (id: string) => void;
+}) {
+  const index = list.findIndex((l) => l.id === lead.id);
+  const prev = index > 0 ? list[index - 1] : null;
+  const next = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
+
+  // Same header treatment as the AM side (shared components).
+  const title = <LeadDetailTitle name={lead.prospect.name} status={lead.status} onBack={onBack} />;
+  const nav = (
+    <LeadDetailNav
+      index={index >= 0 ? index + 1 : undefined}
+      total={list.length}
+      onPrev={prev ? () => onNavigate(prev.id) : undefined}
+      onNext={next ? () => onNavigate(next.id) : undefined}
+    />
+  );
+
+  return (
+    <ClientShell section="leads" title={title} topbarCenter={nav} fullBleed>
+      <SdrDetail
+        lead={lead}
+        allLeads={allLeads}
+        contacts={CONTACTS}
+        onUpdateLead={() => {}}
+        onOpenContact={() => {}}
+        onSwitchToLead={onNavigate}
+      />
+    </ClientShell>
+  );
+}
+
+// ─── Bookings (read-only) ────────────────────────────────────────────
+// The client watches the appointments the AI Receptionist has booked. Resolved
+// leads with a scheduled time, split into upcoming (scheduled_when > 0) and
+// past. Each row opens the same read-only lead detail as the Leads table.
+
+function BookingsList({ bookings, onOpen }: { bookings: Lead[]; onOpen: (leads: Lead[], index: number) => void }) {
+  const upcoming = useMemo(
+    () => bookings.filter((b) => (b.scheduled_when ?? 0) > 0).sort((a, b) => (a.scheduled_when ?? 0) - (b.scheduled_when ?? 0)),
+    [bookings],
+  );
+  const past = useMemo(
+    () => bookings.filter((b) => (b.scheduled_when ?? 0) <= 0).sort((a, b) => (b.scheduled_when ?? 0) - (a.scheduled_when ?? 0)),
+    [bookings],
+  );
+  const ordered = [...upcoming, ...past];
+  const sections = [
+    { key: 'upcoming', label: 'Upcoming', items: upcoming },
+    { key: 'past', label: 'Past', items: past },
+  ].filter((s) => s.items.length > 0);
+
+  if (bookings.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '64px 0' }}>
+        <Text variant="secondary" color="var(--dark-60)">No bookings yet. Appointments the AI Receptionist books will appear here.</Text>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {sections.map((sec, sectionIndex) => (
+        <div key={sec.key} style={{ marginTop: sectionIndex === 0 ? 0 : 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingLeft: 2 }}>
+            <Heading level={3}>{sec.label}</Heading>
+            <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>{sec.items.length}</Text>
+          </div>
+          <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+            {sec.items.map((b, i) => (
+              <BookingRow
+                key={b.id}
+                lead={b}
+                isLast={i === sec.items.length - 1}
+                onOpen={() => onOpen(ordered, ordered.indexOf(b))}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function BookingRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen: () => void }) {
+  const ss = STATUS_STYLES[lead.status];
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); }
+      }}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr minmax(200px, auto) 96px',
+        alignItems: 'center',
+        gap: 14,
+        padding: '12px 18px',
+        borderBottom: isLast ? 'none' : '1px solid var(--dark-8)',
+        cursor: 'pointer',
+        background: 'var(--light-100)',
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-2)')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--light-100)')}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <Avatar fallback={initials(lead.prospect.name)} size={32} style={{ background: avatarColor(lead.prospect.name), flexShrink: 0 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <Text style={{ fontWeight: 500, color: 'var(--dark-90)', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {lead.prospect.name}
+          </Text>
+          <Text variant="secondary" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {requestType(lead)}
+          </Text>
+        </div>
+      </div>
+      <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
+        {lead.scheduled_at}
+      </Text>
+      <div style={{ justifySelf: 'end' }}>
+        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
+      </div>
+    </div>
   );
 }
 

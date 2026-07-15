@@ -7,7 +7,6 @@ import Home from '@/icons/20/Home';
 import Approvals from '@/icons/20/Approvals';
 import Calendar1 from '@/icons/20/Calendar1';
 import BarChartSquare from '@/icons/20/BarChartSquare';
-import Lightning from '@/icons/20/Lightning';
 import Brand from '@/icons/20/Brand';
 import Settings from '@/icons/20/Settings';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
@@ -28,8 +27,7 @@ export const NAV: { section: string; label: string; icon: React.ComponentType<{ 
   { section: 'approvals', label: 'Approvals', icon: Approvals },
   { section: 'calendar', label: 'Calendar', icon: Calendar1 },
   { section: 'insights', label: 'Insights', icon: BarChartSquare },
-  { section: 'leads', label: 'Leads', icon: UserProfileGroup },
-  { section: 'strategy', label: 'Strategy', icon: Lightning },
+  { section: 'leads', label: 'Leads & Bookings', icon: UserProfileGroup },
 ];
 
 const SECTION_LABEL: Record<string, string> = Object.fromEntries(NAV.map((n) => [n.section, n.label]));

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Button, Heading, IconButton, ModalStack, Text } from '@/components';
+import { Button, Heading, IconButton, ModalStack, Text, useModals } from '@/components';
 import { Avatar, Select, StatusPill, TabChip } from '@/staging';
 import Filter from '@/icons/20/Filter';
 import ArrowLeft from '@/icons/20/ArrowLeft';
@@ -12,10 +12,14 @@ import Voice from '@/icons/20/Voice';
 import MessageText2 from '@/icons/20/MessageText2';
 import MessageChat01 from '@/icons/20/MessageChat01';
 import Settings from '@/icons/20/Settings';
+import MoreDots from '@/icons/20/MoreDots';
+import Download from '@/icons/20/Download';
+import Document from '@/icons/20/Document';
 import { H2Layout } from '../H2Layout';
-import { GenerateReportButton } from '../GenerateReportButton';
+import { ExportLeadsModal } from '../ExportLeadsModal';
+import type { ComponentType } from 'react';
 import { useDevState } from '../dev-state-context';
-import { ChannelGlyph, SdrDetail } from '../SdrDetail';
+import { ChannelGlyph, SdrDetail, LeadDetailTitle, LeadDetailNav } from '../SdrDetail';
 import { ContactHistory } from '../ContactHistory';
 import { OutcomeSelect } from '../BookingOutcomeSelect';
 import { SdrColdView } from './ColdViews';
@@ -62,7 +66,7 @@ const inputFocusProps = {
 // One Contact per unique person in the CertaPro re-skin. contact_id is
 // injected into each lead via the post-processing step below.
 
-const CONTACTS: Contact[] = [
+export const CONTACTS: Contact[] = [
   { id: 'c-priya',      name: 'Priya Patel',     phone: '+1 (512) 555-0148', email: 'priya.patel@gmail.com' },
   { id: 'c-david-lin',  name: 'David Lin',        phone: '+1 (512) 555-0193', email: 'd.lin@oakridgehoa.org' },
   { id: 'c-sara-lopez', name: 'Sara Lopez',       phone: '+1 (512) 555-0167', email: 'sara@lopezfamily.net' },
@@ -564,7 +568,7 @@ const SEED_BOOKING_OUTCOMES: Record<string, BookingOutcome> = {
   'l-lisa-kim': 'no-show',
 };
 
-const LEADS: Lead[] = LEADS_RAW.map((l) => {
+export const LEADS: Lead[] = LEADS_RAW.map((l) => {
   // isUnread() derives from the transcript here since `l.unread` is still unset.
   const derivedUnread = isUnread(l);
   let unread = KEEP_NEW_STATUSES.has(l.status) && derivedUnread;
@@ -680,15 +684,16 @@ export function SdrRoute() {
   );
 }
 
-type SdrTab = 'dashboard' | 'leads' | 'bookings' | 'settings';
+type SdrTab = 'leads' | 'bookings' | 'settings';
 
 function SdrInner() {
   const { getState } = useDevState();
+  const { openModal } = useModals();
   const isCold = getState('/h2/sdr') === 'cold';
   const [leads, setLeads] = useState<Lead[]>(LEADS);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
-  const [tab, setTab] = useState<SdrTab>('dashboard');
+  const [tab, setTab] = useState<SdrTab>('leads');
 
   // Filters
   const [channels, setChannels] = useState<Set<Channel>>(new Set());
@@ -763,7 +768,6 @@ function SdrInner() {
 
   const tabStrip = (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-      <TabChip selected={tab === 'dashboard'} onSelect={() => setTab('dashboard')}>Dashboard</TabChip>
       <TabChip selected={tab === 'leads'} onSelect={() => setTab('leads')}>Leads</TabChip>
       <TabChip selected={tab === 'bookings'} onSelect={() => setTab('bookings')}>Bookings</TabChip>
     </div>
@@ -777,19 +781,20 @@ function SdrInner() {
     </Button>
   );
 
-  // ─── Dashboard tab ─────────────────────────────────────────────────
-  if (tab === 'dashboard' && !activeLead) {
-    return (
-      <H2Layout topbarCenter={isCold ? undefined : tabStrip} topbarRight={isCold ? undefined : <>{settingsButton}<GenerateReportButton /></>}>
-        <SdrDashboard leads={leads} isCold={isCold} onViewLeads={() => setTab('leads')} onOpenLead={setActiveLeadId} />
-      </H2Layout>
-    );
-  }
+  // Overflow "…" menu — Generate report + Export live here instead of as their
+  // own topbar buttons.
+  const moreMenu = (
+    <MoreMenu
+      onGenerateReport={() => { /* prototype: report generation is a no-op */ }}
+      onExport={() => openModal(ExportLeadsModal, { leads })}
+    />
+  );
+
 
   // ─── Bookings tab ──────────────────────────────────────────────────
   if (tab === 'bookings' && !activeLead) {
     return (
-      <H2Layout topbarCenter={tabStrip} topbarRight={<>{settingsButton}<GenerateReportButton /></>}>
+      <H2Layout topbarCenter={tabStrip} topbarRight={<>{settingsButton}{moreMenu}</>}>
         <BookingsTab
           leads={leads}
           contactLeadCounts={contactLeadCounts}
@@ -805,7 +810,7 @@ function SdrInner() {
   // renders its own H2Layout with a back button in the topbar title and the
   // "Add agent" action on the right.
   if (tab === 'settings' && !activeLead) {
-    return <SdrSettingsBody onBack={() => setTab('dashboard')} />;
+    return <SdrSettingsBody onBack={() => setTab('leads')} />;
   }
 
   // ─── Cold view ─────────────────────────────────────────────────────
@@ -833,7 +838,7 @@ function SdrInner() {
             <span style={{ fontSize: 14, fontWeight: 500 }}>Contact history</span>
           )
         }
-        topbarRight={<GenerateReportButton />}
+        topbarRight={moreMenu}
       >
         <ContactHistory
           contact={contact}
@@ -854,17 +859,14 @@ function SdrInner() {
     const nextLead = activeLeadIndex >= 0 && activeLeadIndex < filteredLeads.length - 1 ? (filteredLeads[activeLeadIndex + 1] ?? null) : null;
     return (
       <H2Layout
-        title={<DetailTitleCluster lead={activeLead} onBack={() => setActiveLeadId(null)} />}
-        topbarRight={
-          <>
-            <DetailNav
-              index={activeLeadIndex >= 0 ? activeLeadIndex + 1 : undefined}
-              total={filteredLeads.length}
-              onPrev={prevLead ? () => setActiveLeadId(prevLead.id) : undefined}
-              onNext={nextLead ? () => setActiveLeadId(nextLead.id) : undefined}
-            />
-            <GenerateReportButton />
-          </>
+        titleOverride={<LeadDetailTitle name={activeLead.prospect.name} status={activeLead.status} onBack={() => setActiveLeadId(null)} />}
+        topbarCenter={
+          <LeadDetailNav
+            index={activeLeadIndex >= 0 ? activeLeadIndex + 1 : undefined}
+            total={filteredLeads.length}
+            onPrev={prevLead ? () => setActiveLeadId(prevLead.id) : undefined}
+            onNext={nextLead ? () => setActiveLeadId(nextLead.id) : undefined}
+          />
         }
         fullBleed
       >
@@ -881,103 +883,10 @@ function SdrInner() {
   }
 
   // ─── Inbox view ────────────────────────────────────────────────────
-  const filtersButton = (
-    <FiltersPopoverButton
-      count={activeFilterCount}
-      open={filtersOpen}
-      onToggle={() => setFiltersOpen((v) => !v)}
-      onClose={() => setFiltersOpen(false)}
-    >
-      <FilterGroup label="Source">
-        {ALL_CHANNELS.filter((c) => c !== 'chat').map((c) => (
-          <TabChip
-            key={c}
-            selected={channels.has(c)}
-            onSelect={() => setChannels((prev) => toggle(prev, c))}
-          >
-            {SOURCE_LABELS[c]}
-          </TabChip>
-        ))}
-      </FilterGroup>
-      <FilterGroup label="Method">
-        {ALL_METHODS.map((m) => (
-          <TabChip
-            key={m}
-            selected={methods.has(m)}
-            onSelect={() => setMethods((prev) => toggle(prev, m))}
-          >
-            {METHOD_LABELS[m]}
-          </TabChip>
-        ))}
-      </FilterGroup>
-      <FilterGroup label="Status">
-        {ALL_STATUSES.filter((s) => !HIDDEN_STATUSES.has(s)).map((s) => (
-          <TabChip
-            key={s}
-            selected={statuses.has(s)}
-            onSelect={() => setStatuses((prev) => toggle(prev, s))}
-          >
-            {STATUS_STYLES[s].label}
-          </TabChip>
-        ))}
-      </FilterGroup>
-      <FilterGroup label="Date">
-        {(Object.keys(DATE_LABELS) as DateFilter[]).map((d) => (
-          <TabChip key={d} selected={dateFilter === d} onSelect={() => setDateFilter(d)}>
-            {DATE_LABELS[d]}
-          </TabChip>
-        ))}
-      </FilterGroup>
-      <FilterGroup label="Progress">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--dark-40)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--dark-4)'; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--dark-15)'; e.currentTarget.style.boxShadow = 'none'; }}
-            type="number"
-            min={0}
-            max={100}
-            step={20}
-            value={progressMin}
-            onChange={(e) => setProgressMin(Math.max(0, Math.min(100, Number(e.target.value))))}
-            placeholder="0"
-            style={{
-              width: 64,
-              height: 32,
-              border: '1px solid var(--dark-15)',
-              borderRadius: 6,
-              padding: '0 8px',
-              fontSize: 13,
-              fontFamily: 'inherit',
-              color: 'var(--dark-90)',
-              background: 'var(--light-100)',
-              outline: 'none',
-            }}
-          />
-          <Text style={{ fontSize: 13, color: 'var(--dark-60)' }}>% min</Text>
-          {progressMin > 0 && (
-            <button
-              type="button"
-              onClick={() => setProgressMin(0)}
-              style={{ fontSize: 12, color: 'var(--dark-40)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', fontFamily: 'inherit' }}
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </FilterGroup>
-    </FiltersPopoverButton>
-  );
-
   return (
     <H2Layout
       topbarCenter={tabStrip}
-      topbarRight={
-        <>
-          {filtersButton}
-          {settingsButton}
-          <GenerateReportButton />
-        </>
-      }
+      topbarRight={<>{settingsButton}{moreMenu}</>}
     >
       <div style={{ padding: '20px 28px 60px', maxWidth: 1320, margin: '0 auto' }}>
         {/* section: inbox — one table per status, heading sits outside its table */}
@@ -1053,7 +962,6 @@ function SdrInner() {
                         <span>Prospect</span>
                         <span>Method</span>
                         <span>Call reason</span>
-                        <span>What&apos;s needed</span>
                         <span>Time</span>
                       </div>
                     )}
@@ -1083,84 +991,8 @@ function SdrInner() {
   );
 }
 
-// ─── Detail-view title cluster (back · name · status pill) ────────────
-// Sits left-aligned in the topbar's title slot (where the "SDR" string
-// normally lives). Icon-only back button — no text — so the cluster stays
-// compact and lets the lead name read as the page identity.
-
-function DetailTitleCluster({
-  lead,
-  onBack,
-}: {
-  lead: Lead;
-  onBack: () => void;
-}) {
-  const ss = STATUS_STYLES[lead.status];
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back to inbox" onPress={onBack} />
-      <span aria-hidden style={{ width: 1, height: 16, background: 'var(--dark-15)' }} />
-      <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>
-        {lead.prospect.name}
-        <span style={{ color: 'var(--dark-60)', fontWeight: 400 }}>
-          {' · '}
-          {lead.prospect.company}
-        </span>
-      </Text>
-      <StatusPill tone={ss.tone} size="md">{ss.label}</StatusPill>
-      {/* channel pill — moved here, next to the status pill */}
-      <StatusPill tone="neutral" size="md">
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-          <ChannelGlyph channel={lead.channel} size={13} muted />
-          {SOURCE_LABELS[lead.channel]}
-        </span>
-      </StatusPill>
-    </div>
-  );
-}
-
-// Conversation prev/next switcher — lives on the right of the detail topbar.
-// Up = previous lead, Down = next lead.
-function DetailNav({
-  index,
-  total,
-  onPrev,
-  onNext,
-}: {
-  index?: number;
-  total?: number;
-  onPrev?: () => void;
-  onNext?: () => void;
-}) {
-  if (total === undefined || total <= 1) return null;
-  const navButton = (handler: (() => void) | undefined, label: string, icon: 'up' | 'down') => (
-    <button
-      type="button"
-      onClick={handler}
-      disabled={!handler}
-      aria-label={label}
-      style={{
-        width: 28, height: 28, borderRadius: 6,
-        border: '1px solid var(--dark-8)',
-        background: handler ? 'var(--light-100)' : 'var(--dark-4)',
-        color: handler ? 'var(--dark-80)' : 'var(--dark-15)',
-        cursor: handler ? 'pointer' : 'not-allowed',
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-      }}
-    >
-      {icon === 'up' ? <ArrowUp size={15} /> : <ArrowDown size={15} />}
-    </button>
-  );
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-        {index} of {total}
-      </span>
-      {navButton(onPrev, 'Previous lead', 'up')}
-      {navButton(onNext, 'Next lead', 'down')}
-    </div>
-  );
-}
+// The detail-view header (back + name cluster, prev/next switcher) is shared
+// with the client via LeadDetailTitle / LeadDetailNav from ../SdrDetail.
 
 // ─── Contact history title cluster ───────────────────────────────────
 
@@ -1182,6 +1014,122 @@ function ContactTitleCluster({ contact, onBack }: { contact: Contact; onBack: ()
         Contact history
       </Text>
     </div>
+  );
+}
+
+// ─── Overflow "…" menu ────────────────────────────────────────────────
+// A small tertiary icon button that opens a BDS-style dropdown of page
+// actions (Generate report / Export). Anchored to the trigger with
+// position: fixed so no ancestor overflow/stacking can clip it.
+
+function MoreMenu({
+  onGenerateReport,
+  onExport,
+}: {
+  onGenerateReport: () => void;
+  onExport: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement | null>(null);
+  const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
+  const MENU_WIDTH = 208;
+  const PAD = 16;
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const el = triggerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setAnchor({ top: r.bottom + 8, right: Math.max(window.innerWidth - r.right, PAD) });
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  const runAndClose = (fn: () => void) => { setOpen(false); fn(); };
+
+  return (
+    <div ref={triggerRef} style={{ display: 'inline-flex' }}>
+      <IconButton
+        variant="tertiary"
+        size="sm"
+        icon={MoreDots}
+        aria-label="More actions"
+        active={open}
+        onPress={() => setOpen((o) => !o)}
+      />
+      {open && anchor && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
+          <div
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: anchor.top,
+              right: anchor.right,
+              width: MENU_WIDTH,
+              background: 'var(--light-100)',
+              border: '1px solid var(--dark-8)',
+              borderRadius: 10,
+              boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
+              padding: 6,
+              zIndex: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            <MenuItem icon={Document} label="Generate report" onClick={() => runAndClose(onGenerateReport)} />
+            <MenuItem icon={Download} label="Export" onClick={() => runAndClose(onExport)} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MenuItem({ icon: Icon, label, onClick }: { icon: ComponentType<{ size?: number; color?: string }>; label: string; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        width: '100%',
+        padding: '8px 10px',
+        borderRadius: 7,
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        fontSize: 14,
+        color: 'var(--dark-90)',
+        textAlign: 'left',
+        background: hovered ? 'var(--dark-4)' : 'transparent',
+        transition: 'background-color 100ms ease',
+      }}
+    >
+      <Icon size={20} color="var(--dark-60)" />
+      {label}
+    </button>
   );
 }
 
@@ -1293,7 +1241,7 @@ function FilterGroup({ label, children }: { label: string; children: React.React
 
 // Shared column template for the header row and every LeadRow. Status column
 // dropped — each table is already grouped under a status heading.
-const LEADS_GRID = '300px 68px 160px minmax(160px, 2fr) 64px';
+const LEADS_GRID = '300px 68px minmax(160px, 1fr) 64px';
 
 // Column template for the BookingsTab table. 5 cols: prospect (hugs like
 // LEADS_GRID), call reason, scheduled, location (stretches), outcome (pill).
@@ -1321,7 +1269,6 @@ interface LeadRowProps {
 }
 
 function LeadRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps) {
-  const snippet = whatsNeeded(lead);
   const unread = isUnread(lead);
   // Rows with nothing new (already replied / read) recede onto a dark-2 tint;
   // rows with a fresh prospect message stay bright white.
@@ -1421,48 +1368,6 @@ function LeadRow({ lead, isLast, onOpen, contactLeadCount = 1 }: LeadRowProps) {
         <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {requestType(lead)}
         </Text>
-      </div>
-
-      {/* What's needed — AI Handling rows surface a call/booking pill when
-          relevant (live call, successful call, or booked); otherwise the AI
-          summary / last-message excerpt. */}
-      <div style={{ minWidth: 0, overflow: 'hidden' }}>
-        {lead.status === 'ai-handling' && lead.callOutcome === 'live' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <StatusPill tone="danger" size="sm">Live</StatusPill>
-            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              Call in progress
-            </Text>
-          </div>
-        ) : lead.status === 'ai-handling' && lead.scheduled_at ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <StatusPill tone="success" size="sm">Scheduled</StatusPill>
-            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
-              Nothing needed
-            </Text>
-          </div>
-        ) : lead.status === 'ai-handling' && lead.callOutcome === 'successful' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <StatusPill tone="success" size="sm">Call successful</StatusPill>
-            <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {truncate(snippet, 36)}
-            </Text>
-          </div>
-        ) : (
-          <div
-            style={{
-              fontSize: 14,
-              color: unread ? 'var(--dark-90)' : 'var(--dark-60)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              lineHeight: 1.4,
-              fontWeight: unread ? 500 : 400,
-            }}
-          >
-            {truncate(snippet, 60)}
-          </div>
-        )}
       </div>
 
       {/* Time */}

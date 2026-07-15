@@ -354,15 +354,15 @@ export const LEAD_CONVERSATION_SUMMARY: Record<string, string> = {
   // NOTE: l-casey-park and l-morgan-lee are re-skinned in pages/Sdr.tsx (as
   // Carlos Reyes and David Lin), so these recaps describe the RENDERED leads.
   'l-casey-park':
-    'Carlos left a voicemail about a full exterior repaint and trim on his 2,200 sq ft Round Rock home — ~$12k budget, hoping to start in May. The AI texted back, locked a 9:30 AM callback, and sent a calendar invite; he then asked for a Round Rock case study before the call, which flagged the thread for owner review.',
+    'Carlos wants a full exterior repaint and trim on his Round Rock home (~$12k, May start). The AI booked a 9:30 AM callback, then paused for review before the call.',
   'l-morgan-lee':
-    'David, the HOA board president, called about a full repaint of all 14 buildings (~220 units) in NW Austin — last painted ~9 years ago, board-approved budget, decision expected around Q4. The AI looped in Matthew, and after David asked about spreading the work across two fiscal years, paused for owner review to put together a phased estimate for the board.',
+    'David, an HOA board president, wants all 14 buildings (~220 units) in NW Austin repainted by Q4. The AI paused for owner review to build a phased two-year estimate.',
   'l-jason-lee':
-    'Jason wants an exterior repaint across five rental properties (~$60k+) staggered through Q4, with each property priced separately so he can phase the spend. The AI offered to draft a master SOW and paused for owner review on the custom multi-property pricing.',
+    'Jason wants an exterior repaint across five rentals (~$60k+) phased through Q4, priced separately. The AI offered a master SOW and paused for owner review.',
   'l-michelle-huang':
-    'Michelle left a voicemail about repainting the common areas plus six suites (~14,000 sq ft) at the Tarrytown Business Center before Q4 tenant renewals. Budget is facilities-approved but the final number needs owner sign-off, so the AI paused for owner review.',
+    'Michelle wants the common areas and six suites (~14,000 sq ft) at Tarrytown Business Center repainted before Q4. Budget needs owner sign-off, so the AI paused for review.',
   'l-priya-followup':
-    'Priya, a past customer, reported the west-side trim peeling about three weeks after her exterior job and shared a photo of the spot above the garage. The AI flagged it as a warranty claim and paused for an owner callback to schedule an inspection.',
+    'Priya, a past customer, reported trim peeling weeks after her exterior job and shared a photo. The AI flagged a warranty claim and paused for an owner callback.',
 };
 
 /** Conversation summary for the detail thread's top card. Prefers the bespoke
