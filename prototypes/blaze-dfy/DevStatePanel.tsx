@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDfyState } from './lib/dev-state';
+import { useAmView } from './lib/am-view';
 import { useReview } from './lib/review';
 import { ChangesPanel, CHANGES_COUNT } from './ChangesPanel';
 
@@ -47,6 +48,7 @@ const GROUP_STYLE: CSSProperties = {
 export function DevStatePanel() {
   const { state, setState } = useDfyState();
   const { seedReviewed, clearReview } = useReview();
+  const { side, setSide, reviewOpen } = useAmView();
   const navigate = useNavigate();
   // Show the AM/Client switch on the approvals, AI Receptionist, and home
   // surfaces, and jump to the matching surface on the other side.
@@ -199,8 +201,19 @@ export function DevStatePanel() {
         {/* Group 2: AM/Client side switch (approvals + home). Wraps to its own row. */}
         {surface && (
           <div style={GROUP_STYLE}>
-            <SideButton text="AM" current onClick={() => {}} />
-            <SideButton text="Client" onClick={() => navigate(clientHref)} />
+            {/* While the review overlay is open, flip its AM ⇄ Client side in
+                place; otherwise fall back to opening the client portal. */}
+            {surface === 'home' && reviewOpen ? (
+              <>
+                <SideButton text="AM" current={side === 'am'} onClick={() => setSide('am')} />
+                <SideButton text="Client" current={side === 'client'} onClick={() => setSide('client')} />
+              </>
+            ) : (
+              <>
+                <SideButton text="AM" current onClick={() => {}} />
+                <SideButton text="Client" onClick={() => navigate(clientHref)} />
+              </>
+            )}
           </div>
         )}
       </div>

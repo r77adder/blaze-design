@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useClientState, type ClientState } from './dev-state';
-import { ChangesPanel, CHANGES_COUNT } from '../blaze-dfy/ChangesPanel';
+import { ChangesPanel, CHANGES_COUNT } from './ChangesPanel';
 
 /**
  * Designer-only control pinned to the bottom-left of the client portal. Flips
@@ -15,7 +15,7 @@ import { ChangesPanel, CHANGES_COUNT } from '../blaze-dfy/ChangesPanel';
 
 const OPTIONS: { value: ClientState; label: string }[] = [
   { value: 'cold', label: 'Cold' },
-  { value: 'reviewing', label: 'Reviewing' },
+  { value: 'reviewed', label: 'Reviewed' },
   { value: 'mixed', label: 'Mixed' },
   { value: 'steady', label: 'Steady' },
 ];
@@ -50,7 +50,7 @@ const GROUP_STYLE: CSSProperties = {
 };
 
 export function DevStatePanel() {
-  const { state, setState } = useClientState();
+  const { state, setState, reviewFlowOpen, reviewSide, setReviewSide } = useClientState();
   const navigate = useNavigate();
   // Show the AM/Client switch on the approvals, Leads (AI Receptionist), and
   // home surfaces, and jump to the matching surface on the other side.
@@ -83,6 +83,25 @@ export function DevStatePanel() {
       /* ignore */
     }
   }, [position]);
+
+  // While the review overlay is open, collapse to just the AM/Client switch so
+  // the reviewer can flip sides in place. (After all hooks, so order is stable.)
+  if (reviewFlowOpen) {
+    return (
+      <div
+        style={{
+          position: 'fixed', left: 12, bottom: 64, zIndex: 60,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'var(--dark-90)', border: '1px dashed var(--brand)', borderRadius: 6, padding: '5px 8px',
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+          opacity: 0.85,
+        }}
+      >
+        <SideButton text="AM" current={reviewSide === 'am'} onClick={() => setReviewSide('am')} />
+        <SideButton text="Client" current={reviewSide === 'client'} onClick={() => setReviewSide('client')} />
+      </div>
+    );
+  }
 
   const onHandlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!panelRef.current) return;
@@ -210,7 +229,7 @@ export function DevStatePanel() {
         )}
       </div>
     </div>
-    <ChangesPanel open={changesOpen} onClose={() => setChangesOpen(false)} prepare={() => setState('steady')} />
+    <ChangesPanel open={changesOpen} onClose={() => setChangesOpen(false)} onJump={(s) => { setState(s); setChangesOpen(false); }} />
     </>
   );
 }

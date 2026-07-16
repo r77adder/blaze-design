@@ -7,7 +7,7 @@ import { ClientStateProvider, useClientState } from './dev-state';
 import { DevStatePanel } from './DevStatePanel';
 import { Home } from './Home';
 import { HomeCold } from './HomeCold';
-import { HomeReviewing } from './HomeReviewing';
+import { HomeReviewed } from './HomeReviewed';
 import { HomeMixed } from './HomeMixed';
 import { Insights } from './Insights';
 import { Leads } from './Leads';
@@ -32,14 +32,14 @@ import { ReviewCreative } from './ReviewCreative';
  * /insights[/:sub] · /leads · /strategy · /brand-kit[/:sub] · /settings[/:sub]
  *
  * The bottom-left <DevStatePanel/> flips the whole portal between `cold`
- * (mid-onboarding), `reviewing` (everything but go-live is ready), `mixed`
- * (each item at a different review stage), and `steady` (live). Each page
- * reads useClientState().
+ * (Growth Engine Review ready to review), `reviewed` (client approved it, only
+ * go-live left), `mixed` (client requested changes), and `steady` (live) —
+ * each page reads useClientState().
  */
 function HomeRoute() {
   const { state } = useClientState();
   if (state === 'cold') return <HomeCold />;
-  if (state === 'reviewing') return <HomeReviewing />;
+  if (state === 'reviewed') return <HomeReviewed />;
   if (state === 'mixed') return <HomeMixed />;
   return <Home />;
 }

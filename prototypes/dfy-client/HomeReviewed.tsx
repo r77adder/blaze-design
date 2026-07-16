@@ -5,35 +5,23 @@ import Target5 from '@/icons/20/Target5';
 import Mail from '@/icons/20/Mail';
 import Calendar2 from '@/icons/20/Calendar2';
 import { ClientShell } from './shell';
-import { useClientState } from './dev-state';
 import { WORKSPACE_NAME, STRATEGIST, ReadyRow, PhaseRow } from './HomeColdShared';
 import { ConnectAccountsSection } from './ConnectAccounts';
 import { HOME_CONNECT_INTEGRATIONS } from './growth-review/data';
-import { changesSeed } from './growth-review/seed';
+import { APPROVED_SEED } from './growth-review/seed';
 import { useReviewFlow } from './ReviewFlow';
 
 /**
- * HomeMixed — the **client** Home after they requested changes in the Growth
- * Engine Review. Shows how many changes they sent and that their strategist
- * has been notified and is revising. If the state is toggled directly from the
- * dev panel (no real notes), a scripted set stands in so the screen reads.
+ * HomeReviewed — the **client** Home once they've approved the whole Growth
+ * Engine Review. The completed look: the review shows as done, accounts are
+ * connected, and go-live is the only thing left. Reopening the review ("View")
+ * shows every step marked as approved.
  */
-
-const FALLBACK_NOTES = [
-  'Lead with the finished floor for a second before the raw wood in the transformation reel.',
-  'Bump the Local Search Ads budget. The map pack is our best shot locally.',
-];
 
 const ALL_CONNECTED = HOME_CONNECT_INTEGRATIONS.map((c) => c.id);
 
-export function HomeMixed() {
-  const { reviewNotes } = useClientState();
-  const notes = reviewNotes.length ? reviewNotes : FALLBACK_NOTES;
-  const n = notes.length;
-  const label = `${n} change${n === 1 ? '' : 's'}`;
-  // Reopening from here seeds the flow so the flagged steps show "Changes
-  // requested" (real decisions win when they exist; see useReviewFlow).
-  const review = useReviewFlow(changesSeed(notes));
+export function HomeReviewed() {
+  const review = useReviewFlow(APPROVED_SEED);
 
   return (
     <ClientShell section="home">
@@ -41,31 +29,24 @@ export function HomeMixed() {
         {/* section: intro */}
         <div>
           <Heading level={2} style={{ lineHeight: 1.15, letterSpacing: '-0.4px', margin: '0 0 10px' }}>
-            Your changes are with {STRATEGIST.name.split(' ')[0]}.
+            One step left before {WORKSPACE_NAME} goes live.
           </Heading>
-          <Text variant="secondary" style={{ display: 'block', lineHeight: 1.55, color: 'var(--dark-60)' }}>
-            You sent {label} on your Growth Engine Review. {STRATEGIST.name.split(' ')[0]} is on it and will follow up with the updated version.
+          <Text variant="secondary" style={{ display: 'block', lineHeight: 1.55, color: 'var(--dark-60)', maxWidth: 560 }}>
+            You&rsquo;ve approved your Growth Engine. Your strategist is connecting the last channels,
+            then we&rsquo;ll flip the switch and your full portal opens with live results.
           </Text>
         </div>
 
-        {/* section: the review, with changes requested */}
+        {/* section: reviewed */}
         <section>
-          <Heading level={3} style={{ margin: '0 0 12px' }}>In progress</Heading>
+          <Heading level={3} style={{ margin: '0 0 12px' }}>Approved</Heading>
           <Card padding="none">
             <ReadyRow
               icon={Target5}
               title="Growth Engine Review"
-              badge="Changes requested"
-              badgeTone="warning"
-              blurb={`You requested ${label}. ${STRATEGIST.name} has been notified and is working on the next version.`}
-              extra={(
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {notes.map((note, i) => (
-                    <Text key={i} variant="secondary" color="var(--dark-80)" style={{ display: 'block', lineHeight: 1.5 }}>&middot; {note}</Text>
-                  ))}
-                </div>
-              )}
-              titleAction={<Button variant="secondary" size="sm" onPress={review.launch}>View changes</Button>}
+              badge="Reviewed"
+              blurb="Thanks! You approved your scorecard, strategy, website, and first creative. Your strategist has the green light to launch."
+              action={<Button variant="secondary" size="sm" onPress={review.launch}>View</Button>}
               isFirst
             />
           </Card>
@@ -81,7 +62,7 @@ export function HomeMixed() {
             <PhaseRow
               icon={CalendarStart}
               label="Go-live"
-              blurb="We&rsquo;ll switch everything on once you&rsquo;ve approved the updated Growth Engine."
+              blurb="We&rsquo;re connecting the last channels and will switch everything on shortly. Nothing more needed from you."
               state="current"
               isFirst
             />

@@ -6,6 +6,7 @@ import { Create } from './Create';
 import { Workspace } from './Workspace';
 import { ReviewProvider } from './lib/review';
 import { DfyStateProvider } from './lib/dev-state';
+import { AmViewProvider } from './lib/am-view';
 // Provider stack required by the faithfully-ported H2 feature pages (Awareness
 // / Conversion). The pages were copied into ../h2-port; these supply the
 // contexts they read. dev-state is shimmed in h2-port onto our global toggle.
@@ -30,6 +31,7 @@ export default function BlazeDfy() {
   return (
     <ReviewProvider>
       <DfyStateProvider>
+      <AmViewProvider>
       <ToolsProvider>
       <OnboardingProvider>
       <BrandKitProvider>
@@ -55,6 +57,7 @@ export default function BlazeDfy() {
       </BrandKitProvider>
       </OnboardingProvider>
       </ToolsProvider>
+      </AmViewProvider>
       </DfyStateProvider>
     </ReviewProvider>
   );
