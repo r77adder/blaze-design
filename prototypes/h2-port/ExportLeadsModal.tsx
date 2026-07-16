@@ -1,47 +1,41 @@
 import { useRef, useState, useMemo, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { Heading, Text, Modal, type StackModalProps } from '@/components';
-import { Checkbox, Select } from '@/staging';
+import { Checkbox } from '@/staging';
 import Download from '@/icons/20/Download';
 import Help from '@/icons/16/Help';
 import {
   type Lead,
-  type Status,
   STATUS_STYLES,
   METHOD_LABELS,
 } from './sdr-data';
 import { DEFAULT_QUALIFICATION_QUESTIONS } from './qualification-criteria-data';
-import { SAMPLE_ZIPS, FLOORING_SERVICES, leadZip, leadService, qualificationAnswer } from './qualification-answer';
+import { SAMPLE_ZIPS, FLOORING_SERVICES, qualificationAnswer } from './qualification-answer';
+import {
+  METHOD_OPTIONS,
+  TIME_OPTIONS,
+  applyFilters,
+  sortLeads,
+  toggleItem,
+  requestType,
+  FilterSelect,
+  FilterField,
+  MultiSelect,
+  applyScope,
+  statusOptionsFor,
+  type LeadFilters,
+  type LeadScope,
+  type SortState,
+} from './leads-table-kit';
 
 /**
  * Export leads to CSV — the operator (AM) side of the same flow the client
  * portal offers. Opened from the … more-menu in the Leads & Bookings topbar.
- * Ported from dfy-client/Leads.tsx; the client-only "message your strategist"
- * card is dropped since the AM owns this workspace.
+ * Filters open seeded with the table's current state (shared leads-table-kit
+ * model), so what the table shows is what lands in the CSV, in the same sort
+ * order. The client-only "message your strategist" card is dropped since the
+ * AM owns this workspace.
  */
-
-const STATUS_FUNNEL_ORDER: Status[] = ['human-handling', 'ai-handling', 'resolved', 'opted-out'];
-
-/** Best-guess "call reason" from the lead's source / need / tags. */
-function requestType(lead: Lead): string {
-  const src = lead.first_touch_source ?? '';
-  if (/cabinet/i.test(src)) return 'Cabinet refinishing';
-  if (/exterior/i.test(src)) return 'Exterior painting';
-  if (/interior/i.test(src)) return 'Interior painting';
-  if (/warranty/i.test(src)) return 'Warranty claim';
-  if (/hoa/i.test(src)) return 'HOA project';
-  if (/commercial|restaurant|healthcare/i.test(src)) return 'Commercial painting';
-  if (/deck|fence/i.test(src)) return 'Deck & fence';
-  if (/color/i.test(src)) return 'Color consultation';
-  const need = lead.scorecard.need ?? '';
-  if (/cabinet/i.test(need)) return 'Cabinet refinishing';
-  if (/exterior/i.test(need)) return 'Exterior painting';
-  if (/interior/i.test(need)) return 'Interior painting';
-  const tag = lead.tags.find(
-    (t) => !/residential|westlake|cedar park|austin|pflugerville|leander|round rock|lakeway|bee cave|dripping|booked|hot lead|cooled/i.test(t),
-  );
-  return tag ?? 'General inquiry';
-}
 
 interface ExportField {
   key: string;
@@ -141,38 +135,31 @@ function CsvPreview({ fields, leads, anchor }: { fields: ExportField[]; leads: L
   );
 }
 
-function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
-  return (
-    <div>
-      <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 6 }}>{label}</Text>
-      <Select value={value} onChange={onChange} options={options} size="md" fullWidth aria-label={label} />
-    </div>
-  );
-}
-
-export function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] }) {
+export function ExportLeadsModal({ leads, scope, filters, sort, close }: StackModalProps & { leads: Lead[]; scope: LeadScope; filters: LeadFilters; sort: SortState }) {
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(EXPORT_FIELDS.filter((f) => f.defaultOn).map((f) => f.key)),
   );
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [methodFilter, setMethodFilter] = useState('all');
-  const [serviceFilter, setServiceFilter] = useState('all');
-  const [zipFilter, setZipFilter] = useState('all');
+  // Filters open seeded with the table's current state — what you see in the
+  // table is what lands in the CSV, in the same sort order.
+  const [statusFilter, setStatusFilter] = useState(filters.status);
+  const [methodFilter, setMethodFilter] = useState(filters.method);
+  const [timeFilter, setTimeFilter] = useState(filters.time);
+  const [serviceFilters, setServiceFilters] = useState<string[]>(filters.services);
+  const [zipFilters, setZipFilters] = useState<string[]>(filters.zips);
   const [previewOpen, setPreviewOpen] = useState(false);
   const helpRef = useRef<HTMLButtonElement>(null);
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const activeFields = EXPORT_FIELDS.filter((f) => selected.has(f.key));
 
   const filteredLeads = useMemo(
-    () => leads.filter((l) =>
-      (statusFilter === 'all' || l.status === statusFilter) &&
-      (methodFilter === 'all' || l.method === methodFilter) &&
-      (serviceFilter === 'all' || leadService(l) === serviceFilter) &&
-      (zipFilter === 'all' || leadZip(l) === zipFilter),
+    () => sortLeads(
+      applyFilters(applyScope(leads, scope), { status: statusFilter, method: methodFilter, time: timeFilter, services: serviceFilters, zips: zipFilters }),
+      sort,
     ),
-    [leads, statusFilter, methodFilter, serviceFilter, zipFilter],
+    [leads, scope, statusFilter, methodFilter, timeFilter, serviceFilters, zipFilters, sort],
   );
-  const isFiltered = filteredLeads.length !== leads.length;
+  const scopedTotal = applyScope(leads, scope).length;
+  const isFiltered = filteredLeads.length !== scopedTotal;
 
   const toggle = (key: string) =>
     setSelected((prev) => {
@@ -182,10 +169,6 @@ export function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Le
       return next;
     });
 
-  const statusOptions = [{ value: 'all', label: 'All statuses' }, ...STATUS_FUNNEL_ORDER.map((s) => ({ value: s, label: STATUS_STYLES[s].label }))];
-  const methodOptions = [{ value: 'all', label: 'All methods' }, { value: 'call', label: 'Call' }, { value: 'sms', label: 'SMS' }, { value: 'other', label: 'Chat' }];
-  const serviceOptions = [{ value: 'all', label: 'Any service' }, ...FLOORING_SERVICES.map((s) => ({ value: s, label: s }))];
-  const zipOptions = [{ value: 'all', label: 'All zip codes' }, ...SAMPLE_ZIPS.map((z) => ({ value: z, label: z }))];
   const detailFields = EXPORT_FIELDS.filter((f) => f.group === 'details');
   const qualFields = EXPORT_FIELDS.filter((f) => f.group === 'qualification');
 
@@ -246,15 +229,21 @@ export function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Le
             </div>
           </div>
 
-          {/* filter which leads to include */}
+          {/* filter which leads to include — mirrors the table's Filters
+              popover: lead details, then qualification criteria */}
           <div style={{ borderTop: '1px solid var(--dark-8)', paddingTop: 20 }}>
             <Heading level={5} style={{ margin: '0 0 2px' }}>Filter leads</Heading>
             <Text variant="secondary" style={{ color: 'var(--dark-60)', display: 'block', marginBottom: 14 }}>Optional — export only the leads that match.</Text>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
-              <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
-              <FilterSelect label="Method" value={methodFilter} onChange={setMethodFilter} options={methodOptions} />
-              <FilterSelect label="Primary service" value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} />
-              <FilterSelect label="Zip code" value={zipFilter} onChange={setZipFilter} options={zipOptions} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptionsFor(scope)} onClear={statusFilter !== 'all' ? () => setStatusFilter('all') : undefined} />
+              <FilterSelect label="Method" value={methodFilter} onChange={setMethodFilter} options={METHOD_OPTIONS} onClear={methodFilter !== 'all' ? () => setMethodFilter('all') : undefined} />
+              <FilterSelect label="Last activity" value={timeFilter} onChange={setTimeFilter} options={TIME_OPTIONS} onClear={timeFilter !== 'all' ? () => setTimeFilter('all') : undefined} />
+              <FilterField label="Primary service" onClear={serviceFilters.length > 0 ? () => setServiceFilters([]) : undefined}>
+                <MultiSelect placeholder="Any service" unitPlural="services" options={FLOORING_SERVICES} selected={serviceFilters} onToggle={(v) => setServiceFilters(toggleItem(serviceFilters, v))} aria-label="Filter by primary service" />
+              </FilterField>
+              <FilterField label="Zip code" onClear={zipFilters.length > 0 ? () => setZipFilters([]) : undefined}>
+                <MultiSelect placeholder="All zip codes" unitPlural="zip codes" options={SAMPLE_ZIPS} selected={zipFilters} onToggle={(v) => setZipFilters(toggleItem(zipFilters, v))} aria-label="Filter by zip code" />
+              </FilterField>
             </div>
           </div>
         </div>
@@ -265,7 +254,7 @@ export function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Le
         </Modal.FooterContent>
         <Modal.FooterContent slot="right">
           <Text variant="secondary" style={{ color: 'var(--dark-60)', marginRight: 12 }}>
-            {isFiltered ? `${filteredLeads.length} of ${leads.length} leads` : `${leads.length} leads`}
+            {isFiltered ? `${filteredLeads.length} of ${scopedTotal} leads` : `${scopedTotal} leads`}
           </Text>
           <Modal.FooterButton
             variant="primary"

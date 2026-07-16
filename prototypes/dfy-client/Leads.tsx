@@ -30,6 +30,9 @@ import {
   avatarColor,
   isUnread,
   relativeMinutesAgo,
+  effectiveBookingOutcome,
+  BOOKING_OUTCOME_STYLES,
+  type BookingOutcome,
   type Message,
 } from '../h2/sdr-data';
 import { STRATEGIST } from './HomeColdShared';
@@ -38,6 +41,40 @@ import { ColdState } from './ColdState';
 import { useClientState } from './dev-state';
 import { ReceptionistSettings } from './ReceptionistSettings';
 import { SdrDetail, LeadDetailTitle, LeadDetailNav } from '../h2-port/SdrDetail';
+import {
+  LEADS_GRID,
+  DEFAULT_FILTERS,
+  DEFAULT_SORT,
+  applyFilters,
+  sortLeads,
+  matchesQuery,
+  toggleItem,
+  requestType,
+  METHOD_OPTIONS,
+  TIME_OPTIONS,
+  FilterField,
+  FilterSelect,
+  MultiSelect,
+  LeadsToolbar,
+  LeadsHeaderRow,
+  BookingsToolbar,
+  applyBookingScope,
+  applyBookingFilters,
+  sortBookings,
+  matchesBookingQuery,
+  monthOptionsFor,
+  DEFAULT_BOOKING_SCOPE,
+  DEFAULT_BOOKING_FILTERS,
+  type BookingScope,
+  type BookingFilters,
+  DEFAULT_SCOPE,
+  applyScope,
+  statusOptionsFor,
+  type LeadFilters,
+  type LeadScope,
+  type SortState,
+} from '../h2-port/leads-table-kit';
+import { SAMPLE_ZIPS, FLOORING_SERVICES, qualificationAnswer } from '../h2-port/qualification-answer';
 // Shared lead dataset so the client Leads & Bookings page shows the exact same
 // leads as the AM side (switching between them stays consistent).
 import { LEADS, CONTACTS } from '../h2-port/pages/Sdr';
@@ -57,6 +94,11 @@ export function Leads() {
   const { openModal } = useModals();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [subTab, setSubTab] = useState<'leads' | 'bookings'>('leads');
+  // Table filter + sort state lives here so the Export modal opens seeded
+  // with exactly what the table currently shows.
+  const [scope, setScope] = useState<LeadScope>(DEFAULT_SCOPE);
+  const [filters, setFilters] = useState<LeadFilters>(DEFAULT_FILTERS);
+  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
   // Opening a lead/booking swaps the whole page for a full detail view (same as
   // the AM side), not a modal. `activeList` is the ordered list the row came
   // from, so the detail's prev/next navigation stays in sync with the table.
@@ -126,7 +168,7 @@ export function Leads() {
           <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => setSettingsOpen(true)}>
             Settings
           </Button>
-          <Button variant="secondary" size="sm" frontIcon={Download} onPress={() => openModal(ExportLeadsModal, { leads })}>
+          <Button variant="secondary" size="sm" frontIcon={Download} onPress={() => openModal(ExportLeadsModal, { leads, scope, filters, sort })}>
             Export
           </Button>
         </div>
@@ -134,7 +176,16 @@ export function Leads() {
     >
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
         {subTab === 'leads' && (
-          <LeadsTable leads={leads} onOpen={openLead} />
+          <LeadsTable
+            leads={leads}
+            scope={scope}
+            onScopeChange={setScope}
+            filters={filters}
+            onFiltersChange={setFilters}
+            sort={sort}
+            onSortChange={setSort}
+            onOpen={openLead}
+          />
         )}
         {subTab === 'bookings' && (
           <BookingsList bookings={bookings} onOpen={openLead} />
@@ -191,24 +242,61 @@ function LeadDetailPage({
 }
 
 // ─── Bookings (read-only) ────────────────────────────────────────────
-// The client watches the appointments the AI Receptionist has booked. Resolved
-// leads with a scheduled time, split into upcoming (scheduled_when > 0) and
-// past. Each row opens the same read-only lead detail as the Leads table.
+// Mirrors the AM side's BookingsTab (h2-port/pages/Sdr.tsx): funnel metric
+// cards up top, then Upcoming and Past tables with the columns Prospect ·
+// Call reason · Scheduled · Location · Outcome, and a month filter on Past.
+// The one client-side difference: the outcome is a read-only pill (clients
+// watch results, they don't set them). Each row opens the same full-page
+// lead detail as the Leads table.
+
+// Compact variant of the AM's BOOKINGS_GRID, fitted to the client's 960px
+// content column.
+const BOOKINGS_GRID = '250px 140px 170px minmax(100px, 1fr) 120px';
+
+function BookingMetric({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div style={{ flex: '1 1 0', minWidth: 140, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
+      <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</Text>
+      <div style={{ marginTop: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <Text style={{ fontSize: 24, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>{value}</Text>
+        {sub && <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{sub}</Text>}
+      </div>
+    </div>
+  );
+}
 
 function BookingsList({ bookings, onOpen }: { bookings: Lead[]; onOpen: (leads: Lead[], index: number) => void }) {
-  const upcoming = useMemo(
-    () => bookings.filter((b) => (b.scheduled_when ?? 0) > 0).sort((a, b) => (a.scheduled_when ?? 0) - (b.scheduled_when ?? 0)),
-    [bookings],
+  const [query, setQuery] = useState('');
+  const [scope, setScope] = useState<BookingScope>(DEFAULT_BOOKING_SCOPE);
+  const [filters, setFilters] = useState<BookingFilters>(DEFAULT_BOOKING_FILTERS);
+
+  // Scope, filter, then sort — via the shared kit helpers. `rows` is also the
+  // display order handed to the detail's prev/next navigation.
+  const scoped = useMemo(() => applyBookingScope(bookings, scope), [bookings, scope]);
+  const rows = useMemo(
+    () => sortBookings(applyBookingFilters(scoped, filters).filter((b) => matchesBookingQuery(b, query)), scope),
+    [scoped, filters, query, scope],
   );
-  const past = useMemo(
-    () => bookings.filter((b) => (b.scheduled_when ?? 0) <= 0).sort((a, b) => (b.scheduled_when ?? 0) - (a.scheduled_when ?? 0)),
-    [bookings],
-  );
-  const ordered = [...upcoming, ...past];
-  const sections = [
-    { key: 'upcoming', label: 'Upcoming', items: upcoming },
-    { key: 'past', label: 'Past', items: past },
-  ].filter((s) => s.items.length > 0);
+
+  // Funnel conversion metrics across every booking (unaffected by scope /
+  // filters), from each booking's effective outcome. Pending (scheduled,
+  // future) bookings sit outside every rate denominator.
+  const stats = useMemo(() => {
+    const eff = bookings.map(effectiveBookingOutcome);
+    const n = (set: BookingOutcome[]) => eff.filter((o) => set.includes(o)).length;
+    const showed = n(['completed', 'estimate-sent', 'won', 'job-done', 'lost']);
+    const noShow = n(['no-show']);
+    const quoted = n(['estimate-sent', 'won', 'job-done', 'lost']);
+    const won = n(['won', 'job-done']);
+    const decided = n(['won', 'job-done', 'lost']);
+    const rate = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : '—');
+    return {
+      total: eff.length,
+      show: rate(showed, showed + noShow), showSub: `${showed}/${showed + noShow}`,
+      quote: rate(quoted, showed), quoteSub: `${quoted}/${showed}`,
+      close: rate(won, decided), closeSub: `${won}/${decided}`,
+    };
+  }, [bookings]);
 
   if (bookings.length === 0) {
     return (
@@ -220,30 +308,52 @@ function BookingsList({ bookings, onOpen }: { bookings: Lead[]; onOpen: (leads: 
 
   return (
     <>
-      {sections.map((sec, sectionIndex) => (
-        <div key={sec.key} style={{ marginTop: sectionIndex === 0 ? 0 : 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingLeft: 2 }}>
-            <Heading level={3}>{sec.label}</Heading>
-            <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>{sec.items.length}</Text>
-          </div>
-          <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-            {sec.items.map((b, i) => (
-              <BookingRow
-                key={b.id}
-                lead={b}
-                isLast={i === sec.items.length - 1}
-                onOpen={() => onOpen(ordered, ordered.indexOf(b))}
-              />
-            ))}
-          </div>
+      {/* funnel metrics across every booking */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        <BookingMetric label="Bookings" value={String(stats.total)} />
+        <BookingMetric label="Show rate" value={stats.show} sub={stats.showSub} />
+        <BookingMetric label="Quote rate" value={stats.quote} sub={stats.quoteSub} />
+        <BookingMetric label="Close rate" value={stats.close} sub={stats.closeSub} />
+      </div>
+
+      <BookingsToolbar
+        query={query}
+        onQueryChange={setQuery}
+        scope={scope}
+        onScopeChange={setScope}
+        filters={filters}
+        onFiltersChange={setFilters}
+        monthOptions={monthOptionsFor(bookings)}
+        shownCount={rows.length}
+        totalCount={scoped.length}
+      />
+      <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: BOOKINGS_GRID, borderBottom: '1px solid var(--dark-8)', padding: '8px 28px', gap: 12, fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>
+          <span>Prospect</span>
+          <span>Call reason</span>
+          <span>Scheduled</span>
+          <span>Location</span>
+          <span>Outcome</span>
         </div>
-      ))}
+        {rows.map((lead, i) => (
+          <BookingRow key={lead.id} lead={lead} isLast={i === rows.length - 1} onOpen={() => onOpen(rows, i)} />
+        ))}
+        {rows.length === 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0' }}>
+            <Text variant="secondary" color="var(--dark-60)">No bookings match your filters.</Text>
+            <Button variant="tertiary" size="sm" onPress={() => { setQuery(''); setFilters(DEFAULT_BOOKING_FILTERS); }}>Clear filters</Button>
+          </div>
+        )}
+      </div>
     </>
   );
 }
 
 function BookingRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen: () => void }) {
-  const ss = STATUS_STYLES[lead.status];
+  const unread = isUnread(lead);
+  const outcome = BOOKING_OUTCOME_STYLES[effectiveBookingOutcome(lead)];
+  const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
+  const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
   return (
     <div
       role="button"
@@ -254,47 +364,69 @@ function BookingRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onO
       }}
       style={{
         display: 'grid',
-        gridTemplateColumns: '1fr minmax(200px, auto) 96px',
+        gridTemplateColumns: BOOKINGS_GRID,
+        gap: 12,
+        padding: '12px 28px',
+        borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
         alignItems: 'center',
-        gap: 14,
-        padding: '12px 18px',
-        borderBottom: isLast ? 'none' : '1px solid var(--dark-8)',
         cursor: 'pointer',
-        background: 'var(--light-100)',
+        background: baseBg,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-2)')}
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--light-100)')}
+      onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
+      onMouseLeave={(e) => (e.currentTarget.style.background = baseBg)}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+      {/* Prospect — same unread treatment as the Leads table */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, position: 'relative' }}>
+        {unread && (
+          <span
+            aria-label="Unread"
+            style={{ position: 'absolute', left: -18, top: '50%', transform: 'translateY(-50%)', width: 8, height: 8, borderRadius: '50%', background: 'var(--status-posting)' }}
+          />
+        )}
         <Avatar fallback={initials(lead.prospect.name)} size={32} style={{ background: avatarColor(lead.prospect.name), flexShrink: 0 }} />
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <Text style={{ fontWeight: 500, color: 'var(--dark-90)', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {lead.prospect.name}
           </Text>
           <Text variant="secondary" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {requestType(lead)}
+            {localPhone(lead.prospect.phone)}&nbsp;&nbsp;{lead.prospect.company}
           </Text>
         </div>
       </div>
-      <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
-        {lead.scheduled_at}
-      </Text>
-      <div style={{ justifySelf: 'end' }}>
-        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
+
+      {/* Call reason */}
+      <div style={{ minWidth: 0 }}>
+        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {requestType(lead)}
+        </Text>
+      </div>
+
+      {/* Scheduled */}
+      <div style={{ minWidth: 0 }}>
+        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+          {lead.scheduled_at ?? '—'}
+        </Text>
+      </div>
+
+      {/* Location */}
+      <div style={{ minWidth: 0, overflow: 'hidden' }}>
+        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {lead.location ?? '—'}
+        </Text>
+      </div>
+
+      {/* Outcome — read-only pill; the AM side sets these */}
+      <div style={{ minWidth: 0 }}>
+        <StatusPill tone={outcome.tone} size="sm">{outcome.label}</StatusPill>
       </div>
     </div>
   );
 }
 
-// ─── AI Receptionist–style leads inbox ──────────────────────────────
-// Mirrors the AI Receptionist's leads table (h2/pages/Sdr.tsx): leads grouped
-// by status into collapsible sections, with the columns Prospect · Method ·
-// Call reason · Time and the same row treatment (avatar, unread blue dot,
-// muted "nothing new" rows). Row click opens the existing view-only lead
-// detail modal (link target unchanged).
-
-const LEADS_GRID = '300px 80px minmax(220px, 1fr) 80px';
-const STATUS_FUNNEL_ORDER: Status[] = ['human-handling', 'ai-handling', 'resolved', 'opted-out'];
+// ─── CRM-style leads table ──────────────────────────────────────────
+// The table chrome, filter + sort model, and toolbar all come from the
+// shared leads-table-kit (also used by the AM inbox in h2-port/pages/Sdr.tsx
+// and both Export modals), so the two sides can never drift.
 
 function initials(name: string): string {
   return name.split(/\s+/).map((w) => w.charAt(0).toUpperCase()).slice(0, 2).join('');
@@ -302,29 +434,9 @@ function initials(name: string): string {
 
 const localPhone = (phone: string) => phone.replace(/^\+1\s*/, '');
 
-/** Best-guess "call reason" from the lead's source / need / tags. */
-function requestType(lead: Lead): string {
-  const src = lead.first_touch_source ?? '';
-  if (/cabinet/i.test(src)) return 'Cabinet refinishing';
-  if (/exterior/i.test(src)) return 'Exterior painting';
-  if (/interior/i.test(src)) return 'Interior painting';
-  if (/warranty/i.test(src)) return 'Warranty claim';
-  if (/hoa/i.test(src)) return 'HOA project';
-  if (/commercial|restaurant|healthcare/i.test(src)) return 'Commercial painting';
-  if (/deck|fence/i.test(src)) return 'Deck & fence';
-  if (/color/i.test(src)) return 'Color consultation';
-  const need = lead.scorecard.need ?? '';
-  if (/cabinet/i.test(need)) return 'Cabinet refinishing';
-  if (/exterior/i.test(need)) return 'Exterior painting';
-  if (/interior/i.test(need)) return 'Interior painting';
-  const tag = lead.tags.find(
-    (t) => !/residential|westlake|cedar park|austin|pflugerville|leander|round rock|lakeway|bee cave|dripping|booked|hot lead|cooled/i.test(t),
-  );
-  return tag ?? 'General inquiry';
-}
-
 function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen: () => void }) {
   const unread = isUnread(lead);
+  const ss = STATUS_STYLES[lead.status];
   const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
   const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
   return (
@@ -364,8 +476,8 @@ function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen
           <Text style={{ fontWeight: 500, color: 'var(--dark-90)', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {lead.prospect.name}
           </Text>
-          <Text variant="secondary" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {localPhone(lead.prospect.phone)}&nbsp;&nbsp;{lead.location ?? lead.prospect.company}
+          <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {localPhone(lead.prospect.phone)}
           </Text>
         </div>
       </div>
@@ -385,6 +497,11 @@ function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen
         </Text>
       </div>
 
+      {/* Status */}
+      <div>
+        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
+      </div>
+
       {/* Time */}
       <div style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
         {formatRelative(lead.last_activity_at)}
@@ -393,64 +510,58 @@ function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen
   );
 }
 
-function LeadsTable({ leads, onOpen }: { leads: Lead[]; onOpen: (leads: Lead[], index: number) => void }) {
-  const [collapsed, setCollapsed] = useState<Set<Status>>(() => new Set<Status>(['resolved', 'opted-out']));
-  const sorted = useMemo(
-    () => [...leads].sort((a, b) => relativeMinutesAgo(a.last_activity_at) - relativeMinutesAgo(b.last_activity_at)),
-    [leads],
+function LeadsTable({
+  leads,
+  scope,
+  onScopeChange,
+  filters,
+  onFiltersChange,
+  sort,
+  onSortChange,
+  onOpen,
+}: {
+  leads: Lead[];
+  scope: LeadScope;
+  onScopeChange: (s: LeadScope) => void;
+  filters: LeadFilters;
+  onFiltersChange: (f: LeadFilters) => void;
+  sort: SortState;
+  onSortChange: (s: SortState) => void;
+  onOpen: (leads: Lead[], index: number) => void;
+}) {
+  const [query, setQuery] = useState('');
+
+  // Scope, filter, then sort — via the same kit helpers the export modal
+  // uses. `rows` is also the display order handed to the detail's prev/next.
+  const scoped = useMemo(() => applyScope(leads, scope), [leads, scope]);
+  const rows = useMemo(
+    () => sortLeads(applyFilters(scoped, filters).filter((l) => matchesQuery(l, query)), sort),
+    [scoped, query, filters, sort],
   );
-  const groups = STATUS_FUNNEL_ORDER
-    .map((status) => ({ status, ss: STATUS_STYLES[status], groupLeads: sorted.filter((l) => l.status === status) }))
-    .filter((g) => g.groupLeads.length > 0);
-  // Flat display order, powers the modal's up/down lead navigation.
-  const ordered = groups.flatMap((g) => g.groupLeads);
 
   return (
     <>
-      {groups.map((g, groupIndex) => {
-        const isCollapsed = collapsed.has(g.status);
-        const ChevronIcon = isCollapsed ? ChevronDown : ChevronUp;
-        return (
-          <div key={g.status} style={{ marginTop: groupIndex === 0 ? 0 : 32 }}>
-            <button
-              type="button"
-              aria-expanded={!isCollapsed}
-              onClick={() =>
-                setCollapsed((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(g.status)) next.delete(g.status);
-                  else next.add(g.status);
-                  return next;
-                })
-              }
-              style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isCollapsed ? 0 : 10, paddingLeft: 2, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' }}
-            >
-              <Heading level={3}>{g.ss.label}</Heading>
-              <Text style={{ fontSize: 14, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums' }}>{g.groupLeads.length}</Text>
-              <span style={{ marginLeft: 'auto', display: 'inline-flex' }}>
-                <ChevronIcon size={18} color="var(--dark-60)" />
-              </span>
-            </button>
-            {!isCollapsed && (
-              <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-                {groupIndex === 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: LEADS_GRID, borderBottom: '1px solid var(--dark-8)', padding: '6px 28px', gap: 12, fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>
-                    <span>Prospect</span>
-                    <span>Method</span>
-                    <span>Call reason</span>
-                    <span>Time</span>
-                  </div>
-                )}
-                {g.groupLeads.map((lead, i) => (
-                  <LeadRow key={lead.id} lead={lead} isLast={i === g.groupLeads.length - 1} onOpen={() => onOpen(ordered, ordered.indexOf(lead))} />
-                ))}
-              </div>
-            )}
+      <LeadsToolbar
+        query={query}
+        onQueryChange={setQuery}
+        scope={scope}
+        onScopeChange={onScopeChange}
+        filters={filters}
+        onFiltersChange={onFiltersChange}
+        shownCount={rows.length}
+        totalCount={scoped.length}
+      />
+      <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
+        <LeadsHeaderRow sort={sort} onSortChange={onSortChange} />
+        {rows.map((lead, i) => (
+          <LeadRow key={lead.id} lead={lead} isLast={i === rows.length - 1} onOpen={() => onOpen(rows, i)} />
+        ))}
+        {rows.length === 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0' }}>
+            <Text variant="secondary" color="var(--dark-60)">No leads match your filters.</Text>
+            <Button variant="tertiary" size="sm" onPress={() => { setQuery(''); onFiltersChange(DEFAULT_FILTERS); }}>Clear filters</Button>
           </div>
-        );
-      })}
-      <div style={{ marginTop: 16 }}>
-        <Text variant="secondary" style={{ fontSize: 12 }}>{leads.length} leads · sorted by last activity</Text>
+        )}
       </div>
     </>
   );
@@ -709,33 +820,6 @@ function NextActionStep({ lead }: { lead: Lead }) {
   );
 }
 
-// Sample answers that actually match the qualification-criteria labels. The
-// underlying H2 lead data is painting-themed and has no zips, so we derive a
-// stable, on-label value per lead: a real Austin service-area zip and a
-// flooring service (Grain Design Flooring's actual offerings).
-const SAMPLE_ZIPS = ['78701', '78702', '78703', '78704', '78705', '78610', '78613', '78620', '78641', '78660', '78664', '78681'];
-const FLOORING_SERVICES = ['Hardwood floor', 'Laminate floor', 'Vinyl floor', 'Carpet'];
-function seedIndex(seed: string, mod: number): number {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  return h % mod;
-}
-const leadZip = (lead: Lead) => SAMPLE_ZIPS[seedIndex(lead.id, SAMPLE_ZIPS.length)];
-const leadService = (lead: Lead) => FLOORING_SERVICES[seedIndex(`${lead.id}·svc`, FLOORING_SERVICES.length)];
-
-/** This lead's answer to a configured qualification question, shared by the
- *  lead detail rail and the CSV export columns/filters. */
-function qualificationAnswer(lead: Lead, id: string): string | undefined {
-  switch (id) {
-    case 'q-name': return lead.prospect.name;
-    case 'q-phone': return localPhone(lead.prospect.phone);
-    case 'q-zip': return leadZip(lead);
-    case 'q-budget': return lead.scorecard.budget;
-    case 'q-service': return leadService(lead);
-    default: return undefined;
-  }
-}
-
 function InfoRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
@@ -954,38 +1038,31 @@ function CsvPreview({ fields, leads, anchor }: { fields: ExportField[]; leads: L
   );
 }
 
-function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
-  return (
-    <div>
-      <Text variant="metadata" color="var(--dark-60)" style={{ display: 'block', marginBottom: 6 }}>{label}</Text>
-      <Select value={value} onChange={onChange} options={options} size="md" fullWidth aria-label={label} />
-    </div>
-  );
-}
-
-function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] }) {
+function ExportLeadsModal({ leads, scope, filters, sort, close }: StackModalProps & { leads: Lead[]; scope: LeadScope; filters: LeadFilters; sort: SortState }) {
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(EXPORT_FIELDS.filter((f) => f.defaultOn).map((f) => f.key)),
   );
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [methodFilter, setMethodFilter] = useState('all');
-  const [serviceFilter, setServiceFilter] = useState('all');
-  const [zipFilter, setZipFilter] = useState('all');
+  // Filters open seeded with the table's current state — what you see in the
+  // table is what lands in the CSV, in the same sort order.
+  const [statusFilter, setStatusFilter] = useState(filters.status);
+  const [methodFilter, setMethodFilter] = useState(filters.method);
+  const [timeFilter, setTimeFilter] = useState(filters.time);
+  const [serviceFilters, setServiceFilters] = useState<string[]>(filters.services);
+  const [zipFilters, setZipFilters] = useState<string[]>(filters.zips);
   const [previewOpen, setPreviewOpen] = useState(false);
   const helpRef = useRef<HTMLButtonElement>(null);
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const activeFields = EXPORT_FIELDS.filter((f) => selected.has(f.key));
 
   const filteredLeads = useMemo(
-    () => leads.filter((l) =>
-      (statusFilter === 'all' || l.status === statusFilter) &&
-      (methodFilter === 'all' || l.method === methodFilter) &&
-      (serviceFilter === 'all' || leadService(l) === serviceFilter) &&
-      (zipFilter === 'all' || leadZip(l) === zipFilter),
+    () => sortLeads(
+      applyFilters(applyScope(leads, scope), { status: statusFilter, method: methodFilter, time: timeFilter, services: serviceFilters, zips: zipFilters }),
+      sort,
     ),
-    [leads, statusFilter, methodFilter, serviceFilter, zipFilter],
+    [leads, scope, statusFilter, methodFilter, timeFilter, serviceFilters, zipFilters, sort],
   );
-  const isFiltered = filteredLeads.length !== leads.length;
+  const scopedTotal = applyScope(leads, scope).length;
+  const isFiltered = filteredLeads.length !== scopedTotal;
 
   const toggle = (key: string) =>
     setSelected((prev) => {
@@ -995,10 +1072,6 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
       return next;
     });
 
-  const statusOptions = [{ value: 'all', label: 'All statuses' }, ...STATUS_FUNNEL_ORDER.map((s) => ({ value: s, label: STATUS_STYLES[s].label }))];
-  const methodOptions = [{ value: 'all', label: 'All methods' }, { value: 'call', label: 'Call' }, { value: 'sms', label: 'SMS' }, { value: 'other', label: 'Chat' }];
-  const serviceOptions = [{ value: 'all', label: 'Any service' }, ...FLOORING_SERVICES.map((s) => ({ value: s, label: s }))];
-  const zipOptions = [{ value: 'all', label: 'All zip codes' }, ...SAMPLE_ZIPS.map((z) => ({ value: z, label: z }))];
   const detailFields = EXPORT_FIELDS.filter((f) => f.group === 'details');
   const qualFields = EXPORT_FIELDS.filter((f) => f.group === 'qualification');
 
@@ -1059,15 +1132,21 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
             </div>
           </div>
 
-          {/* filter which leads to include */}
+          {/* filter which leads to include — mirrors the table's Filters
+              popover: lead details, then qualification criteria */}
           <div style={{ borderTop: '1px solid var(--dark-8)', paddingTop: 20 }}>
             <Heading level={5} style={{ margin: '0 0 2px' }}>Filter leads</Heading>
             <Text variant="secondary" style={{ color: 'var(--dark-60)', display: 'block', marginBottom: 14 }}>Optional: export only the leads that match.</Text>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
-              <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
-              <FilterSelect label="Method" value={methodFilter} onChange={setMethodFilter} options={methodOptions} />
-              <FilterSelect label="Primary service" value={serviceFilter} onChange={setServiceFilter} options={serviceOptions} />
-              <FilterSelect label="Zip code" value={zipFilter} onChange={setZipFilter} options={zipOptions} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptionsFor(scope)} onClear={statusFilter !== 'all' ? () => setStatusFilter('all') : undefined} />
+              <FilterSelect label="Method" value={methodFilter} onChange={setMethodFilter} options={METHOD_OPTIONS} onClear={methodFilter !== 'all' ? () => setMethodFilter('all') : undefined} />
+              <FilterSelect label="Last activity" value={timeFilter} onChange={setTimeFilter} options={TIME_OPTIONS} onClear={timeFilter !== 'all' ? () => setTimeFilter('all') : undefined} />
+              <FilterField label="Primary service" onClear={serviceFilters.length > 0 ? () => setServiceFilters([]) : undefined}>
+                <MultiSelect placeholder="Any service" unitPlural="services" options={FLOORING_SERVICES} selected={serviceFilters} onToggle={(v) => setServiceFilters(toggleItem(serviceFilters, v))} aria-label="Filter by primary service" />
+              </FilterField>
+              <FilterField label="Zip code" onClear={zipFilters.length > 0 ? () => setZipFilters([]) : undefined}>
+                <MultiSelect placeholder="All zip codes" unitPlural="zip codes" options={SAMPLE_ZIPS} selected={zipFilters} onToggle={(v) => setZipFilters(toggleItem(zipFilters, v))} aria-label="Filter by zip code" />
+              </FilterField>
             </div>
           </div>
 
@@ -1088,7 +1167,7 @@ function ExportLeadsModal({ leads, close }: StackModalProps & { leads: Lead[] })
         </Modal.FooterContent>
         <Modal.FooterContent slot="right">
           <Text variant="secondary" style={{ color: 'var(--dark-60)', marginRight: 12 }}>
-            {isFiltered ? `${filteredLeads.length} of ${leads.length} leads` : `${leads.length} leads`}
+            {isFiltered ? `${filteredLeads.length} of ${scopedTotal} leads` : `${scopedTotal} leads`}
           </Text>
           <Modal.FooterButton
             variant="primary"
