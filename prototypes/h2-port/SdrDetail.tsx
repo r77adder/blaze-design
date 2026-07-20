@@ -103,6 +103,26 @@ export function ChannelGlyph({
   return <Mail size={size} color={base} />;
 }
 
+/** Optional overrides for the detail sidebar. When omitted, the sidebar renders
+ *  the default AM layout (schedule + change-status + disqualify buttons, contact
+ *  timeline). The client portal passes a config to slim it down and swap in its
+ *  own pipeline actions — kept as generic props so this shared component stays
+ *  agnostic to the client's pipeline model. */
+export interface SidebarConfig {
+  /** Hide the AM "Change status" + "Disqualify" buttons. */
+  hideStatusControls?: boolean;
+  /** Hide the contact-timeline section. */
+  hideTimeline?: boolean;
+  /** Override the primary button label (default: Schedule meeting / Reschedule). */
+  primaryLabel?: string;
+  /** Override the primary button handler (default: open the scheduler). */
+  onPrimary?: () => void;
+  /** Extra contact line shown right after the email (e.g. an address). */
+  address?: string;
+  /** Rendered pinned to the bottom of the sidebar (e.g. a Close lead control). */
+  footer?: React.ReactNode;
+}
+
 interface SdrDetailProps {
   lead: Lead;
   onUpdateLead: (lead: Lead) => void;
@@ -110,6 +130,7 @@ interface SdrDetailProps {
   contacts: Contact[];
   onOpenContact: (contactId: string) => void;
   onSwitchToLead?: (id: string) => void;
+  sidebarConfig?: SidebarConfig;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -1273,16 +1294,16 @@ export function LeadDetailNav({ index, total, onPrev, onNext }: { index?: number
 // ─── Sidebar components ───────────────────────────────────────────────
 
 /** Contact detail (phone / email) with a copy button that fades in on hover. */
-function CopyableField({ value, label }: { value: string; label: string }) {
+function CopyableField({ value, label, multiline = false }: { value: string; label: string; multiline?: boolean }) {
   const { showToast } = useToast();
   const [hovered, setHovered] = useState(false);
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}
+      style={{ display: 'flex', alignItems: multiline ? 'flex-start' : 'center', gap: 6, minWidth: 0 }}
     >
-      <span style={{ fontSize: 16, color: 'var(--dark-90)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
+      <span style={{ fontSize: 16, color: 'var(--dark-90)', overflow: multiline ? 'visible' : 'hidden', textOverflow: multiline ? 'clip' : 'ellipsis', whiteSpace: multiline ? 'normal' : 'nowrap', lineHeight: multiline ? 1.4 : undefined }}>{value}</span>
       <span style={{ opacity: hovered ? 1 : 0, transition: 'opacity 120ms ease', flexShrink: 0, display: 'inline-flex' }}>
         <IconButton
           variant="ghost"
@@ -1489,6 +1510,7 @@ interface SidebarProps {
   onScheduleMeeting: () => void;
   onChangeStatus: (status: Status) => void;
   onDisqualify: () => void;
+  config?: SidebarConfig;
 }
 
 function Sidebar({
@@ -1500,10 +1522,14 @@ function Sidebar({
   onScheduleMeeting,
   onChangeStatus,
   onDisqualify,
+  config,
 }: SidebarProps) {
   const [statusOpen, setStatusOpen] = useState(false);
   const hasMultipleLeads = allContactLeads.length > 1;
   const timelineEvents = buildContactTimeline(allContactLeads, lead);
+
+  const primaryLabel = config?.primaryLabel ?? (lead.status === 'resolved' ? 'Reschedule' : 'Schedule meeting');
+  const onPrimary = config?.onPrimary ?? onScheduleMeeting;
 
   return (
     <div
@@ -1544,6 +1570,7 @@ function Sidebar({
           </button>
           <CopyableField value={lead.prospect.phone} label="phone number" />
           <CopyableField value={lead.prospect.email} label="email" />
+          {config?.address && <CopyableField value={config.address} label="address" multiline />}
         </div>
       </div>
 
@@ -1581,34 +1608,38 @@ function Sidebar({
           Single column so labels don't truncate in the narrower sidebar. */}
       <div style={{ padding: '0 20px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
-          <Button variant="secondary" size="md" frontIcon={CalendarOutline} onPress={onScheduleMeeting}>
-            {lead.status === 'resolved' ? 'Reschedule' : 'Schedule meeting'}
+          <Button variant="secondary" size="md" frontIcon={CalendarOutline} onPress={onPrimary}>
+            {primaryLabel}
           </Button>
-          <div style={{ position: 'relative' }}>
-            <Button
-              variant="secondary"
-              size="md"
-              onPress={() => setStatusOpen((v) => !v)}
-            >
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <Refresh01 size={16} />
-                Change status
-                <ChevronDown size={14} />
-              </span>
-            </Button>
-            {statusOpen && (
-              <PopoverMenu onClose={() => setStatusOpen(false)}>
-                {ALL_STATUSES.map((s) => (
-                  <PopoverItem key={s} onSelect={() => { setStatusOpen(false); onChangeStatus(s); }}>
-                    {STATUS_STYLES[s].label}
-                  </PopoverItem>
-                ))}
-              </PopoverMenu>
-            )}
-          </div>
-          <Button variant="secondary" size="md" frontIcon={Trash2} onPress={onDisqualify}>
-            Disqualify
-          </Button>
+          {!config?.hideStatusControls && (
+            <>
+              <div style={{ position: 'relative' }}>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onPress={() => setStatusOpen((v) => !v)}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Refresh01 size={16} />
+                    Change status
+                    <ChevronDown size={14} />
+                  </span>
+                </Button>
+                {statusOpen && (
+                  <PopoverMenu onClose={() => setStatusOpen(false)}>
+                    {ALL_STATUSES.map((s) => (
+                      <PopoverItem key={s} onSelect={() => { setStatusOpen(false); onChangeStatus(s); }}>
+                        {STATUS_STYLES[s].label}
+                      </PopoverItem>
+                    ))}
+                  </PopoverMenu>
+                )}
+              </div>
+              <Button variant="secondary" size="md" frontIcon={Trash2} onPress={onDisqualify}>
+                Disqualify
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -1633,10 +1664,19 @@ function Sidebar({
       </div>
 
       {/* section: contact timeline */}
-      <div style={{ padding: '0 20px' }}>
-        <Heading level={5} style={{ margin: '0 0 12px' }}>Timeline</Heading>
-        <ContactTimeline events={timelineEvents} scrollToLead={scrollToLead} />
-      </div>
+      {!config?.hideTimeline && (
+        <div style={{ padding: '0 20px' }}>
+          <Heading level={5} style={{ margin: '0 0 12px' }}>Timeline</Heading>
+          <ContactTimeline events={timelineEvents} scrollToLead={scrollToLead} />
+        </div>
+      )}
+
+      {/* section: pinned footer (e.g. Close lead) */}
+      {config?.footer && (
+        <div style={{ padding: '0 20px', marginTop: 'auto' }}>
+          {config.footer}
+        </div>
+      )}
     </div>
   );
 }
@@ -1697,7 +1737,7 @@ function PopoverItem({ children, onSelect }: { children: React.ReactNode; onSele
 
 // ─── Main ─────────────────────────────────────────────────────────────
 
-export function SdrDetail({ lead, onUpdateLead, allLeads, contacts: _contacts, onOpenContact, onSwitchToLead }: SdrDetailProps) {
+export function SdrDetail({ lead, onUpdateLead, allLeads, contacts: _contacts, onOpenContact, onSwitchToLead, sidebarConfig }: SdrDetailProps) {
   const { showToast } = useToast();
   const { openModal } = useModals();
   const [paused, setPaused] = useState(false);
@@ -1826,6 +1866,7 @@ export function SdrDetail({ lead, onUpdateLead, allLeads, contacts: _contacts, o
           onScheduleMeeting={handleScheduleMeeting}
           onChangeStatus={handleChangeStatus}
           onDisqualify={handleDisqualify}
+          config={sidebarConfig}
         />
       </div>
     </div>

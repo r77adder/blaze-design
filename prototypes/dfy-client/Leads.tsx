@@ -1,10 +1,8 @@
 import { useMemo, useRef, useState, type ComponentType } from 'react';
 import { createPortal } from 'react-dom';
 import { Heading, Text, Button, IconButton, Modal, useModals, type StackModalProps } from '@/components';
-import { StatusPill, Pill, Avatar, Checkbox, Select, TabChip } from '@/staging';
+import { StatusPill, Avatar, Checkbox, TabChip, useToast } from '@/staging';
 import Voice from '@/icons/20/Voice';
-import MessageText2 from '@/icons/20/MessageText2';
-import MessageChat01 from '@/icons/20/MessageChat01';
 import ChevronDown from '@/icons/20/ChevronDown';
 import ChevronUp from '@/icons/20/ChevronUp';
 import UserProfileGroup from '@/icons/20/UserProfileGroup';
@@ -13,26 +11,17 @@ import Settings from '@/icons/20/Settings';
 import Help from '@/icons/16/Help';
 import Send1 from '@/icons/20/Send1';
 import Check from '@/icons/16/Check';
-import ChevronRight from '@/icons/16/ChevronRight';
 import ArrowLeft from '@/icons/20/ArrowLeft';
 import Copy from '@/icons/20/Copy';
 import { DEFAULT_QUALIFICATION_QUESTIONS } from '../h2/qualification-criteria-data';
 import {
   type Lead,
-  type Status,
   STATUS_STYLES,
-  SOURCE_LABELS,
   METHOD_LABELS,
   MEDIUM_LABELS,
   defaultMedium,
   formatRelative,
   conversationSummary,
-  avatarColor,
-  isUnread,
-  relativeMinutesAgo,
-  effectiveBookingOutcome,
-  BOOKING_OUTCOME_STYLES,
-  type BookingOutcome,
   type Message,
 } from '../h2/sdr-data';
 import { STRATEGIST } from './HomeColdShared';
@@ -40,14 +29,34 @@ import { ClientShell } from './shell';
 import { ColdState } from './ColdState';
 import { useClientState } from './dev-state';
 import { ReceptionistSettings } from './ReceptionistSettings';
-import { SdrDetail, LeadDetailTitle, LeadDetailNav } from '../h2-port/SdrDetail';
+import Close from '@/icons/16/Close';
+import { SdrDetail, LeadDetailNav } from '../h2-port/SdrDetail';
+import { H2Layout } from '../h2-port/H2Layout';
+import { InboxTable } from './InboxTable';
+import { LeadsPipeline } from './LeadsPipeline';
+import { StatusDropdown, Tooltip } from './LeadsShared';
 import {
-  LEADS_GRID,
+  inboxLeads,
+  pipelineLeads,
+  handlerOf,
+  leadStatusOf,
+  HANDLER_STYLES,
+  HANDLER_DESC,
+  HANDLER_OPTIONS,
+  LEAD_STATUS_STYLES,
+  LEAD_STATUS_DESC,
+  LEAD_STATUS_OPTIONS,
+  LEAD_STATUS_CLOSED,
+  type Handler,
+  type LeadStatus,
+  type HandlerOverrides,
+  type LeadStatusOverrides,
+} from './leads-view';
+import {
   DEFAULT_FILTERS,
   DEFAULT_SORT,
   applyFilters,
   sortLeads,
-  matchesQuery,
   toggleItem,
   requestType,
   METHOD_OPTIONS,
@@ -55,18 +64,6 @@ import {
   FilterField,
   FilterSelect,
   MultiSelect,
-  LeadsToolbar,
-  LeadsHeaderRow,
-  BookingsToolbar,
-  applyBookingScope,
-  applyBookingFilters,
-  sortBookings,
-  matchesBookingQuery,
-  monthOptionsFor,
-  DEFAULT_BOOKING_SCOPE,
-  DEFAULT_BOOKING_FILTERS,
-  type BookingScope,
-  type BookingFilters,
   DEFAULT_SCOPE,
   applyScope,
   statusOptionsFor,
@@ -74,7 +71,7 @@ import {
   type LeadScope,
   type SortState,
 } from '../h2-port/leads-table-kit';
-import { SAMPLE_ZIPS, FLOORING_SERVICES, qualificationAnswer } from '../h2-port/qualification-answer';
+import { SAMPLE_ZIPS, FLOORING_SERVICES, qualificationAnswer, leadZip, seedIndex } from '../h2-port/qualification-answer';
 // Shared lead dataset so the client Leads & Bookings page shows the exact same
 // leads as the AM side (switching between them stays consistent).
 import { LEADS, CONTACTS } from '../h2-port/pages/Sdr';
@@ -88,56 +85,75 @@ import { LEADS, CONTACTS } from '../h2-port/pages/Sdr';
  * conversation summary.
  */
 
-export function Leads() {
+/**
+ * The Leads & Bookings workspace: Conversations + Leads. Rendered as the
+ * client portal page (default) OR `embedded` inside another shell — the AM
+ * workspace uses the embedded form so both sides show the exact same surface.
+ */
+export function Leads({ embedded = false }: { embedded?: boolean } = {}) {
   const { state } = useClientState();
   const leads = LEADS;
   const { openModal } = useModals();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [subTab, setSubTab] = useState<'leads' | 'bookings'>('leads');
-  // Table filter + sort state lives here so the Export modal opens seeded
-  // with exactly what the table currently shows.
-  const [scope, setScope] = useState<LeadScope>(DEFAULT_SCOPE);
-  const [filters, setFilters] = useState<LeadFilters>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
-  // Opening a lead/booking swaps the whole page for a full detail view (same as
-  // the AM side), not a modal. `activeList` is the ordered list the row came
-  // from, so the detail's prev/next navigation stays in sync with the table.
+  const [subTab, setSubTab] = useState<'inbox' | 'leads'>('inbox');
+  // Opening a row swaps the whole page for a full detail view (same as the AM
+  // side), not a modal. `activeList` is the ordered list the row came from, so
+  // the detail's prev/next navigation stays in sync with the surface it opened
+  // from.
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [activeList, setActiveList] = useState<Lead[]>([]);
 
-  // Bookings — resolved leads that have a scheduled appointment.
-  const bookings = useMemo(
-    () => leads.filter((l) => l.status === 'resolved' && l.scheduled_at && typeof l.scheduled_when === 'number'),
-    [leads],
-  );
+  // Runtime overrides: the user can switch a conversation's Handler or move a
+  // lead's status, and it holds across the table, board, and detail. Derived
+  // values back-fill anything not overridden.
+  const [handlerOv, setHandlerOv] = useState<HandlerOverrides>({});
+  const [leadStatusOv, setLeadStatusOv] = useState<LeadStatusOverrides>({});
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
+  const setHandler = (id: string, h: Handler) => setHandlerOv((o) => ({ ...o, [id]: h }));
+  const setLeadStatus = (id: string, s: LeadStatus) => setLeadStatusOv((o) => ({ ...o, [id]: s }));
+  // Permanently deleting a record drops it from every surface and closes the
+  // detail. Prototype-local (the shared LEADS fixture is never mutated).
+  const deleteLead = (id: string) => { setDeletedIds((s) => new Set(s).add(id)); setActiveLeadId(null); };
+
+  // Conversations = every inbound contact except opt-outs. Leads = every sales
+  // opportunity (lead status ≠ Non-Lead) across the full dataset, including the
+  // closed pile. Both derive from the same shared `LEADS`, minus anything the
+  // user deleted this session.
+  const inbox = useMemo(() => inboxLeads(leads).filter((l) => !deletedIds.has(l.id)), [leads, deletedIds]);
+  const salesLeads = useMemo(() => pipelineLeads(leads, leadStatusOv).filter((l) => !deletedIds.has(l.id)), [leads, leadStatusOv, deletedIds]);
 
   const openLead = (list: Lead[], index: number) => { setActiveList(list); setActiveLeadId(list[index]?.id ?? null); };
 
-  // Full-page AI Receptionist settings, scoped to the Leads tab, opens from the
-  // topbar button and returns here on back (no route change).
-  if (settingsOpen) {
+  // Full-page AI Receptionist settings (client only), opens from the topbar
+  // button and returns here on back (no route change).
+  if (!embedded && settingsOpen) {
     return <ReceptionistSettings onBack={() => setSettingsOpen(false)} />;
   }
 
-  // Full-page lead / booking detail, opens in place of the table, mirroring the
-  // AM side's SdrDetail page.
+  // Full-page lead / booking detail, opens in place of the table.
   const activeLead = activeLeadId ? leads.find((l) => l.id === activeLeadId) ?? null : null;
   if (activeLead) {
     return (
       <LeadDetailPage
+        key={activeLead.id}
+        embedded={embedded}
         lead={activeLead}
         list={activeList.length ? activeList : leads}
         allLeads={leads}
+        handlerOv={handlerOv}
+        leadStatusOv={leadStatusOv}
+        onSetHandler={setHandler}
+        onSetLeadStatus={setLeadStatus}
+        onDeleteLead={deleteLead}
         onBack={() => setActiveLeadId(null)}
         onNavigate={setActiveLeadId}
       />
     );
   }
 
-  // Cold, pre-go-live: the AI Receptionist isn't capturing leads yet, so the
-  // inbox is empty. Show an explanatory empty state describing what will land
-  // here once the receptionist goes live.
-  if (state !== 'steady') {
+  // Cold, pre-go-live (client only): the AI Receptionist isn't capturing leads
+  // yet, so show an explanatory empty state.
+  if (!embedded && state !== 'steady') {
     return (
       <ClientShell section="leads">
         <ColdState
@@ -154,70 +170,204 @@ export function Leads() {
     );
   }
 
-  return (
-    <ClientShell
-      section="leads"
-      topbarCenter={
-        <div style={{ display: 'flex', gap: 6 }}>
-          <TabChip selected={subTab === 'leads'} onSelect={() => setSubTab('leads')}>Leads</TabChip>
-          <TabChip selected={subTab === 'bookings'} count={bookings.length || undefined} onSelect={() => setSubTab('bookings')}>Bookings</TabChip>
-        </div>
-      }
-      topbarRight={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => setSettingsOpen(true)}>
-            Settings
-          </Button>
-          <Button variant="secondary" size="sm" frontIcon={Download} onPress={() => openModal(ExportLeadsModal, { leads, scope, filters, sort })}>
-            Export
-          </Button>
-        </div>
-      }
-    >
-      <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        {subTab === 'leads' && (
-          <LeadsTable
-            leads={leads}
-            scope={scope}
-            onScopeChange={setScope}
-            filters={filters}
-            onFiltersChange={setFilters}
-            sort={sort}
-            onSortChange={setSort}
+  const tabs = (
+    <div style={{ display: 'flex', gap: 6 }}>
+      <TabChip selected={subTab === 'inbox'} onSelect={() => setSubTab('inbox')}>Conversations</TabChip>
+      <TabChip selected={subTab === 'leads'} count={salesLeads.length || undefined} onSelect={() => setSubTab('leads')}>Leads</TabChip>
+    </div>
+  );
+  const actions = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {!embedded && (
+        <Button variant="tertiary" size="sm" frontIcon={Settings} onPress={() => setSettingsOpen(true)}>
+          Settings
+        </Button>
+      )}
+      <Button variant="secondary" size="sm" frontIcon={Download} onPress={() => openModal(ExportLeadsModal, { leads: subTab === 'leads' ? salesLeads : inbox, scope: DEFAULT_SCOPE, filters: DEFAULT_FILTERS, sort: DEFAULT_SORT })}>
+        Export
+      </Button>
+    </div>
+  );
+  const body = (
+    <>
+      {subTab === 'inbox' && (
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <InboxTable
+            leads={inbox}
             onOpen={openLead}
+            handlerOv={handlerOv}
+            leadStatusOv={leadStatusOv}
+            onSetHandler={setHandler}
+            onSetLeadStatus={setLeadStatus}
           />
-        )}
-        {subTab === 'bookings' && (
-          <BookingsList bookings={bookings} onOpen={openLead} />
-        )}
-      </div>
+        </div>
+      )}
+      {subTab === 'leads' && (
+        // Full-bleed the light page surface: escape the surrounding 24px
+        // padding so the whole kanban page reads as background-light with the
+        // white cards floating on it; content stays centered at 1120.
+        <div style={{ background: 'var(--background-light)', margin: '-24px', padding: '24px', minHeight: '100%', boxSizing: 'border-box' }}>
+          <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+            <LeadsPipeline leads={salesLeads} onOpen={openLead} handlerOv={handlerOv} leadStatusOv={leadStatusOv} onSetHandler={setHandler} onSetLeadStatus={setLeadStatus} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // Embedded (AM workspace): push the tabs + actions into the host shell's
+  // topbar (via the workspace-chrome shim) so there's a single header, then
+  // render the body full-bleed with its own padding.
+  if (embedded) {
+    return (
+      <H2Layout topbarCenter={tabs} topbarRight={actions} fullBleed>
+        <div style={{ minHeight: '100%', padding: 24, boxSizing: 'border-box' }}>{body}</div>
+      </H2Layout>
+    );
+  }
+
+  // Client portal: tabs + actions live in the shell topbar.
+  return (
+    <ClientShell section="leads" topbarCenter={tabs} topbarRight={actions}>
+      {body}
     </ClientShell>
   );
 }
 
 // ─── Full-page lead / booking detail ─────────────────────────────────
-// Renders the same SdrDetail page the AM side uses, wrapped in the client
-// shell with a back button + prev/next navigation.
+// Reuses the shared SdrDetail conversation pane, but drives the client's own
+// header status control + a slimmed sidebar (no timeline, single pipeline
+// action, Close lead pinned to the bottom) via SdrDetail's sidebarConfig.
+
+/** A fuller address for the sidebar — a deterministic street on top of the
+ *  lead's known neighborhood + zip. Returns undefined when we don't know where
+ *  the lead is. */
+const STREETS = ['Oak St', 'Maple Ave', 'Cedar Ln', 'Elm Dr', 'Pecan Way', 'Bluebonnet Rd', 'Live Oak Blvd', 'Shoal Creek Dr'];
+function fullAddress(lead: Lead): string | undefined {
+  const city = leadLocation(lead);
+  if (!city) return undefined;
+  const num = 100 + seedIndex(`${lead.id}·st#`, 8900);
+  const street = STREETS[seedIndex(`${lead.id}·st`, STREETS.length)];
+  return `${num} ${street}, ${city}, TX ${leadZip(lead)}`;
+}
+
+/** A single row inside the Close lead menu: a compact label, with its
+ *  explanation shown as a side tooltip on hover. */
+function CloseMenuRow({ desc, onSelect, children }: { desc: string; onSelect: () => void; children: React.ReactNode }) {
+  return (
+    <Tooltip label={desc} side="right" block>
+      <button
+        type="button"
+        onClick={onSelect}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px', border: 'none', background: 'transparent', borderRadius: 6, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--dark-4)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      >
+        {children}
+      </button>
+    </Tooltip>
+  );
+}
+
+/** Bottom-of-sidebar control: a centered tertiary "Close lead" with an X.
+ *  Leads get the two negative close reasons (Disqualified / Lost); every
+ *  record — lead or not — also gets a divider-separated Delete permanently.
+ *  Descriptions live in hover tooltips. */
+function CloseLeadControl({ asLead, onClose, onDelete }: { asLead: boolean; onClose: (s: LeadStatus) => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <div style={{ position: 'relative' }}>
+        <Button variant="tertiary" size="md" frontIcon={Close} onPress={() => setOpen((o) => !o)}>Close lead</Button>
+        {open && (
+          <>
+            <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
+            <div role="menu" style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', minWidth: 190, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.12)', padding: 6, zIndex: 20, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {asLead && LEAD_STATUS_CLOSED.map((s) => {
+                const ss = LEAD_STATUS_STYLES[s];
+                return (
+                  <CloseMenuRow key={s} desc={LEAD_STATUS_DESC[s]} onSelect={() => { setOpen(false); onClose(s); }}>
+                    <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
+                  </CloseMenuRow>
+                );
+              })}
+              {asLead && <div style={{ height: 1, background: 'var(--dark-8)', margin: '4px 6px' }} />}
+              <CloseMenuRow desc="Permanently delete this record. This can't be undone." onSelect={() => { setOpen(false); onDelete(); }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--red-70)', fontSize: 14 }}>
+                  <Close size={14} color="var(--red-70)" />
+                  Delete permanently
+                </span>
+              </CloseMenuRow>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function LeadDetailPage({
+  embedded = false,
   lead,
   list,
   allLeads,
+  handlerOv,
+  leadStatusOv,
+  onSetHandler,
+  onSetLeadStatus,
+  onDeleteLead,
   onBack,
   onNavigate,
 }: {
+  embedded?: boolean;
   lead: Lead;
   list: Lead[];
   allLeads: Lead[];
+  handlerOv: HandlerOverrides;
+  leadStatusOv: LeadStatusOverrides;
+  onSetHandler: (id: string, h: Handler) => void;
+  onSetLeadStatus: (id: string, s: LeadStatus) => void;
+  onDeleteLead: (id: string) => void;
   onBack: () => void;
   onNavigate: (id: string) => void;
 }) {
+  const { showToast } = useToast();
   const index = list.findIndex((l) => l.id === lead.id);
   const prev = index > 0 ? list[index - 1] : null;
   const next = index >= 0 && index < list.length - 1 ? list[index + 1] : null;
 
-  // Same header treatment as the AM side (shared components).
-  const title = <LeadDetailTitle name={lead.prospect.name} status={lead.status} onBack={onBack} />;
+  const leadStatus = leadStatusOf(lead, leadStatusOv);
+  const handler = handlerOf(lead, handlerOv);
+  const asLead = leadStatus !== 'non-lead';
+
+  // Name + the two editable axes (Lead status, then Handler) sit together in
+  // the header so the user can move either without leaving the conversation.
+  const title = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <IconButton variant="ghost" size="sm" icon={ArrowLeft} aria-label="Back" onPress={onBack} />
+      {/* name + the two editable axes, spaced a little more generously */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{lead.prospect.name}</Text>
+        <StatusDropdown
+          value={leadStatus}
+          options={LEAD_STATUS_OPTIONS}
+          styles={LEAD_STATUS_STYLES}
+          descs={LEAD_STATUS_DESC}
+          onChange={(s) => { onSetLeadStatus(lead.id, s); showToast({ message: `Lead status → ${LEAD_STATUS_STYLES[s].label}` }); }}
+          ariaLabel="Change lead status"
+        />
+        <StatusDropdown
+          value={handler}
+          options={HANDLER_OPTIONS}
+          styles={HANDLER_STYLES}
+          descs={HANDLER_DESC}
+          onChange={(h) => { onSetHandler(lead.id, h); showToast({ message: `Handler → ${HANDLER_STYLES[h].label}` }); }}
+          ariaLabel="Change handler"
+        />
+      </div>
+    </div>
+  );
+
   const nav = (
     <LeadDetailNav
       index={index >= 0 ? index + 1 : undefined}
@@ -227,343 +377,51 @@ function LeadDetailPage({
     />
   );
 
-  return (
-    <ClientShell section="leads" title={title} topbarCenter={nav} fullBleed>
-      <SdrDetail
-        lead={lead}
-        allLeads={allLeads}
-        contacts={CONTACTS}
-        onUpdateLead={() => {}}
-        onOpenContact={() => {}}
-        onSwitchToLead={onNavigate}
+  const sidebarConfig = {
+    hideStatusControls: true,
+    hideTimeline: true,
+    address: fullAddress(lead),
+    primaryLabel: leadStatus === 'booked' ? 'Reschedule' : 'Schedule meeting',
+    footer: (
+      <CloseLeadControl
+        asLead={asLead}
+        onClose={(s) => { onSetLeadStatus(lead.id, s); showToast({ message: `Lead closed · ${LEAD_STATUS_STYLES[s].label}` }); }}
+        onDelete={() => { onDeleteLead(lead.id); showToast({ message: 'Record permanently deleted' }); }}
       />
-    </ClientShell>
-  );
-}
+    ),
+  };
 
-// ─── Bookings (read-only) ────────────────────────────────────────────
-// Mirrors the AM side's BookingsTab (h2-port/pages/Sdr.tsx): funnel metric
-// cards up top, then Upcoming and Past tables with the columns Prospect ·
-// Call reason · Scheduled · Location · Outcome, and a month filter on Past.
-// The one client-side difference: the outcome is a read-only pill (clients
-// watch results, they don't set them). Each row opens the same full-page
-// lead detail as the Leads table.
-
-// Compact variant of the AM's BOOKINGS_GRID, fitted to the client's 960px
-// content column.
-const BOOKINGS_GRID = '250px 140px 170px minmax(100px, 1fr) 120px';
-
-function BookingMetric({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div style={{ flex: '1 1 0', minWidth: 140, background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, padding: '14px 16px' }}>
-      <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-60)' }}>{label}</Text>
-      <div style={{ marginTop: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <Text style={{ fontSize: 24, fontWeight: 500, color: 'var(--dark-90)', fontVariantNumeric: 'tabular-nums' }}>{value}</Text>
-        {sub && <Text variant="secondary" style={{ fontSize: 12, color: 'var(--dark-40)', fontVariantNumeric: 'tabular-nums' }}>{sub}</Text>}
-      </div>
-    </div>
-  );
-}
-
-function BookingsList({ bookings, onOpen }: { bookings: Lead[]; onOpen: (leads: Lead[], index: number) => void }) {
-  const [query, setQuery] = useState('');
-  const [scope, setScope] = useState<BookingScope>(DEFAULT_BOOKING_SCOPE);
-  const [filters, setFilters] = useState<BookingFilters>(DEFAULT_BOOKING_FILTERS);
-
-  // Scope, filter, then sort — via the shared kit helpers. `rows` is also the
-  // display order handed to the detail's prev/next navigation.
-  const scoped = useMemo(() => applyBookingScope(bookings, scope), [bookings, scope]);
-  const rows = useMemo(
-    () => sortBookings(applyBookingFilters(scoped, filters).filter((b) => matchesBookingQuery(b, query)), scope),
-    [scoped, filters, query, scope],
+  const detail = (
+    <SdrDetail
+      lead={lead}
+      allLeads={allLeads}
+      contacts={CONTACTS}
+      // Typing a reply or approving the AI's draft hands the conversation to
+      // a human — flip the handler automatically.
+      onUpdateLead={(updated) => {
+        const added = updated.transcript.slice(lead.transcript.length);
+        if (added.some((m) => m.role === 'owner' || m.role === 'ai')) onSetHandler(lead.id, 'human-handling');
+      }}
+      onOpenContact={() => {}}
+      onSwitchToLead={onNavigate}
+      sidebarConfig={sidebarConfig}
+    />
   );
 
-  // Funnel conversion metrics across every booking (unaffected by scope /
-  // filters), from each booking's effective outcome. Pending (scheduled,
-  // future) bookings sit outside every rate denominator.
-  const stats = useMemo(() => {
-    const eff = bookings.map(effectiveBookingOutcome);
-    const n = (set: BookingOutcome[]) => eff.filter((o) => set.includes(o)).length;
-    const showed = n(['completed', 'estimate-sent', 'won', 'job-done', 'lost']);
-    const noShow = n(['no-show']);
-    const quoted = n(['estimate-sent', 'won', 'job-done', 'lost']);
-    const won = n(['won', 'job-done']);
-    const decided = n(['won', 'job-done', 'lost']);
-    const rate = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : '—');
-    return {
-      total: eff.length,
-      show: rate(showed, showed + noShow), showSub: `${showed}/${showed + noShow}`,
-      quote: rate(quoted, showed), quoteSub: `${quoted}/${showed}`,
-      close: rate(won, decided), closeSub: `${won}/${decided}`,
-    };
-  }, [bookings]);
-
-  if (bookings.length === 0) {
+  // Embedded: swap the host topbar's section name for the lead header (title +
+  // pager) via the workspace-chrome shim, so the detail owns a single header.
+  if (embedded) {
     return (
-      <div style={{ textAlign: 'center', padding: '64px 0' }}>
-        <Text variant="secondary" color="var(--dark-60)">No bookings yet. Appointments the AI Receptionist books will appear here.</Text>
-      </div>
+      <H2Layout titleOverride={title} topbarCenter={nav} fullBleed>
+        <div style={{ height: '100%', minHeight: 0 }}>{detail}</div>
+      </H2Layout>
     );
   }
 
   return (
-    <>
-      {/* funnel metrics across every booking */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-        <BookingMetric label="Bookings" value={String(stats.total)} />
-        <BookingMetric label="Show rate" value={stats.show} sub={stats.showSub} />
-        <BookingMetric label="Quote rate" value={stats.quote} sub={stats.quoteSub} />
-        <BookingMetric label="Close rate" value={stats.close} sub={stats.closeSub} />
-      </div>
-
-      <BookingsToolbar
-        query={query}
-        onQueryChange={setQuery}
-        scope={scope}
-        onScopeChange={setScope}
-        filters={filters}
-        onFiltersChange={setFilters}
-        monthOptions={monthOptionsFor(bookings)}
-        shownCount={rows.length}
-        totalCount={scoped.length}
-      />
-      <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: BOOKINGS_GRID, borderBottom: '1px solid var(--dark-8)', padding: '8px 28px', gap: 12, fontSize: 12, color: 'var(--dark-60)', fontWeight: 400 }}>
-          <span>Prospect</span>
-          <span>Call reason</span>
-          <span>Scheduled</span>
-          <span>Location</span>
-          <span>Outcome</span>
-        </div>
-        {rows.map((lead, i) => (
-          <BookingRow key={lead.id} lead={lead} isLast={i === rows.length - 1} onOpen={() => onOpen(rows, i)} />
-        ))}
-        {rows.length === 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0' }}>
-            <Text variant="secondary" color="var(--dark-60)">No bookings match your filters.</Text>
-            <Button variant="tertiary" size="sm" onPress={() => { setQuery(''); setFilters(DEFAULT_BOOKING_FILTERS); }}>Clear filters</Button>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-function BookingRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen: () => void }) {
-  const unread = isUnread(lead);
-  const outcome = BOOKING_OUTCOME_STYLES[effectiveBookingOutcome(lead)];
-  const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
-  const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); }
-      }}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: BOOKINGS_GRID,
-        gap: 12,
-        padding: '12px 28px',
-        borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
-        alignItems: 'center',
-        cursor: 'pointer',
-        background: baseBg,
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
-      onMouseLeave={(e) => (e.currentTarget.style.background = baseBg)}
-    >
-      {/* Prospect — same unread treatment as the Leads table */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, position: 'relative' }}>
-        {unread && (
-          <span
-            aria-label="Unread"
-            style={{ position: 'absolute', left: -18, top: '50%', transform: 'translateY(-50%)', width: 8, height: 8, borderRadius: '50%', background: 'var(--status-posting)' }}
-          />
-        )}
-        <Avatar fallback={initials(lead.prospect.name)} size={32} style={{ background: avatarColor(lead.prospect.name), flexShrink: 0 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <Text style={{ fontWeight: 500, color: 'var(--dark-90)', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {lead.prospect.name}
-          </Text>
-          <Text variant="secondary" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {localPhone(lead.prospect.phone)}&nbsp;&nbsp;{lead.prospect.company}
-          </Text>
-        </div>
-      </div>
-
-      {/* Call reason */}
-      <div style={{ minWidth: 0 }}>
-        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {requestType(lead)}
-        </Text>
-      </div>
-
-      {/* Scheduled */}
-      <div style={{ minWidth: 0 }}>
-        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-          {lead.scheduled_at ?? '—'}
-        </Text>
-      </div>
-
-      {/* Location */}
-      <div style={{ minWidth: 0, overflow: 'hidden' }}>
-        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {lead.location ?? '—'}
-        </Text>
-      </div>
-
-      {/* Outcome — read-only pill; the AM side sets these */}
-      <div style={{ minWidth: 0 }}>
-        <StatusPill tone={outcome.tone} size="sm">{outcome.label}</StatusPill>
-      </div>
-    </div>
-  );
-}
-
-// ─── CRM-style leads table ──────────────────────────────────────────
-// The table chrome, filter + sort model, and toolbar all come from the
-// shared leads-table-kit (also used by the AM inbox in h2-port/pages/Sdr.tsx
-// and both Export modals), so the two sides can never drift.
-
-function initials(name: string): string {
-  return name.split(/\s+/).map((w) => w.charAt(0).toUpperCase()).slice(0, 2).join('');
-}
-
-const localPhone = (phone: string) => phone.replace(/^\+1\s*/, '');
-
-function LeadRow({ lead, isLast, onOpen }: { lead: Lead; isLast: boolean; onOpen: () => void }) {
-  const unread = isUnread(lead);
-  const ss = STATUS_STYLES[lead.status];
-  const baseBg = unread ? 'var(--light-100)' : 'var(--dark-2)';
-  const hoverBg = unread ? 'var(--dark-2)' : 'var(--dark-4)';
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: LEADS_GRID,
-        gap: 12,
-        padding: '12px 28px',
-        borderBottom: isLast ? 'none' : '1px solid var(--dark-4)',
-        alignItems: 'center',
-        cursor: 'pointer',
-        background: baseBg,
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
-      onMouseLeave={(e) => (e.currentTarget.style.background = baseBg)}
-    >
-      {/* Prospect: blue dot signals a prospect message waiting on a reply */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, position: 'relative' }}>
-        {unread && (
-          <span
-            aria-label="Unread"
-            style={{ position: 'absolute', left: -18, top: '50%', transform: 'translateY(-50%)', width: 8, height: 8, borderRadius: '50%', background: 'var(--status-posting)' }}
-          />
-        )}
-        <Avatar fallback={initials(lead.prospect.name)} size={32} style={{ background: avatarColor(lead.prospect.name), flexShrink: 0 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <Text style={{ fontWeight: 500, color: 'var(--dark-90)', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {lead.prospect.name}
-          </Text>
-          <Text variant="secondary" style={{ fontSize: 14, color: 'var(--dark-60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {localPhone(lead.prospect.phone)}
-          </Text>
-        </div>
-      </div>
-
-      {/* Method */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-        {lead.method === 'call' && <Voice size={14} color="var(--dark-60)" />}
-        {lead.method === 'sms' && <MessageText2 size={14} color="var(--dark-60)" />}
-        {lead.method === 'other' && <MessageChat01 size={14} color="var(--dark-60)" />}
-        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14 }}>{METHOD_LABELS[lead.method]}</Text>
-      </div>
-
-      {/* Call reason */}
-      <div style={{ minWidth: 0 }}>
-        <Text variant="secondary" color="var(--dark-60)" style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {requestType(lead)}
-        </Text>
-      </div>
-
-      {/* Status */}
-      <div>
-        <StatusPill tone={ss.tone} size="sm">{ss.label}</StatusPill>
-      </div>
-
-      {/* Time */}
-      <div style={{ fontSize: 12, color: 'var(--dark-60)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-        {formatRelative(lead.last_activity_at)}
-      </div>
-    </div>
-  );
-}
-
-function LeadsTable({
-  leads,
-  scope,
-  onScopeChange,
-  filters,
-  onFiltersChange,
-  sort,
-  onSortChange,
-  onOpen,
-}: {
-  leads: Lead[];
-  scope: LeadScope;
-  onScopeChange: (s: LeadScope) => void;
-  filters: LeadFilters;
-  onFiltersChange: (f: LeadFilters) => void;
-  sort: SortState;
-  onSortChange: (s: SortState) => void;
-  onOpen: (leads: Lead[], index: number) => void;
-}) {
-  const [query, setQuery] = useState('');
-
-  // Scope, filter, then sort — via the same kit helpers the export modal
-  // uses. `rows` is also the display order handed to the detail's prev/next.
-  const scoped = useMemo(() => applyScope(leads, scope), [leads, scope]);
-  const rows = useMemo(
-    () => sortLeads(applyFilters(scoped, filters).filter((l) => matchesQuery(l, query)), sort),
-    [scoped, query, filters, sort],
-  );
-
-  return (
-    <>
-      <LeadsToolbar
-        query={query}
-        onQueryChange={setQuery}
-        scope={scope}
-        onScopeChange={onScopeChange}
-        filters={filters}
-        onFiltersChange={onFiltersChange}
-        shownCount={rows.length}
-        totalCount={scoped.length}
-      />
-      <div style={{ background: 'var(--light-100)', border: '1px solid var(--dark-8)', borderRadius: 12, overflow: 'hidden' }}>
-        <LeadsHeaderRow sort={sort} onSortChange={onSortChange} />
-        {rows.map((lead, i) => (
-          <LeadRow key={lead.id} lead={lead} isLast={i === rows.length - 1} onOpen={() => onOpen(rows, i)} />
-        ))}
-        {rows.length === 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0' }}>
-            <Text variant="secondary" color="var(--dark-60)">No leads match your filters.</Text>
-            <Button variant="tertiary" size="sm" onPress={() => { setQuery(''); onFiltersChange(DEFAULT_FILTERS); }}>Clear filters</Button>
-          </div>
-        )}
-      </div>
-    </>
+    <ClientShell section="leads" title={title} topbarCenter={nav} fullBleed>
+      {detail}
+    </ClientShell>
   );
 }
 

@@ -413,23 +413,25 @@ export function ScopeToggle({
   value,
   onChange,
   options,
+  size = 'sm',
   'aria-label': ariaLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  size?: 'sm' | 'md';
   'aria-label'?: string;
 }) {
   return (
     <>
-      {/* size sm keeps the 28px segment height; font bumps to 14px only */}
+      {/* font bumps to 14px regardless of segment size */}
       <style>{`
         .leads-scope-toggle [role="tab"] { background: var(--dark-2) !important; color: var(--dark-60) !important; font-size: 14px !important; }
         .leads-scope-toggle [role="tab"] + [role="tab"] { border-left: 1px solid var(--dark-8) !important; }
         .leads-scope-toggle [role="tab"]:hover { color: var(--dark-90) !important; }
         .leads-scope-toggle [role="tab"][aria-selected="true"] { background: var(--light-100) !important; color: var(--dark-90) !important; }
       `}</style>
-      <SegmentedControl size="sm" aria-label={ariaLabel} className="leads-scope-toggle" value={value} onChange={onChange} options={options} />
+      <SegmentedControl size={size} aria-label={ariaLabel} className="leads-scope-toggle" value={value} onChange={onChange} options={options} />
     </>
   );
 }

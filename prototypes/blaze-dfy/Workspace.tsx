@@ -22,10 +22,22 @@ import { SeoAeoRoute } from '../h2-port/pages/SeoAeo';
 import { PaidSocialRoute } from '../h2-port/pages/PaidSocial';
 import { PaidSearchRoute } from '../h2-port/pages/PaidSearch';
 import { LandingPagesRoute } from '../h2-port/pages/LandingPages';
-import { SdrRoute } from '../h2-port/pages/Sdr';
 import { ReputationRoute } from '../h2-port/pages/Reputation';
 import { CompetitorIntelPage } from '../h2-port/competitor-tracking/pages/CompetitorIntel';
 import { ContentSettingsRoute } from '../h2-port/pages/ContentSettings';
+import { Leads } from '../dfy-client/Leads';
+import { ClientStateProvider } from '../dfy-client/dev-state';
+
+/** AM Leads & Bookings — the exact same Conversations + Leads workspace the
+ *  client sees, rendered `embedded` inside the AM WorkspaceShell so both sides
+ *  stay identical. */
+function SdrLeads() {
+  return (
+    <ClientStateProvider>
+      <Leads embedded />
+    </ClientStateProvider>
+  );
+}
 
 /** section slug -> ported feature page. Shared across AM/Client for now. */
 const H2_FEATURE_ROUTES: Record<string, ComponentType> = {
@@ -36,7 +48,7 @@ const H2_FEATURE_ROUTES: Record<string, ComponentType> = {
   'paid-search': PaidSearchRoute,
   'competitor-tracking': CompetitorIntelPage,
   'landing-pages': LandingPagesRoute,
-  sdr: SdrRoute,
+  sdr: SdrLeads,
   reputation: ReputationRoute,
   'content-settings': ContentSettingsRoute,
 };
