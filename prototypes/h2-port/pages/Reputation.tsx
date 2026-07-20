@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from 'react';
-import { Button, Heading, Modal, ModalStack, Text, useModals } from '@/components';
+import { Button, Heading, IconButton, Modal, ModalStack, Text, useModals } from '@/components';
 import type { StackModalProps } from '@/components';
-import { Facebook, Google, Instagram, TikTok, Twitter } from '@/icons/20';
+import { Facebook, Google, Instagram, LinkExternal, TikTok, Twitter } from '@/icons/20';
 import { StatusPill, TabChip, useToast } from '@/staging';
 import type { StatusPillTone } from '@/staging';
 import { H2Layout } from '../H2Layout';
@@ -183,71 +183,71 @@ const ATTENTION: AttentionItem[] = [
     severity: 'urgent', source: 'yelp', sourceLabel: 'Yelp',
     customer: 'Devon R. · Round Rock, TX', when: 'Yesterday', stars: 2,
     title: 'Quoted price went up after the job started',
-    body: 'Estimate said $4,200 for the exterior. After two days the lead asked for another $900 for "extra prep." I would have appreciated a heads-up before they started.',
-    fullText: 'Estimate said $4,200 for the exterior. After two days the lead asked for another $900 for "extra prep" because of wood rot they hadn\'t flagged in the walk-through. I get that rot happens, but the quote should have a contingency line for that, or someone should call me before the spray gun comes out. Crew was friendly and the finish looks good, but the surprise bill really soured the experience.',
+    body: 'Estimate said $4,200 to refinish the hardwood. After two days the lead asked for another $900 for "extra prep." I would have appreciated a heads-up before they started.',
+    fullText: 'Estimate said $4,200 to refinish the hardwood. After two days the lead asked for another $900 for "extra prep" because of subfloor rot and a leveling issue they hadn\'t flagged in the walk-through. I get that old floors hide surprises, but the quote should have a contingency line for that, or someone should call me before the boards come up. Crew was friendly and the finish looks good, but the surprise bill really soured the experience.',
     containment: { label: 'Escalating', tone: 'escalating' },
     velocity: '↗ 2.4× normal · 24h',
     aiDraft: {
       tone: 'Apologetic', confidence: 71, needsReview: true,
-      text: '"Hi Devon — really sorry about the surprise on the wood rot. You\'re right that we should flag it before the crew starts spraying. John (the owner) is going to call you today to walk through the invoice and make this right. Thanks for letting us know how it landed."',
+      text: '"Hi Devon, really sorry about the surprise on the subfloor rot. You\'re right that we should flag it before the crew pulls up boards. John (the owner) is going to call you today to walk through the invoice and make this right. Thanks for letting us know how it landed."',
     },
     history: [
       { who: 'Office · Marci', when: 'Yesterday, 4:12 PM', text: 'Refunded $200 of the change order. Asked Devon to call John directly.' },
-      { who: 'Estimator auto-reply', when: 'Yesterday, 11:08 AM', text: 'Thanks for reaching out — your project manager will get back to you within 24 hours.' },
+      { who: 'Estimator auto-reply', when: 'Yesterday, 11:08 AM', text: 'Thanks for reaching out, your project manager will get back to you within 24 hours.' },
     ],
   },
   {
     id: 'austin-painters-reddit',
     severity: 'watch', source: 'reddit', sourceLabel: 'r/Austin',
     customer: 'u/cedar_park_carla', when: '5h ago',
-    title: 'Any honest reviews of CertaPro Austin?',
-    body: "Getting bids from a few painters for a 2,400 sq ft exterior repaint. CertaPro came in middle of the pack on price — anyone here used them recently?",
-    fullText: "Getting bids from a few painters for a 2,400 sq ft exterior repaint in Cedar Park. CertaPro came in middle of the pack on price — anyone here used them recently? Five Star and Paper Moon are the other two I\'m considering. Looking for honest takes on prep work and how they handle change orders.",
+    title: 'Any honest reviews of Grain Design Flooring Austin?',
+    body: "Getting bids from a few flooring pros for a 2,400 sq ft hardwood refinish. Grain Design came in middle of the pack on price. Anyone here used them recently?",
+    fullText: "Getting bids from a few flooring pros for a 2,400 sq ft hardwood refinish in Cedar Park. Grain Design came in middle of the pack on price. Anyone here used them recently? Two other local outfits are the ones I\'m also considering. Looking for honest takes on prep work and how they handle change orders.",
     containment: { label: 'Active discussion', tone: 'emerging' },
     velocity: '↗ 3× normal · 6h',
     aiDraft: {
       tone: 'Helpful, direct', confidence: 78,
-      text: '"Hey Carla — John here, owner of CertaPro Painters of Austin. Happy to share a few recent Cedar Park references and walk you through how we handle prep + change orders. Drop me an email at john@certapro-austin.com or call (512) 323-9502 and I\'ll set it up."',
+      text: '"Hey Carla, John here, owner of Grain Design Flooring in Austin. Happy to share a few recent Cedar Park references and walk you through how we handle prep and change orders. Drop me an email at john@graindesignflooring.com or call (512) 323-9502 and I\'ll set it up."',
     },
     history: [
-      { who: 'Community team · Matthew', when: 'March 14', text: 'Joined an r/Austin thread about exterior painting prices. Answered 6 questions, got 32 upvotes.' },
+      { who: 'Community team · Matthew', when: 'March 14', text: 'Joined an r/Austin thread about hardwood refinishing prices. Answered 6 questions, got 32 upvotes.' },
     ],
   },
   {
     id: 'marissa-google',
     severity: 'urgent', source: 'google', sourceLabel: 'Google Reviews',
     customer: 'Marissa K. · Austin, TX', when: '2h ago', stars: 1,
-    title: 'Paint chipping after 6 months, no response',
-    body: "Interior was painted in November. Three doorways are chipping already and I\'ve called twice with no callback. Disappointed — the crew itself was great.",
-    fullText: "Interior was painted in November. Three doorways are chipping already and I\'ve called twice with no callback. Disappointed — the crew itself was great when they were here and I really liked working with the lead on color choices. But a six-month-old paint job shouldn\'t be peeling and I shouldn\'t have to chase someone to come look at it.",
+    title: 'Finish peeling after 6 months, no response',
+    body: "Floors were refinished in November. Three high-traffic spots are already peeling and I\'ve called twice with no callback. Disappointed, the crew itself was great.",
+    fullText: "Floors were refinished in November. Three high-traffic spots by the doorways are already peeling and I\'ve called twice with no callback. Disappointed, the crew itself was great when they were here and I really liked working with the lead on the stain choice. But a six-month-old finish shouldn\'t be wearing through and I shouldn\'t have to chase someone to come look at it.",
     containment: { label: 'Isolated complaint', tone: 'isolated' },
     history: [
-      { who: 'Office inbox', when: '4 days ago', text: 'Initial voicemail received — no callback logged.' },
+      { who: 'Office inbox', when: '4 days ago', text: 'Initial voicemail received, no callback logged.' },
     ],
   },
   {
     id: 'hannah-instagram',
     severity: 'watch', source: 'instagram', sourceLabel: 'Instagram comment',
     customer: '@hannahgoesgreen', when: '1d ago',
-    title: 'Do you use low-VOC paint? Nothing on the site.',
-    body: "Hi! Trying to figure out if you use low-VOC paint for interior jobs — couldn\'t find anything in the FAQ.",
-    fullText: "Hi! Trying to figure out if you use low-VOC paint for interior jobs — couldn\'t find anything in the FAQ or services page. We\'re expecting in August and I want to repaint the nursery but I\'m being careful about fumes. Would love a clear answer because we\'d love to book you for the interior.",
+    title: 'Do you use a low-VOC finish? Nothing on the site.',
+    body: "Hi! Trying to figure out if you use a low-VOC, water-based finish for refinishing jobs. Couldn\'t find anything in the FAQ.",
+    fullText: "Hi! Trying to figure out if you use a low-VOC, water-based finish for refinishing jobs. Couldn\'t find anything in the FAQ or services page. We\'re expecting in August and I want to refinish the nursery floor but I\'m being careful about fumes. Would love a clear answer because we\'d love to book you for the refinish.",
     containment: { label: 'Emerging pattern', tone: 'pattern' },
     aiDraft: {
       tone: 'Warm, factual', confidence: 94,
-      text: '"Hi Hannah! Great question — we use low-VOC and zero-VOC interior paints from Sherwin-Williams and Benjamin Moore on request, at no extra charge. We\'ll mention it on the in-home estimate. Call (512) 323-9502 whenever you\'re ready and we\'ll get you on the calendar before August!"',
+      text: '"Hi Hannah! Great question, we use low-VOC, water-based finishes like Bona Traffic HD on request, at no extra charge. They cure fast and are safe around little ones and pets. We\'ll mention it on the in-home estimate. Call (512) 323-9502 whenever you\'re ready and we\'ll get you on the calendar before August!"',
     },
   },
   {
     id: 'priya-google',
     severity: 'watch', source: 'google', sourceLabel: 'Google Reviews',
     customer: 'Priya S. · Westlake, TX', when: '3h ago', stars: 4,
-    title: 'Great cabinet refinish — wish the trim coat was thicker',
-    body: 'Cabinets look factory-fresh and the crew was respectful of the kitchen. Only nit — trim paint feels a touch thin near the handles.',
-    fullText: 'Cabinets look factory-fresh and the crew was respectful of the kitchen — Matthew came by twice to check the prep work which I really appreciated. Only nit — trim paint feels a touch thin near the cabinet handles, and a couple of spots are already showing a fingernail mark. Would 100% hire them again, just maybe ask for an extra coat on high-touch areas next time.',
+    title: 'Great floor refinish, wish the finish coat was thicker',
+    body: 'Floors look factory-fresh and the crew was respectful of the home. Only nit, the finish feels a touch thin near the threshold.',
+    fullText: 'Floors look factory-fresh and the crew was respectful of the home. Matthew came by twice to check the prep work which I really appreciated. Only nit, the finish feels a touch thin near the kitchen threshold, and a couple of spots are already showing a scuff. Would 100% hire them again, just maybe ask for an extra coat on high-traffic areas next time.',
     aiDraft: {
       tone: 'Warm, helpful', confidence: 92,
-      text: '"Hi Priya — thanks so much for the kind words about Matthew and the crew! You\'re right that high-touch areas like handles benefit from an extra coat. We\'ll come back out and touch those up at no charge — I\'ll have the office reach out to schedule. — John"',
+      text: '"Hi Priya, thanks so much for the kind words about Matthew and the crew! You\'re right that high-traffic areas like thresholds benefit from an extra coat. We\'ll come back out and touch those up at no charge, I\'ll have the office reach out to schedule. John"',
     },
   },
   {
@@ -255,14 +255,14 @@ const ATTENTION: AttentionItem[] = [
     severity: 'watch', source: 'facebook', sourceLabel: 'Facebook',
     customer: 'Theo M.', when: '6h ago',
     title: 'Do you cover Dripping Springs?',
-    body: 'Do you cover Dripping Springs? Looking to repaint a 1,900 sq ft single story.',
-    fullText: 'Do you cover Dripping Springs? Looking to repaint a 1,900 sq ft single story this summer — exterior plus a couple of interior rooms. Saw a friend\'s house in Westlake that you painted and it looked great.',
+    body: 'Do you cover Dripping Springs? Looking to refinish about 1,900 sq ft of hardwood.',
+    fullText: 'Do you cover Dripping Springs? Looking to refinish about 1,900 sq ft of hardwood this summer, plus new LVP in a couple of rooms. Saw a friend\'s house in Westlake where you did the floors and it looked great.',
     aiDraft: {
       tone: 'Friendly, concise', confidence: 97,
-      text: '"Hey Theo! Yes — Dripping Springs is in our service area. We can do a free in-home estimate any weekday. Call (512) 323-9502 or fill out the form at certapro.com/austin and we\'ll get you on the calendar."',
+      text: '"Hey Theo! Yes, Dripping Springs is in our service area. We can do a free in-home estimate any weekday. Call (512) 323-9502 or fill out the form at graindesignflooring.com and we\'ll get you on the calendar."',
     },
     history: [
-      { who: 'Theo M.', when: '6 months ago', text: 'Asked about pricing on Instagram — got a standard "request an estimate" reply.' },
+      { who: 'Theo M.', when: '6 months ago', text: 'Asked about pricing on Instagram, got a standard "request an estimate" reply.' },
     ],
   },
 ];
@@ -272,13 +272,13 @@ const AUTO_REPLIED: AttentionItem[] = [
     id: 'sasha-google-auto',
     severity: 'watch', source: 'google', sourceLabel: 'Google Reviews',
     customer: 'Sasha L. · Lakeway, TX', when: '32m ago', stars: 5,
-    title: 'Five stars — painted our exterior in 4 days, on budget',
-    body: 'Crew showed up on time and cleaned up perfectly. Painted our exterior in 4 days, on budget. John explained every step.',
-    fullText: 'Crew showed up on time and cleaned up perfectly. Painted our exterior in 4 days, on budget. John explained every step — from prep to color choice to the timeline. Color consultation was the difference. Worth every penny. Already telling my neighbors.',
+    title: 'Five stars, refinished our floors in 4 days, on budget',
+    body: 'Crew showed up on time and kept the dust down. Refinished our floors in 4 days, on budget. John explained every step.',
+    fullText: 'Crew showed up on time and the dust containment was better than I expected. Refinished our whole downstairs in 4 days, on budget. John explained every step, from sanding to stain color to the timeline. The stain sample session was the difference. Worth every penny. Already telling my neighbors.',
     autoReplied: true,
     aiDraft: {
       tone: 'Grateful, warm', confidence: 96,
-      text: '"Sasha, thank you so much — really glad the color consult landed for you and that the crew left everything clean. Tell your neighbors and we\'ll give them $200 off their estimate. — John"',
+      text: '"Sasha, thank you so much, really glad the stain samples landed for you and that the crew kept things clean. Tell your neighbors and we\'ll give them $200 off their estimate. John"',
     },
   },
   {
@@ -286,25 +286,25 @@ const AUTO_REPLIED: AttentionItem[] = [
     severity: 'watch', source: 'instagram', sourceLabel: 'Instagram comment',
     customer: '@jamalruns', when: '1h ago',
     title: 'How far out are you booking?',
-    body: 'How far out are you booking right now? Looking to schedule an exterior for July.',
-    fullText: 'How far out are you booking right now? Looking to schedule an exterior for July — 2,100 sq ft single story in Pflugerville. No rush, just trying to plan around a trip.',
+    body: 'How far out are you booking right now? Looking to schedule a refinish for July.',
+    fullText: 'How far out are you booking right now? Looking to schedule a hardwood refinish for July, about 1,400 sq ft in Pflugerville. No rush, just trying to plan around a trip.',
     autoReplied: true,
     aiDraft: {
       tone: 'Friendly, factual', confidence: 93,
-      text: '"Hey! We\'re currently booking exterior jobs about 3-4 weeks out, so July is wide open. Call (512) 323-9502 or DM us and we\'ll set up a free estimate. — Matthew"',
+      text: '"Hey! We\'re currently booking refinish jobs about 3-4 weeks out, so July is wide open. Call (512) 323-9502 or DM us and we\'ll set up a free estimate. Matthew"',
     },
   },
   {
     id: 'community-reddit-auto',
     severity: 'watch', source: 'reddit', sourceLabel: 'r/Austin',
     customer: 'u/clean_living_clara', when: '3h ago',
-    title: 'Anyone do cabinet refinishing in Austin?',
-    body: 'Looking to refinish kitchen cabinets instead of replacing — any recs in Austin?',
-    fullText: 'Looking to refinish kitchen cabinets instead of replacing — any recs in Austin? Budget around $4-5k. Cabinets are oak from the 90s, want to go white. Open to brush or spray finish.',
+    title: 'Anyone refinish hardwood in Austin instead of replacing?',
+    body: 'Looking to refinish oak floors instead of replacing, any recs in Austin?',
+    fullText: 'Looking to refinish oak floors instead of ripping them out, any recs in Austin? Budget around $4-5k. Floors are red oak from the 90s, want to go a bit darker. Open to dust-free sanding shops.',
     autoReplied: true,
     aiDraft: {
       tone: 'Helpful, direct', confidence: 91,
-      text: '"Yes! Cabinet refinishing is one of our specialties — spray finish, full prep, typically 5-7 days in your home. Recent Tarrytown kitchen ran around $4,800. Happy to do a free in-home estimate: (512) 323-9502."',
+      text: '"Yes! Refinishing instead of replacing is one of our specialties, dust-free sanding, custom stain, typically 4-6 days in your home. A recent Tarrytown red oak project ran around $4,800. Happy to do a free in-home estimate: (512) 323-9502."',
     },
   },
 ];
@@ -318,8 +318,8 @@ const INSIGHTS: InsightItem[] = [
       { text: '+41%', tone: 'up' },
       { text: 'Yelp 2★' },
     ],
-    title: 'Tighten the estimate + change-order process',
-    body: '41% spike in negative mentions about surprise charges after the crew starts. The fix sits in the estimating walk-through — flag wood rot, stucco repair, and prep-time risks before quoting.',
+    title: 'Tighten the estimate and change-order process',
+    body: '41% spike in negative mentions about surprise charges after the crew starts. The fix sits in the estimating walk-through, flag subfloor leveling, soft boards, and moisture risks before quoting.',
     actionLabel: 'Brief Matthew',
     actionToast: 'Brief sent to Matthew Tims · VP of Residential',
   },
@@ -327,12 +327,12 @@ const INSIGHTS: InsightItem[] = [
     id: 'low-voc-page',
     category: 'product', categoryLabel: 'Service offering', icon: 'product',
     metaPills: [
-      { text: 'Low-VOC paint' },
+      { text: 'Water-based finish' },
       { text: '+60%', tone: 'up' },
       { text: 'IG + r/Austin' },
     ],
-    title: 'Add low-VOC paint as a callout on every interior estimate',
-    body: 'Low-VOC questions are up 60% wk/wk — driven by young families and nursery repaints. We already offer it at no extra charge; making it visible removes a recurring objection.',
+    title: 'Add water-based finish as a callout on every estimate',
+    body: 'Low-VOC finish questions are up 60% wk/wk, driven by young families and pet owners. We already offer it at no extra charge, so making it visible removes a recurring objection.',
     actionLabel: 'Open service brief',
     actionToast: 'Opening service brief',
   },
@@ -340,12 +340,12 @@ const INSIGHTS: InsightItem[] = [
     id: 'low-voc-faq',
     category: 'content', categoryLabel: 'Content gap', icon: 'content',
     metaPills: [
-      { text: 'Low-VOC FAQ' },
+      { text: 'Finish FAQ' },
       { text: '+18%', tone: 'up' },
       { text: 'FAQ gap' },
     ],
-    title: 'Publish a low-VOC + nursery-safe paint FAQ',
-    body: '39 questions in 7 days across IG and Facebook ask the same thing. A short FAQ + before/after carousel closes the loop and converts more nursery jobs.',
+    title: 'Publish a water-based, pet-safe finish FAQ',
+    body: '39 questions in 7 days across IG and Facebook ask the same thing. A short FAQ plus before/after carousel closes the loop and converts more jobs.',
     actionLabel: 'Draft FAQ post',
     actionToast: 'Drafting FAQ post',
   },
@@ -353,12 +353,12 @@ const INSIGHTS: InsightItem[] = [
     id: 'cabinet-campaign',
     category: 'opp', categoryLabel: 'Opportunity', icon: 'opp',
     metaPills: [
-      { text: 'Cabinet refinish' },
+      { text: 'Floor refinishing' },
       { text: '+8%', tone: 'good' },
       { text: 'r/Austin 1.8k views' },
     ],
-    title: 'Lean into cabinet refinishing as next campaign angle',
-    body: 'Cabinet refinish is the #1 unsolicited positive theme (248 mentions, 91% positive). Pull "factory-fresh" and "refinish, don\'t replace" directly into next month\'s hero ads.',
+    title: 'Lean into refinish, do not replace as next campaign angle',
+    body: 'Floor refinishing is the #1 unsolicited positive theme (248 mentions, 91% positive). Pull "factory-fresh" and "refinish, do not replace" directly into next month\'s hero ads.',
     actionLabel: 'Use in campaign',
     actionToast: 'Added to next campaign brief',
   },
@@ -370,7 +370,7 @@ const INSIGHTS: InsightItem[] = [
       { text: 'Sentiment +2.1%', tone: 'good' },
     ],
     title: 'Turn on auto-request for completed jobs',
-    body: '42 homeowners hit a 90+ satisfaction score on the final walk-through this week, but only 6 left a Google review. A 24-hour text prompt could 4–5× your weekly review volume.',
+    body: '42 homeowners hit a 90+ satisfaction score on the final walk-through this week, but only 6 left a Google review. A 24-hour text prompt could 4-5× your weekly review volume.',
     actionLabel: 'Turn on auto-request',
     actionToast: 'Auto-request turned on',
   },
@@ -379,40 +379,40 @@ const INSIGHTS: InsightItem[] = [
 const MENTIONS: MentionItem[] = [
   {
     id: 'm-1', source: 'reddit', sourceLabel: 'r/Austin', when: '9h',
-    text: 'CertaPro just finished our Tarrytown kitchen cabinets — look factory-fresh. Worth every dollar.',
+    text: 'Grain Design just refinished our Tarrytown red oak, looks factory-fresh. Worth every dollar.',
     author: 'u/tarrytown_tracey', sentiment: 'positive', meta: '· 142 reactions · 18k reach',
   },
   {
     id: 'm-2', source: 'tiktok', sourceLabel: 'TikTok comment', when: '2d',
-    text: 'We had CertaPro do our exterior in Westlake and the crew was so respectful of the yard',
+    text: 'We had Grain Design install wide-plank in Westlake and the crew was so respectful of the house',
     author: '@westlake_will', sentiment: 'positive', meta: '· 842 reactions · 90k views',
   },
   {
     id: 'm-3', source: 'reddit', sourceLabel: 'r/Austin', when: '5h',
-    text: 'Any honest reviews of CertaPro Austin? Considering them for a Cedar Park exterior.',
+    text: 'Any honest reviews of Grain Design Flooring? Considering them for a Cedar Park refinish.',
     author: 'u/cedar_park_carla', sentiment: 'neutral', meta: '· 38 reactions · 12k reach',
   },
   {
     id: 'm-4', source: 'google', sourceLabel: 'Google Search', when: '1d',
-    text: "Best painters in Austin 2026: 8 local pros homeowners actually recommend (CertaPro makes the list)",
+    text: "Best flooring pros in Austin 2026: 8 local companies homeowners actually recommend (Grain Design makes the list)",
     author: 'austin.curbed.com', sentiment: 'positive', meta: '· Press',
   },
   {
     id: 'm-5', source: 'yelp', sourceLabel: 'Yelp', when: 'Yesterday',
-    text: 'Quoted price went up after the job started — see review.',
+    text: 'Quote went up after they pulled up the old floor, see review.',
     author: 'Devon R.', sentiment: 'negative', meta: '· Local',
   },
 ];
 
 const TOPICS: TopicRow[] = [
-  { topic: 'Cabinet refinish', topicTone: 'positive', mentions: 248, sentiment: 91, sentimentTone: 'green', velocity: '1.2× normal', trend: { dir: 'up', text: '↑ +8%' }, badge: { kind: 'src', source: 'instagram', label: 'strongest' } },
+  { topic: 'Floor refinishing', topicTone: 'positive', mentions: 248, sentiment: 91, sentimentTone: 'green', velocity: '1.2× normal', trend: { dir: 'up', text: '↑ +8%' }, badge: { kind: 'src', source: 'instagram', label: 'strongest' } },
   { topic: 'Scheduling & timeline', mentions: 184, sentiment: 34, sentimentTone: 'red', velocity: '1.4× normal', trend: { dir: 'up', text: '↑ +22%' } },
-  { topic: 'Color consultation', topicTone: 'positive', mentions: 162, sentiment: 86, sentimentTone: 'green', velocity: '1.0× normal', trend: { dir: 'flat', text: '— 0%' } },
-  { topic: 'Cleanup & site care', mentions: 96, sentiment: 58, sentimentTone: 'yellow', velocity: '1.1× normal', trend: { dir: 'up', text: '↑ +12%' } },
+  { topic: 'Stain & finish consult', topicTone: 'positive', mentions: 162, sentiment: 86, sentimentTone: 'green', velocity: '1.0× normal', trend: { dir: 'flat', text: '— 0%' } },
+  { topic: 'Dust & site care', mentions: 96, sentiment: 58, sentimentTone: 'yellow', velocity: '1.1× normal', trend: { dir: 'up', text: '↑ +12%' } },
   { topic: 'Pricing', mentions: 88, sentiment: 49, sentimentTone: 'yellow', velocity: '0.9× normal', trend: { dir: 'down', text: '↓ −6%' } },
   { topic: 'Change orders', topicTone: 'risk', mentions: 71, sentiment: 18, sentimentTone: 'red', velocity: '2.4× normal', trend: { dir: 'up', text: '↑ +41%' }, badge: { kind: 'spike', label: 'Spike detected' } },
-  { topic: 'Low-VOC paint', topicTone: 'risk', mentions: 54, sentiment: 42, sentimentTone: 'yellow', velocity: '3.1× normal', trend: { dir: 'up', text: '↑ +60%' }, badge: { kind: 'spike', label: 'Spreading on Reddit' } },
-  { topic: 'Exterior longevity', mentions: 39, sentiment: 61, sentimentTone: 'yellow', velocity: '1.3× normal', trend: { dir: 'up', text: '↑ +18%' } },
+  { topic: 'Water-based finish', topicTone: 'risk', mentions: 54, sentiment: 42, sentimentTone: 'yellow', velocity: '3.1× normal', trend: { dir: 'up', text: '↑ +60%' }, badge: { kind: 'spike', label: 'Spreading on Reddit' } },
+  { topic: 'Finish durability', mentions: 39, sentiment: 61, sentimentTone: 'yellow', velocity: '1.3× normal', trend: { dir: 'up', text: '↑ +18%' } },
 ];
 
 interface KpiCardProps {
@@ -500,26 +500,29 @@ interface AiDraftBlockProps {
   draft: AiDraft;
   /** When true, render only an "Edit reply" link (no Approve button). */
   readOnly?: boolean;
-  /** When true, render no action buttons at all (used when the card chrome
-   *  already provides Approve/Edit in the top-right). */
+  /** When true, render no action buttons at all. */
   hideActions?: boolean;
+  /** Card layout — the reply, its confidence and the Edit / Post Reply actions
+   *  all live inside this box, actions right-aligned along the bottom. */
+  cardMode?: boolean;
+  /** In cardMode, an already-published auto-reply shows only "Edit reply". */
+  autoReplied?: boolean;
   approveLabel?: string;
   onEdit: () => void;
   onApprove?: () => void;
 }
 
-function AiDraftBlock({ draft, readOnly, hideActions, approveLabel = 'Approve & reply', onEdit, onApprove }: AiDraftBlockProps) {
-  // Single accent palette — purple-tinted background, no side border.
-  // The legacy needs-review (yellow/warning) branch has been removed; tone
-  // signals come from the StatusPill eyebrow now.
+function AiDraftBlock({ draft, readOnly, hideActions, cardMode, autoReplied, approveLabel = 'Approve & reply', onEdit, onApprove }: AiDraftBlockProps) {
+  // Neutral surface — dark-2 fill with a dark-4 hairline border.
   const leadGlyph = draft.needsReview ? '⊙ Needs human review' : '✦ AI draft';
   return (
     <div
       style={{
-        background: 'rgba(124, 92, 252, 0.06)',
+        background: 'var(--dark-2)',
+        border: '1px solid var(--dark-4)',
         borderRadius: 10,
         padding: '12px 14px',
-        marginBottom: 10,
+        marginBottom: hideActions || cardMode ? 0 : 10,
       }}
     >
       <div
@@ -527,23 +530,37 @@ function AiDraftBlock({ draft, readOnly, hideActions, approveLabel = 'Approve & 
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          fontSize: 12,
+          fontSize: 14,
           color: 'var(--purple)',
           fontWeight: 500,
           marginBottom: 6,
         }}
       >
         {leadGlyph} · {draft.tone}
-        {!hideActions && (
+        {!hideActions && !cardMode && (
           <span style={{ color: 'var(--dark-40)', fontWeight: 400, marginLeft: 'auto' }}>
             Confidence {draft.confidence}%
           </span>
         )}
       </div>
-      <div style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, marginBottom: hideActions ? 0 : 10 }}>
+      <div style={{ fontSize: 14, color: 'var(--dark-90)', lineHeight: 1.5, marginBottom: hideActions ? 0 : 12 }}>
         {draft.text}
       </div>
-      {!hideActions && (
+      {cardMode ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <StatusPill tone="neutral" size="sm">Confidence {draft.confidence}%</StatusPill>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {autoReplied ? (
+              <Button variant="tertiary" size="sm" onClick={onEdit}>Edit reply</Button>
+            ) : (
+              <>
+                <Button variant="tertiary" size="sm" onClick={onEdit}>Edit</Button>
+                {onApprove && <Button variant="secondary" size="sm" onClick={onApprove}>Post Reply</Button>}
+              </>
+            )}
+          </div>
+        </div>
+      ) : !hideActions ? (
         readOnly ? (
           <button
             type="button"
@@ -553,7 +570,7 @@ function AiDraftBlock({ draft, readOnly, hideActions, approveLabel = 'Approve & 
               border: 'none',
               padding: 0,
               fontFamily: 'inherit',
-              fontSize: 12,
+              fontSize: 14,
               color: 'var(--purple)',
               fontWeight: 500,
               cursor: 'pointer',
@@ -570,7 +587,7 @@ function AiDraftBlock({ draft, readOnly, hideActions, approveLabel = 'Approve & 
             )}
           </div>
         )
-      )}
+      ) : null}
     </div>
   );
 }
@@ -583,47 +600,9 @@ interface AttentionCardProps {
 }
 
 function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: AttentionCardProps) {
-  // Inner controls (Edit / Approve / Edit-reply buttons) need to stop
-  // propagation so clicking them doesn't also open the detail modal.
+  // Inner controls (Edit / Post Reply / platform link) stop propagation so
+  // clicking them doesn't also open the detail modal.
   const stop = (e: MouseEvent) => e.stopPropagation();
-
-  // Top-right action cluster — same logic as the AEO redesign. Auto-replied
-  // rows surface only an "Edit reply" link; rows with a draft surface
-  // a Confidence pill + Approve + Edit; rows without a draft fall back to
-  // "Review & reply".
-  const actions = item.autoReplied && item.aiDraft ? (
-    <div onClick={stop} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <button
-        type="button"
-        onClick={() => onEditDraft(item)}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          padding: 0,
-          fontFamily: 'inherit',
-          fontSize: 12,
-          color: 'var(--purple)',
-          fontWeight: 500,
-          cursor: 'pointer',
-          textDecoration: 'underline',
-        }}
-      >
-        Edit reply
-      </button>
-    </div>
-  ) : item.aiDraft ? (
-    <div onClick={stop} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <StatusPill tone="neutral" size="sm">Confidence {item.aiDraft.confidence}%</StatusPill>
-      <Button variant="secondary" size="sm" onClick={() => onEditDraft(item)}>Edit</Button>
-      <Button variant="secondary" size="sm" onClick={() => onApproveDraft(item)}>Approve</Button>
-    </div>
-  ) : (
-    <div onClick={stop}>
-      <Button variant="secondary" size="sm" onClick={() => onOpenDetail(item)}>
-        Review &amp; reply
-      </Button>
-    </div>
-  );
 
   return (
     <div
@@ -640,39 +619,57 @@ function AttentionCard({ item, onEditDraft, onApproveDraft, onOpenDetail }: Atte
         background: 'var(--light-100)',
         border: '1px solid var(--dark-8)',
         borderRadius: 12,
-        padding: '14px 16px',
-        marginBottom: 8,
+        padding: '20px 22px',
+        marginBottom: 12,
         cursor: 'pointer',
         textAlign: 'left',
       }}
     >
-      {/* Top row: eyebrow (source + customer + date + velocity) on the left,
-       *  Confidence pill + Approve/Edit action cluster on the right. */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
-          <SourceBadge source={item.source} label={item.sourceLabel} />
+      {/* Top row: platform logo + name, stars, customer on the left; timestamp
+       *  and a link out to the hosting platform on the right. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <SourceLogo source={item.source} label={item.sourceLabel} />
+            <Text variant="secondary" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{item.sourceLabel}</Text>
+          </span>
           {item.stars !== undefined && <Stars n={item.stars} />}
-          <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.customer}</span>
-          <span style={{ fontSize: 12, color: 'var(--dark-40)' }}>{item.when}</span>
-          {item.velocity && (
-            <span style={{ fontSize: 12, color: 'var(--dark-60)' }}>{item.velocity}</span>
-          )}
+          {item.customer && <Text variant="secondary" style={{ color: 'var(--dark-60)' }}>{item.customer}</Text>}
         </div>
-        <div style={{ flexShrink: 0 }}>{actions}</div>
+        <div onClick={stop} style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <Text variant="secondary" style={{ color: 'var(--dark-40)' }}>{item.when}</Text>
+          <IconButton
+            variant="tertiary"
+            size="sm"
+            icon={LinkExternal}
+            aria-label={`View on ${item.sourceLabel}`}
+            title={`View on ${item.sourceLabel}`}
+            onPress={() => { /* opens the review on the hosting platform */ }}
+          />
+        </div>
       </div>
-      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--dark-90)', lineHeight: 1.35, marginBottom: 6 }}>
-        {item.title}
-      </div>
-      <div style={{ fontSize: 14, color: 'var(--dark-60)', lineHeight: 1.5, marginBottom: item.aiDraft ? 12 : 0 }}>
+
+      <Heading level={5} style={{ margin: '0 0 4px', lineHeight: 1.35 }}>{item.title}</Heading>
+
+      <Text variant="secondary" style={{ display: 'block', color: 'var(--dark-60)', lineHeight: 1.5, marginBottom: item.aiDraft ? 16 : 0 }}>
         {item.body}
-      </div>
-      {item.aiDraft && (
+      </Text>
+
+      {item.aiDraft ? (
         <div onClick={stop}>
           <AiDraftBlock
             draft={item.aiDraft}
-            hideActions
+            cardMode
+            autoReplied={item.autoReplied}
             onEdit={() => onEditDraft(item)}
+            onApprove={() => onApproveDraft(item)}
           />
+        </div>
+      ) : (
+        <div onClick={stop} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="secondary" size="sm" onClick={() => onOpenDetail(item)}>
+            Review &amp; reply
+          </Button>
         </div>
       )}
     </div>
@@ -980,7 +977,27 @@ function ListeningPane() {
 
 // ─── TABS ─────────────────────────────────────────────────────────
 
-type TabKey = 'reviews' | 'insights' | 'listening';
+export type TabKey = 'reviews' | 'insights' | 'listening';
+
+/** The Reputation subtabs, so a host shell can render them in its own topbar
+ *  (controlled) instead of inline. `count` badges are constant in this proto. */
+export const REPUTATION_TABS = [
+  { key: 'reviews', label: 'Reviews & Comments', count: ATTENTION.length },
+  { key: 'insights', label: 'Business Insights', count: 5 },
+  { key: 'listening', label: 'Social Listening' },
+] as const;
+
+export function ReputationTabs({ tab, onTab }: { tab: TabKey; onTab: (t: TabKey) => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
+      {REPUTATION_TABS.map((t) => (
+        <TabChip key={t.key} selected={tab === t.key} count={t.count} onSelect={() => onTab(t.key)}>
+          {t.label}
+        </TabChip>
+      ))}
+    </div>
+  );
+}
 
 // ─── ITEM-DETAIL MODAL ────────────────────────────────────────────
 
@@ -1224,6 +1241,111 @@ export function ReputationRoute() {
     <ModalStack>
       <ReputationRouteInner />
     </ModalStack>
+  );
+}
+
+/** Shell-agnostic Reputation surface. AM and the client both embed this inside
+ *  their own shells, so it renders its tab strip inline (no topbar-chrome
+ *  dependency) and never shows the cold state. This is the single source of
+ *  truth so the two sides stay identical. */
+/** `tab`/`onTab` let a host shell own tab state and render <ReputationTabs> in
+ *  its own topbar; when omitted, the view self-manages and renders the tab strip
+ *  inline. */
+export function ReputationView({ tab, onTab }: { tab?: TabKey; onTab?: (t: TabKey) => void } = {}) {
+  return (
+    <ModalStack>
+      <ReputationViewInner controlledTab={tab} controlledOnTab={onTab} />
+    </ModalStack>
+  );
+}
+
+function ReputationViewInner({ controlledTab, controlledOnTab }: { controlledTab?: TabKey; controlledOnTab?: (t: TabKey) => void }) {
+  const { showToast } = useToast();
+  const { openModal, closeModal } = useModals();
+  const [localTab, setLocalTab] = useState<TabKey>('reviews');
+  const tab = controlledTab ?? localTab;
+  const setTab = controlledOnTab ?? setLocalTab;
+  // When the host drives the tabs (in its topbar), don't also render them inline.
+  const tabsInHeader = controlledTab !== undefined;
+  const [attention, setAttention] = useState<AttentionItem[]>(ATTENTION);
+
+  const editAttentionDraft = (item: AttentionItem) => {
+    if (!item.aiDraft) return;
+    openModal(EditDraftModal, {
+      initialText: item.aiDraft.text,
+      onSave: (text) => {
+        setAttention((prev) =>
+          prev.map((a) => (a.id === item.id && a.aiDraft ? { ...a, aiDraft: { ...a.aiDraft, text } } : a)),
+        );
+        closeModal();
+        showToast({ message: 'Draft updated' });
+      },
+    });
+  };
+
+  const openItemDetail = (item: AttentionItem) => {
+    openModal(ItemDetailModal, {
+      item,
+      onSendReply: () => showToast({ message: `Reply sent to ${item.customer ?? item.sourceLabel}` }),
+      onApproveDraft: () => showToast({ message: `Reply approved · sending to ${item.sourceLabel}` }),
+      onEditDraft: () => editAttentionDraft(item),
+    });
+  };
+
+  const reviewCount = attention.length;
+
+  return (
+    <div style={{ padding: '20px 28px 60px', maxWidth: 1180, margin: '0 auto' }}>
+      {/* Tab strip renders inline only when the host shell isn't showing it in
+       *  the topbar. */}
+      {!tabsInHeader && (
+        <div style={{ marginBottom: 24 }}>
+          <ReputationTabs tab={tab} onTab={setTab} />
+        </div>
+      )}
+
+      {/* KPI strip */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+        <KpiCard label="Reputation Health" value="82" unit="/100" delta={{ tone: 'good', text: '+4' }} sub="vs last 30 days" />
+        <KpiCard label="Total Mentions" value="1,248" delta={{ tone: 'good', text: '+18%' }} sub="this week" />
+        <KpiCard label="Positive Sentiment" value="74%" delta={{ tone: 'good', text: '+2.1%' }} sub="of all mentions" />
+        <KpiCard label="Negative Sentiment" value="11%" delta={{ tone: 'bad', text: '+1.4%' }} sub="trending up" />
+        <KpiCard label="Needs Attention" value={String(reviewCount)} delta={{ tone: 'warn', text: '2 urgent' }} sub="reviews + comments" />
+      </div>
+
+      {tab === 'reviews' && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Heading level={3}>Needs attention</Heading>
+            <span style={{ fontSize: 14, color: 'var(--dark-40)' }}>{reviewCount} items · sorted by impact</span>
+          </div>
+          {attention.map((item) => (
+            <AttentionCard
+              key={item.id}
+              item={item}
+              onEditDraft={editAttentionDraft}
+              onApproveDraft={(it) => showToast({ message: `Reply approved · sending to ${it.sourceLabel}` })}
+              onOpenDetail={openItemDetail}
+            />
+          ))}
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 32, marginBottom: 12 }}>
+            <Heading level={3}>Auto-replied</Heading>
+            <span style={{ fontSize: 14, color: 'var(--dark-40)' }}>{AUTO_REPLIED.length} items · high-confidence drafts published</span>
+          </div>
+          {AUTO_REPLIED.map((item) => (
+            <AttentionCard
+              key={item.id}
+              item={item}
+              onEditDraft={editAttentionDraft}
+              onApproveDraft={(it) => showToast({ message: `Reply approved · sending to ${it.sourceLabel}` })}
+              onOpenDetail={openItemDetail}
+            />
+          ))}
+        </>
+      )}
+      {tab === 'insights' && <InsightsPane onAction={(i) => showToast({ message: i.actionToast })} />}
+      {tab === 'listening' && <ListeningPane />}
+    </div>
   );
 }
 

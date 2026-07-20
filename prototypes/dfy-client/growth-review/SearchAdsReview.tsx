@@ -7,7 +7,7 @@ import Edit3 from '@/icons/20/Edit3';
 import Check2 from '@/icons/20/Check2';
 import { SEARCH_ADS, SITELINKS, type SearchAsset } from './data';
 import { useWizard } from './wizard';
-import { RequestChangesAction } from './ui';
+import { TextArea, Popover } from './ui';
 
 /**
  * Google Search review. A Responsive Search Ad is not a finished ad: the client
@@ -25,11 +25,50 @@ const inputStyle: React.CSSProperties = {
   fontFamily: F, fontSize: 14, letterSpacing: '0.28px', color: 'var(--dark-90)', outline: 'none', boxSizing: 'border-box',
 };
 
+/** Thumbs up/down for one asset. Thumbs-down flags the asset and opens the
+ *  same request-changes popover pane used across the review (ui.tsx's
+ *  RequestChangesAction), so the client can add a note; thumbs-up clears it.
+ *  `onVote` owns the local vote state (drives the line-through + flagged count);
+ *  the note is written into the wizard store from the pane. */
+function VoteControls({ decisionKey, prompt, vote, onVote }: {
+  decisionKey: string; prompt: string; vote?: Vote; onVote: (v: Vote) => void;
+}) {
+  const { decisions, decide } = useWizard();
+  const flagged = decisions[decisionKey]?.status === 'changes';
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(decisions[decisionKey]?.note ?? '');
+
+  const dislike = () => {
+    setDraft(decisions[decisionKey]?.note ?? '');
+    if (vote !== 'down') onVote('down');
+    setOpen(true);
+  };
+  const like = () => { onVote('up'); setOpen(false); };
+  const withdraw = () => { if (vote === 'down') onVote('down'); setDraft(''); setOpen(false); };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0, position: 'relative' }}>
+      <IconButton size="sm" variant={vote === 'up' ? 'green' : 'ghost'} icon={ThumbUp} title="Like" onPress={like} />
+      <IconButton size="sm" variant={vote === 'down' ? 'red' : 'ghost'} icon={ThumbDown} title="Dislike" onPress={dislike} />
+      <Popover open={open} onClose={() => setOpen(false)}>
+        <Text variant="secondary" color="var(--dark-80)" style={{ display: 'block' }}>{prompt}</Text>
+        <TextArea autoFocus value={draft} placeholder="Add a note for the team…" onChange={(e) => setDraft(e.target.value)} style={{ fontSize: 14 }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          {flagged ? <Button size="sm" variant="ghost" onPress={withdraw}>Withdraw</Button> : <span />}
+          <Button size="sm" variant="primary" isDisabled={!draft.trim()} onPress={() => { decide(decisionKey, { status: 'changes', note: draft }); setOpen(false); }}>
+            Send Request
+          </Button>
+        </div>
+      </Popover>
+    </div>
+  );
+}
+
 /** One reviewable asset: text (or inline editor), edited flag, edit + vote controls.
  *  With hoverReveal, the like/dislike votes stay visible and only the edit
- *  button fades in on hover. */
-function AssetRow({ text, original, vote, onVote, onSave, mono, hoverReveal }: {
-  text: string; original: string; vote?: Vote; onVote: (v: Vote) => void; onSave: (v: string) => void; mono?: boolean; hoverReveal?: boolean;
+ *  button fades in on hover. Thumbs-down opens the request-changes pane. */
+function AssetRow({ text, original, vote, onVote, onSave, mono, hoverReveal, decisionKey, prompt }: {
+  text: string; original: string; vote?: Vote; onVote: (v: Vote) => void; onSave: (v: string) => void; mono?: boolean; hoverReveal?: boolean; decisionKey: string; prompt: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
@@ -50,18 +89,18 @@ function AssetRow({ text, original, vote, onVote, onSave, mono, hoverReveal }: {
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 0', borderTop: '1px solid var(--dark-8)', opacity: vote === 'down' ? 0.55 : 1 }}
+      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 0', borderTop: '1px solid var(--dark-8)' }}
     >
-      <Text style={{ minWidth: 0, fontSize: mono ? 14 : 16, fontWeight: 400, color: mono ? 'var(--dark-70)' : 'var(--dark-90)', fontFamily: F, textDecoration: vote === 'down' ? 'line-through' : 'none' }}>{text}</Text>
-      <span style={{ display: 'inline-flex', flexShrink: 0, opacity: showEdit ? 1 : 0, pointerEvents: showEdit ? 'auto' : 'none', transition: 'opacity 0.12s ease' }}>
-        <IconButton size="sm" variant="ghost" icon={Edit3} title="Edit" onPress={() => { setDraft(text); setEditing(true); }} />
-      </span>
-      {edited && <Pill size="sm">Edited</Pill>}
-      <span style={{ flex: 1 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-        <IconButton size="sm" variant={vote === 'up' ? 'green' : 'ghost'} icon={ThumbUp} title="Like" onPress={() => onVote('up')} />
-        <IconButton size="sm" variant={vote === 'down' ? 'red' : 'ghost'} icon={ThumbDown} title="Dislike" onPress={() => onVote('down')} />
+      {/* Only the content dims on downvote — keep the vote controls (and their
+          popover) at full opacity so the pane isn't see-through. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, opacity: vote === 'down' ? 0.55 : 1 }}>
+        <Text style={{ minWidth: 0, fontSize: mono ? 14 : 16, fontWeight: 400, color: mono ? 'var(--dark-70)' : 'var(--dark-90)', fontFamily: F, textDecoration: vote === 'down' ? 'line-through' : 'none' }}>{text}</Text>
+        <span style={{ display: 'inline-flex', flexShrink: 0, opacity: showEdit ? 1 : 0, pointerEvents: showEdit ? 'auto' : 'none', transition: 'opacity 0.12s ease' }}>
+          <IconButton size="sm" variant="ghost" icon={Edit3} title="Edit" onPress={() => { setDraft(text); setEditing(true); }} />
+        </span>
+        {edited && <Pill size="sm">Edited</Pill>}
       </div>
+      <VoteControls decisionKey={decisionKey} prompt={prompt} vote={vote} onVote={onVote} />
     </div>
   );
 }
@@ -90,7 +129,7 @@ function AdTicker({ cards }: { cards: ReactNode[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const offset = useRef(0);
   const speed = useRef(0);
-  const target = useRef(0.9);
+  const target = useRef(0.5);
   useEffect(() => {
     let raf = 0;
     const step = () => {
@@ -112,7 +151,7 @@ function AdTicker({ cards }: { cards: ReactNode[] }) {
     <div
       style={{ position: 'relative', overflow: 'hidden', padding: '6px 0' }}
       onMouseEnter={() => { target.current = 0; }}
-      onMouseLeave={() => { target.current = 0.9; }}
+      onMouseLeave={() => { target.current = 0.5; }}
     >
       <div ref={trackRef} style={{ display: 'flex', gap: 16, width: 'max-content', alignItems: 'stretch', willChange: 'transform' }}>
         {cards.map((c, i) => (
@@ -140,43 +179,59 @@ function ApproveAll() {
   );
 }
 
-/** The sitelinks block in the client review: one section-level Request Changes
- *  for the whole set, each sitelink shown as a clearly-separated card. */
+/** The sitelinks block in the client review: each sitelink is reviewed on its
+ *  own with thumbs up/down. A downvote opens the request-changes pane and
+ *  records a per-sitelink requested change; an upvote clears it. */
 function ClientSitelinksSection() {
-  const { decisions } = useWizard();
-  const decision = decisions['paid:sitelinks'];
-  const changed = decision?.status === 'changes';
+  const { decisions, decide } = useWizard();
+  const [votes, setVotes] = useState<Record<string, Vote | undefined>>({});
+  const setVote = (id: string, v: Vote) => {
+    const key = `paid:sitelink:${id}`;
+    const next = votes[id] === v ? undefined : v;
+    setVotes((p) => ({ ...p, [id]: next }));
+    decide(key, next === 'down' ? { status: 'changes', note: decisions[key]?.note ?? '' } : null);
+  };
   return (
     <section>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
-        <Heading level={3} style={{ margin: 0 }}>Sitelinks</Heading>
-        <RequestChangesAction decisionKey="paid:sitelinks" prompt="What should change about the sitelinks?" />
-      </div>
+      <Heading level={3} style={{ margin: 0, marginBottom: 4 }}>Sitelinks</Heading>
       <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginBottom: 12, lineHeight: 1.5 }}>Extra links shown under your ad that jump people to key pages.</Text>
-      {changed && decision?.note && (
-        <div style={{ marginBottom: 12, padding: '10px 12px', background: 'rgba(174,34,34,0.06)', borderRadius: 8 }}>
-          <Text color="var(--dark-80)" style={{ display: 'block', fontSize: 14, lineHeight: 1.5 }}>You requested changes: {decision.note}</Text>
-        </div>
-      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {SITELINKS.map((s) => (
-          <div key={s.id} style={{ border: '1px solid var(--dark-8)', borderRadius: 10, background: 'var(--light-100)', padding: '16px 18px' }}>
-            <Text style={{ display: 'block', fontSize: 15, fontWeight: 500, color: '#1a0dab', fontFamily: F }}>{s.title}</Text>
-            <Text style={{ display: 'block', marginTop: 4, fontSize: 13.5, color: 'var(--dark-60)', lineHeight: 1.45 }}>{s.desc}</Text>
-            <Text style={{ display: 'block', marginTop: 8, fontSize: 12.5, color: 'var(--status-approved)', fontFamily: F }}>{s.url}</Text>
-          </div>
-        ))}
+        {SITELINKS.map((s, i) => {
+          const id = s.id ?? String(i);
+          const vote = votes[id];
+          return (
+            <div key={id}>
+              <div style={{ border: '1px solid var(--dark-8)', borderRadius: 10, background: 'var(--light-100)', padding: '16px 18px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                  <Text style={{ minWidth: 0, fontSize: 15, fontWeight: 500, color: '#1a0dab', fontFamily: F, textDecoration: vote === 'down' ? 'line-through' : 'none', opacity: vote === 'down' ? 0.55 : 1 }}>{s.title}</Text>
+                  <VoteControls decisionKey={`paid:sitelink:${id}`} prompt="What should change about this sitelink?" vote={vote} onVote={(v) => setVote(id, v)} />
+                </div>
+                <Text style={{ display: 'block', marginTop: 4, fontSize: 13.5, color: 'var(--dark-60)', lineHeight: 1.45, opacity: vote === 'down' ? 0.55 : 1 }}>{s.desc}</Text>
+                <Text style={{ display: 'block', marginTop: 8, fontSize: 12.5, color: 'var(--status-approved)', fontFamily: F, opacity: vote === 'down' ? 0.55 : 1 }}>{s.url}</Text>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
 }
 
 export function SearchAdsReview() {
+  const { decisions, decide } = useWizard();
   const [votes, setVotes] = useState<Record<string, Vote | undefined>>({});
   const [edits, setEdits] = useState<Record<string, string>>({});
 
   const textOf = (a: SearchAsset) => edits[a.id] ?? a.text;
-  const setVote = (id: string, v: Vote) => setVotes((p) => ({ ...p, [id]: p[id] === v ? undefined : v }));
+  // A downvote records a per-asset requested change (empty note to start);
+  // any other vote (or toggling off) clears it. The inline prompt then fills
+  // the note as the client types.
+  const setVote = (id: string, v: Vote) => {
+    const key = `paid:asset:${id}`;
+    const next = votes[id] === v ? undefined : v;
+    setVotes((p) => ({ ...p, [id]: next }));
+    decide(key, next === 'down' ? { status: 'changes', note: decisions[key]?.note ?? '' } : null);
+  };
   const setEdit = (id: string, val: string) => setEdits((p) => ({ ...p, [id]: val }));
 
   const kept = (list: SearchAsset[]) => list.filter((a) => votes[a.id] !== 'down');
@@ -237,29 +292,28 @@ export function SearchAdsReview() {
       <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Section title="Headlines" hint="Up to 15. Google shows up to 3 at a time." count={countPill(SEARCH_ADS.headlines)}>
           {SEARCH_ADS.headlines.map((h) => (
-            <AssetRow key={h.id} text={textOf(h)} original={h.text} vote={votes[h.id]} onVote={(v) => setVote(h.id, v)} onSave={(val) => setEdit(h.id, val)} hoverReveal />
+            <AssetRow key={h.id} text={textOf(h)} original={h.text} vote={votes[h.id]} onVote={(v) => setVote(h.id, v)} onSave={(val) => setEdit(h.id, val)} hoverReveal
+              decisionKey={`paid:asset:${h.id}`} prompt="What should change about this headline?" />
           ))}
         </Section>
 
         <Section title="Descriptions" hint="Up to 4. Google shows up to 2 at a time." count={countPill(SEARCH_ADS.descriptions)}>
           {SEARCH_ADS.descriptions.map((d) => (
-            <AssetRow key={d.id} text={textOf(d)} original={d.text} vote={votes[d.id]} onVote={(v) => setVote(d.id, v)} onSave={(val) => setEdit(d.id, val)} hoverReveal />
+            <AssetRow key={d.id} text={textOf(d)} original={d.text} vote={votes[d.id]} onVote={(v) => setVote(d.id, v)} onSave={(val) => setEdit(d.id, val)} hoverReveal
+              decisionKey={`paid:asset:${d.id}`} prompt="What should change about this description?" />
           ))}
         </Section>
 
         <Section title="Images" hint="Shown alongside the ad on eligible placements.">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 16, padding: '14px 0 18px' }}>
             {SEARCH_ADS.images.map((im) => (
-              <div key={im.id} style={{ opacity: votes[im.id] === 'down' ? 0.55 : 1 }}>
-                <div style={{ aspectRatio: '4 / 3', borderRadius: 8, overflow: 'hidden', background: 'var(--dark-4)', border: '1px solid var(--dark-8)' }}>
+              <div key={im.id}>
+                <div style={{ aspectRatio: '4 / 3', borderRadius: 8, overflow: 'hidden', background: 'var(--dark-4)', border: '1px solid var(--dark-8)', opacity: votes[im.id] === 'down' ? 0.55 : 1 }}>
                   <img src={im.img} alt={im.label} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
-                  <Text style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.35 }}>{im.label}</Text>
-                  <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                    <IconButton size="sm" variant={votes[im.id] === 'up' ? 'green' : 'ghost'} icon={ThumbUp} title="Like" onPress={() => setVote(im.id, 'up')} />
-                    <IconButton size="sm" variant={votes[im.id] === 'down' ? 'red' : 'ghost'} icon={ThumbDown} title="Dislike" onPress={() => setVote(im.id, 'down')} />
-                  </div>
+                  <Text style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--dark-60)', lineHeight: 1.35, opacity: votes[im.id] === 'down' ? 0.55 : 1 }}>{im.label}</Text>
+                  <VoteControls decisionKey={`paid:asset:${im.id}`} prompt="What should change about this image?" vote={votes[im.id]} onVote={(v) => setVote(im.id, v)} />
                 </div>
               </div>
             ))}

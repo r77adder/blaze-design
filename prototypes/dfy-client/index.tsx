@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
 import { ModalStack } from '@/components';
 import { Toaster, ToasterProvider } from '@/staging';
@@ -20,6 +21,7 @@ import { Scorecard } from './Scorecard';
 import { ReviewStrategy } from './ReviewStrategy';
 import { ReviewGoals } from './ReviewGoals';
 import { ReviewCreative } from './ReviewCreative';
+import { ReputationView, ReputationTabs, type TabKey } from '../h2-port/pages/Reputation';
 
 /**
  * Blaze DFY, the **client** portal (done-for-you customer's view).
@@ -44,12 +46,23 @@ function HomeRoute() {
   return <Home />;
 }
 
+/** Reputation with its subtabs lifted into the shell topbar. */
+function ClientReputation() {
+  const [tab, setTab] = useState<TabKey>('reviews');
+  return (
+    <ClientShell section="reputation" topbarCenter={<ReputationTabs tab={tab} onTab={setTab} />}>
+      <ReputationView tab={tab} onTab={setTab} />
+    </ClientShell>
+  );
+}
+
 function SectionRoute() {
   const { section = 'home', sub } = useParams();
   if (section === 'home') return <HomeRoute />;
   if (section === 'approvals') return <Approvals sub={sub} />;
   if (section === 'calendar') return <Calendar sub={sub} />;
   if (section === 'insights') return <Insights sub={sub} />;
+  if (section === 'reputation') return <ClientReputation />;
   if (section === 'leads') return <Leads />;
   if (section === 'strategy') return <Strategy sub={sub} />;
   if (section === 'scorecard') return <Scorecard />;

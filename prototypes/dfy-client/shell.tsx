@@ -4,7 +4,7 @@ import { IconButton, Text } from '@/components';
 import { PrototypeShell } from '../_shell';
 import type { SidebarSection } from '../_shell/Sidebar';
 import Home from '@/icons/20/Home';
-import Approvals from '@/icons/20/Approvals';
+import Star from '@/icons/20/Star';
 import Calendar1 from '@/icons/20/Calendar1';
 import BarChartSquare from '@/icons/20/BarChartSquare';
 import Brand from '@/icons/20/Brand';
@@ -24,9 +24,9 @@ export const BASE = '/dfy-client';
  */
 export const NAV: { section: string; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { section: 'home', label: 'Home', icon: Home },
-  { section: 'approvals', label: 'Approvals', icon: Approvals },
   { section: 'calendar', label: 'Calendar', icon: Calendar1 },
   { section: 'insights', label: 'Insights', icon: BarChartSquare },
+  { section: 'reputation', label: 'Reputation', icon: Star },
   { section: 'leads', label: 'Leads & Bookings', icon: UserProfileGroup },
 ];
 

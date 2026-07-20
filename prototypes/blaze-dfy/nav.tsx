@@ -12,7 +12,6 @@ import { DevStatePanel } from './DevStatePanel';
 import { useDfyState } from './lib/dev-state';
 import { useReview, stepReviewCounts, type Phase } from './lib/review';
 import HomeIcon from '@/icons/20/Home';
-import ClipboardCheck from '@/icons/20/Approvals';
 import Compass from '@/icons/20/Globe';
 import Clapperboard from '@/icons/20/Star';
 import Palette from '@/icons/20/Brand';
@@ -153,7 +152,6 @@ const CONVERSION_GROUP: NavGroup = { label: 'Conversion', items: [
 const AM_SECTIONS: NavGroup[] = [
   { items: [
     { label: 'Home', icon: HomeIcon, section: 'home' },
-    { label: 'Approvals', icon: ClipboardCheck, section: 'approvals' },
   ] },
   AWARENESS_GROUP,
   CONVERSION_GROUP,

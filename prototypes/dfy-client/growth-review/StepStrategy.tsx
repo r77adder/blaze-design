@@ -1,5 +1,4 @@
 import { Heading, Text } from '@/components';
-import { Pill } from '@/staging';
 import { STRATEGY_PILLARS, STRATEGY_TOTAL, STRATEGY_TOTAL_NOTE, websiteHero, type StrategyPillar } from './data';
 import { GradientHeadline, ReviewSectionHeader } from './ui';
 
@@ -22,13 +21,12 @@ export function StepStrategy() {
             key={pillar.id}
             style={{ paddingTop: idx === 0 ? 8 : 44, paddingBottom: 44, borderTop: idx === 0 ? 'none' : '1px solid var(--dark-8)' }}
           >
-            <ReviewSectionHeader decisionKey={`strategy:${pillar.id}`} title={pillar.title} subtitle={pillar.intro} />
+            <ReviewSectionHeader decisionKey={`strategy:${pillar.id}`} title={pillar.title} subtitle={pillar.intro} hideActions />
             {pillar.showWebsite ? (
               <WebsiteBody pillar={pillar} />
             ) : (
               <div style={CONTAINER}>
                 <BulletItems items={pillar.items} />
-                <PriceRow pillar={pillar} />
               </div>
             )}
           </section>
@@ -56,9 +54,8 @@ function BulletItems({ items }: { items: { title: string; body: string; spend?: 
         <div key={item.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <span style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--dark-40)', flexShrink: 0, marginTop: 9 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 2 }}>
+            <div style={{ marginBottom: 2 }}>
               <Text style={{ fontWeight: 500 }}>{item.title}</Text>
-              {item.spend && <Pill size="sm">{item.spend}</Pill>}
             </div>
             <Text style={{ display: 'block', fontSize: 15, color: 'var(--dark-80)', lineHeight: 1.6 }}>{item.body}</Text>
           </div>
@@ -84,31 +81,7 @@ function WebsiteBody({ pillar }: { pillar: StrategyPillar }) {
         </div>
         <div>
           <BulletItems items={pillar.items} />
-          {pillar.proofPoints && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
-              {pillar.proofPoints.map((p) => (
-                <Pill key={p} size="md">{p}</Pill>
-              ))}
-            </div>
-          )}
         </div>
-      </div>
-      <PriceRow pillar={pillar} />
-    </div>
-  );
-}
-
-/** Monthly price, shown inside the pillar's container with a divider above. */
-function PriceRow({ pillar }: { pillar: StrategyPillar }) {
-  if (!pillar.price) return null;
-  return (
-    <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--dark-8)', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-      <Text variant="secondary" color="var(--dark-60)">Monthly price</Text>
-      <div style={{ textAlign: 'right' }}>
-        <Text style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark-90)', letterSpacing: '0.2px' }}>{pillar.price}</Text>
-        {pillar.priceNote && (
-          <Text variant="metadata" color="var(--dark-40)" style={{ display: 'block', marginTop: 2 }}>{pillar.priceNote}</Text>
-        )}
       </div>
     </div>
   );

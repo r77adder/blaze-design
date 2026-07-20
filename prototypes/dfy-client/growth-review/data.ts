@@ -164,8 +164,8 @@ export interface StrategyPillar {
 }
 
 /** Grand total across all strategy sections, shown at the bottom of the step. */
-export const STRATEGY_TOTAL = '$4,200/mo';
-export const STRATEGY_TOTAL_NOTE = 'includes ~$2,850/mo in ad spend';
+export const STRATEGY_TOTAL = '$2,499/mo';
+export const STRATEGY_TOTAL_NOTE = 'One flat kit price, the same for every client.';
 
 export const STRATEGY_PILLARS: StrategyPillar[] = [
   {

@@ -189,7 +189,7 @@ export function GradientHeadline({ children, level = 1, style }: { children: Rea
   );
 }
 
-export function ReviewSectionHeader({ decisionKey, title, subtitle }: { decisionKey: string; title: string; subtitle?: string }) {
+export function ReviewSectionHeader({ decisionKey, title, subtitle, hideActions = false }: { decisionKey: string; title: string; subtitle?: string; hideActions?: boolean }) {
   const { decisions, decide } = useWizard();
   const decision = decisions[decisionKey];
   const isChanges = decision?.status === 'changes';
@@ -203,23 +203,25 @@ export function ReviewSectionHeader({ decisionKey, title, subtitle }: { decision
             <Text variant="secondary" color="var(--dark-60)" style={{ display: 'block', marginTop: 2, lineHeight: 1.5 }}>{subtitle}</Text>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          {isChanges ? (
-            <Button size="sm" variant="red" frontIcon={Comment} onPress={() => decide(decisionKey, null)}>Requested Change</Button>
-          ) : (
-            <RequestChangesAction decisionKey={decisionKey} prompt="What would you like changed?" />
-          )}
-          <Button
-            size="sm"
-            variant={isApproved ? 'green' : 'secondary'}
-            frontIcon={Check2}
-            onPress={() => decide(decisionKey, isApproved ? null : { status: 'approved' })}
-          >
-            {isApproved ? 'Approved' : 'Approve'}
-          </Button>
-        </div>
+        {!hideActions && (
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {isChanges ? (
+              <Button size="sm" variant="red" frontIcon={Comment} onPress={() => decide(decisionKey, null)}>Requested Change</Button>
+            ) : (
+              <RequestChangesAction decisionKey={decisionKey} prompt="What would you like changed?" />
+            )}
+            <Button
+              size="sm"
+              variant={isApproved ? 'green' : 'secondary'}
+              frontIcon={Check2}
+              onPress={() => decide(decisionKey, isApproved ? null : { status: 'approved' })}
+            >
+              {isApproved ? 'Approved' : 'Approve'}
+            </Button>
+          </div>
+        )}
       </div>
-      {isChanges && decision?.note && <ChangeNote decisionKey={decisionKey} note={decision.note} />}
+      {!hideActions && isChanges && decision?.note && <ChangeNote decisionKey={decisionKey} note={decision.note} />}
     </div>
   );
 }

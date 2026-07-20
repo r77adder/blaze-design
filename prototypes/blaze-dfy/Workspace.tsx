@@ -4,7 +4,7 @@ import { Heading, Text, Button } from '@/components';
 import { getAccount } from './lib/api';
 import type { Account } from './lib/types';
 import type { Side } from './lib/router';
-import { WorkspaceShell, STEPS, useGo, type Go } from './nav';
+import { WorkspaceShell, STEPS, useGo, useWorkspaceChrome, type Go } from './nav';
 import { Home } from './Home';
 import { Strategy, GoalsOnboarding } from './Strategy';
 import { CreativeReview } from './CreativeReview';
@@ -22,7 +22,7 @@ import { SeoAeoRoute } from '../h2-port/pages/SeoAeo';
 import { PaidSocialRoute } from '../h2-port/pages/PaidSocial';
 import { PaidSearchRoute } from '../h2-port/pages/PaidSearch';
 import { LandingPagesRoute } from '../h2-port/pages/LandingPages';
-import { ReputationRoute } from '../h2-port/pages/Reputation';
+import { ReputationView, ReputationTabs, type TabKey } from '../h2-port/pages/Reputation';
 import { CompetitorIntelPage } from '../h2-port/competitor-tracking/pages/CompetitorIntel';
 import { ContentSettingsRoute } from '../h2-port/pages/ContentSettings';
 import { Leads } from '../dfy-client/Leads';
@@ -39,6 +39,18 @@ function SdrLeads() {
   );
 }
 
+/** Reputation with its subtabs pushed up into the WorkspaceShell topbar (same
+ *  chrome-context mechanism H2Layout uses), so the tabs sit in the header. */
+function AmReputation() {
+  const chrome = useWorkspaceChrome();
+  const [tab, setTab] = useState<TabKey>('reviews');
+  useEffect(() => {
+    chrome?.setTopbarCenter(<ReputationTabs tab={tab} onTab={setTab} />);
+  });
+  useEffect(() => () => { chrome?.setTopbarCenter(null); }, [chrome]);
+  return <ReputationView tab={tab} onTab={setTab} />;
+}
+
 /** section slug -> ported feature page. Shared across AM/Client for now. */
 const H2_FEATURE_ROUTES: Record<string, ComponentType> = {
   'organic-social': OrganicSocialRoute,
@@ -49,7 +61,7 @@ const H2_FEATURE_ROUTES: Record<string, ComponentType> = {
   'competitor-tracking': CompetitorIntelPage,
   'landing-pages': LandingPagesRoute,
   sdr: SdrLeads,
-  reputation: ReputationRoute,
+  reputation: AmReputation,
   'content-settings': ContentSettingsRoute,
 };
 

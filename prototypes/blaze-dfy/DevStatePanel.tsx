@@ -55,10 +55,12 @@ export function DevStatePanel() {
   const pathname = useLocation().pathname;
   const surface = pathname.includes('/approvals') ? 'approvals'
     : pathname.includes('/sdr') ? 'sdr'
+    : pathname.includes('/reputation') ? 'reputation'
     : (pathname.includes('/home') || /\/am\/?$/.test(pathname)) ? 'home'
     : null;
   const clientHref = surface === 'approvals' ? '/dfy-client/approvals'
     : surface === 'sdr' ? '/dfy-client/leads'
+    : surface === 'reputation' ? '/dfy-client/reputation'
     : '/dfy-client';
   // Sit quietly at half opacity by default; lift to full on hover so the panel
   // never competes with the real workspace chrome.

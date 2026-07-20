@@ -95,18 +95,9 @@ function AccessRow({ item }: { item: AccessItem }) {
         </span>
       </button>
 
-      {/* body: help-guide link + copyables + input fields */}
+      {/* body: copyables + input fields, then the help-guide CTA at the bottom */}
       {open && (
         <div style={{ padding: '20px 22px 26px', borderTop: '1px solid var(--dark-8)', display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Button size="md" variant="secondary" endIcon={LinkExternal} onPress={() => { /* opens the external setup guide */ }}>
-              Open the setup guide
-            </Button>
-            <Text variant="secondary" color="var(--dark-60)" style={{ whiteSpace: 'nowrap' }}>
-              Step-by-step help, opens in a new tab.
-            </Text>
-          </div>
-
           {item.copyables && item.copyables.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {item.copyables.map((c) => (
@@ -121,13 +112,23 @@ function AccessRow({ item }: { item: AccessItem }) {
                 <Text variant="secondary" color="var(--dark-90)" style={{ display: 'block', marginBottom: 8 }}>{f.label}</Text>
                 <TextField
                   fullWidth
-                  size="lg"
+                  size="md"
                   value={values[f.label] ?? ''}
                   placeholder={f.placeholder}
                   onChange={(val) => setValues((v) => ({ ...v, [f.label]: val }))}
                 />
               </label>
             ))}
+          </div>
+
+          {/* help-guide CTA lives at the bottom, primary, with its support text beneath */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+            <Button size="md" variant="primary" endIcon={LinkExternal} onPress={() => { /* opens the external setup guide */ }}>
+              Open the setup guide
+            </Button>
+            <Text variant="secondary" color="var(--dark-60)">
+              Step-by-step help, opens in a new tab.
+            </Text>
           </div>
         </div>
       )}

@@ -57,12 +57,15 @@ export function DevStatePanel() {
   const rest = useLocation().pathname.replace(/^\/dfy-client/, '').replace(/^\//, '').replace(/\/$/, '');
   const surface = rest.startsWith('approvals') ? 'approvals'
     : rest.startsWith('leads') ? 'leads'
+    : rest.startsWith('reputation') ? 'reputation'
     : (rest === '' || rest === 'home') ? 'home'
     : null;
   const amHref = surface === 'approvals'
     ? '/blaze-dfy/grain-design-flooring/am/approvals'
     : surface === 'leads'
     ? '/blaze-dfy/grain-design-flooring/am/sdr'
+    : surface === 'reputation'
+    ? '/blaze-dfy/grain-design-flooring/am/reputation'
     : '/blaze-dfy/grain-design-flooring/am/home';
   // Sit quietly at half opacity by default; lift to full on hover so the panel
   // never competes with the real portal chrome.
