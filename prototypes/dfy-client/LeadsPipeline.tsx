@@ -41,7 +41,7 @@ import {
  * rows into a salesperson list. Search + Filters work in both.
  */
 
-const LIST_GRID = '260px minmax(140px, 1fr) 104px 150px 176px 84px';
+const LIST_GRID = '260px minmax(140px, 1fr) 104px 176px 150px 84px';
 
 function initials(name: string): string {
   return name.split(/\s+/).map((w) => w.charAt(0).toUpperCase()).slice(0, 2).join('');
@@ -194,14 +194,14 @@ function ListRow({
         </Text>
       </div>
 
-      {/* Lead status */}
-      <div style={{ minWidth: 0 }}>
-        <StatusDropdown value={status} options={LEAD_STATUS_OPTIONS} styles={LEAD_STATUS_STYLES} descs={LEAD_STATUS_DESC} onChange={(s) => onSetLeadStatus(lead.id, s)} ariaLabel="Change lead status" />
-      </div>
-
       {/* Handler */}
       <div style={{ minWidth: 0 }}>
         <StatusDropdown value={handler} options={HANDLER_OPTIONS} styles={HANDLER_STYLES} descs={HANDLER_DESC} onChange={(h) => onSetHandler(lead.id, h)} ariaLabel="Change handler" />
+      </div>
+
+      {/* Lead status */}
+      <div style={{ minWidth: 0 }}>
+        <StatusDropdown value={status} options={LEAD_STATUS_OPTIONS} styles={LEAD_STATUS_STYLES} descs={LEAD_STATUS_DESC} onChange={(s) => onSetLeadStatus(lead.id, s)} ariaLabel="Change lead status" />
       </div>
 
       {/* Updated */}
@@ -236,8 +236,8 @@ function LeadsList({
         <span>Prospect</span>
         <span>Service</span>
         <span>Budget</span>
-        <span>Lead status</span>
         <span>Handler</span>
+        <span>Lead status</span>
         <span>Updated</span>
       </div>
       {rows.map(({ lead, status }, i) => (

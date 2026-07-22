@@ -262,9 +262,9 @@ export interface ConvColumn {
 export const CONV_COLUMNS: ConvColumn[] = [
   { key: 'prospect', label: 'Prospect' },
   { key: 'method', label: 'Method' },
-  { key: 'leadStatus', label: 'Lead status', desc: 'Where this contact sits as a sales opportunity — from Non-Lead through Booked.' },
-  { key: 'reason', label: 'Reason' },
   { key: 'handler', label: 'Handler', desc: 'Who is working this conversation right now — the AI or a teammate.' },
+  { key: 'reason', label: 'Reason' },
+  { key: 'leadStatus', label: 'Lead status', desc: 'Where this contact sits as a sales opportunity — from Non-Lead through Booked.' },
   { key: 'time', label: 'Time' },
 ];
 

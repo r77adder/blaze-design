@@ -47,7 +47,7 @@ import {
  * wrapped-up inquiries.
  */
 
-const CONV_GRID = '300px 84px 156px minmax(150px, 1fr) 176px 80px';
+const CONV_GRID = '300px 84px 176px minmax(150px, 1fr) 156px 80px';
 
 function initials(name: string): string {
   return name.split(/\s+/).map((w) => w.charAt(0).toUpperCase()).slice(0, 2).join('');
@@ -122,15 +122,15 @@ function ConvRow({
       {/* Method */}
       <MethodCell lead={lead} />
 
-      {/* Lead status */}
+      {/* Handler */}
       <div style={{ minWidth: 0 }}>
         <StatusDropdown
-          value={leadStatusOf(lead, leadStatusOv)}
-          options={LEAD_STATUS_OPTIONS}
-          styles={LEAD_STATUS_STYLES}
-          descs={LEAD_STATUS_DESC}
-          onChange={(s) => onSetLeadStatus(lead.id, s)}
-          ariaLabel="Change lead status"
+          value={handlerOf(lead, handlerOv)}
+          options={HANDLER_OPTIONS}
+          styles={HANDLER_STYLES}
+          descs={HANDLER_DESC}
+          onChange={(h) => onSetHandler(lead.id, h)}
+          ariaLabel="Change handler"
         />
       </div>
 
@@ -141,15 +141,15 @@ function ConvRow({
         </Text>
       </div>
 
-      {/* Handler */}
+      {/* Lead status */}
       <div style={{ minWidth: 0 }}>
         <StatusDropdown
-          value={handlerOf(lead, handlerOv)}
-          options={HANDLER_OPTIONS}
-          styles={HANDLER_STYLES}
-          descs={HANDLER_DESC}
-          onChange={(h) => onSetHandler(lead.id, h)}
-          ariaLabel="Change handler"
+          value={leadStatusOf(lead, leadStatusOv)}
+          options={LEAD_STATUS_OPTIONS}
+          styles={LEAD_STATUS_STYLES}
+          descs={LEAD_STATUS_DESC}
+          onChange={(s) => onSetLeadStatus(lead.id, s)}
+          ariaLabel="Change lead status"
         />
       </div>
 
