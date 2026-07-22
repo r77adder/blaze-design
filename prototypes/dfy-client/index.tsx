@@ -21,6 +21,7 @@ import { Scorecard } from './Scorecard';
 import { ReviewStrategy } from './ReviewStrategy';
 import { ReviewGoals } from './ReviewGoals';
 import { ReviewCreative } from './ReviewCreative';
+import { GrowthReviewRoute } from './ReviewFlow';
 import { ReputationView, ReputationTabs, type TabKey } from '../h2-port/pages/Reputation';
 
 /**
@@ -32,6 +33,11 @@ import { ReputationView, ReputationTabs, type TabKey } from '../h2-port/pages/Re
  *
  * Routes (relative to /dfy-client): / · /approvals · /calendar ·
  * /insights[/:sub] · /leads · /strategy · /brand-kit[/:sub] · /settings[/:sub]
+ *
+ * The Growth Engine Review also has its own shareable URL: /growth-review
+ * (client side) and /growth-review/am (strategist side) — the same flow the
+ * cold-state Home opens as an overlay, mounted directly so it can be sent to
+ * a reviewer as a link.
  *
  * The bottom-left <DevStatePanel/> flips the whole portal between `cold`
  * (Growth Engine Review ready to review), `reviewed` (client approved it, only
@@ -69,6 +75,7 @@ function SectionRoute() {
   if (section === 'review-strategy') return <ReviewStrategy />;
   if (section === 'review-goals') return <ReviewGoals />;
   if (section === 'review-creative') return <ReviewCreative />;
+  if (section === 'growth-review') return <GrowthReviewRoute sub={sub} />;
   if (section === 'brand-kit') return <BrandKit sub={sub} />;
   if (section === 'settings') return <Settings sub={sub} />;
   return (
