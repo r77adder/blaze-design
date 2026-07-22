@@ -99,7 +99,9 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 
 ## Try it
 
-If this touches a prototype: open `http://localhost:5173/<slug>` after `pnpm dev`.
+If this touches a prototype: once this merges to `main`, GitHub Pages auto-deploys it to the
+public, shareable link **https://r77adder.github.io/blaze-design/<slug>** (no sign-in, ~2 min after merge).
+Before merge, run it locally with `pnpm dev` and open `http://localhost:5173/<slug>`.
 If this is a staging component: open Ladle (`pnpm ladle`) and find the story.
 If this is docs only: read the diff in the Files tab.
 
