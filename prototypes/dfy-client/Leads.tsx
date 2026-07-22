@@ -340,7 +340,7 @@ function LeadDetailPage({
   const handler = handlerOf(lead, handlerOv);
   const asLead = leadStatus !== 'non-lead';
 
-  // Name + the two editable axes (Lead status, then Handler) sit together in
+  // Name + the two editable axes (Handler, then Lead status) sit together in
   // the header so the user can move either without leaving the conversation.
   const title = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -349,20 +349,20 @@ function LeadDetailPage({
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <Text variant="largeList" style={{ color: 'var(--dark-90)', fontWeight: 500 }}>{lead.prospect.name}</Text>
         <StatusDropdown
-          value={leadStatus}
-          options={LEAD_STATUS_OPTIONS}
-          styles={LEAD_STATUS_STYLES}
-          descs={LEAD_STATUS_DESC}
-          onChange={(s) => { onSetLeadStatus(lead.id, s); showToast({ message: `Lead status → ${LEAD_STATUS_STYLES[s].label}` }); }}
-          ariaLabel="Change lead status"
-        />
-        <StatusDropdown
           value={handler}
           options={HANDLER_OPTIONS}
           styles={HANDLER_STYLES}
           descs={HANDLER_DESC}
           onChange={(h) => { onSetHandler(lead.id, h); showToast({ message: `Handler → ${HANDLER_STYLES[h].label}` }); }}
           ariaLabel="Change handler"
+        />
+        <StatusDropdown
+          value={leadStatus}
+          options={LEAD_STATUS_OPTIONS}
+          styles={LEAD_STATUS_STYLES}
+          descs={LEAD_STATUS_DESC}
+          onChange={(s) => { onSetLeadStatus(lead.id, s); showToast({ message: `Lead status → ${LEAD_STATUS_STYLES[s].label}` }); }}
+          ariaLabel="Change lead status"
         />
       </div>
     </div>
