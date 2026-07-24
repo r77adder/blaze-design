@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { prototypeRoutes, iosPrototypeRoutes, type PrototypeRoute } from './router';
-import { CommentOverlay } from '../../prototypes/_shell/CommentOverlay';
+// CommentOverlay is intentionally not mounted: it posts to /api/prototype-feedback,
+// which does not exist on the static GitHub Pages deploy, so it only produced
+// failing requests and extra chrome on shared links. Re-add <CommentOverlay />
+// below if the feedback backend comes back.
 import '../tokens/colors.css';
 import '../tokens/fonts.scss';
 import '../tokens/reset.css';
@@ -240,7 +243,6 @@ function Index() {
 export function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <CommentOverlay />
       <Routes>
         <Route path="/" element={<Index />} />
         {prototypeRoutes.map(({ slug, Component }) => (

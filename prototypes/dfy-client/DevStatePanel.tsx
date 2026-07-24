@@ -21,8 +21,52 @@ const OPTIONS: { value: ClientState; label: string }[] = [
 ];
 
 const STORAGE_KEY = 'dfy-client-dev-panel-position';
+/** Session-scoped, so hiding the panel lasts while you demo or share a screen
+ *  but never leaks into the next browser session. */
+const HIDDEN_KEY = 'dfy-client-dev-panel-hidden';
 
 interface Position { x: number; y: number }
+
+/**
+ * Lets the designer hide all prototype chrome (state buttons + the AM/Client
+ * switch) for the current session — handy when sending someone the review link
+ * or screen-sharing. Toggle with Shift+D; the × on the panel hides it.
+ */
+function useHidden(): [boolean, (v: boolean) => void] {
+  const [hidden, setHiddenState] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.sessionStorage.getItem(HIDDEN_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const setHidden = (v: boolean) => {
+    setHiddenState(v);
+    try {
+      window.sessionStorage.setItem(HIDDEN_KEY, v ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key !== 'D' && e.key !== 'd') return;
+      // Never steal the key while someone is typing into the prototype.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return;
+      e.preventDefault();
+      setHidden(!(window.sessionStorage.getItem(HIDDEN_KEY) === '1'));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  return [hidden, setHidden];
+}
 
 function loadStoredPosition(): Position | null {
   try {
@@ -71,6 +115,7 @@ export function DevStatePanel() {
   // never competes with the real portal chrome.
   const [hovered, setHovered] = useState(false);
   const [changesOpen, setChangesOpen] = useState(false);
+  const [hidden, setHidden] = useHidden();
 
   const [position, setPosition] = useState<Position | null>(() =>
     typeof window === 'undefined' ? null : loadStoredPosition(),
@@ -87,6 +132,9 @@ export function DevStatePanel() {
     }
   }, [position]);
 
+  // Hidden for this session (Shift+D). After all hooks, so order stays stable.
+  if (hidden) return null;
+
   // While the review overlay is open, collapse to just the AM/Client switch so
   // the reviewer can flip sides in place. (After all hooks, so order is stable.)
   if (reviewFlowOpen) {
@@ -102,6 +150,7 @@ export function DevStatePanel() {
       >
         <SideButton text="AM" current={reviewSide === 'am'} onClick={() => setReviewSide('am')} />
         <SideButton text="Client" current={reviewSide === 'client'} onClick={() => setReviewSide('client')} />
+        <HideButton onClick={() => setHidden(true)} />
       </div>
     );
   }
@@ -230,10 +279,31 @@ export function DevStatePanel() {
             <SideButton text="Client" current onClick={() => {}} />
           </div>
         )}
+        <HideButton onClick={() => setHidden(true)} />
       </div>
     </div>
     <ChangesPanel open={changesOpen} onClose={() => setChangesOpen(false)} onJump={(s) => { setState(s); setChangesOpen(false); }} />
     </>
+  );
+}
+
+/** Dismisses all prototype chrome for the session. Shift+D brings it back. */
+function HideButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Hide prototype controls for this session (Shift+D to show again)"
+      aria-label="Hide prototype controls for this session"
+      style={{
+        appearance: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+        fontSize: 11, lineHeight: 1, padding: '3px 5px', borderRadius: 3,
+        background: 'transparent', color: 'var(--light-60)', fontWeight: 400,
+        whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 'auto',
+      }}
+    >
+      ×
+    </button>
   );
 }
 
