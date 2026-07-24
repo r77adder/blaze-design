@@ -104,6 +104,10 @@ export function DevStatePanel() {
     : rest.startsWith('reputation') ? 'reputation'
     : (rest === '' || rest === 'home') ? 'home'
     : null;
+  // The standalone Growth Engine Review page is the link that goes out to
+  // reviewers, so it carries no prototype chrome at all — not even the
+  // AM/Client switch. (The overlay launched from Home still gets it.)
+  const isGrowthReview = rest.startsWith('growth-review');
   const amHref = surface === 'approvals'
     ? '/blaze-dfy/grain-design-flooring/am/approvals'
     : surface === 'leads'
@@ -131,6 +135,10 @@ export function DevStatePanel() {
       /* ignore */
     }
   }, [position]);
+
+  // No chrome at all on the shareable Growth Engine Review page.
+  // (After all hooks, so order stays stable.)
+  if (isGrowthReview) return null;
 
   // Hidden for this session (Shift+D). After all hooks, so order stays stable.
   if (hidden) return null;
