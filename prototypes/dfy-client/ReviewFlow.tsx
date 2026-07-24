@@ -79,20 +79,15 @@ export function useReviewFlow(fallback?: Fallback): { launch: () => void; overla
  */
 export function GrowthReviewRoute({ sub }: { sub?: string }) {
   const navigate = useNavigate();
-  const { setReviewFlowOpen, reviewSide, setReviewSide } = useClientState();
+  const { reviewSide, setReviewSide } = useClientState();
   const applyOutcome = useApplyOutcome();
   const seed = useSeed();
   const urlMode = sub === 'am' ? 'am' : 'client';
 
-  // The URL picks the side on load; the dev panel's AM/Client toggle can still
-  // flip it afterwards, since it writes the same reviewSide.
+  // The URL is the only thing that picks the side here — this page renders no
+  // prototype chrome, so there is no toggle to flip it afterwards. Use
+  // /growth-review/am for the strategist view.
   useEffect(() => { setReviewSide(urlMode); }, [urlMode]);
-
-  // Tell the dev panel a review is on screen so it offers that toggle.
-  useEffect(() => {
-    setReviewFlowOpen(true);
-    return () => setReviewFlowOpen(false);
-  }, []);
 
   return (
     <GrowthEngineReviewFlow
